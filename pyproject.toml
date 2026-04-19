@@ -21,6 +21,7 @@ dev = [
     "langchain-openai>=1.1.14",
     "langgraph>=1.1.8",
     "pytest>=8",
+    "rich>=13.7.0",
 ]
 
 [tool.pytest.ini_options]
