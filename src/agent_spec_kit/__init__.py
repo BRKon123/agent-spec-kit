@@ -25,6 +25,7 @@ __all__ = [
     "__version__",
     "new_event_id",
     "wrap_langchain_agent",
+    "wrap_pydantic_ai_agent",
 ]
 
 __version__ = "0.1.0"
@@ -35,4 +36,8 @@ def __getattr__(name: str) -> Any:
         from agent_spec_kit.integrations.langchain_adapter import wrap_langchain_agent
 
         return wrap_langchain_agent
+    if name == "wrap_pydantic_ai_agent":
+        from agent_spec_kit.integrations.pydantic_ai_adapter import wrap_pydantic_ai_agent
+
+        return wrap_pydantic_ai_agent
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
