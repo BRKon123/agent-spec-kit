@@ -30,7 +30,7 @@ def _has_openai() -> bool:
 @pytest.mark.skipif(not _has_openai(), reason="OPENAI_API_KEY not set")
 def test_live_react_agent_tool_and_output() -> None:
     async def body() -> None:
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
         graph = create_react_agent(llm, [secret_word])
         adapted = wrap_langchain_agent(
             graph,
