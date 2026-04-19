@@ -8,12 +8,11 @@ Implement :class:`AdaptedAgent` and return :class:`TurnResult` from
 :meth:`AdaptedAgent.run_turn`. Populate ``events`` with the typed classes in
 :mod:`agent_spec_kit.events` (not ad-hoc dicts):
 
-1. **ToolCallEvent** — when a tool finishes: set ``tool_name``, ``args``,
-   ``result`` or ``error``.
-2. **AgentTurnEvent** — once per completed **root** turn: ``user_input`` and
-   ``agent_output`` (the final assistant reply for that user message).
-3. **SubagentCallEvent** — for nested agents when your framework exposes a
-   path; set ``source_path`` and ``agent_name`` when possible.
+1. **AgentTurnEvent** (root) — created at turn start; holds ``children`` (nested
+   ``ToolCallEvent`` and optional subgraph ``AgentTurnEvent`` nodes). Set
+   ``user_input`` and ``agent_output`` when the root turn completes.
+2. **ToolCallEvent** — tool calls as children of the root turn or of another tool
+   when execution nests; set ``tool_name``, ``args``, ``result`` or ``error``.
 
 Prefer **coarse** step-level events over token streams for v1. See event
 field definitions in :mod:`agent_spec_kit.events`.

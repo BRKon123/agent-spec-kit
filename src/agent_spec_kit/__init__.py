@@ -8,9 +8,9 @@ from agent_spec_kit.events import (
     AgentEvent,
     AgentTurnEvent,
     BaseEvent,
-    SubagentCallEvent,
     ToolCallEvent,
     new_event_id,
+    print_rich_event_trace,
 )
 from agent_spec_kit.run import AdaptedAgent, TurnResult
 
@@ -19,11 +19,11 @@ __all__ = [
     "AgentEvent",
     "AgentTurnEvent",
     "BaseEvent",
-    "SubagentCallEvent",
     "ToolCallEvent",
     "TurnResult",
     "__version__",
     "new_event_id",
+    "print_rich_event_trace",
     "wrap_langchain_agent",
     "wrap_pydantic_ai_agent",
 ]

@@ -10,18 +10,13 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 
-from agent_spec_kit.events import (
-    AgentEvent,
-    AgentTurnEvent,
-    SubagentCallEvent,
-    ToolCallEvent,
-    new_event_id,
-)
+from agent_spec_kit.events import AgentEvent, AgentTurnEvent, ToolCallEvent, new_event_id
 from agent_spec_kit.run import TurnResult
 
 _Dynamic = Any | Callable[[str], Any]
 
 # internal stream normalisation
+
 
 def unpack_stream_chunk(chunk: Any) -> tuple[tuple[str, ...], dict[str, Any]]:
     """
@@ -51,41 +46,28 @@ def _message_text(msg: BaseMessage) -> Any:
     return c
 
 
-def _register_ai_tool_calls(state: _ToolCallArgs, ai: AIMessage) -> None:
-    for tc in ai.tool_calls or []:
-        if not isinstance(tc, dict):
-            continue
-        tid = tc.get("id")
-        if tid is None:
-            continue
-        state.known[tid] = (tc.get("name") or "", tc.get("args"))
-
-
-class _ToolCallArgs:
-    __slots__ = ("known",)
-
-    def __init__(self) -> None:
-        self.known: dict[str, tuple[str, Any]] = {}
-
-
 class UpdatesNormalizer:
-    """State machine over LangGraph ``updates`` stream chunks."""
+    """State machine over LangGraph ``updates`` stream chunks; mutates ``root_turn``."""
 
     __slots__ = (
+        "_root_turn",
         "_first_human",
-        "_tool_args",
         "_emitted_tools",
+        "_open_stack",
+        "_tid_to_node",
         "_last_ai_by_ns",
         "_pending_root_error",
         "_pending_sub_errors",
         "_turn_index",
     )
 
-    def __init__(self, turn_index: int = 0) -> None:
+    def __init__(self, root_turn: AgentTurnEvent, turn_index: int = 0) -> None:
+        self._root_turn = root_turn
         self._turn_index = turn_index
         self._first_human: Any = None
-        self._tool_args = _ToolCallArgs()
         self._emitted_tools: set[str] = set()
+        self._open_stack: list[tuple[str, ToolCallEvent]] = []
+        self._tid_to_node: dict[str, ToolCallEvent] = {}
         self._last_ai_by_ns: dict[tuple[str, ...], AIMessage] = {}
         self._pending_root_error: str | None = None
         self._pending_sub_errors: dict[tuple[str, ...], str] = {}
@@ -94,8 +76,7 @@ class UpdatesNormalizer:
         self,
         source_path: tuple[str, ...],
         updates: Mapping[str, Any],
-    ) -> list[AgentEvent]:
-        out: list[AgentEvent] = []
+    ) -> None:
         for _node_name, partial in updates.items():
             if not isinstance(partial, dict):
                 continue
@@ -105,21 +86,48 @@ class UpdatesNormalizer:
             for msg in messages:
                 if not isinstance(msg, BaseMessage):
                     continue
-                out.extend(self._feed_message(source_path, msg))
-        return out
+                self._feed_message(source_path, msg)
+
+    def _attachment_parent(self) -> AgentTurnEvent | ToolCallEvent:
+        if not self._open_stack:
+            return self._root_turn
+        return self._open_stack[-1][1]
 
     def _feed_message(
         self,
         source_path: tuple[str, ...],
         msg: BaseMessage,
-    ) -> list[AgentEvent]:
-        out: list[AgentEvent] = []
+    ) -> None:
         if isinstance(msg, HumanMessage) and self._first_human is None:
             self._first_human = _message_text(msg)
 
         if isinstance(msg, AIMessage):
             if getattr(msg, "tool_calls", None):
-                _register_ai_tool_calls(self._tool_args, msg)
+                parent = self._attachment_parent()
+                for tc in msg.tool_calls or []:
+                    if not isinstance(tc, dict):
+                        continue
+                    tid = tc.get("id")
+                    if tid is None:
+                        continue
+                    name = tc.get("name") or ""
+                    args = tc.get("args")
+                    meta: dict[str, Any] = {}
+                    if tid:
+                        meta["tool_call_id"] = tid
+                    node = ToolCallEvent(
+                        turn_index=self._turn_index,
+                        event_id=new_event_id(prefix="tool:"),
+                        source_path=source_path,
+                        metadata=meta,
+                        tool_name=name,
+                        args=args,
+                        result=None,
+                        error=None,
+                    )
+                    parent.children.append(node)
+                    self._open_stack.append((tid, node))
+                    self._tid_to_node[tid] = node
             else:
                 self._last_ai_by_ns[source_path] = msg
                 err = _error_from_message(msg)
@@ -129,73 +137,64 @@ class UpdatesNormalizer:
                 else:
                     if err:
                         self._pending_root_error = err
-            return out
+            return
 
         if isinstance(msg, ToolMessage):
             tid = msg.tool_call_id or ""
             if tid and tid in self._emitted_tools:
-                return out
-            name, args = self._tool_args.known.get(tid, ("", None))
-            if not name:
-                name = msg.name or ""
+                return
+            pending = self._tid_to_node.get(tid)
+            name = msg.name or ""
             err = _error_from_message(msg)
-            meta: dict[str, Any] = {}
-            if tid:
-                meta["tool_call_id"] = tid
-            ev = ToolCallEvent(
-                turn_index=self._turn_index,
-                event_id=new_event_id(prefix="tool:"),
-                parent_id=None,
-                source_path=source_path,
-                metadata=meta,
-                tool_name=name,
-                args=args,
-                result=None if err else msg.content,
-                error=err,
-            )
-            out.append(ev)
-            if tid:
-                self._emitted_tools.add(tid)
-            return out
-
-        return out
-
-    def finalize(self) -> list[AgentEvent]:
-        out: list[AgentEvent] = []
-        root_ai = self._last_ai_by_ns.get(())
-        if root_ai is not None:
-            err = self._pending_root_error
-            out.append(
-                AgentTurnEvent(
+            if pending is None:
+                tm_meta: dict[str, Any] = {}
+                if tid:
+                    tm_meta["tool_call_id"] = tid
+                parent = self._attachment_parent()
+                orphan = ToolCallEvent(
                     turn_index=self._turn_index,
-                    event_id=new_event_id(prefix="turn:"),
-                    parent_id=None,
-                    source_path=(),
-                    metadata={},
-                    user_input=self._first_human,
-                    agent_output=_message_text(root_ai),
+                    event_id=new_event_id(prefix="tool:"),
+                    source_path=source_path,
+                    metadata=tm_meta,
+                    tool_name=name,
+                    args=None,
+                    result=None if err else msg.content,
                     error=err,
                 )
-            )
+                parent.children.append(orphan)
+            else:
+                if not pending.tool_name and name:
+                    pending.tool_name = name
+                pending.result = None if err else msg.content
+                pending.error = err
+                self._open_stack = [(t, n) for t, n in self._open_stack if t != tid]
+                if tid:
+                    self._tid_to_node.pop(tid, None)
+            if tid:
+                self._emitted_tools.add(tid)
+            return
+
+    def finalize(self) -> None:
+        root_ai = self._last_ai_by_ns.get(())
+        self._root_turn.user_input = self._first_human
+        if root_ai is not None:
+            self._root_turn.agent_output = _message_text(root_ai)
+            self._root_turn.error = self._pending_root_error
         for ns, ai in self._last_ai_by_ns.items():
             if not ns:
                 continue
             name = ns[-1] if ns else "subagent"
             err = self._pending_sub_errors.get(ns)
-            out.append(
-                SubagentCallEvent(
-                    turn_index=self._turn_index,
-                    event_id=new_event_id(prefix="sub:"),
-                    parent_id=None,
-                    source_path=ns,
-                    metadata={},
-                    agent_name=name,
-                    call_input=None,
-                    call_output=_message_text(ai),
-                    error=err,
-                )
+            sub_turn = AgentTurnEvent(
+                turn_index=self._turn_index,
+                event_id=new_event_id(prefix="turn:"),
+                source_path=ns,
+                metadata={"subgraph_node": name},
+                user_input=None,
+                agent_output=_message_text(ai),
+                error=err,
             )
-        return out
+            self._root_turn.children.append(sub_turn)
 
 
 def _error_from_message(msg: BaseMessage) -> str | None:
@@ -210,7 +209,6 @@ def _error_from_message(msg: BaseMessage) -> str | None:
         if isinstance(c, str):
             return c
     return None
-
 
 
 def _coerce_stream_chunk(chunk: Any) -> Any:
@@ -232,7 +230,12 @@ def _resolve_dynamic(val: _Dynamic | None, user_message: str) -> Any:
 
 
 def root_turn_output(events: Sequence[AgentEvent]) -> Any:
-    """Last root-level ``AgentTurnEvent.agent_output``, if any."""
+    """``agent_output`` from the root ``AgentTurnEvent`` (``source_path == ()``), if any."""
+    if not events:
+        return None
+    head = events[0]
+    if isinstance(head, AgentTurnEvent) and head.source_path == ():
+        return head.agent_output
     for ev in reversed(events):
         if isinstance(ev, AgentTurnEvent) and ev.source_path == ():
             return ev.agent_output
@@ -277,8 +280,16 @@ class _LangChainAdaptedAgent:
             inp = self._initial_input_factory(user_message)
             cfg = _resolve_dynamic(self._config, user_message)
             ctx = _resolve_dynamic(self._context, user_message)
-            norm = UpdatesNormalizer(turn_index=self._turn_index)
-            collected: list[AgentEvent] = []
+            root_turn = AgentTurnEvent(
+                turn_index=self._turn_index,
+                event_id=new_event_id(prefix="turn:"),
+                source_path=(),
+                metadata={},
+                user_input=None,
+                agent_output=None,
+                error=None,
+            )
+            norm = UpdatesNormalizer(root_turn, turn_index=self._turn_index)
             kwargs: dict[str, Any] = {
                 "stream_mode": self._stream_mode,
                 "subgraphs": self._subgraphs,
@@ -290,12 +301,12 @@ class _LangChainAdaptedAgent:
                 chunk = _coerce_stream_chunk(raw)
                 ns, updates = unpack_stream_chunk(chunk)
                 for node_name, partial in updates.items():
-                    collected.extend(norm.feed(ns, {node_name: partial}))
-            collected.extend(norm.finalize())
-            out = root_turn_output(collected)
+                    norm.feed(ns, {node_name: partial})
+            norm.finalize()
+            out = root_turn_output((root_turn,))
             return TurnResult(
                 output=out,
-                events=tuple(collected),
+                events=(root_turn,),
                 status="ok",
                 error=None,
             )

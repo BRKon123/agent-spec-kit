@@ -17,6 +17,7 @@ from langgraph.prebuilt import create_react_agent
 from rich.console import Console
 from rich.pretty import pprint
 
+from agent_spec_kit import print_rich_event_trace
 from agent_spec_kit.integrations.langchain_adapter import wrap_langchain_agent
 
 
@@ -60,9 +61,11 @@ async def main() -> None:
     )
     console.rule("[bold]Turn summary[/bold]")
     pprint({"status": r.status, "error": r.error, "output": r.output})
-    console.rule("[bold]Events[/bold]")
+    console.rule("[bold]Event trace (tree)[/bold]")
+    print_rich_event_trace(console, r.events)
+    console.rule("[bold]Raw events (with children)[/bold]")
     for i, ev in enumerate(r.events):
-        console.print(f"[dim]— event {i} —[/dim]")
+        console.print(f"[dim]— root {i} —[/dim]")
         pprint(ev)
 
 

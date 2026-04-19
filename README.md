@@ -10,7 +10,7 @@ Install the optional stack:
 pip install agent-spec-kit[langchain]
 ```
 
-**Primary API:** `wrap_langchain_agent` — pass a compiled LangGraph graph (or any runnable with `astream`), an `initial_input_factory` that maps the user message string to the input dict your graph expects, then call `run_turn(user_message)` on the returned `AdaptedAgent`. You get a `TurnResult` with `output`, `events` (typed `ToolCallEvent`, `AgentTurnEvent`, `SubagentCallEvent`), `status`, and `error`.
+**Primary API:** `wrap_langchain_agent` — pass a compiled LangGraph graph (or any runnable with `astream`), an `initial_input_factory` that maps the user message string to the input dict your graph expects, then call `run_turn(user_message)` on the returned `AdaptedAgent`. You get a `TurnResult` with `output`, `events` (typically a single root `AgentTurnEvent` whose `children` hold `ToolCallEvent` and nested `AgentTurnEvent` nodes), `status`, and `error`.
 
 - **Stream shape:** use `stream_mode`, `version`, and `subgraphs` on `wrap_langchain_agent` (forwarded to LangGraph `astream`).
 - **Runtime data:** use `context` and/or `config` (or callables `str → value` for per-turn values). These are **not** the same as stream options—they correspond to LangGraph `context=` and `RunnableConfig`.

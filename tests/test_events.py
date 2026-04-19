@@ -1,13 +1,13 @@
 """Tests for normalized event types."""
 
-from dataclasses import replace
+import pytest
 
 from agent_spec_kit import (
     AgentTurnEvent,
     BaseEvent,
-    SubagentCallEvent,
     ToolCallEvent,
     new_event_id,
+    print_rich_event_trace,
 )
 
 
@@ -15,17 +15,18 @@ def test_base_event_defaults() -> None:
     e = BaseEvent()
     assert e.turn_index is None
     assert e.event_id is None
-    assert e.parent_id is None
     assert e.source_path == ()
     assert e.metadata == {}
+    assert e.children == []
 
 
-def test_tool_call_event_frozen_replace() -> None:
-    t = ToolCallEvent(tool_name="x", args={"a": 1})
-    t2 = replace(t, result="ok", event_id="e1")
-    assert t2.tool_name == "x"
-    assert t2.result == "ok"
-    assert t2.event_id == "e1"
+def test_tool_call_event_mutable_children() -> None:
+    t = ToolCallEvent(tool_name="x", args={"a": 1}, event_id="e1")
+    inner = ToolCallEvent(tool_name="inner", event_id="e2")
+    t.children.append(inner)
+    assert t.children[0] is inner
+    assert t.tool_name == "x"
+    assert t.result is None
 
 
 def test_agent_turn_event_fields() -> None:
@@ -35,14 +36,23 @@ def test_agent_turn_event_fields() -> None:
     assert a.turn_index == 2
 
 
-def test_subagent_call_event_fields() -> None:
-    s = SubagentCallEvent(agent_name="researcher", call_output="done")
-    assert s.agent_name == "researcher"
-    assert s.call_output == "done"
-
-
 def test_new_event_id_prefix() -> None:
     a = new_event_id()
     b = new_event_id(prefix="p:")
     assert len(a) == 32
     assert b.startswith("p:")
+
+
+def test_rich_node_labels() -> None:
+    assert BaseEvent()._rich_node_label() == "BaseEvent"
+    assert ToolCallEvent(tool_name="t", result=1)._rich_node_label().startswith("t  result=")
+    assert "root" in AgentTurnEvent()._rich_node_label()
+
+
+def test_print_rich_event_trace_smoke() -> None:
+    pytest.importorskip("rich")
+    from rich.console import Console
+
+    root = AgentTurnEvent(user_input="hi", agent_output="bye")
+    root.children.append(ToolCallEvent(tool_name="noop", result="ok"))
+    print_rich_event_trace(Console(width=120), (root,), title="test trace")
