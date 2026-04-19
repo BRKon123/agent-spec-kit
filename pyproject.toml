@@ -9,14 +9,27 @@ authors = [
 requires-python = ">=3.12"
 dependencies = []
 
+[project.optional-dependencies]
+langchain = [
+    "langchain-core>=1.3.0",
+    "langgraph>=1.1.8",
+]
+
 [dependency-groups]
 dev = [
+    "langchain-core>=1.3.0",
+    "langchain-openai>=1.1.14",
+    "langgraph>=1.1.8",
     "pytest>=8",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+addopts = "-m 'not integration'"
+markers = [
+    "integration: optional tests that need a live stack or API keys (not run by default)",
+]
 
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]
