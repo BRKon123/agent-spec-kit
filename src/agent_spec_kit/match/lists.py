@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -221,10 +222,16 @@ class ListMatcher(BaseMatcher):
 
 
 def list_matcher(
-    *elements: Any,
+    elements: Sequence[Any],
+    *,
     mode: Literal["ordered", "unordered"] = "ordered",
     allow_extras: bool = False,
 ) -> ListMatcher:
+    if isinstance(elements, (str, bytes, bytearray)):
+        raise TypeError(
+            "list_matcher() expects a list or tuple of specs, not str/bytes "
+            "(use a list/tuple of specs, e.g. m.list([spec1, spec2]))"
+        )
     return ListMatcher(
         elements=tuple(coerce_any(e) for e in elements),
         mode=mode,

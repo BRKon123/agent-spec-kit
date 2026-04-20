@@ -41,6 +41,7 @@ from agent_spec_kit.match.transform import TransformMatcher, transform_matcher
 from agent_spec_kit.match.types import MatchError, MatchResult, Path
 
 _NO = object()
+_MISSING = object()
 
 
 @overload
@@ -156,11 +157,15 @@ def object(  # noqa: A001
 
 
 def list(  # noqa: A001
-    *elements: Any,
+    elements: Sequence[Any],
+    *,
     mode: Literal["ordered", "unordered"] = "ordered",
     allow_extras: bool = False,
 ) -> ListMatcher:
     """Match a list with a fixed sequence of per-element specs.
+
+    Pass specs as a single sequence (same shape as tool-call lists), e.g.
+    ``list([a, b, c], mode=..., allow_extras=...)``.
 
     - ``mode="ordered"`` (default): elements must match in order. If ``allow_extras`` is
       False, lengths must match. If True, each spec must match some item in order, left
@@ -170,7 +175,7 @@ def list(  # noqa: A001
 
     For every item the same shape, use :func:`list_of` instead.
     """
-    return list_matcher(*elements, mode=mode, allow_extras=allow_extras)
+    return list_matcher(elements, mode=mode, allow_extras=allow_extras)
 
 
 def list_of(inner: Any) -> ListOfMatcher:
@@ -188,6 +193,49 @@ def transform(fn: Callable[[Any], Any], inner: Any) -> TransformMatcher:
     Useful when the wire format differs from what you want to validate (e.g. string to int).
     """
     return transform_matcher(fn, inner)
+
+
+def contains(substring: str) -> PredicateMatcher:
+    """Match when ``substring`` appears in ``str(actual)``."""
+
+    def pred(actual: Any) -> bool:
+        try:
+            return substring in str(actual)
+        except Exception:
+            return False
+
+    return PredicateMatcher(
+        pred,
+        message=f"expected value to contain substring {substring!r}",
+    )
+
+
+def tool_call(
+    name: str,
+    *,
+    args: Any = _MISSING,
+    result: Any = _MISSING,
+    error: Any = _MISSING,
+    metadata: Any = _MISSING,
+    children: Any = _MISSING,
+) -> ObjectMatcher:
+    """Build an object matcher for one normalized tool-call dict (``name``, ``args``, …).
+
+    ``args``, ``result``, ``error``, ``metadata``, and ``children`` are keyword-only.
+    Omitted fields are not constrained (``extra="ignore"`` on the object matcher).
+    """
+    fields: dict[str, Any] = {"name": name}
+    if args is not _MISSING:
+        fields["args"] = args
+    if result is not _MISSING:
+        fields["result"] = result
+    if error is not _MISSING:
+        fields["error"] = error
+    if metadata is not _MISSING:
+        fields["metadata"] = metadata
+    if children is not _MISSING:
+        fields["children"] = children
+    return object_matcher(fields, extra="ignore")
 
 
 __all__ = [
@@ -210,6 +258,7 @@ __all__ = [
     "list",
     "list_of",
     "check",
+    "contains",
     "match",
     "number",
     "object",
@@ -218,5 +267,6 @@ __all__ = [
     "regex",
     "require",
     "string",
+    "tool_call",
     "transform",
 ]

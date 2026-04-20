@@ -13,6 +13,7 @@ from agent_spec_kit.events import (
     print_rich_event_trace,
 )
 from agent_spec_kit.run import AdaptedAgent, TurnResult
+from agent_spec_kit.scenario import Scenario, create_scenario
 
 __all__ = [
     "AdaptedAgent",
@@ -21,6 +22,8 @@ __all__ = [
     "BaseEvent",
     "ToolCallEvent",
     "TurnResult",
+    "Scenario",
+    "create_scenario",
     "__version__",
     "new_event_id",
     "print_rich_event_trace",

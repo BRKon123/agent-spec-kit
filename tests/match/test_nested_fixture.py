@@ -17,9 +17,11 @@ def test_nested_json_fixture() -> None:
                         {
                             "id": m.string(min_len=1),
                             "scores": m.list(
-                                m.number(min=0),
-                                m.number(min=0),
-                                lambda x: x == 100,
+                                [
+                                    m.number(min=0),
+                                    m.number(min=0),
+                                    lambda x: x == 100,
+                                ],
                                 mode="unordered",
                                 allow_extras=False,
                             ),
@@ -35,7 +37,7 @@ def test_nested_json_fixture() -> None:
                         extra="forbid",
                     )
                 ),
-                "tags": m.list("alpha", "beta"),
+                "tags": m.list(["alpha", "beta"]),
             },
             "audit": m.list_of(
                 m.object(

@@ -23,6 +23,7 @@ from agent_spec_kit.match.api import (
     TransformMatcher,
     any_value,
     check,
+    contains,
     field,
     forbid,
     list,
@@ -35,6 +36,7 @@ from agent_spec_kit.match.api import (
     regex,
     require,
     string,
+    tool_call,
     transform,
 )
 
@@ -54,6 +56,7 @@ __all__ = [
     "TransformMatcher",
     "any_value",
     "check",
+    "contains",
     "field",
     "forbid",
     "list",
@@ -66,5 +69,6 @@ __all__ = [
     "regex",
     "require",
     "string",
+    "tool_call",
     "transform",
 ]

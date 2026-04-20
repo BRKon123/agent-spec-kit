@@ -28,7 +28,7 @@ def test_error_nested_object_path() -> None:
 
 
 def test_error_list_ordered_exact_element_path() -> None:
-    r = m.check(m.list(1, 2, 3), [1, 9, 3])
+    r = m.check(m.list([1, 2, 3]), [1, 9, 3])
     assert not r.ok
     assert len(r.errors) == 1
     e = r.errors[0]
@@ -37,7 +37,7 @@ def test_error_list_ordered_exact_element_path() -> None:
 
 
 def test_error_list_ordered_exact_length_message() -> None:
-    r = m.check(m.list(1, 2), [1])
+    r = m.check(m.list([1, 2]), [1])
     assert not r.ok
     e = r.errors[0]
     assert e.path == ()
@@ -134,7 +134,7 @@ def test_error_transform_fn_raises_reports_transform_code() -> None:
 
 def test_error_list_unordered_exact_no_assignment_path_is_list_root() -> None:
     """When multiset cannot be satisfied, failure is reported at the list path."""
-    r = m.check(m.list(1, 1, 2, mode="unordered", allow_extras=False), [1, 2, 3])
+    r = m.check(m.list([1, 1, 2], mode="unordered", allow_extras=False), [1, 2, 3])
     assert not r.ok
     e = r.errors[0]
     assert e.path == ()

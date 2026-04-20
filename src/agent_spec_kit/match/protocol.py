@@ -59,7 +59,7 @@ def coerce_any(spec: Any) -> BaseMatcher:
     if isinstance(spec, (list, tuple)):
         from agent_spec_kit.match.lists import list_matcher
 
-        return list_matcher(*(coerce_any(x) for x in spec), mode="ordered", allow_extras=False)
+        return list_matcher(spec, mode="ordered", allow_extras=False)
 
     if isinstance(spec, (str, int, float, bool)) or spec is None:
         from agent_spec_kit.match.scalars import EqualityMatcher
