@@ -1,13 +1,17 @@
-"""Structured-output matchers with coercion from literals and predicates."""
+"""Structured-output matchers with coercion from literals and predicates.
+
+Import as ``import agent_spec_kit.match as m``, build specs with :func:`m.object`,
+:func:`m.list`, literals, and helpers (:func:`m.string`, :func:`m.optional`, …), then
+validate with :func:`m.check`.
+"""
 
 from __future__ import annotations
 
 from agent_spec_kit.match.api import (
     BaseMatcher,
     ForbidRule,
-    ListExactMatcher,
+    ListMatcher,
     ListOfMatcher,
-    ListUnorderedMatcher,
     MatchError,
     MatchResult,
     ObjectMatcher,
@@ -21,9 +25,8 @@ from agent_spec_kit.match.api import (
     check,
     field,
     forbid,
-    list_exact,
+    list,
     list_of,
-    list_unordered,
     match,
     number,
     object,
@@ -38,9 +41,8 @@ from agent_spec_kit.match.api import (
 __all__ = [
     "BaseMatcher",
     "ForbidRule",
-    "ListExactMatcher",
+    "ListMatcher",
     "ListOfMatcher",
-    "ListUnorderedMatcher",
     "MatchError",
     "MatchResult",
     "ObjectMatcher",
@@ -54,9 +56,8 @@ __all__ = [
     "check",
     "field",
     "forbid",
-    "list_exact",
+    "list",
     "list_of",
-    "list_unordered",
     "match",
     "number",
     "object",

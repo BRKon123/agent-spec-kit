@@ -1,18 +1,22 @@
-"""Public matcher combinators, :func:`match` (build spec), and :func:`check` (run)."""
+"""Public matcher combinators for building specs, and :func:`check` to validate values.
+
+Build a spec from literals (nested ``dict`` / ``list``), :func:`object`, :func:`list`,
+:func:`string`, :func:`optional`, etc., then run ``check(spec, actual)`` or
+``check(spec, actual=value)``. Use :func:`match` to turn a value into an explicit
+:class:`~agent_spec_kit.match.protocol.BaseMatcher` for embedding.
+"""
 
 from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, overload
+from typing import Any, Literal, overload
 
 from agent_spec_kit.match.lists import (
-    ListExactMatcher,
+    ListMatcher,
     ListOfMatcher,
-    ListUnorderedMatcher,
-    list_exact_matcher,
+    list_matcher,
     list_of_matcher,
-    list_unordered_matcher,
 )
 from agent_spec_kit.match.object import ExtraPolicy, ObjectMatcher, object_matcher
 from agent_spec_kit.match.protocol import BaseMatcher, coerce_any, _is_predicate_callable
@@ -48,10 +52,12 @@ def check(spec: Any, *, actual: Any) -> MatchResult: ...
 
 
 def check(spec: Any, actual_pos: Any = _NO, *, actual: Any = _NO) -> MatchResult:
-    """
-    Run a spec against a value: coerce ``spec`` and return a :class:`MatchResult`.
+    """Validate ``actual`` against ``spec`` and return a :class:`MatchResult`.
 
-    Use ``check(spec, actual)`` or ``check(spec, actual=value)``.
+    ``spec`` is coerced to a matcher (see :func:`match`). On success ``result.ok`` is
+    True; on failure ``result.errors`` lists :class:`MatchError` instances with paths.
+
+    Call as ``check(spec, actual)`` or ``check(spec, actual=value)`` (not both).
     """
     if actual_pos is not _NO and actual is not _NO:
         raise TypeError("check() accepts at most one actual value (positional or actual=)")
@@ -70,14 +76,13 @@ def match(spec: Any, *, message: None = None) -> BaseMatcher: ...
 
 
 def match(spec: Any, *, message: str | None = None) -> BaseMatcher:
-    """
-    Build a matcher (no execution):
+    """Build a matcher without running it (use :func:`check` to validate a value).
 
-    - ``match(fn, message=\"...\")`` — :class:`PredicateMatcher` with a custom failure message.
-    - ``match(spec)`` or ``match(spec, message=None)`` — coerce ``spec`` to a :class:`BaseMatcher`
-      for embedding (literals, dict/list, combinators, bare callables, etc.).
+    - ``match(fn, message="...")`` — wrap a predicate callable; failure uses your message.
+    - ``match(spec)`` — coerce ``spec`` to a :class:`BaseMatcher` (literals, nested
+      ``dict``/``list``, combinators, or a plain callable predicate with a generic message).
 
-    To validate a value, use :func:`check`.
+    Use this when you need to embed a coerced spec inside another combinator.
     """
     if message is not None:
         if not _is_predicate_callable(spec):
@@ -87,6 +92,7 @@ def match(spec: Any, *, message: str | None = None) -> BaseMatcher:
 
 
 def any_value() -> AnyValueMatcher:
+    """Accept any value at this position (the check always succeeds)."""
     return AnyValueMatcher()
 
 
@@ -96,6 +102,7 @@ def string(
     max_len: int | None = None,
     pattern: str | re.Pattern[str] | None = None,
 ) -> StringMatcher:
+    """Require a string ``actual``, optionally with min/max length or a regex pattern."""
     pat = re.compile(pattern) if isinstance(pattern, str) else pattern
     return StringMatcher(min_len=min_len, max_len=max_len, pattern=pat)
 
@@ -106,19 +113,27 @@ def number(
     max: float | int | None = None,
     int_only: bool = False,
 ) -> NumberMatcher:
+    """Require a numeric ``actual``; optionally clamp to a range or require integers."""
     return NumberMatcher(min=min, max=max, int_only=int_only)
 
 
 def regex(pattern: str | re.Pattern[str]) -> RegexMatcher:
+    """Require ``actual`` to be a string that fully matches the regex (``fullmatch``)."""
     p = re.compile(pattern) if isinstance(pattern, str) else pattern
     return RegexMatcher(p)
 
 
 def one_of(*options: Any) -> Any:
+    """Require ``actual`` to satisfy at least one of the given specs (first match wins)."""
     return one_of_matcher(*options)
 
 
 def optional(inner: Any) -> Any:
+    """Allow ``None`` at this position, or otherwise match ``inner``.
+
+    Use in :func:`object` field specs so the key may be missing, present with ``None``,
+    or present with a value that matches ``inner``.
+    """
     return optional_matcher(inner)
 
 
@@ -128,31 +143,58 @@ def object(  # noqa: A001
     extra: ExtraPolicy = "forbid",
     rules: Sequence[Rule] | None = None,
 ) -> ObjectMatcher:
+    """Match dict-like values (``dict``, dataclass, Pydantic model, etc.).
+
+    ``mapping`` maps each key to a spec (literal or matcher). ``extra="forbid"`` rejects
+    keys not listed; ``extra="ignore"`` allows additional keys. ``rules`` adds
+    conditional :func:`require` / :func:`forbid` rules using :func:`field` conditions.
+
+    Chain ``.where(fn, "message")`` on the result for a whole-object check (see
+    :class:`ObjectMatcher`).
+    """
     return object_matcher(mapping, extra=extra, rules=rules)
 
 
-def list_exact(*elements: Any) -> ListExactMatcher:
-    return list_exact_matcher(*elements)
+def list(  # noqa: A001
+    *elements: Any,
+    mode: Literal["ordered", "unordered"] = "ordered",
+    allow_extras: bool = False,
+) -> ListMatcher:
+    """Match a list with a fixed sequence of per-element specs.
 
+    - ``mode="ordered"`` (default): elements must match in order. If ``allow_extras`` is
+      False, lengths must match. If True, each spec must match some item in order, left
+      to right (extra items in the list are skipped).
+    - ``mode="unordered"``: order does not matter; each spec must match a different list
+      item. If ``allow_extras`` is True, the list may be longer than ``elements``.
 
-def list_unordered(*elements: Any) -> ListUnorderedMatcher:
-    return list_unordered_matcher(*elements)
+    For every item the same shape, use :func:`list_of` instead.
+    """
+    return list_matcher(*elements, mode=mode, allow_extras=allow_extras)
 
 
 def list_of(inner: Any) -> ListOfMatcher:
+    """Match a list where every element matches the same ``inner`` spec.
+
+    Use this for homogeneous lists (e.g. a list of objects). For a fixed tuple of
+    different expectations, use :func:`list`.
+    """
     return list_of_matcher(inner)
 
 
 def transform(fn: Callable[[Any], Any], inner: Any) -> TransformMatcher:
+    """Apply ``fn`` to ``actual``, then run ``inner`` on the transformed value.
+
+    Useful when the wire format differs from what you want to validate (e.g. string to int).
+    """
     return transform_matcher(fn, inner)
 
 
 __all__ = [
     "BaseMatcher",
     "ForbidRule",
-    "ListExactMatcher",
+    "ListMatcher",
     "ListOfMatcher",
-    "ListUnorderedMatcher",
     "MatchError",
     "MatchResult",
     "ObjectMatcher",
@@ -165,9 +207,8 @@ __all__ = [
     "any_value",
     "field",
     "forbid",
-    "list_exact",
+    "list",
     "list_of",
-    "list_unordered",
     "check",
     "match",
     "number",

@@ -46,7 +46,7 @@ def coerce_any(spec: Any) -> BaseMatcher:
     - :class:`re.Pattern` → regex matcher (same as ``m.regex``)
     - Predicate-style callables → :class:`PredicateMatcher` with a generic message
     - :class:`collections.abc.Mapping` (e.g. plain ``dict``) → :func:`object_matcher` with coerced values
-    - ``list`` / ``tuple`` → :func:`list_exact_matcher` with coerced elements
+    - ``list`` / ``tuple`` → ordered exact-length :func:`list_matcher` with coerced elements
     """
     if isinstance(spec, BaseMatcher):
         return spec
@@ -57,9 +57,9 @@ def coerce_any(spec: Any) -> BaseMatcher:
         return object_matcher({k: coerce_any(v) for k, v in spec.items()})
 
     if isinstance(spec, (list, tuple)):
-        from agent_spec_kit.match.lists import list_exact_matcher
+        from agent_spec_kit.match.lists import list_matcher
 
-        return list_exact_matcher(*(coerce_any(x) for x in spec))
+        return list_matcher(*(coerce_any(x) for x in spec), mode="ordered", allow_extras=False)
 
     if isinstance(spec, (str, int, float, bool)) or spec is None:
         from agent_spec_kit.match.scalars import EqualityMatcher

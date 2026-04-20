@@ -62,7 +62,11 @@ class FieldCompare(Condition):
 
 
 class FieldRef:
-    """Use ``m.field(\"name\")`` and compare to build a :class:`Condition`."""
+    """Reference another object key for rule conditions (see :func:`require` / :func:`forbid`).
+
+    Compare with ``==``, ``!=``, or ``<`` / ``<=`` / ``>`` / ``>=`` to build a condition,
+    e.g. ``m.field("action") == "escalate"``.
+    """
 
     __slots__ = ("name",)
 
@@ -122,18 +126,25 @@ class _WhenBuilder:
         self._kind = kind
 
     def when(self, condition: Condition) -> RequireRule | ForbidRule:
+        """Attach when the rule applies (built from :func:`field` comparisons)."""
         if self._kind == "require":
             return RequireRule(field_name=self._field_name, when=condition)
         return ForbidRule(field_name=self._field_name, when=condition)
 
 
 def require(field_name: str) -> _WhenBuilder:
+    """Require ``field_name`` to be present when the ``.when(...)`` condition is true.
+
+    Pass the result in ``object(..., rules=[m.require("ticket_id").when(...), ...])``.
+    """
     return _WhenBuilder(field_name, "require")
 
 
 def forbid(field_name: str) -> _WhenBuilder:
+    """Require ``field_name`` to be absent when the ``.when(...)`` condition is true."""
     return _WhenBuilder(field_name, "forbid")
 
 
 def field(name: str) -> FieldRef:
+    """Start a condition on another key of the same object (for use in ``.when(...)``)."""
     return FieldRef(name)
