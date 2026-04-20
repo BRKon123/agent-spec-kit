@@ -26,12 +26,17 @@ __all__ = [
     "print_rich_event_trace",
     "wrap_langchain_agent",
     "wrap_pydantic_ai_agent",
+    "match",
 ]
 
 __version__ = "0.1.0"
 
 
 def __getattr__(name: str) -> Any:
+    if name == "match":
+        import agent_spec_kit.match as match_mod
+
+        return match_mod
     if name == "wrap_langchain_agent":
         from agent_spec_kit.integrations.langchain_adapter import wrap_langchain_agent
 

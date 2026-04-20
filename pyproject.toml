@@ -7,7 +7,9 @@ authors = [
     { name = "Ruthvik Konduru" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pydantic>=2,<3",
+]
 
 [project.optional-dependencies]
 langchain = [
