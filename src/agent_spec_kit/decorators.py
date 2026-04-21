@@ -95,11 +95,6 @@ def scenario(
                 f"{f.__name__}: first parameter of a scenario must be named 's' (got {first_name!r})"
             )
         fixture_param_names = tuple(name for name, _ in params[1:])
-        if agent_fixture not in fixture_param_names:
-            raise TypeError(
-                f"{f.__name__}: agent_fixture {agent_fixture!r} must appear as a parameter "
-                f"(after 's'); got parameters: {('s',) + fixture_param_names!r}"
-            )
 
         definition = ScenarioDef(
             name=f.__name__,

@@ -35,7 +35,7 @@ def _demo_assert_that_fails_on_env_flag(env_flag_true: bool) -> None:
     tags=("counterexample-demo", "demo-pass", "langchain"),
     timeout_s=120.0,
 )
-async def test_counterexample_demo_pass_multiplication_reply_contains_four(s, adapted_agent):
+async def test_counterexample_demo_pass_multiplication_reply_contains_four(s):
     s.user_message("What is 2 times 2? Reply briefly and include the digit 4 in your answer.")
     await s.materialise()
     s.assert_output(m.contains("4"))
@@ -48,7 +48,7 @@ async def test_counterexample_demo_pass_multiplication_reply_contains_four(s, ad
     tags=("counterexample-demo", "expected-failure", "langchain"),
     timeout_s=120.0,
 )
-async def test_counterexample_demo_fail_assert_output_literal(s, adapted_agent):
+async def test_counterexample_demo_fail_assert_output_literal(s):
     s.user_message("Say hello in one short sentence.")
     await s.materialise()
     s.assert_output("___COUNTEREX_DEMO_IMPOSSIBLE_LITERAL___")
@@ -61,7 +61,7 @@ async def test_counterexample_demo_fail_assert_output_literal(s, adapted_agent):
     tags=("counterexample-demo", "expected-failure", "langchain"),
     timeout_s=120.0,
 )
-async def test_counterexample_demo_fail_tool_calls_missing_sql(s, adapted_agent):
+async def test_counterexample_demo_fail_tool_calls_missing_sql(s):
     s.user_message("What is 2 + 3? Reply briefly; you do not need any database.")
     await s.materialise()
     s.assert_tool_calls([m.tool_call("query_sql_database")], ordered=True, allow_extras=False)
@@ -74,7 +74,7 @@ async def test_counterexample_demo_fail_tool_calls_missing_sql(s, adapted_agent)
     tags=("counterexample-demo", "expected-failure", "langchain"),
     timeout_s=120.0,
 )
-async def test_counterexample_demo_fail_tool_calls_wrong_args(s, adapted_agent):
+async def test_counterexample_demo_fail_tool_calls_wrong_args(s):
     s.user_message(
         "Compute 10 + 20 using the add_integers tool (call it with a=10 and b=20). "
         "Then state the numeric result in natural language."
@@ -94,7 +94,7 @@ async def test_counterexample_demo_fail_tool_calls_wrong_args(s, adapted_agent):
     tags=("counterexample-demo", "expected-failure", "langchain"),
     timeout_s=120.0,
 )
-async def test_counterexample_demo_fail_assert_that_env(s, adapted_agent, env_flag_true):
+async def test_counterexample_demo_fail_assert_that_env(s, env_flag_true):
     (
         s.user_message("Say hi in one short sentence.")
         .assert_that(_demo_assert_that_fails_on_env_flag)
@@ -108,7 +108,7 @@ async def test_counterexample_demo_fail_assert_that_env(s, adapted_agent, env_fl
     tags=("counterexample-demo", "expected-failure", "langchain"),
     timeout_s=120.0,
 )
-async def test_counterexample_demo_fail_body_fixture_substring(s, adapted_agent, wrong_expected_substring):
+async def test_counterexample_demo_fail_body_fixture_substring(s, wrong_expected_substring):
     s.user_message("Say hello in one short sentence.")
     await s.materialise()
     out = str(s.last_turn.output)
@@ -123,7 +123,7 @@ async def test_counterexample_demo_fail_body_fixture_substring(s, adapted_agent,
     tags=("counterexample-demo", "expected-failure", "langchain"),
     timeout_s=120.0,
 )
-async def test_counterexample_demo_fail_assert_output_regex(s, adapted_agent):
+async def test_counterexample_demo_fail_assert_output_regex(s):
     s.user_message("Say hello in one short sentence.")
     await s.materialise()
     s.assert_output(m.string(pattern=r"^ZZZ+"))
@@ -136,7 +136,7 @@ async def test_counterexample_demo_fail_assert_output_regex(s, adapted_agent):
     tags=("counterexample-demo", "expected-failure", "langchain"),
     timeout_s=120.0,
 )
-async def test_counterexample_demo_fail_tool_calls_ordered_pair_when_only_add(s, adapted_agent):
+async def test_counterexample_demo_fail_tool_calls_ordered_pair_when_only_add(s):
     s.user_message(
         "Use add_integers only: what is 7 + 8? Call add_integers with a=7 and b=8, then answer briefly."
     )

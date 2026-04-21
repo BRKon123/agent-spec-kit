@@ -41,7 +41,7 @@ from __future__ import annotations
 import agent_spec_kit as ek
 
 @ek.scenario(agent_fixture="agent", tags=("smoke",))
-async def test_smoke(s, agent):
+async def test_smoke(s):
     s.user_message("hi")
     await s.materialise()
 """,
@@ -82,7 +82,7 @@ from __future__ import annotations
 import agent_spec_kit as ek
 
 @ek.scenario(agent_fixture="agent", repeats=1, tags=())
-async def test_run(s, agent):
+async def test_run(s):
     s.user_message("hi")
     await s.materialise()
 """,
@@ -122,11 +122,11 @@ from __future__ import annotations
 import agent_spec_kit as ek
 
 @ek.scenario(agent_fixture="agent", tags=("onlyme",))
-async def tagged(s, agent):
+async def tagged(s):
     pass
 
 @ek.scenario(agent_fixture="agent", tags=("other",))
-async def other(s, agent):
+async def other(s):
     pass
 """,
         encoding="utf-8",
@@ -174,11 +174,11 @@ from __future__ import annotations
 import agent_spec_kit as ek
 
 @ek.scenario(agent_fixture="agent", repeats=1, tags=())
-async def test_one(s, agent):
+async def test_one(s):
     pass
 
 @ek.scenario(agent_fixture="agent", repeats=1, tags=())
-async def test_two(s, agent):
+async def test_two(s):
     pass
 """,
         encoding="utf-8",

@@ -18,11 +18,11 @@ def test_scenario_rejects_non_s_first_param() -> None:
             pass
 
 
-def test_scenario_requires_agent_fixture_in_signature() -> None:
+def test_scenario_agent_fixture_need_not_be_in_signature() -> None:
     reset_registries()
 
-    with pytest.raises(TypeError, match="agent_fixture.*must appear"):
+    @scenario(agent_fixture="agent", tags=())
+    async def t(s):  # type: ignore[no-untyped-def]
+        pass
 
-        @scenario(agent_fixture="agent")
-        async def t(s, repo):  # type: ignore[no-untyped-def]
-            pass
+    assert t.__name__ == "t"

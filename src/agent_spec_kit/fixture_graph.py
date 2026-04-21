@@ -24,6 +24,7 @@ TeardownFn = Callable[[], Coroutine[Any, Any, None]]
 
 def _collect_needed_fixture_names(scenario: ScenarioDef) -> set[str]:
     needed: set[str] = set(scenario.fixture_param_names)
+    needed.add(scenario.agent_fixture)
     queue: deque[str] = deque(needed)
     while queue:
         name = queue.popleft()

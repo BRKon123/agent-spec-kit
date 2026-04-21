@@ -24,7 +24,7 @@ def test_fixture_cycle_error() -> None:
         return 2
 
     @scenario(agent_fixture="a", tags=())
-    async def t(s, a):  # type: ignore[no-untyped-def]
+    async def t(s):  # type: ignore[no-untyped-def]
         pass
 
     sd = next(s for s in iter_scenarios() if s.name == "t")
@@ -63,7 +63,7 @@ def test_teardown_reverse_order() -> None:
         return A()
 
     @scenario(agent_fixture="agent", tags=())
-    async def t(s, agent, inner, outer):  # type: ignore[no-untyped-def]
+    async def t(s, inner, outer):  # type: ignore[no-untyped-def]
         assert inner == 1 and outer == 2
 
     sd = next(s for s in iter_scenarios() if s.name == "t")
@@ -86,7 +86,7 @@ def test_auto_materialise_pending_steps() -> None:
         return A()
 
     @scenario(agent_fixture="agent", tags=())
-    async def auto_mat(s, agent):  # type: ignore[no-untyped-def]
+    async def auto_mat(s):  # type: ignore[no-untyped-def]
         s.user_message("hi")
 
     sd = next(s for s in iter_scenarios() if s.name == "auto_mat")

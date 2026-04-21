@@ -55,7 +55,7 @@ def _after_second_turn(store) -> None:
     tags=("langchain", "example", "sql-json", "smoke"),
     timeout_s=180.0,
 )
-async def test_sql_json_multi_turn_tool_and_env_checks(s, adapted_agent, store):
+async def test_sql_json_multi_turn_tool_and_env_checks(s, store):
     """Two user turns; tool expectations (unordered) and direct SQLite/JSON assertions."""
     (
         s.user_message(

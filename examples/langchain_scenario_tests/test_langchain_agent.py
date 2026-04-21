@@ -19,7 +19,7 @@ import agent_spec_kit.match as m
     tags=("langchain", "example", "smoke"),
     timeout_s=120.0,
 )
-async def test_arithmetic_reply_contains_five(s, adapted_agent):
+async def test_arithmetic_reply_contains_five(s):
     s.user_message(
         "What is 2 + 3? If you use tools, use add_integers. "
         "Reply in natural language and include the digit 5 for the sum."
@@ -35,7 +35,7 @@ async def test_arithmetic_reply_contains_five(s, adapted_agent):
     tags=("langchain", "example", "expected-failure"),
     timeout_s=120.0,
 )
-async def test_expects_nonexistent_sql_tool(s, adapted_agent):
+async def test_expects_nonexistent_sql_tool(s):
     """Fails: no ``query_sql_database`` tool exists on this agent."""
     s.user_message("What is 2 + 3?")
     await s.materialise()
@@ -53,7 +53,7 @@ async def test_expects_nonexistent_sql_tool(s, adapted_agent):
     tags=("langchain", "example", "expected-failure"),
     timeout_s=120.0,
 )
-async def test_expects_impossible_literal_output(s, adapted_agent):
+async def test_expects_impossible_literal_output(s):
     """Fails: model will not emit this exact token."""
     s.user_message("Say hello in one short sentence.")
     await s.materialise()
