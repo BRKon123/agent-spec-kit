@@ -11,6 +11,9 @@ dependencies = [
     "pydantic>=2,<3",
 ]
 
+[project.scripts]
+agent-spec-kit = "agent_spec_kit.cli:main"
+
 [project.optional-dependencies]
 langchain = [
     "langchain>=1.0.0",

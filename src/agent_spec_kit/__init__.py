@@ -12,8 +12,9 @@ from agent_spec_kit.events import (
     new_event_id,
     print_rich_event_trace,
 )
+from agent_spec_kit.decorators import fixture, scenario
 from agent_spec_kit.run import AdaptedAgent, TurnResult
-from agent_spec_kit.scenario import Scenario, create_scenario
+from agent_spec_kit.scenario_core import Scenario, create_scenario
 
 __all__ = [
     "AdaptedAgent",
@@ -24,6 +25,8 @@ __all__ = [
     "TurnResult",
     "Scenario",
     "create_scenario",
+    "fixture",
+    "scenario",
     "__version__",
     "new_event_id",
     "print_rich_event_trace",

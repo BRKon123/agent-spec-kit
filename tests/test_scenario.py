@@ -61,6 +61,16 @@ def test_create_scenario_rejects_duplicate_fixture_keys() -> None:
         create_scenario(agent, fixture_values={"x": 1}, x=2)
 
 
+def test_has_pending_steps() -> None:
+    agent = ScriptedAgent([TurnResult(output="x", events=())])
+    s = create_scenario(agent)
+    assert not s.has_pending_steps
+    s.user_message("a")
+    assert s.has_pending_steps
+    _run(s.materialise())
+    assert not s.has_pending_steps
+
+
 def test_materialise_suffix_only() -> None:
     agent = ScriptedAgent(
         [
