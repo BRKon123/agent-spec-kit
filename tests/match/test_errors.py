@@ -41,7 +41,7 @@ def test_error_list_ordered_exact_length_message() -> None:
     assert not r.ok
     e = r.errors[0]
     assert e.path == ()
-    assert e.code == "list"
+    assert e.code == "list_length_mismatch"
     em = e.message.lower()
     assert "length" in em or "wrong" in em
     assert "order" in em
@@ -138,6 +138,6 @@ def test_error_list_unordered_exact_no_assignment_path_is_list_root() -> None:
     assert not r.ok
     e = r.errors[0]
     assert e.path == ()
-    assert e.code == "list"
+    assert e.code == "unordered_mismatch"
     em = e.message.lower()
     assert "order" in em and ("ignored" in em or "different" in em or "position" in em)

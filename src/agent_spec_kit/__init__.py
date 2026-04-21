@@ -13,6 +13,7 @@ from agent_spec_kit.events import (
     print_rich_event_trace,
 )
 from agent_spec_kit.decorators import fixture, scenario
+from agent_spec_kit.failures import Counterexample, FailureRecord, ScenarioAssertionFailed
 from agent_spec_kit.run import AdaptedAgent, TurnResult
 from agent_spec_kit.scenario_core import Scenario, create_scenario
 
@@ -25,6 +26,9 @@ __all__ = [
     "TurnResult",
     "Scenario",
     "create_scenario",
+    "Counterexample",
+    "FailureRecord",
+    "ScenarioAssertionFailed",
     "fixture",
     "scenario",
     "__version__",

@@ -96,7 +96,7 @@ async def test_run(s, agent):
         env=_env(),
     )
     assert r.returncode == 0, r.stderr + r.stdout
-    assert "PASS test_run" in r.stdout
+    assert "test_run" in r.stdout
     assert "1 passed" in r.stdout
 
 
@@ -191,6 +191,6 @@ async def test_two(s, agent):
         env=_env(),
     )
     assert r.returncode == 0, r.stderr + r.stdout
-    assert "PASS test_one" in r.stdout
-    assert "PASS test_two" in r.stdout
+    assert "test_one" in r.stdout
+    assert "test_two" in r.stdout
     assert "2 passed" in r.stdout

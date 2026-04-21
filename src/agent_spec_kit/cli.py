@@ -8,6 +8,13 @@ import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
+from agent_spec_kit.cli_reporting import (
+    emit_error,
+    emit_failure_detail,
+    emit_list_table,
+    emit_note,
+    emit_summary_table,
+)
 from agent_spec_kit.discovery import collect_module_paths, import_paths
 from agent_spec_kit.registries import ScenarioDef, iter_scenarios, reset_registries
 from agent_spec_kit.runner import JobResult, WorkerJob, run_scenario_job, worker_run_job
@@ -33,20 +40,11 @@ def _scenario_matches_tags(
     return True
 
 
-def _format_job_line(r: JobResult) -> str:
-    bracket = f"[{r.repeat_index}/{r.repeat_total}]"
-    if r.ok:
-        return f"PASS {r.scenario_name} {bracket}"
-    tail = f" - {r.detail}" if r.detail else ""
-    return f"FAIL {r.scenario_name} {bracket}{tail}"
-
-
 async def _run_serial(jobs: list[tuple[ScenarioDef, int, int]], *, fail_fast: bool) -> list[JobResult]:
     out: list[JobResult] = []
     for sd, idx, total in jobs:
         r = await run_scenario_job(sd, repeat_index=idx, repeat_total=total)
         out.append(r)
-        print(_format_job_line(r))
         if fail_fast and not r.ok:
             break
     return out
@@ -83,13 +81,13 @@ def main(argv: list[str] | None = None) -> int:
     tags_all = _parse_csv(args.tags_all)
     root = args.path
     if not root.exists():
-        print(f"error: path does not exist: {root}", file=sys.stderr)
+        emit_error(f"path does not exist: {root}")
         return 2
 
     reset_registries()
     paths = collect_module_paths(root)
     if not paths:
-        print("no test_*.py or fixtures.py found", file=sys.stderr)
+        emit_error("no test_*.py or fixtures.py found")
         return 1 if not args.list else 0
 
     import_paths(paths)
@@ -97,10 +95,7 @@ def main(argv: list[str] | None = None) -> int:
     scenarios = [s for s in iter_scenarios() if _scenario_matches_tags(s, tags_any=tags_any, tags_all=tags_all)]
 
     if args.list:
-        for s in scenarios:
-            tags_s = ",".join(s.tags) if s.tags else ""
-            extra = f"  [{tags_s}]" if tags_s else ""
-            print(f"{s.module}:{s.name}{extra}")
+        emit_list_table(scenarios)
         return 0
 
     jobs = _build_jobs(scenarios)
@@ -112,8 +107,7 @@ def main(argv: list[str] | None = None) -> int:
     results: list[JobResult] = []
 
     if args.fail_fast and args.n > 1:
-        print("note: --fail-fast runs serially (-n ignored)", file=sys.stderr)
-        args.n = 1
+        emit_note("--fail-fast runs serially (-n ignored)")
 
     if args.n <= 1:
         results = asyncio.run(_run_serial(jobs, fail_fast=args.fail_fast))
@@ -134,15 +128,15 @@ def main(argv: list[str] | None = None) -> int:
             for fut in as_completed(futures):
                 r = fut.result()
                 results.append(r)
-                print(_format_job_line(r))
                 if args.fail_fast and not r.ok:
                     ex.shutdown(wait=False, cancel_futures=True)
                     break
-        # reorder results for stable summary optional - skip
 
-    passed = sum(1 for r in results if r.ok)
+    for r in results:
+        if not r.ok:
+            emit_failure_detail(r)
+    emit_summary_table(results)
     failed = sum(1 for r in results if not r.ok)
-    print(f"{passed} passed, {failed} failed")
     return 1 if failed else 0
 
 

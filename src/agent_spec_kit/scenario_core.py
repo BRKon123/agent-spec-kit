@@ -8,6 +8,12 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
+from agent_spec_kit.failures import (
+    FailureRecord,
+    ScenarioAssertionFailed,
+    counterexample_from_failure,
+    raise_scenario_match_failure,
+)
 from agent_spec_kit.match.api import check as match_check
 from agent_spec_kit.match.lists import list_matcher
 from agent_spec_kit.match.types import MatchResult
@@ -120,17 +126,13 @@ def _format_match_failure(result: MatchResult, label: str) -> str:
     return "\n".join(parts)
 
 
-def _raise_if_not_ok(result: MatchResult, label: str) -> None:
-    if not result.ok:
-        raise AssertionError(_format_match_failure(result, label))
-
-
 @dataclass
 class Scenario:
     """Queued scenario steps; run with :meth:`materialise`."""
 
     adapted_agent: AdaptedAgent
     fixture_values: dict[str, Any] = field(default_factory=dict)
+    scenario_name: str = ""
     _steps: list[_Step] = field(default_factory=list)
     _executed_until: int = 0
     _turn_results: list[TurnResult] = field(default_factory=list)
@@ -203,6 +205,28 @@ class Scenario:
         list_spec = _coerce_tool_calls_list_spec(spec, ordered=ordered, allow_extras=allow_extras)
         return match_check(list_spec, actual)
 
+    def raise_unless_ok(
+        self,
+        result: MatchResult,
+        *,
+        actual: Any,
+        label: str = "check",
+    ) -> None:
+        """Raise :class:`ScenarioAssertionFailed` if ``result`` is not ok (post-``materialise`` checks)."""
+        if result.ok:
+            return
+        turn_idx = len(self._turn_results) - 1 if self._turn_results else None
+        raise_scenario_match_failure(
+            scenario_name=self.scenario_name or "(scenario)",
+            step_index=self._executed_until,
+            step_kind="scenario_body",
+            turn_index=turn_idx,
+            result=result,
+            matcher_spec=None,
+            actual=actual,
+            headline_prefix=label,
+        )
+
     def _require_post_checks_ready(self) -> None:
         if self._executed_until != len(self._steps):
             raise RuntimeError(
@@ -241,7 +265,14 @@ class Scenario:
         if isinstance(step, _OutputAssertStep):
             tr = self._turn_for_assert_output(step.turn)
             r = match_check(step.matcher, tr.output)
-            _raise_if_not_ok(r, "assert_output")
+            _raise_match_step(
+                self,
+                step_kind="assert_output",
+                label="assert_output",
+                result=r,
+                matcher_spec=step.matcher,
+                actual=tr.output,
+            )
             return
         if isinstance(step, _ToolCallsAssertStep):
             tr = self._turn_for_assert_output(step.turn)
@@ -252,7 +283,14 @@ class Scenario:
                 allow_extras=step.allow_extras,
             )
             r = match_check(list_spec, actual)
-            _raise_if_not_ok(r, "assert_tool_calls")
+            _raise_match_step(
+                self,
+                step_kind="assert_tool_calls",
+                label="assert_tool_calls",
+                result=r,
+                matcher_spec=step.spec,
+                actual=actual,
+            )
             return
         raise TypeError(f"unknown step type: {type(step)!r}")
 
@@ -269,12 +307,71 @@ class Scenario:
         kwargs = _resolve_fixture_kwargs(fn, self.fixture_values)
         try:
             result = await _invoke_maybe_async(fn, **kwargs)
-        except AssertionError:
+        except ScenarioAssertionFailed:
             raise
+        except AssertionError as e:
+            turn_idx = len(self._turn_results) - 1 if self._turn_results else None
+            record = FailureRecord(
+                scenario_name=self.scenario_name or "(scenario)",
+                step_index=self._executed_until,
+                step_kind="assert_that",
+                turn_index=turn_idx,
+                actual=(),
+                matcher_spec=None,
+                matcher_errors=(),
+                error=e,
+            )
+            raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from e
         except Exception as e:
-            raise AssertionError(f"assert_that callable raised: {e}") from e
+            turn_idx = len(self._turn_results) - 1 if self._turn_results else None
+            record = FailureRecord(
+                scenario_name=self.scenario_name or "(scenario)",
+                step_index=self._executed_until,
+                step_kind="assert_that",
+                turn_index=turn_idx,
+                actual=(),
+                matcher_spec=None,
+                matcher_errors=(),
+                error=AssertionError(f"assert_that callable raised: {e}"),
+            )
+            raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from e
         if result is False:
-            raise AssertionError("assert_that callable returned False")
+            turn_idx = len(self._turn_results) - 1 if self._turn_results else None
+            record = FailureRecord(
+                scenario_name=self.scenario_name or "(scenario)",
+                step_index=self._executed_until,
+                step_kind="assert_that",
+                turn_index=turn_idx,
+                actual=False,
+                matcher_spec=None,
+                matcher_errors=(),
+                error=AssertionError("assert_that callable returned False"),
+            )
+            raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from None
+
+
+def _raise_match_step(
+    scenario: Scenario,
+    *,
+    step_kind: str,
+    label: str,
+    result: MatchResult,
+    matcher_spec: Any,
+    actual: Any,
+) -> None:
+    if result.ok:
+        return
+    turn_idx = len(scenario._turn_results) - 1 if scenario._turn_results else None
+    raise_scenario_match_failure(
+        scenario_name=scenario.scenario_name or "(scenario)",
+        step_index=scenario._executed_until,
+        step_kind=step_kind,
+        turn_index=turn_idx,
+        result=result,
+        matcher_spec=matcher_spec,
+        actual=actual,
+        headline_prefix=label,
+    )
 
 
 def _coerce_tool_calls_list_spec(
@@ -292,6 +389,7 @@ def create_scenario(
     adapted_agent: AdaptedAgent,
     *,
     fixture_values: dict[str, Any] | None = None,
+    scenario_name: str = "",
     **fixtures: Any,
 ) -> Scenario:
     """Build a :class:`Scenario` with optional ``fixture_values`` merged with keyword fixtures."""
@@ -300,7 +398,11 @@ def create_scenario(
     if overlap:
         raise TypeError(f"fixture keys passed both in fixture_values= and as keywords: {sorted(overlap)}")
     fv.update(fixtures)
-    return Scenario(adapted_agent=adapted_agent, fixture_values=fv)
+    return Scenario(
+        adapted_agent=adapted_agent,
+        fixture_values=fv,
+        scenario_name=scenario_name,
+    )
 
 
 __all__ = ["Scenario", "create_scenario"]

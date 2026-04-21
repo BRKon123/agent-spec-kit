@@ -25,6 +25,8 @@ class MatchError:
     message: str
     expected: str
     actual: str
+    #: Optional JSON object with machine-readable witness (list length, slice indices, etc.).
+    witness_json: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

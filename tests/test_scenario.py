@@ -71,6 +71,18 @@ def test_has_pending_steps() -> None:
     assert not s.has_pending_steps
 
 
+def test_raise_unless_ok_raises_scenario_assertion_failed() -> None:
+    from agent_spec_kit.failures import ScenarioAssertionFailed
+
+    agent = ScriptedAgent([TurnResult(output="x", events=())])
+    s = create_scenario(agent, scenario_name="sn")
+    s.user_message("hi")
+    _run(s.materialise())
+    r = s.check_output("nope")
+    with pytest.raises(ScenarioAssertionFailed):
+        s.raise_unless_ok(r, actual=s.last_turn.output, label="post_check")
+
+
 def test_materialise_suffix_only() -> None:
     agent = ScriptedAgent(
         [

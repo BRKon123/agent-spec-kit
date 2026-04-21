@@ -8,6 +8,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from agent_spec_kit.discovery import import_paths
+from agent_spec_kit.failures import (
+    Counterexample,
+    FailureRecord,
+    ScenarioAssertionFailed,
+    counterexample_from_failure,
+)
 from agent_spec_kit.fixture_graph import TeardownFn, resolve_fixtures
 from agent_spec_kit.registries import ScenarioDef, find_scenario, reset_registries
 from agent_spec_kit.scenario_core import _invoke_maybe_async, create_scenario
@@ -21,6 +27,7 @@ class JobResult:
     repeat_total: int
     detail: str | None
     duration_s: float
+    counterexample: Counterexample | None = None
 
 
 def _format_error(exc: BaseException) -> str:
@@ -43,10 +50,16 @@ async def run_scenario_job(
     teardowns: list[TeardownFn] = []
     ok = False
     detail: str | None = None
+    counterexample: Counterexample | None = None
+    s = None
     try:
         fixture_values, teardowns = await resolve_fixtures(scenario_def)
         agent = fixture_values[scenario_def.agent_fixture]
-        s = create_scenario(agent, fixture_values=fixture_values)
+        s = create_scenario(
+            agent,
+            fixture_values=fixture_values,
+            scenario_name=scenario_def.name,
+        )
         kwargs: dict[str, object] = {"s": s}
         for name in scenario_def.fixture_param_names:
             kwargs[name] = fixture_values[name]
@@ -61,6 +74,24 @@ async def run_scenario_job(
         else:
             await body()
         ok = True
+    except ScenarioAssertionFailed as e:
+        counterexample = e.counterexample
+        detail = counterexample.headline
+    except AssertionError as e:
+        turn_idx = len(s._turn_results) - 1 if s is not None and s._turn_results else None
+        step_ix = s._executed_until if s is not None else 0
+        record = FailureRecord(
+            scenario_name=scenario_def.name,
+            step_index=step_ix,
+            step_kind="scenario_body",
+            turn_index=turn_idx,
+            actual=None,
+            matcher_spec=None,
+            matcher_errors=(),
+            error=e,
+        )
+        counterexample = counterexample_from_failure(record)
+        detail = counterexample.headline
     except BaseException as e:
         detail = _format_error(e)
     finally:
@@ -78,6 +109,7 @@ async def run_scenario_job(
         repeat_total=repeat_total,
         detail=detail,
         duration_s=duration_s,
+        counterexample=counterexample,
     )
 
 

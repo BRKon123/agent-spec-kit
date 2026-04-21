@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import json
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -32,13 +33,22 @@ def _ordered_exact(
         return MatchResult.failure(
             MatchError(
                 path=path,
-                code="list",
+                code="list_length_mismatch",
                 message=(
                     "wrong list length: expected exactly "
                     f"{len(elements)} value(s) in this order, found {len(actual)}"
                 ),
                 expected=str(len(elements)),
                 actual=str(len(actual)),
+                witness_json=json.dumps(
+                    {
+                        "mode": "ordered_exact",
+                        "expected_len": len(elements),
+                        "actual_len": len(actual),
+                        "actual_witness": actual[: min(8, len(actual))],
+                    },
+                    default=str,
+                ),
             )
         )
     errors: list[MatchError] = []
@@ -66,13 +76,17 @@ def _ordered_subsequence(
             return MatchResult.failure(
                 MatchError(
                     path=path,
-                    code="list",
+                    code="missing_element",
                     message=(
                         "could not find each expected value in order from left to right "
                         "(extra values in between are allowed)"
                     ),
                     expected="each value in order, left to right",
                     actual=_short_repr(actual),
+                    witness_json=json.dumps(
+                        {"mode": "ordered_subsequence", "actual_witness": actual[:12]},
+                        default=str,
+                    ),
                 )
             )
     return MatchResult.success()
@@ -92,13 +106,17 @@ def _multiset_by_permutation(
     return MatchResult.failure(
         MatchError(
             path=path,
-            code="list",
+            code="unordered_mismatch",
             message=(
                 "the list does not match when order is ignored: each expected value "
                 "must correspond to a different position in the list"
             ),
             expected="each value matched to a different position (order ignored)",
             actual=_short_repr(actual),
+            witness_json=json.dumps(
+                {"mode": "unordered_permutation", "actual_witness": actual[:12]},
+                default=str,
+            ),
         )
     )
 
@@ -140,7 +158,7 @@ def _unordered_injective_dfs(
     return MatchResult.failure(
         MatchError(
             path=path,
-            code="list",
+            code="unordered_mismatch",
             message=msg,
             expected=(
                 "each value to a different item (order ignored, extras allowed)"
@@ -148,6 +166,14 @@ def _unordered_injective_dfs(
                 else "each value to a different position (order ignored)"
             ),
             actual=_short_repr(actual),
+            witness_json=json.dumps(
+                {
+                    "mode": "unordered_injective",
+                    "allow_extras": allow_extras,
+                    "actual_witness": actual[:12],
+                },
+                default=str,
+            ),
         )
     )
 
@@ -188,13 +214,22 @@ class ListMatcher(BaseMatcher):
                 return MatchResult.failure(
                     MatchError(
                         path=path,
-                        code="list",
+                        code="list_length_mismatch",
                         message=(
                             "wrong list length: expected exactly "
                             f"{n} value(s) when order is ignored, found {m}"
                         ),
                         expected=str(n),
                         actual=str(m),
+                        witness_json=json.dumps(
+                            {
+                                "mode": "unordered_exact",
+                                "expected_len": n,
+                                "actual_len": m,
+                                "actual_witness": actual[: min(8, m)],
+                            },
+                            default=str,
+                        ),
                     )
                 )
             if n == 0:
@@ -207,13 +242,17 @@ class ListMatcher(BaseMatcher):
             return MatchResult.failure(
                 MatchError(
                     path=path,
-                    code="list",
+                    code="list_too_short",
                     message=(
                         "list is too short: need at least "
                         f"{n} item(s) to match all expected values (order does not matter)"
                     ),
                     expected=f">= {n}",
                     actual=str(m),
+                    witness_json=json.dumps(
+                        {"expected_min": n, "actual_len": m, "actual_witness": actual},
+                        default=str,
+                    ),
                 )
             )
         if n == 0:

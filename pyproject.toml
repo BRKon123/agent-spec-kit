@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2,<3",
+    "rich>=13.7.0",
 ]
 
 [project.scripts]
@@ -33,7 +34,6 @@ dev = [
     "pydantic-ai>=1.0.0",
     "pytest>=8",
     "pytest-xdist>=3.5.0",
-    "rich>=13.7.0",
 ]
 
 [tool.pytest.ini_options]

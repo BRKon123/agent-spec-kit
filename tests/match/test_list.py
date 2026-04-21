@@ -33,7 +33,7 @@ def test_ordered_with_extras_subsequence() -> None:
 def test_ordered_with_extras_subsequence_impossible() -> None:
     r = m.check(m.list([1, 2, 3], allow_extras=True), [3, 1])
     assert not r.ok
-    assert r.errors[0].code == "list"
+    assert r.errors[0].code == "missing_element"
     msg = r.errors[0].message.lower()
     assert "order" in msg and ("left to right" in msg or "expected value" in msg)
 
@@ -47,14 +47,14 @@ def test_unordered_with_extras_injective() -> None:
 def test_unordered_with_extras_too_few_actual() -> None:
     r = m.check(m.list([1, 2, 3], mode="unordered", allow_extras=True), [1, 2])
     assert not r.ok
-    assert r.errors[0].code == "list"
+    assert r.errors[0].code == "list_too_short"
     assert "at least" in r.errors[0].message.lower()
 
 
 def test_unordered_contains_no_assignment_failure_message() -> None:
     r = m.check(m.list([1, 1, 2], mode="unordered", allow_extras=True), [2, 2, 2, 2])
     assert not r.ok
-    assert r.errors[0].code == "list"
+    assert r.errors[0].code == "unordered_mismatch"
     msg = r.errors[0].message.lower()
     assert "different" in msg and ("order" in msg or "ignored" in msg)
 
@@ -101,7 +101,7 @@ def test_coerce_literal_list_still_ordered_exact() -> None:
 def test_unordered_exact_length_mismatch_message() -> None:
     r = m.check(m.list([1], mode="unordered", allow_extras=False), [1, 1])
     assert not r.ok
-    assert r.errors[0].code == "list"
+    assert r.errors[0].code == "list_length_mismatch"
     msg = r.errors[0].message.lower()
     assert "length" in msg and "order" in msg
 
