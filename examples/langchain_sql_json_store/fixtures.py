@@ -233,3 +233,9 @@ async def adapted_agent(store: SqlJsonStore):
         stream_mode="updates",
         version="v2",
     )
+
+
+@ek.fixture
+def second_turn_env_gate_ok() -> bool:
+    """Always false — paired with ``assert_that`` after turn 2 to simulate a failing env gate."""
+    return False

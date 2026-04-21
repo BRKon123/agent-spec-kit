@@ -150,3 +150,38 @@ async def test_counterexample_demo_fail_tool_calls_ordered_pair_when_only_add(s)
         allow_extras=False,
     )
     await s.materialise()
+
+
+"""
+# dual control
+@ek.scenario(
+    user_fixture="user_fixture", # user fixture defines agent with tools (no tools reqiured tho if user cannot use tools)
+    agent_fixture="adapted_agent", # agent fixture defines agent with tools
+    repeats=1,
+    tags=("counterexample-demo", "expected-failure", "langchain"),
+    timeout_s=120.0,
+)
+async def test_conversation(s, store):
+    s.action(function_takes_store_and_creates_initial_env) # the initial actions
+    s.simulate_conversation(instruction=""
+                "You are John Smith with phone number 555-123-2002. "
+                "Your phone has shown No Service for the past few hours. "
+                "You will consider the issue fixed when your status bar shows signal."
+            "", user_first=True, max_turns=10) # the conversation starts with user message that has been given
+    s.assert_that(function_checks_store) # the final env check
+
+
+
+# no user
+@ek.scenario(
+    agent_fixture="adapted_agent", # no user defined
+    repeats=1,
+    tags=("counterexample-demo", "expected-failure", "langchain"),
+    timeout_s=120.0,
+)
+async def test_single_control(s, store):
+    s.action(function_takes_store_and_creates_initial_env) # the initial actions
+    s.simulate_conversation(instruction="" this is the ticket: ... classify it
+            "", user_first=False, max_turns=10) # since scenario has no user, it will just simulate the agent across the turns
+    s.assert_that(function_checks_store) # the final env check
+"""
