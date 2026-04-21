@@ -5,8 +5,35 @@ from __future__ import annotations
 import io
 
 from agent_spec_kit.cli_reporting import emit_failure_detail, emit_job_compact, emit_summary_table
+from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
 from agent_spec_kit.failures import Counterexample
 from agent_spec_kit.runner import JobResult
+
+
+def test_emit_summary_table_failure_column_short_check_kind() -> None:
+    """Failure column shows check_kind, not the long detail headline."""
+    buf = io.StringIO()
+    bad = JobResult(
+        ok=False,
+        scenario_name="t_fail",
+        repeat_index=1,
+        repeat_total=1,
+        detail="assert_output: t_fail: value does not equal expected",
+        duration_s=0.01,
+        counterexample=Counterexample(
+            headline="long",
+            location="step 1, turn 0",
+            path=None,
+            expected_summary="e",
+            actual_min="a",
+            notes=(),
+            check_kind="assert_output",
+        ),
+    )
+    emit_summary_table([bad], file=buf)
+    text = buf.getvalue()
+    assert "assert_output" in text
+    assert "value does not equal" not in text
 
 
 def test_emit_summary_table_contains_rows() -> None:
@@ -125,9 +152,45 @@ def test_emit_failure_detail_shows_non_root_path() -> None:
         ),
     )
     emit_failure_detail(r, file=buf)
-    assert "Path: $[0].name" in buf.getvalue()
-    assert "Actual:" in buf.getvalue()
-    assert "witness" not in buf.getvalue().lower()
+    out = buf.getvalue()
+    assert "Path: $[0].name" in out
+    assert "Actual:" in out
+    assert "Where:" in out
+    assert "witness" not in out.lower()
+
+
+def test_emit_failure_detail_includes_check_kind_and_event_trace() -> None:
+    root = AgentTurnEvent(user_input="hi", agent_output="out", turn_index=0)
+    root.children.append(ToolCallEvent(tool_name="demo_tool", args={"k": 1}, result=2))
+    buf = io.StringIO()
+    emit_failure_detail(
+        JobResult(
+            ok=False,
+            scenario_name="t_trace",
+            repeat_index=1,
+            repeat_total=1,
+            detail="d",
+            duration_s=0.1,
+            counterexample=Counterexample(
+                headline="h",
+                location="step 1, turn 0",
+                path=None,
+                expected_summary="exp",
+                actual_min="act",
+                notes=(),
+                check_kind="assert_tool_calls",
+                location_detail="Queued step 1 — assert_tool_calls — after user message #1",
+                events=(root,),
+            ),
+        ),
+        file=buf,
+    )
+    text = buf.getvalue()
+    assert "Check: assert_tool_calls" in text
+    assert "Where:" in text
+    assert "Event trace" in text
+    assert "demo_tool" in text
+    assert "Hint:" not in text
 
 
 def test_emit_job_compact_still_works() -> None:

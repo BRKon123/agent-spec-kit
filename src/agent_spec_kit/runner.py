@@ -6,6 +6,7 @@ import asyncio
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from agent_spec_kit.discovery import import_paths
 from agent_spec_kit.failures import (
@@ -80,6 +81,9 @@ async def run_scenario_job(
     except AssertionError as e:
         turn_idx = len(s._turn_results) - 1 if s is not None and s._turn_results else None
         step_ix = s._executed_until if s is not None else 0
+        ev: tuple[Any, ...] | None = None
+        if s is not None and s._turn_results and s._turn_results[-1].events:
+            ev = tuple(s._turn_results[-1].events)
         record = FailureRecord(
             scenario_name=scenario_def.name,
             step_index=step_ix,
@@ -89,6 +93,7 @@ async def run_scenario_job(
             matcher_spec=None,
             matcher_errors=(),
             error=e,
+            events=ev,
         )
         counterexample = counterexample_from_failure(record)
         detail = counterexample.headline

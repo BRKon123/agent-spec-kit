@@ -225,6 +225,7 @@ class Scenario:
             matcher_spec=None,
             actual=actual,
             headline_prefix=label,
+            events=_last_turn_events_tuple(self),
         )
 
     def _require_post_checks_ready(self) -> None:
@@ -320,6 +321,7 @@ class Scenario:
                 matcher_spec=None,
                 matcher_errors=(),
                 error=e,
+                events=_last_turn_events_tuple(self),
             )
             raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from e
         except Exception as e:
@@ -333,6 +335,7 @@ class Scenario:
                 matcher_spec=None,
                 matcher_errors=(),
                 error=AssertionError(f"assert_that callable raised: {e}"),
+                events=_last_turn_events_tuple(self),
             )
             raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from e
         if result is False:
@@ -346,8 +349,18 @@ class Scenario:
                 matcher_spec=None,
                 matcher_errors=(),
                 error=AssertionError("assert_that callable returned False"),
+                events=_last_turn_events_tuple(self),
             )
             raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from None
+
+
+def _last_turn_events_tuple(scenario: Scenario) -> tuple[Any, ...] | None:
+    if not scenario._turn_results:
+        return None
+    ev = scenario._turn_results[-1].events
+    if not ev:
+        return None
+    return tuple(ev)
 
 
 def _raise_match_step(
@@ -371,6 +384,7 @@ def _raise_match_step(
         matcher_spec=matcher_spec,
         actual=actual,
         headline_prefix=label,
+        events=_last_turn_events_tuple(scenario),
     )
 
 

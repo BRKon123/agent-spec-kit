@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import sys
 from collections.abc import Sequence
@@ -9,10 +10,13 @@ from typing import TYPE_CHECKING, TextIO
 
 from rich import box
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
+
+from agent_spec_kit.events import print_rich_event_trace
 
 if TYPE_CHECKING:
     from agent_spec_kit.registries import ScenarioDef
@@ -56,6 +60,19 @@ def emit_job_compact(r: "JobResult", *, file: TextIO | None = None) -> None:
         )
 
 
+def _failure_compact_for_table(r: "JobResult") -> str:
+    """Short failure label for the results table (no long matcher headlines)."""
+    if r.ok:
+        return ""
+    cx = r.counterexample
+    if cx is not None and cx.check_kind:
+        kind = cx.check_kind
+        if kind == "assert_that":
+            return "assertion failure in env"
+        return kind
+    return _table_cell_compact(r.detail or "")
+
+
 def _table_cell_compact(s: str, *, max_len: int = 200) -> str:
     """Single-line cell text; cap length like the failure column."""
     t = (s or "").replace("\n", " ")
@@ -76,26 +93,38 @@ def emit_failure_detail(r: "JobResult", *, file: TextIO | None = None) -> None:
         return
     c = _console(file or sys.stdout)
     cx = r.counterexample
-    lines: list[str] = [
-        f"Location: {cx.location}",
-    ]
+    lines: list[str] = []
+    if cx.check_kind:
+        lines.append(f"[bold]Check:[/bold] {escape(str(cx.check_kind))}")
+    if cx.location_detail:
+        lines.append(f"[bold]Where:[/bold] {escape(cx.location_detail)}")
+    else:
+        lines.append(f"[bold]Where:[/bold] {escape(cx.location)}")
     if _meaningful_path(cx.path):
-        lines.append(f"Path: {cx.path}")
-    lines.append(f"Expected: {cx.expected_summary}")
-    lines.append("Actual:")
+        lines.append(f"[bold]Path:[/bold] {escape(cx.path)}")
+    lines.append(f"[bold]Expected:[/bold] {escape(str(cx.expected_summary))}")
+    lines.append("[bold]Actual:[/bold]")
     body = str(cx.actual_min)
     try:
         parsed = json.loads(body)
         body = json.dumps(parsed, indent=2, default=str)
     except (json.JSONDecodeError, TypeError):
         pass
-    panel_inner = "\n".join(lines) + "\n\n" + body
+    panel_inner = "\n".join(lines) + "\n\n" + escape(body)
     for n in cx.notes:
-        panel_inner += f"\n{n}"
+        panel_inner += "\n" + escape(n)
+    if cx.events:
+        trace_w = min(max(c.width - 6, 60), 120)
+        trace_buf = io.StringIO()
+        trace_console = Console(file=trace_buf, width=trace_w, highlight=False, force_terminal=False)
+        panel_inner += "\n\n────────────────────────────────────────\n"
+        panel_inner += "[bold]Event trace[/bold]\n"
+        print_rich_event_trace(trace_console, cx.events, title="")
+        panel_inner += trace_buf.getvalue().rstrip("\n")
     c.print(
         Panel(
-            panel_inner,
-            title=f"[red]FAIL[/] {r.scenario_name} [{r.repeat_index}/{r.repeat_total}]",
+            Text.from_markup(panel_inner),
+            title=f"[red]FAIL[/] {escape(r.scenario_name)} [{r.repeat_index}/{r.repeat_total}]",
             border_style="red",
             box=box.ROUNDED,
         )
@@ -115,7 +144,7 @@ def emit_summary_table(results: Sequence["JobResult"], *, file: TextIO | None = 
         res_txt = "[green]pass[/]" if r.ok else "[red]fail[/]"
         fail = ""
         if not r.ok:
-            fail = _table_cell_compact(r.detail or "")
+            fail = _failure_compact_for_table(r)
         tbl.add_row(_table_cell_compact(r.scenario_name), rep, f"{r.duration_s:.2f}", res_txt, fail)
     c.print(Rule(style="dim"))
     c.print(tbl)

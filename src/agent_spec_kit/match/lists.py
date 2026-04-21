@@ -14,6 +14,57 @@ from agent_spec_kit.match.types import MatchError, MatchResult, Path, _short_rep
 _MAX_PERM = 9  # exhaustive permutation search for multiset (factorial growth)
 
 
+def _actual_tool_names_from_list(actual: list[Any]) -> list[str]:
+    names: list[str] = []
+    for item in actual:
+        if isinstance(item, dict) and "name" in item:
+            names.append(str(item["name"]))
+        else:
+            names.append(type(item).__name__)
+    return names
+
+
+def _expected_tool_names_from_elements(elements: tuple[BaseMatcher, ...]) -> list[str] | None:
+    """If each element is an object matcher with a string equality on ``name``, return names."""
+    from agent_spec_kit.match.object import ObjectMatcher
+    from agent_spec_kit.match.scalars import EqualityMatcher
+
+    out: list[str] = []
+    for em in elements:
+        if isinstance(em, ObjectMatcher) and "name" in em.props:
+            nm = em.props["name"]
+            if isinstance(nm, EqualityMatcher) and isinstance(nm.expected, str):
+                out.append(nm.expected)
+                continue
+        return None
+    return out
+
+
+def _list_length_witness_payload(
+    *,
+    mode: str,
+    elements: tuple[BaseMatcher, ...],
+    actual: list[Any],
+    expected_len: int,
+    actual_len: int,
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "mode": mode,
+        "expected_len": expected_len,
+        "actual_len": actual_len,
+        "actual_witness": actual[: min(8, len(actual))],
+    }
+    if extra:
+        payload.update(extra)
+    exp_names = _expected_tool_names_from_elements(elements)
+    act_names = _actual_tool_names_from_list(actual)
+    if exp_names is not None and len(exp_names) == expected_len:
+        payload["expected_tool_names"] = exp_names
+        payload["actual_tool_names"] = act_names
+    return payload
+
+
 def _not_list_error(path: Path, actual: Any) -> MatchResult:
     return MatchResult.failure(
         MatchError(
@@ -30,6 +81,13 @@ def _ordered_exact(
     elements: tuple[BaseMatcher, ...], actual: list[Any], path: Path
 ) -> MatchResult:
     if len(actual) != len(elements):
+        witness = _list_length_witness_payload(
+            mode="ordered_exact",
+            elements=elements,
+            actual=actual,
+            expected_len=len(elements),
+            actual_len=len(actual),
+        )
         return MatchResult.failure(
             MatchError(
                 path=path,
@@ -40,15 +98,7 @@ def _ordered_exact(
                 ),
                 expected=str(len(elements)),
                 actual=str(len(actual)),
-                witness_json=json.dumps(
-                    {
-                        "mode": "ordered_exact",
-                        "expected_len": len(elements),
-                        "actual_len": len(actual),
-                        "actual_witness": actual[: min(8, len(actual))],
-                    },
-                    default=str,
-                ),
+                witness_json=json.dumps(witness, default=str),
             )
         )
     errors: list[MatchError] = []
@@ -211,6 +261,13 @@ class ListMatcher(BaseMatcher):
 
         if not self.allow_extras:
             if m != n:
+                witness = _list_length_witness_payload(
+                    mode="unordered_exact",
+                    elements=self.elements,
+                    actual=actual,
+                    expected_len=n,
+                    actual_len=m,
+                )
                 return MatchResult.failure(
                     MatchError(
                         path=path,
@@ -221,15 +278,7 @@ class ListMatcher(BaseMatcher):
                         ),
                         expected=str(n),
                         actual=str(m),
-                        witness_json=json.dumps(
-                            {
-                                "mode": "unordered_exact",
-                                "expected_len": n,
-                                "actual_len": m,
-                                "actual_witness": actual[: min(8, m)],
-                            },
-                            default=str,
-                        ),
+                        witness_json=json.dumps(witness, default=str),
                     )
                 )
             if n == 0:
