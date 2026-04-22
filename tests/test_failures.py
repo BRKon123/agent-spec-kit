@@ -115,9 +115,99 @@ def test_conversation_trace_includes_user_and_last_two_agent_turns() -> None:
     from agent_spec_kit.events import UserTurnEvent
 
     assert isinstance(roots[0], UserTurnEvent) and roots[0].content == "u0"
-    assert isinstance(roots[1], AgentTurnEvent) and roots[1].children[0].tool_name == "t0"
+    assert isinstance(roots[1], AgentTurnEvent)
+    assert isinstance(roots[1].children[0], ToolCallEvent)
+    assert roots[1].children[0].tool_name == "t0"
     assert isinstance(roots[2], UserTurnEvent) and roots[2].content == "u1"
-    assert isinstance(roots[3], AgentTurnEvent) and roots[3].children[0].tool_name == "t1"
+    assert isinstance(roots[3], AgentTurnEvent)
+    assert isinstance(roots[3].children[0], ToolCallEvent)
+    assert roots[3].children[0].tool_name == "t1"
+
+
+def test_conversation_trace_user_turn_attaches_events_as_children() -> None:
+    """User-side TurnResult.events appear under UserTurnEvent.children; siblings stay user then agent."""
+    from agent_spec_kit.events import UserTurnEvent
+
+    u_tool = TurnResult(
+        output="student line",
+        events=(ToolCallEvent(tool_name="student_checkpoint", result="ok"),),
+    )
+    u_wrapped = TurnResult(
+        output="wrapped student",
+        events=(
+            AgentTurnEvent(
+                user_input="seed",
+                agent_output="wrapped student",
+                children=[ToolCallEvent(tool_name="inner_tool", result=99)],
+            ),
+        ),
+    )
+    a0 = TurnResult(
+        output="tutor out",
+        events=(AgentTurnEvent(agent_output="tutor out", children=[ToolCallEvent(tool_name="tutor_t", result=0)]),),
+    )
+    turns = (
+        ConversationTurn.from_turn("user", u_tool),
+        ConversationTurn.from_turn("agent", a0),
+        ConversationTurn.from_turn("user", u_wrapped),
+    )
+    roots = conversation_turns_to_event_trace(turns, max_agent_turns=5)
+    assert len(roots) == 3
+    assert isinstance(roots[0], UserTurnEvent) and roots[0].content == "student line"
+    assert len(roots[0].children) == 1
+    assert isinstance(roots[0].children[0], ToolCallEvent)
+    assert roots[0].children[0].tool_name == "student_checkpoint"
+    assert isinstance(roots[1], AgentTurnEvent)
+    assert isinstance(roots[1].children[0], ToolCallEvent)
+    assert roots[1].children[0].tool_name == "tutor_t"
+    assert isinstance(roots[2], UserTurnEvent) and roots[2].content == "wrapped student"
+    assert len(roots[2].children) == 1
+    assert isinstance(roots[2].children[0], ToolCallEvent)
+    assert roots[2].children[0].tool_name == "inner_tool"
+
+
+def test_conversation_trace_user_turn_flattens_nested_root_agent_shells() -> None:
+    """Nested AgentTurnEvent(root) wrappers under the user root are stripped for traces."""
+    from agent_spec_kit.events import UserTurnEvent
+
+    inner = AgentTurnEvent(
+        agent_output="inner",
+        children=[ToolCallEvent(tool_name="student_checkpoint", result="first")],
+    )
+    root = AgentTurnEvent(agent_output="out", children=[inner])
+    u = TurnResult(output="What is 4 times 5?", events=(root,))
+    roots = conversation_turns_to_event_trace(
+        (ConversationTurn.from_turn("user", u),),
+        max_agent_turns=5,
+    )
+    assert len(roots) == 1 and isinstance(roots[0], UserTurnEvent)
+    assert len(roots[0].children) == 1
+    assert isinstance(roots[0].children[0], ToolCallEvent)
+    assert roots[0].children[0].tool_name == "student_checkpoint"
+
+
+def test_conversation_trace_user_turn_keeps_non_root_agent_as_child() -> None:
+    """Single AgentTurn with non-empty source_path is not promoted (unusual on user)."""
+    from agent_spec_kit.events import UserTurnEvent
+
+    u_ns = TurnResult(
+        output="x",
+        events=(
+            AgentTurnEvent(
+                agent_output="x",
+                source_path=("sub",),
+                children=[ToolCallEvent(tool_name="t_ns", result=1)],
+            ),
+        ),
+    )
+    roots = conversation_turns_to_event_trace(
+        (ConversationTurn.from_turn("user", u_ns),),
+        max_agent_turns=5,
+    )
+    assert len(roots) == 1 and isinstance(roots[0], UserTurnEvent)
+    assert len(roots[0].children) == 1
+    assert isinstance(roots[0].children[0], AgentTurnEvent)
+    assert roots[0].children[0].source_path == ("sub",)
 
 
 def test_conversation_trace_windows_last_five_agent_turns() -> None:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -29,6 +29,45 @@ def _window_conversation_for_trace(
     return turns[i_lo:]
 
 
+def _flatten_root_agent_shells(nodes: Iterable[Any]) -> list[Any]:
+    """
+    Drop nested ``AgentTurnEvent`` wrappers that still have ``source_path == ()``.
+
+    LangGraph sometimes emits an extra root-shaped ``AgentTurnEvent`` between the
+    outer turn and ``ToolCallEvent`` nodes; a single-level promotion still left
+    ``UserTurn -> AgentTurn (root) -> tool``. Recurse until only meaningful nodes
+    (tools, subgraph ``AgentTurnEvent`` with non-empty ``source_path``, etc.) remain.
+    """
+    from agent_spec_kit.events import AgentTurnEvent
+
+    out: list[Any] = []
+    for n in nodes:
+        if isinstance(n, AgentTurnEvent) and n.source_path == ():
+            out.extend(_flatten_root_agent_shells(n.children))
+        else:
+            out.append(n)
+    return out
+
+
+def _children_for_user_turn_trace(events: tuple[Any, ...]) -> list[Any]:
+    """
+    Map ``ConversationTurn.events`` for a user line into Rich children for ``UserTurnEvent``.
+
+    A wrapped LangChain / Pydantic user turn is often a single root ``AgentTurnEvent``
+    (``source_path == ()``). For traces we splice its (nested) shell's children so
+    ``student_checkpoint`` (etc.) sit directly under the user line, not under one
+    or more redundant ``AgentTurn (root)`` nodes. Non-root subgraph turns keep their
+    ``AgentTurn`` node (non-empty ``source_path``).
+    """
+    from agent_spec_kit.events import AgentTurnEvent
+
+    if len(events) == 1 and isinstance(events[0], AgentTurnEvent):
+        root = events[0]
+        if root.source_path == ():
+            return _flatten_root_agent_shells(root.children)
+    return list(events)
+
+
 def conversation_turns_to_event_trace(
     turns: Sequence[ConversationTurn], *, max_agent_turns: int = 5
 ) -> tuple[Any, ...]:
@@ -37,6 +76,12 @@ def conversation_turns_to_event_trace(
     agent lines as each root in :attr:`ConversationTurn.events`, or a shell
     ``AgentTurnEvent`` when the turn has no event tree. At most the last
     ``max_agent_turns`` **agent** turns (with interleaved user turns).
+
+    ``UserTurnEvent`` and ``AgentTurnEvent`` roots stay **siblings** in turn order.
+    User-side ``ConversationTurn.events`` become ``UserTurnEvent.children``. If there
+    is exactly one root ``AgentTurnEvent`` with ``source_path == ()`` (typical adapter
+    shell), nested same-path shells are stripped recursively so tools appear directly
+    under the user line.
     """
     from agent_spec_kit.events import AgentTurnEvent, UserTurnEvent
 
@@ -44,7 +89,9 @@ def conversation_turns_to_event_trace(
     out: list[Any] = []
     for ct in win:
         if ct.actor == "user":
-            out.append(UserTurnEvent(content=ct.output, error=ct.error))
+            ue = UserTurnEvent(content=ct.output, error=ct.error)
+            ue.children.extend(_children_for_user_turn_trace(ct.events))
+            out.append(ue)
         else:
             if ct.events:
                 out.extend(ct.events)

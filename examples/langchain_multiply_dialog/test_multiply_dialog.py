@@ -78,3 +78,48 @@ async def test_multiply_dialog_simulated_student(s):
         )
         .assert_output(m.contains("24"), actor="agent")
     )
+
+
+@ek.scenario(
+    agent_fixture="adapted_agent",
+    user_fixture="user_simulator_with_tools",
+    repeats=1,
+    tags=("langchain", "example", "multiply-dialog", "simulation", "user-tools"),
+    timeout_s=180.0,
+)
+async def test_multiply_dialog_simulated_student_user_tools(s):
+    """Like simulated student, but the student agent calls ``student_checkpoint`` each turn."""
+    (
+        s.simulate_conversation(
+            seed_actor="user",
+            seed_input="Session start. Produce only your first question.",
+            max_turns=1,
+        )
+        .assert_tool_calls(
+            [m.tool_call("student_checkpoint")],
+            ordered=True,
+            allow_extras=True,
+            actor="user",
+        )
+        .assert_tool_calls(
+            [m.tool_call("multiply_integers", args={"a": 4, "b": 5})],
+            ordered=True,
+            allow_extras=True,
+            actor="agent",
+        )
+        .assert_output(m.contains("20"), actor="agent")
+        .simulate_conversation(max_turns=1)
+        .assert_tool_calls(
+            [m.tool_call("student_checkpoint")],
+            ordered=True,
+            allow_extras=True,
+            actor="user",
+        )
+        .assert_tool_calls(
+            [m.tool_call("multiply_integers", args={"a": 3, "b": 8})],
+            ordered=True,
+            allow_extras=True,
+            actor="agent",
+        )
+        .assert_output(m.contains("23"), actor="agent")
+    )
