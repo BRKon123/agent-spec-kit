@@ -3,12 +3,54 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
 from agent_spec_kit.match.types import MatchError, _short_repr
+from agent_spec_kit.run import ConversationTurn
 
 _MISSING = object()
+
+
+def _window_conversation_for_trace(
+    turns: tuple[ConversationTurn, ...], *, max_agent_turns: int = 5
+) -> tuple[ConversationTurn, ...]:
+    """Last ``max_agent_turns`` agent turns and their interleaved user lines (contiguous tail)."""
+    if not turns:
+        return ()
+    agent_idx = [i for i, t in enumerate(turns) if t.actor == "agent"]
+    if not agent_idx:
+        return turns
+    take = agent_idx[-max_agent_turns:]
+    i_lo = min(take)
+    while i_lo > 0 and turns[i_lo - 1].actor == "user":
+        i_lo -= 1
+    return turns[i_lo:]
+
+
+def conversation_turns_to_event_trace(
+    turns: Sequence[ConversationTurn], *, max_agent_turns: int = 5
+) -> tuple[Any, ...]:
+    """
+    Build Rich tree roots for a failure panel: user lines as ``UserTurnEvent``,
+    agent lines as each root in :attr:`ConversationTurn.events`, or a shell
+    ``AgentTurnEvent`` when the turn has no event tree. At most the last
+    ``max_agent_turns`` **agent** turns (with interleaved user turns).
+    """
+    from agent_spec_kit.events import AgentTurnEvent, UserTurnEvent
+
+    win = _window_conversation_for_trace(tuple(turns), max_agent_turns=max_agent_turns)
+    out: list[Any] = []
+    for ct in win:
+        if ct.actor == "user":
+            out.append(UserTurnEvent(content=ct.output, error=ct.error))
+        else:
+            if ct.events:
+                out.extend(ct.events)
+            else:
+                out.append(AgentTurnEvent(agent_output=ct.output, error=ct.error))
+    return tuple(out)
 
 
 def _path_to_str(path: tuple[Any, ...]) -> str:
@@ -139,6 +181,8 @@ class FailureRecord:
     matcher_errors: tuple[MatchError, ...]
     error: BaseException | None = None
     events: tuple[Any, ...] | None = None
+    # When set, counterexample uses conversation_turns_to_event_trace (up to 5 recent agent turns).
+    turn_results: tuple[ConversationTurn, ...] | None = None
 
 
 @dataclass(slots=True)
@@ -172,6 +216,12 @@ def _witness_dict(err: MatchError) -> dict[str, Any]:
         return {}
 
 
+def _trace_events_for_record(record: FailureRecord) -> tuple[Any, ...] | None:
+    if record.turn_results is not None and len(record.turn_results) > 0:
+        return conversation_turns_to_event_trace(record.turn_results)
+    return record.events
+
+
 def _counterexample_base(
     *,
     headline: str,
@@ -198,7 +248,7 @@ def _counterexample_base(
         notes=notes,
         check_kind=record.step_kind,
         location_detail=detail,
-        events=record.events,
+        events=_trace_events_for_record(record),
     )
 
 
@@ -278,6 +328,7 @@ def raise_scenario_match_failure(
     actual: Any,
     headline_prefix: str = "",
     events: tuple[Any, ...] | None = None,
+    turn_results: tuple[ConversationTurn, ...] | None = None,
 ) -> None:
     """Raise :class:`ScenarioAssertionFailed` from a failed :class:`MatchResult`."""
     record = FailureRecord(
@@ -290,6 +341,7 @@ def raise_scenario_match_failure(
         matcher_errors=result.errors,
         error=None,
         events=events,
+        turn_results=turn_results,
     )
     cx = counterexample_from_failure(record)
     if headline_prefix:
@@ -301,6 +353,7 @@ __all__ = [
     "Counterexample",
     "FailureRecord",
     "ScenarioAssertionFailed",
+    "conversation_turns_to_event_trace",
     "counterexample_from_failure",
     "raise_scenario_match_failure",
 ]

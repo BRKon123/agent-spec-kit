@@ -36,6 +36,27 @@ class TurnResult:
     error: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ConversationTurn:
+    """One conversational turn, tagged with ``actor`` (``\"agent\"`` or ``\"user\"``)."""
+
+    actor: str
+    output: Any = None
+    events: tuple[AgentEvent, ...] = field(default_factory=tuple)
+    status: str = "ok"
+    error: str | None = None
+
+    @staticmethod
+    def from_turn(actor: str, tr: "TurnResult") -> "ConversationTurn":
+        return ConversationTurn(
+            actor=actor,
+            output=tr.output,
+            events=tr.events,
+            status=tr.status,
+            error=tr.error,
+        )
+
+
 @runtime_checkable
 class AdaptedAgent(Protocol):
     """Minimal contract for scenario tests and custom framework adapters."""
@@ -45,4 +66,4 @@ class AdaptedAgent(Protocol):
         ...
 
 
-__all__ = ["AdaptedAgent", "TurnResult"]
+__all__ = ["AdaptedAgent", "ConversationTurn", "TurnResult"]

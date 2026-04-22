@@ -188,7 +188,7 @@ def test_emit_failure_detail_includes_check_kind_and_event_trace() -> None:
     text = buf.getvalue()
     assert "Check: assert_tool_calls" in text
     assert "Where:" in text
-    assert "Event trace" in text
+    assert "Event trace (till failure)" in text
     assert "demo_tool" in text
     assert "Hint:" not in text
 
@@ -208,3 +208,41 @@ def test_emit_job_compact_still_works() -> None:
         file=buf,
     )
     assert "PASS" in buf.getvalue() and "x" in buf.getvalue()
+
+
+def test_emit_summary_table_includes_param_columns() -> None:
+    """One column per @parametrize axis; values use Case id when name is absent."""
+    buf = io.StringIO()
+    emit_summary_table(
+        [
+            JobResult(
+                ok=True,
+                scenario_name="s",
+                case_id="llm_model=fast+task=a",
+                repeat_index=1,
+                repeat_total=1,
+                detail=None,
+                duration_s=0.0,
+                counterexample=None,
+                param_cells={"llm_model": "fast", "task": "A task"},
+            ),
+            JobResult(
+                ok=True,
+                scenario_name="s",
+                case_id="llm_model=slow+task=b",
+                repeat_index=1,
+                repeat_total=1,
+                detail=None,
+                duration_s=0.0,
+                counterexample=None,
+                param_cells={"llm_model": "slow", "task": "B thing"},
+            ),
+        ],
+        file=buf,
+    )
+    out = buf.getvalue()
+    assert "llm_model" in out and "task" in out
+    assert "fast" in out and "slow" in out
+    assert "A task" in out
+    # First column is scenario name, not the composite ``[case_id]`` suffix.
+    assert "llm_model=fast" not in out

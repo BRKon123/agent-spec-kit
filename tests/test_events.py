@@ -6,6 +6,7 @@ from agent_spec_kit import (
     AgentTurnEvent,
     BaseEvent,
     ToolCallEvent,
+    UserTurnEvent,
     new_event_id,
     print_rich_event_trace,
 )
@@ -47,6 +48,7 @@ def test_rich_node_labels() -> None:
     assert BaseEvent()._rich_node_label() == "BaseEvent"
     assert ToolCallEvent(tool_name="t", result=1)._rich_node_label().startswith("t  result=")
     assert "root" in AgentTurnEvent()._rich_node_label()
+    assert "UserTurn:" in UserTurnEvent(content="ping")._rich_node_label()
 
 
 def test_print_rich_event_trace_smoke() -> None:

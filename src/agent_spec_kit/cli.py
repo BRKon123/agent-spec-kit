@@ -16,6 +16,7 @@ from agent_spec_kit.cli_reporting import (
     emit_summary_table,
 )
 from agent_spec_kit.discovery import collect_module_paths, import_paths
+from agent_spec_kit.fixture_graph import scenario_case_runs
 from agent_spec_kit.registries import ScenarioDef, iter_scenarios, reset_registries
 from agent_spec_kit.runner import JobResult, WorkerJob, run_scenario_job, worker_run_job
 
@@ -40,22 +41,29 @@ def _scenario_matches_tags(
     return True
 
 
-async def _run_serial(jobs: list[tuple[ScenarioDef, int, int]], *, fail_fast: bool) -> list[JobResult]:
+async def _run_serial(
+    jobs: list[tuple[ScenarioDef, int, int, int]], *, fail_fast: bool
+) -> list[JobResult]:
     out: list[JobResult] = []
-    for sd, idx, total in jobs:
-        r = await run_scenario_job(sd, repeat_index=idx, repeat_total=total)
+    for sd, case_index, idx, total in jobs:
+        r = await run_scenario_job(
+            sd, case_index=case_index, repeat_index=idx, repeat_total=total
+        )
         out.append(r)
         if fail_fast and not r.ok:
             break
     return out
 
 
-def _build_jobs(scenarios: list[ScenarioDef]) -> list[tuple[ScenarioDef, int, int]]:
-    jobs: list[tuple[ScenarioDef, int, int]] = []
+def _build_jobs(scenarios: list[ScenarioDef]) -> list[tuple[ScenarioDef, int, int, int]]:
+    """(ScenarioDef, case_index, repeat_index, repeat_total)."""
+    jobs: list[tuple[ScenarioDef, int, int, int]] = []
     for sd in scenarios:
+        n_cases = max(1, len(scenario_case_runs(sd)))
         total = sd.repeats
-        for k in range(total):
-            jobs.append((sd, k + 1, total))
+        for cix in range(n_cases):
+            for k in range(total):
+                jobs.append((sd, cix, k + 1, total))
     return jobs
 
 
@@ -113,12 +121,13 @@ def main(argv: list[str] | None = None) -> int:
         results = asyncio.run(_run_serial(jobs, fail_fast=args.fail_fast))
     else:
         worker_jobs: list[WorkerJob] = []
-        for sd, idx, total in jobs:
+        for sd, cix, idx, total in jobs:
             worker_jobs.append(
                 WorkerJob(
                     paths=path_tuple,
                     scenario_module=sd.module,
                     scenario_name=sd.name,
+                    case_index=cix,
                     repeat_index=idx,
                     repeat_total=total,
                 )

@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`agent_spec_kit.scenario`."""
+"""Unit tests for :mod:`agent_spec_kit.scenario_core`."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 import agent_spec_kit.match as m
+from agent_spec_kit import create_scenario
 from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
 from agent_spec_kit.run import TurnResult
-from agent_spec_kit.scenario import create_scenario
 
 
 def _turn_with_tools(output: str, *tool_names: str) -> TurnResult:

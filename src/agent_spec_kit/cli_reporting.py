@@ -17,10 +17,10 @@ from rich.table import Table
 from rich.text import Text
 
 from agent_spec_kit.events import print_rich_event_trace
+from agent_spec_kit.runner import JobResult
 
 if TYPE_CHECKING:
     from agent_spec_kit.registries import ScenarioDef
-    from agent_spec_kit.runner import JobResult
 
 
 def _console(file: TextIO | None = None) -> Console:
@@ -37,12 +37,28 @@ def emit_note(msg: str, *, file: TextIO | None = None) -> None:
     c.print(f"[dim]{msg}[/]")
 
 
-def emit_job_compact(r: "JobResult", *, file: TextIO | None = None) -> None:
+def _cli_job_label(r: JobResult) -> str:
+    """Table / compact line: scenario + ``(axis=label, …)`` when :attr:`JobResult.param_cells` is set, else :attr:`JobResult.display_name`."""
+    if r.param_cells:
+        p = ", ".join(f"{k}={_table_cell_compact(v)}" for k, v in sorted(r.param_cells.items()))
+        return f"{r.scenario_name} ({p})"
+    return r.display_name
+
+
+def _param_column_keys(results: Sequence[JobResult]) -> list[str]:
+    k: set[str] = set()
+    for r in results:
+        k.update(r.param_cells)
+    return sorted(k)
+
+
+def emit_job_compact(r: JobResult, *, file: TextIO | None = None) -> None:
     c = _console(file or sys.stdout)
     bracket = f"[{r.repeat_index}/{r.repeat_total}]"
     t = f" {r.duration_s:.2f}s"
+    dname = _cli_job_label(r)
     if r.ok:
-        c.print(Text.assemble(("PASS ", "bold green"), (r.scenario_name, "bold"), (" ", "dim"), (bracket, "dim"), (t, "dim")))
+        c.print(Text.assemble(("PASS ", "bold green"), (dname, "bold"), (" ", "dim"), (bracket, "dim"), (t, "dim")))
     else:
         tail = r.detail or ""
         if len(tail) > 120:
@@ -50,7 +66,7 @@ def emit_job_compact(r: "JobResult", *, file: TextIO | None = None) -> None:
         c.print(
             Text.assemble(
                 ("FAIL ", "bold red"),
-                (r.scenario_name, "bold"),
+                (dname, "bold"),
                 (" ", "dim"),
                 (bracket, "dim"),
                 (t, "dim"),
@@ -118,34 +134,46 @@ def emit_failure_detail(r: "JobResult", *, file: TextIO | None = None) -> None:
         trace_buf = io.StringIO()
         trace_console = Console(file=trace_buf, width=trace_w, highlight=False, force_terminal=False)
         panel_inner += "\n\n────────────────────────────────────────\n"
-        panel_inner += "[bold]Event trace[/bold]\n"
-        print_rich_event_trace(trace_console, cx.events, title="")
+        print_rich_event_trace(trace_console, cx.events, title="Event trace (till failure)")
         panel_inner += trace_buf.getvalue().rstrip("\n")
     c.print(
         Panel(
             Text.from_markup(panel_inner),
-            title=f"[red]FAIL[/] {escape(r.scenario_name)} [{r.repeat_index}/{r.repeat_total}]",
+            title=f"[red]FAIL[/] {escape(_cli_job_label(r))} [{r.repeat_index}/{r.repeat_total}]",
             border_style="red",
             box=box.ROUNDED,
         )
     )
 
 
-def emit_summary_table(results: Sequence["JobResult"], *, file: TextIO | None = None) -> None:
+def emit_summary_table(results: Sequence[JobResult], *, file: TextIO | None = None) -> None:
     c = _console(file or sys.stdout)
+    param_keys = _param_column_keys(results)
     tbl = Table(title="Results", box=box.SIMPLE_HEAD, show_lines=True)
     tbl.add_column("Test", style="bold", overflow="fold", max_width=56)
+    for axis in param_keys:
+        tbl.add_column(axis, overflow="fold", max_width=32)
     tbl.add_column("Repeat", justify="center")
     tbl.add_column("Time (s)", justify="right")
     tbl.add_column("Result", justify="center")
     tbl.add_column("Failure (compact)", overflow="fold", max_width=56)
     for r in results:
+        test_cell = r.scenario_name if param_keys else r.display_name
         rep = f"{r.repeat_index}/{r.repeat_total}"
         res_txt = "[green]pass[/]" if r.ok else "[red]fail[/]"
         fail = ""
         if not r.ok:
             fail = _failure_compact_for_table(r)
-        tbl.add_row(_table_cell_compact(r.scenario_name), rep, f"{r.duration_s:.2f}", res_txt, fail)
+        param_vals = [escape(_table_cell_compact(r.param_cells.get(p, "—"))) for p in param_keys]
+        row = [
+            _table_cell_compact(test_cell),
+            *param_vals,
+            rep,
+            f"{r.duration_s:.2f}",
+            res_txt,
+            fail,
+        ]
+        tbl.add_row(*row)
     c.print(Rule(style="dim"))
     c.print(tbl)
     passed = sum(1 for x in results if x.ok)

@@ -6,6 +6,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from agent_spec_kit.param_cases import Case
+
+
+@dataclass(frozen=True, slots=True)
+class FixtureParamAxis:
+    name: str
+    cases: tuple[Case[Any], ...]
+
 
 @dataclass(frozen=True, slots=True)
 class FixtureDef:
@@ -13,6 +21,7 @@ class FixtureDef:
     fn: Callable[..., Any]
     dep_names: tuple[str, ...]
     source: str
+    param_axes: tuple[FixtureParamAxis, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,7 +29,8 @@ class ScenarioDef:
     name: str
     module: str
     fn: Callable[..., Any]
-    agent_fixture: str
+    agent_fixture: str | None
+    user_fixture: str | None
     repeats: int
     tags: tuple[str, ...]
     timeout_s: float | None
@@ -74,6 +84,7 @@ def find_scenario(*, module: str, name: str) -> ScenarioDef | None:
 
 __all__ = [
     "FixtureDef",
+    "FixtureParamAxis",
     "ScenarioDef",
     "get_fixture",
     "iter_fixtures",

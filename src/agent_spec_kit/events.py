@@ -86,17 +86,40 @@ class AgentTurnEvent(BaseEvent):
         return f"AgentTurn ({path})"
 
 
-AgentEvent: TypeAlias = ToolCallEvent | AgentTurnEvent
+@dataclass
+class UserTurnEvent(BaseEvent):
+    """Synthetic root for failure traces: one user-side or scripted user line."""
+
+    content: Any = None
+    error: str | None = None
+
+    def _rich_node_label(self) -> str:
+        s = self.content
+        s = s if s is not None else ""
+        if not isinstance(s, str):
+            s = repr(s)
+        if self.error:
+            t = f"{s}  [error: {self.error!r}]"
+        else:
+            t = s
+        if len(t) > 72:
+            t = t[:69] + "..."
+        return f"UserTurn: {t}"
+
+
+AgentEvent: TypeAlias = ToolCallEvent | AgentTurnEvent | UserTurnEvent
 
 
 def print_rich_event_trace(
     console: Any,
-    roots: Sequence[AgentEvent],
+    roots: Sequence[BaseEvent],
     *,
-    title: str = "Event trace",
+    title: str = "Event trace (till failure)",
 ) -> None:
     """
     Pretty-print one or more event trees (e.g. ``TurnResult.events``) using Rich.
+    For mixed conversation + agent trees, use roots built from
+    :func:`conversation_turns_to_event_trace` in :mod:`agent_spec_kit.failures`.
 
     Requires the optional ``rich`` package.
     """
@@ -119,6 +142,7 @@ __all__ = [
     "AgentTurnEvent",
     "BaseEvent",
     "ToolCallEvent",
+    "UserTurnEvent",
     "new_event_id",
     "print_rich_event_trace",
 ]

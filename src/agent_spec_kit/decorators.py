@@ -1,14 +1,22 @@
-"""@fixture and @scenario registration decorators."""
+"""@fixture, @parametrize, and @scenario registration decorators."""
 
 from __future__ import annotations
 
 import inspect
-from collections.abc import Callable
-from typing import Any, TypeVar, overload
+from collections.abc import Callable, Iterable
+from typing import Any, TypeVar, cast, overload
 
-from agent_spec_kit.registries import FixtureDef, ScenarioDef, register_fixture, register_scenario
+from agent_spec_kit.param_cases import Case, normalize_cases
+from agent_spec_kit.registries import (
+    FixtureDef,
+    FixtureParamAxis,
+    ScenarioDef,
+    register_fixture,
+    register_scenario,
+)
 
 F = TypeVar("F", bound=Callable[..., Any])
+EK_PARAM = "_ek_param_axes"
 
 
 def _fixture_source(fn: Callable[..., Any]) -> str:
@@ -33,13 +41,50 @@ def _param_names_for_fixture(fn: Callable[..., Any]) -> tuple[str, ...]:
     return tuple(names)
 
 
+def _axes_from_function(fn: Callable[..., Any]) -> tuple[FixtureParamAxis, ...]:
+    raw: list[tuple[str, list[Case[Any]]]] = cast(
+        "list[tuple[str, list[Case[Any]]]]", getattr(fn, EK_PARAM, [])
+    )
+    if not raw:
+        return ()
+    return tuple(
+        FixtureParamAxis(name=n, cases=tuple(c)) for n, c in raw
+    )
+
+
+def parametrize(name: str, values: Iterable[Any]) -> Callable[[F], F]:
+    """Stack on an ``@ek.fixture`` (put ``@ek.fixture`` on the **outer** line, parametrize **inner**)."""
+
+    cases = normalize_cases(values)
+
+    def deco(fn: F) -> F:
+        cur: list[tuple[str, list[Case[Any]]]] = cast("list", list(getattr(fn, EK_PARAM, [])))
+        cur.append((name, list(cases)))
+        setattr(fn, EK_PARAM, cur)
+        return fn
+
+    return deco
+
+
 def fixture(fn: F) -> F:
-    """Register a fixture function (plain return or ``yield`` teardown)."""
+    """Register a fixture (plain return or ``yield`` teardown)."""
+    param_axes = _axes_from_function(fn)
+    dep_names = _param_names_for_fixture(fn)
+    for ax in param_axes:
+        if ax.name not in dep_names:
+            raise TypeError(
+                f"{fn.__name__}: @parametrize({ax.name!r}, ...) but that name is not a parameter of the fixture"
+            )
+    ax_names = [a.name for a in param_axes]
+    if len(ax_names) != len(set(ax_names)):
+        raise TypeError(f"{fn.__name__}: duplicate @parametrize axis name in fixture")
+
     definition = FixtureDef(
         name=fn.__name__,
         fn=fn,
-        dep_names=_param_names_for_fixture(fn),
+        dep_names=dep_names,
         source=_fixture_source(fn),
+        param_axes=param_axes,
     )
     register_fixture(definition)
     return fn
@@ -48,7 +93,8 @@ def fixture(fn: F) -> F:
 @overload
 def scenario(
     *,
-    agent_fixture: str,
+    agent_fixture: str | None = None,
+    user_fixture: str | None = None,
     repeats: int = 1,
     tags: tuple[str, ...] = (),
     timeout_s: float | None = None,
@@ -63,15 +109,20 @@ def scenario(
     fn: F | None = None,
     *,
     agent_fixture: str | None = None,
+    user_fixture: str | None = None,
     repeats: int = 1,
     tags: tuple[str, ...] = (),
     timeout_s: float | None = None,
 ) -> Callable[[F], F] | F:
-    """Register a scenario test (metadata only; does not run at import time)."""
+    """Register a scenario. At least one of ``agent_fixture`` or ``user_fixture`` must be set."""
 
     def deco(f: F) -> F:
-        if agent_fixture is None:
-            raise TypeError("@scenario() requires agent_fixture=...")
+        if agent_fixture is None and user_fixture is None:
+            msg = (
+                f"{f.__name__}: @scenario() requires at least one of "
+                f"agent_fixture=... or user_fixture=..."
+            )
+            raise TypeError(msg)
         if repeats < 1:
             raise ValueError("repeats must be >= 1")
         if timeout_s is not None and timeout_s <= 0:
@@ -94,6 +145,7 @@ def scenario(
             raise TypeError(
                 f"{f.__name__}: first parameter of a scenario must be named 's' (got {first_name!r})"
             )
+        # After ``s``: fixture names, @parametrize axis values (name → Case.value), or ``{axis}_case`` (full Case).
         fixture_param_names = tuple(name for name, _ in params[1:])
 
         definition = ScenarioDef(
@@ -101,6 +153,7 @@ def scenario(
             module=f.__module__,
             fn=f,
             agent_fixture=agent_fixture,
+            user_fixture=user_fixture,
             repeats=repeats,
             tags=tags,
             timeout_s=timeout_s,
@@ -115,4 +168,4 @@ def scenario(
     return deco
 
 
-__all__ = ["fixture", "scenario"]
+__all__ = ["fixture", "parametrize", "scenario"]
