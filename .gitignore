@@ -12,3 +12,6 @@ wheels/
 # local secrets
 .env
 .envrc
+
+# local run storage
+.agent_spec_kit/

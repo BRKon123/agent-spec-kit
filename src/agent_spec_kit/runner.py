@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -42,6 +43,15 @@ class JobResult:
     detail: str | None = None
     duration_s: float = 0.0
     counterexample: Counterexample | None = None
+    status: str = "passed"
+    started_at: str | None = None
+    finished_at: str | None = None
+    output_preview: str | None = None
+    failure_kind: str | None = None
+    failure_message: str | None = None
+    turn_results: tuple[Any, ...] = ()
+    assertions: tuple[dict[str, Any], ...] = ()
+    raw_error: str | None = None
     #: Keys are @parametrize axis names; values are ``name`` or ``id`` (see :func:`_param_cell_labels`).
     param_cells: dict[str, str] = field(default_factory=dict)
     # Back-compat: some call sites use scenario_name for display; case_id is the param slice
@@ -119,6 +129,7 @@ async def run_scenario_job(
 ) -> JobResult:
     """Resolve fixtures, run the scenario, auto-materialise if needed, teardown."""
     t0 = time.perf_counter()
+    started_at = datetime.now(tz=UTC).isoformat()
     runs = scenario_case_runs(scenario_def)
     if case_index < 0 or case_index >= len(runs):
         return JobResult(
@@ -130,6 +141,11 @@ async def run_scenario_job(
             detail=f"case_index {case_index} out of range (0..{len(runs) - 1})",
             duration_s=0.0,
             param_cells={},
+            status="error",
+            started_at=started_at,
+            finished_at=datetime.now(tz=UTC).isoformat(),
+            failure_kind="invalid_case_index",
+            failure_message=f"case_index {case_index} out of range (0..{len(runs) - 1})",
         )
     param_case = runs[case_index]
     case_id = _case_id_suffix(param_case)
@@ -139,6 +155,10 @@ async def run_scenario_job(
     detail: str | None = None
     counterexample: Counterexample | None = None
     s: Any = None
+    status = "passed"
+    failure_kind: str | None = None
+    raw_error: str | None = None
+    assertions: list[dict[str, Any]] = []
     try:
         fixture_values, teardowns = await resolve_fixtures(scenario_def, param_case=param_case)
         a_fix = scenario_def.agent_fixture
@@ -186,6 +206,33 @@ async def run_scenario_job(
     except ScenarioAssertionFailed as e:
         counterexample = e.counterexample
         detail = counterexample.headline
+        status = "failed"
+        failure_kind = counterexample.check_kind or "assertion_failure"
+        assertions.append(
+            {
+                "assertion_type": failure_kind,
+                "actor": None,
+                "turn_index": None,
+                "status": "failed",
+                "message": detail,
+                "details": {
+                    "location": counterexample.location,
+                    "path": counterexample.path,
+                    "expected_summary": counterexample.expected_summary,
+                    "actual_min": counterexample.actual_min,
+                },
+                "counterexample": {
+                    "headline": counterexample.headline,
+                    "location": counterexample.location,
+                    "path": counterexample.path,
+                    "expected_summary": counterexample.expected_summary,
+                    "actual_min": counterexample.actual_min,
+                    "notes": list(counterexample.notes),
+                    "check_kind": counterexample.check_kind,
+                    "location_detail": counterexample.location_detail,
+                },
+            }
+        )
     except AssertionError as e:
         turn_idx = len(s._turn_results) - 1 if s is not None and s._turn_results else None
         step_ix = s._executed_until if s is not None else 0
@@ -211,8 +258,38 @@ async def run_scenario_job(
         )
         counterexample = counterexample_from_failure(record)
         detail = counterexample.headline
+        status = "failed"
+        failure_kind = counterexample.check_kind or "assertion_failure"
+        assertions.append(
+            {
+                "assertion_type": failure_kind,
+                "actor": None,
+                "turn_index": turn_idx,
+                "status": "failed",
+                "message": detail,
+                "details": {
+                    "location": counterexample.location,
+                    "path": counterexample.path,
+                    "expected_summary": counterexample.expected_summary,
+                    "actual_min": counterexample.actual_min,
+                },
+                "counterexample": {
+                    "headline": counterexample.headline,
+                    "location": counterexample.location,
+                    "path": counterexample.path,
+                    "expected_summary": counterexample.expected_summary,
+                    "actual_min": counterexample.actual_min,
+                    "notes": list(counterexample.notes),
+                    "check_kind": counterexample.check_kind,
+                    "location_detail": counterexample.location_detail,
+                },
+            }
+        )
     except BaseException as e:
         detail = _format_error(e)
+        raw_error = detail
+        status = "timeout" if isinstance(e, asyncio.TimeoutError) else "error"
+        failure_kind = status
     finally:
         for td in reversed(teardowns):
             try:
@@ -231,6 +308,15 @@ async def run_scenario_job(
         duration_s=duration_s,
         counterexample=counterexample,
         param_cells=param_labels,
+        status=status if not ok else "passed",
+        started_at=started_at,
+        finished_at=datetime.now(tz=UTC).isoformat(),
+        output_preview=(str(s._turn_results[-1].output)[:500] if s is not None and s._turn_results else None),
+        failure_kind=failure_kind,
+        failure_message=detail if not ok else None,
+        turn_results=tuple(s._turn_results) if s is not None else (),
+        assertions=tuple(assertions),
+        raw_error=raw_error,
     )
 
 

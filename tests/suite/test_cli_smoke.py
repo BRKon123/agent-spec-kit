@@ -19,6 +19,17 @@ def _env() -> dict[str, str]:
     return env
 
 
+def _run_cli(args: list[str], *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "agent_spec_kit.cli", *args],
+        capture_output=True,
+        text=True,
+        check=False,
+        env=_env(),
+        cwd=cwd,
+    )
+
+
 def test_cli_list_discovers_scenario(tmp_path: Path) -> None:
     (tmp_path / "fixtures.py").write_text(
         """
@@ -47,13 +58,7 @@ async def test_smoke(s):
 """,
         encoding="utf-8",
     )
-    r = subprocess.run(
-        [sys.executable, "-m", "agent_spec_kit.cli", "run", str(tmp_path), "--list"],
-        capture_output=True,
-        text=True,
-        check=False,
-        env=_env(),
-    )
+    r = _run_cli(["run", str(tmp_path), "--list"], cwd=tmp_path)
     assert r.returncode == 0, r.stderr
     out = r.stdout
     assert "test_smoke" in out
@@ -88,13 +93,7 @@ async def test_run(s):
 """,
         encoding="utf-8",
     )
-    r = subprocess.run(
-        [sys.executable, "-m", "agent_spec_kit.cli", "run", str(tmp_path)],
-        capture_output=True,
-        text=True,
-        check=False,
-        env=_env(),
-    )
+    r = _run_cli(["run", str(tmp_path)], cwd=tmp_path)
     assert r.returncode == 0, r.stderr + r.stdout
     assert "test_run" in r.stdout
     assert "1 passed" in r.stdout
@@ -131,22 +130,7 @@ async def other(s):
 """,
         encoding="utf-8",
     )
-    r = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "agent_spec_kit.cli",
-            "run",
-            str(tmp_path),
-            "--list",
-            "--tags",
-            "onlyme",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-        env=_env(),
-    )
+    r = _run_cli(["run", str(tmp_path), "--list", "--tags", "onlyme"], cwd=tmp_path)
     assert r.returncode == 0, r.stderr
     assert "tagged" in r.stdout
     assert "other" not in r.stdout
@@ -183,14 +167,72 @@ async def test_two(s):
 """,
         encoding="utf-8",
     )
-    r = subprocess.run(
-        [sys.executable, "-m", "agent_spec_kit.cli", "run", str(tmp_path), "-n", "2"],
-        capture_output=True,
-        text=True,
-        check=False,
-        env=_env(),
-    )
+    r = _run_cli(["run", str(tmp_path), "-n", "2"], cwd=tmp_path)
     assert r.returncode == 0, r.stderr + r.stdout
     assert "test_one" in r.stdout
     assert "test_two" in r.stdout
     assert "2 passed" in r.stdout
+
+
+def test_cli_run_metadata_validation(tmp_path: Path) -> None:
+    r = _run_cli(["run", str(tmp_path), "--metadata", "bad"], cwd=tmp_path)
+    assert r.returncode == 2
+    assert "expected key=value" in r.stderr
+
+
+def test_cli_runs_and_show(tmp_path: Path) -> None:
+    (tmp_path / "fixtures.py").write_text(
+        """
+from __future__ import annotations
+import agent_spec_kit as ek
+from agent_spec_kit.run import TurnResult
+
+@ek.fixture
+async def agent():
+    class A:
+        async def run_turn(self, user_message: str) -> TurnResult:
+            return TurnResult(output="ok", events=())
+    return A()
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "test_run.py").write_text(
+        """
+from __future__ import annotations
+import agent_spec_kit as ek
+
+@ek.scenario(agent_fixture="agent", repeats=1, tags=("telecom",))
+async def test_run(s):
+    s.user_message("hello")
+    await s.materialise()
+""",
+        encoding="utf-8",
+    )
+    run = _run_cli(
+        [
+            "run",
+            str(tmp_path),
+            "--experiment",
+            "telecom-agent",
+            "--metadata",
+            "model_family=gpt",
+            "--metadata",
+            "prompt_version=v3",
+            "--notes",
+            "tracking notes",
+        ],
+        cwd=tmp_path,
+    )
+    assert run.returncode == 0, run.stderr + run.stdout
+
+    runs = _run_cli(["runs"], cwd=tmp_path)
+    assert runs.returncode == 0
+    assert "telecom-agent" in runs.stdout
+    assert "scenarios" in runs.stdout
+    run_id = runs.stdout.split()[0]
+
+    show = _run_cli(["show", run_id], cwd=tmp_path)
+    assert show.returncode == 0
+    assert f"Run: {run_id}" in show.stdout
+    assert "Experiment: telecom-agent" in show.stdout
+    assert "Notes: tracking notes" in show.stdout
