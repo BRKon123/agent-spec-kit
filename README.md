@@ -80,6 +80,35 @@ asyncio.run(main())
 
 Implement the `AdaptedAgent` protocol (`async def run_turn(user_message: str) -> TurnResult`) and populate `TurnResult.events` using the typed event classes in `agent_spec_kit.events`. See the module docstring in `agent_spec_kit.run` for a short checklist.
 
+## Async LLM Criteria Checker
+
+Use `agent_spec_kit.match.llm_criteria(...)` to evaluate output against a rubric and pass when at least `threshold` criteria pass.
+
+- `model` uses provider-prefixed routing: `<provider>:<model_name>`, for example `openai:gpt-5-nano` or `anthropic:claude-sonnet-4-5`.
+- Prefer pass/fail criteria over broad numeric scoring for more stable judge outputs.
+- Use async execution (`await scenario.materialise()` or `await scenario.async_check_output(...)`) when this matcher is involved.
+
+```python
+import agent_spec_kit.match as m
+from agent_spec_kit import create_scenario
+
+s = create_scenario(agent)
+s.user_message("Summarize this incident update for an engineering manager.").assert_output(
+    m.llm_criteria(
+        criteria=[
+            "States the root cause correctly",
+            "Mentions customer impact explicitly",
+            "Lists concrete next steps",
+        ],
+        threshold=2,
+        model="openai:gpt-5-nano",
+    )
+)
+await s.materialise()
+```
+
+You can also inject your own judge backend (sync or async) with `judge_fn(actual, criteria, judge_context)`.
+
 ## Live integration tests (OpenAI)
 
 Dev dependencies include `langchain-openai`. Integration tests are marked `integration` and are **excluded by default** (`addopts = -m 'not integration'`).

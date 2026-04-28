@@ -21,6 +21,10 @@ class BaseMatcher(ABC):
     def check(self, actual: Any, path: Path) -> MatchResult:
         raise NotImplementedError
 
+    async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        """Async matcher entrypoint; sync matchers delegate to :meth:`check`."""
+        return self.check(actual, path)
+
 
 def _is_predicate_callable(obj: Any) -> bool:
     """Treat user functions/lambdas/methods/partials as predicates; not types or builtins."""

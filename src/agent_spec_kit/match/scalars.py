@@ -1,4 +1,4 @@
-"""Scalar matchers: equality, predicates, strings, numbers, regex, one_of, optional, any."""
+"""Scalar matchers: equality, predicates, strings, numbers, regex, one_of/all_of/not_, optional, any."""
 
 from __future__ import annotations
 
@@ -225,6 +225,80 @@ class OneOfMatcher(BaseMatcher):
             )
         )
 
+    async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        for opt in self.options:
+            r = await opt.async_check(actual, path)
+            if r.ok:
+                return MatchResult.success()
+        joined = ", ".join(_matcher_summary(o) for o in self.options)
+        return MatchResult.failure(
+            MatchError(
+                path=path,
+                code="one_of",
+                message="value does not match any option",
+                expected=f"one of ({joined})",
+                actual=_short_repr(actual),
+            )
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AllOfMatcher(BaseMatcher):
+    options: tuple[BaseMatcher, ...]
+
+    def check(self, actual: Any, path: Path) -> MatchResult:
+        errors: list[MatchError] = []
+        for opt in self.options:
+            r = opt.check(actual, path)
+            if not r.ok:
+                errors.extend(r.errors)
+        if errors:
+            return MatchResult(ok=False, errors=tuple(errors))
+        return MatchResult.success()
+
+    async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        errors: list[MatchError] = []
+        for opt in self.options:
+            r = await opt.async_check(actual, path)
+            if not r.ok:
+                errors.extend(r.errors)
+        if errors:
+            return MatchResult(ok=False, errors=tuple(errors))
+        return MatchResult.success()
+
+
+@dataclass(frozen=True, slots=True)
+class NotMatcher(BaseMatcher):
+    inner: BaseMatcher
+
+    def check(self, actual: Any, path: Path) -> MatchResult:
+        r = self.inner.check(actual, path)
+        if not r.ok:
+            return MatchResult.success()
+        return MatchResult.failure(
+            MatchError(
+                path=path,
+                code="not",
+                message="value matches disallowed spec",
+                expected=f"not {_matcher_summary(self.inner)}",
+                actual=_short_repr(actual),
+            )
+        )
+
+    async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        r = await self.inner.async_check(actual, path)
+        if not r.ok:
+            return MatchResult.success()
+        return MatchResult.failure(
+            MatchError(
+                path=path,
+                code="not",
+                message="value matches disallowed spec",
+                expected=f"not {_matcher_summary(self.inner)}",
+                actual=_short_repr(actual),
+            )
+        )
+
 
 def _matcher_summary(m: BaseMatcher) -> str:
     if isinstance(m, EqualityMatcher):
@@ -241,10 +315,24 @@ class OptionalMatcher(BaseMatcher):
             return MatchResult.success()
         return self.inner.check(actual, path)
 
+    async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        if actual is None:
+            return MatchResult.success()
+        return await self.inner.async_check(actual, path)
+
 
 def one_of_matcher(*options: Any) -> OneOfMatcher:
     coerced = tuple(coerce_any(o) for o in options)
     return OneOfMatcher(options=coerced)
+
+
+def all_of_matcher(*options: Any) -> AllOfMatcher:
+    coerced = tuple(coerce_any(o) for o in options)
+    return AllOfMatcher(options=coerced)
+
+
+def not_matcher(inner: Any) -> NotMatcher:
+    return NotMatcher(inner=coerce_any(inner))
 
 
 def optional_matcher(inner: Any) -> OptionalMatcher:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -175,6 +176,32 @@ def test_check_output_and_check_tool_calls_after_materialise() -> None:
     assert tools.ok
 
 
+def test_async_check_output_supports_async_matchers() -> None:
+    async def judge_fn(_actual: str, _criteria: Sequence[str], _ctx: str | None):
+        return {
+            "criteria": [
+                {"passed": True, "rationale": "ok"},
+                {"passed": False, "rationale": "nope"},
+            ]
+        }
+
+    agent = ScriptedAgent([TurnResult(output="hello incident update", events=())])
+    s = create_scenario(agent)
+    s.user_message("hi")
+    _run(s.materialise())
+    result = _run(
+        s.async_check_output(
+            m.llm_criteria(
+                criteria=["mentions incident", "mentions mitigation"],
+                threshold=1,
+                model="openai:gpt-5-nano",
+                judge_fn=judge_fn,
+            )
+        )
+    )
+    assert result.ok
+
+
 def test_check_output_rejects_pending_steps() -> None:
     agent = ScriptedAgent([TurnResult(output="a", events=())])
     s = create_scenario(agent)
@@ -204,6 +231,29 @@ def test_branching_with_check_tool_calls_then_second_materialise() -> None:
         s.user_message("second").assert_output(m.contains("step2"))
         _run(s.materialise())
     assert len(s.turn_results) == 2
+
+
+def test_assert_output_llm_criteria_works_during_materialise() -> None:
+    def judge_fn(_actual: str, _criteria: Sequence[str], _ctx: str | None):
+        return {
+            "criteria": [
+                {"passed": True, "rationale": "root cause present"},
+                {"passed": True, "rationale": "impact present"},
+                {"passed": False, "rationale": "next steps missing"},
+            ]
+        }
+
+    agent = ScriptedAgent([TurnResult(output="incident report", events=())])
+    s = create_scenario(agent)
+    s.user_message("run").assert_output(
+        m.llm_criteria(
+            criteria=["root cause", "impact", "next steps"],
+            threshold=2,
+            model="openai:gpt-5-nano",
+            judge_fn=judge_fn,
+        )
+    )
+    _run(s.materialise())
 
 
 def test_async_action_and_assert_that(tmp_path: Path) -> None:

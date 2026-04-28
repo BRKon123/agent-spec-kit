@@ -45,6 +45,35 @@ class TransformMatcher(BaseMatcher):
             )
         return MatchResult(ok=False, errors=tuple(merged))
 
+    async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        try:
+            transformed = self.fn(actual)
+        except Exception as e:  # noqa: BLE001
+            return MatchResult.failure(
+                MatchError(
+                    path=path,
+                    code="transform",
+                    message=f"transform raised: {e}",
+                    expected="transform without exception",
+                    actual=_short_repr(actual),
+                )
+            )
+        r = await self.inner.async_check(transformed, path)
+        if r.ok:
+            return r
+        merged: list[MatchError] = []
+        for err in r.errors:
+            merged.append(
+                MatchError(
+                    path=err.path,
+                    code=err.code,
+                    message=f"after transform: {err.message}",
+                    expected=err.expected,
+                    actual=err.actual,
+                )
+            )
+        return MatchResult(ok=False, errors=tuple(merged))
+
 
 def transform_matcher(fn: Callable[[Any], Any], inner: Any) -> TransformMatcher:
     return TransformMatcher(fn=fn, inner=coerce_any(inner))

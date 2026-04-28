@@ -111,6 +111,40 @@ def _ordered_exact(
     return MatchResult.success()
 
 
+async def _ordered_exact_async(
+    elements: tuple[BaseMatcher, ...], actual: list[Any], path: Path
+) -> MatchResult:
+    if len(actual) != len(elements):
+        witness = _list_length_witness_payload(
+            mode="ordered_exact",
+            elements=elements,
+            actual=actual,
+            expected_len=len(elements),
+            actual_len=len(actual),
+        )
+        return MatchResult.failure(
+            MatchError(
+                path=path,
+                code="list_length_mismatch",
+                message=(
+                    "wrong list length: expected exactly "
+                    f"{len(elements)} value(s) in this order, found {len(actual)}"
+                ),
+                expected=str(len(elements)),
+                actual=str(len(actual)),
+                witness_json=json.dumps(witness, default=str),
+            )
+        )
+    errors: list[MatchError] = []
+    for i, (em, val) in enumerate(zip(elements, actual, strict=True)):
+        r = await em.async_check(val, path + (i,))
+        if not r.ok:
+            errors.extend(r.errors)
+    if errors:
+        return MatchResult(ok=False, errors=tuple(errors))
+    return MatchResult.success()
+
+
 def _ordered_subsequence(
     elements: tuple[BaseMatcher, ...], actual: list[Any], path: Path
 ) -> MatchResult:
@@ -118,6 +152,37 @@ def _ordered_subsequence(
     for em in elements:
         while ai < len(actual):
             r = em.check(actual[ai], path + (ai,))
+            if r.ok:
+                ai += 1
+                break
+            ai += 1
+        else:
+            return MatchResult.failure(
+                MatchError(
+                    path=path,
+                    code="missing_element",
+                    message=(
+                        "could not find each expected value in order from left to right "
+                        "(extra values in between are allowed)"
+                    ),
+                    expected="each value in order, left to right",
+                    actual=_short_repr(actual),
+                    witness_json=json.dumps(
+                        {"mode": "ordered_subsequence", "actual_witness": actual[:12]},
+                        default=str,
+                    ),
+                )
+            )
+    return MatchResult.success()
+
+
+async def _ordered_subsequence_async(
+    elements: tuple[BaseMatcher, ...], actual: list[Any], path: Path
+) -> MatchResult:
+    ai = 0
+    for em in elements:
+        while ai < len(actual):
+            r = await em.async_check(actual[ai], path + (ai,))
             if r.ok:
                 ai += 1
                 break
@@ -171,6 +236,35 @@ def _multiset_by_permutation(
     )
 
 
+async def _multiset_by_permutation_async(
+    specs: list[BaseMatcher], actual: list[Any], path: Path
+) -> MatchResult:
+    n = len(specs)
+    for perm in itertools.permutations(range(n)):
+        for i, j in enumerate(perm):
+            r = await specs[i].async_check(actual[j], path + (j,))
+            if not r.ok:
+                break
+        else:
+            return MatchResult.success()
+    return MatchResult.failure(
+        MatchError(
+            path=path,
+            code="unordered_mismatch",
+            message=(
+                "the list does not match when order is ignored: each expected value "
+                "must correspond to a different position in the list"
+            ),
+            expected="each value matched to a different position (order ignored)",
+            actual=_short_repr(actual),
+            witness_json=json.dumps(
+                {"mode": "unordered_permutation", "actual_witness": actual[:12]},
+                default=str,
+            ),
+        )
+    )
+
+
 def _unordered_injective_dfs(
     specs: list[BaseMatcher], actual: list[Any], path: Path, *, allow_extras: bool
 ) -> MatchResult:
@@ -194,6 +288,63 @@ def _unordered_injective_dfs(
         return False
 
     if dfs(0):
+        return MatchResult.success()
+    if allow_extras:
+        msg = (
+            "could not match each expected value to a different item in the list "
+            "(order does not matter; extra items in the list are allowed)"
+        )
+    else:
+        msg = (
+            "the list does not match when order is ignored: each expected value "
+            "must correspond to a different position in the list"
+        )
+    return MatchResult.failure(
+        MatchError(
+            path=path,
+            code="unordered_mismatch",
+            message=msg,
+            expected=(
+                "each value to a different item (order ignored, extras allowed)"
+                if allow_extras
+                else "each value to a different position (order ignored)"
+            ),
+            actual=_short_repr(actual),
+            witness_json=json.dumps(
+                {
+                    "mode": "unordered_injective",
+                    "allow_extras": allow_extras,
+                    "actual_witness": actual[:12],
+                },
+                default=str,
+            ),
+        )
+    )
+
+
+async def _unordered_injective_dfs_async(
+    specs: list[BaseMatcher], actual: list[Any], path: Path, *, allow_extras: bool
+) -> MatchResult:
+    n = len(specs)
+    m = len(actual)
+    used = [False] * m
+
+    async def dfs(i: int) -> bool:
+        if i == n:
+            return True
+        for j in range(m):
+            if used[j]:
+                continue
+            r = await specs[i].async_check(actual[j], path + (j,))
+            if not r.ok:
+                continue
+            used[j] = True
+            if await dfs(i + 1):
+                return True
+            used[j] = False
+        return False
+
+    if await dfs(0):
         return MatchResult.success()
     if allow_extras:
         msg = (
@@ -308,6 +459,68 @@ class ListMatcher(BaseMatcher):
             return MatchResult.success()
         return _unordered_injective_dfs(specs, actual, path, allow_extras=True)
 
+    async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        if not isinstance(actual, list):
+            return _not_list_error(path, actual)
+
+        if self.mode == "ordered":
+            if not self.allow_extras:
+                return await _ordered_exact_async(self.elements, actual, path)
+            return await _ordered_subsequence_async(self.elements, actual, path)
+
+        n = len(self.elements)
+        m = len(actual)
+        specs = list(self.elements)
+
+        if not self.allow_extras:
+            if m != n:
+                witness = _list_length_witness_payload(
+                    mode="unordered_exact",
+                    elements=self.elements,
+                    actual=actual,
+                    expected_len=n,
+                    actual_len=m,
+                )
+                return MatchResult.failure(
+                    MatchError(
+                        path=path,
+                        code="list_length_mismatch",
+                        message=(
+                            "wrong list length: expected exactly "
+                            f"{n} value(s) when order is ignored, found {m}"
+                        ),
+                        expected=str(n),
+                        actual=str(m),
+                        witness_json=json.dumps(witness, default=str),
+                    )
+                )
+            if n == 0:
+                return MatchResult.success()
+            if n <= _MAX_PERM:
+                return await _multiset_by_permutation_async(specs, actual, path)
+            return await _unordered_injective_dfs_async(specs, actual, path, allow_extras=False)
+
+        if m < n:
+            return MatchResult.failure(
+                MatchError(
+                    path=path,
+                    code="list_too_short",
+                    message=(
+                        "list is too short: need at least "
+                        f"{n} item(s) to match all expected values (order does not matter)"
+                    ),
+                    expected=f">= {n}",
+                    actual=str(m),
+                    witness_json=json.dumps(
+                        {"expected_min": n, "actual_len": m, "actual_witness": actual},
+                        default=str,
+                    ),
+                )
+            )
+        if n == 0:
+            return MatchResult.success()
+        return await _unordered_injective_dfs_async(specs, actual, path, allow_extras=True)
+
 
 def list_matcher(
     elements: Sequence[Any],
@@ -345,6 +558,26 @@ class ListOfMatcher(BaseMatcher):
         errors: list[MatchError] = []
         for i, val in enumerate(actual):
             r = self.inner.check(val, path + (i,))
+            if not r.ok:
+                errors.extend(r.errors)
+        if errors:
+            return MatchResult(ok=False, errors=tuple(errors))
+        return MatchResult.success()
+
+    async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        if not isinstance(actual, list):
+            return MatchResult.failure(
+                MatchError(
+                    path=path,
+                    code="list_of",
+                    message="expected a list",
+                    expected="list",
+                    actual=type(actual).__name__,
+                )
+            )
+        errors: list[MatchError] = []
+        for i, val in enumerate(actual):
+            r = await self.inner.async_check(val, path + (i,))
             if not r.ok:
                 errors.extend(r.errors)
         if errors:

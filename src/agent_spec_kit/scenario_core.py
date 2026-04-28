@@ -14,6 +14,7 @@ from agent_spec_kit.failures import (
     counterexample_from_failure,
     raise_scenario_match_failure,
 )
+from agent_spec_kit.match.api import async_check as match_async_check
 from agent_spec_kit.match.api import check as match_check
 from agent_spec_kit.match.lists import list_matcher
 from agent_spec_kit.match.types import MatchResult
@@ -287,6 +288,32 @@ class Scenario:
         list_spec = _coerce_tool_calls_list_spec(spec, ordered=ordered, allow_extras=allow_extras)
         return match_check(list_spec, actual)
 
+    async def async_check_output(
+        self, spec: Any, *, turn: Literal["last"] = "last", actor: str | None = None
+    ) -> MatchResult:
+        self._require_post_checks_ready()
+        if turn != "last":
+            raise ValueError("only turn='last' is supported")
+        tr = self._conversation_for_assert(actor)
+        return await match_async_check(spec, tr.output)
+
+    async def async_check_tool_calls(
+        self,
+        spec: Any,
+        *,
+        ordered: bool = True,
+        allow_extras: bool = True,
+        turn: Literal["last"] = "last",
+        actor: str | None = None,
+    ) -> MatchResult:
+        self._require_post_checks_ready()
+        if turn != "last":
+            raise ValueError("only turn='last' is supported")
+        tr = self._conversation_for_assert(actor)
+        actual = _tool_dicts_from_conversation_turn(tr)
+        list_spec = _coerce_tool_calls_list_spec(spec, ordered=ordered, allow_extras=allow_extras)
+        return await match_async_check(list_spec, actual)
+
     def raise_unless_ok(
         self,
         result: MatchResult,
@@ -428,7 +455,7 @@ class Scenario:
             turns_in_segment = 1
 
         if step.stop_condition is not None and last_output_for_stop is not None:
-            r0 = match_check(step.stop_condition, last_output_for_stop)
+            r0 = await match_async_check(step.stop_condition, last_output_for_stop)
             if r0.ok and last_actor_for_stop is not None:
                 return
 
@@ -443,7 +470,7 @@ class Scenario:
             self._append_turn(tnext)
             out_s = tnext.output if isinstance(tnext.output, str) else str(tnext.output) if tnext.output is not None else ""
             if step.stop_condition is not None:
-                r1 = match_check(step.stop_condition, out_s)
+                r1 = await match_async_check(step.stop_condition, out_s)
                 if r1.ok:
                     return
             if tnext.status != "ok":
@@ -480,7 +507,7 @@ class Scenario:
                 msg = "assert_output/assert_tool_calls require a preceding user_message step in the queue"
                 raise AssertionError(msg)
             tr = self._conversation_for_assert(step.actor)
-            r = match_check(step.matcher, tr.output)
+            r = await match_async_check(step.matcher, tr.output)
             _raise_match_step(
                 self,
                 step_kind="assert_output",
@@ -503,7 +530,7 @@ class Scenario:
                 ordered=step.ordered,
                 allow_extras=step.allow_extras,
             )
-            r = match_check(list_spec, actual)
+            r = await match_async_check(list_spec, actual)
             _raise_match_step(
                 self,
                 step_kind="assert_tool_calls",

@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, overload
+from typing import Any, Literal
 
+from agent_spec_kit.match.llm_criteria import LLMCriteriaMatcher, llm_criteria_matcher
 from agent_spec_kit.match.lists import (
     ListMatcher,
     ListOfMatcher,
@@ -29,11 +30,15 @@ from agent_spec_kit.match.rules import (
     require,
 )
 from agent_spec_kit.match.scalars import (
+    AllOfMatcher,
     AnyValueMatcher,
+    NotMatcher,
     NumberMatcher,
     PredicateMatcher,
     RegexMatcher,
     StringMatcher,
+    all_of_matcher,
+    not_matcher,
     one_of_matcher,
     optional_matcher,
 )
@@ -42,14 +47,6 @@ from agent_spec_kit.match.types import MatchError, MatchResult, Path
 
 _NO = object()
 _MISSING = object()
-
-
-@overload
-def check(spec: Any, actual: Any) -> MatchResult: ...
-
-
-@overload
-def check(spec: Any, *, actual: Any) -> MatchResult: ...
 
 
 def check(spec: Any, actual_pos: Any = _NO, *, actual: Any = _NO) -> MatchResult:
@@ -68,12 +65,14 @@ def check(spec: Any, actual_pos: Any = _NO, *, actual: Any = _NO) -> MatchResult
     return coerce_any(spec).check(value, ())
 
 
-@overload
-def match(spec: Any, *, message: str) -> PredicateMatcher: ...
-
-
-@overload
-def match(spec: Any, *, message: None = None) -> BaseMatcher: ...
+async def async_check(spec: Any, actual_pos: Any = _NO, *, actual: Any = _NO) -> MatchResult:
+    """Async version of :func:`check`; supports both sync and async matchers."""
+    if actual_pos is not _NO and actual is not _NO:
+        raise TypeError("async_check() accepts at most one actual value (positional or actual=)")
+    value = actual if actual_pos is _NO else actual_pos
+    if value is _NO:
+        raise TypeError("async_check(spec, actual) requires the value to validate")
+    return await coerce_any(spec).async_check(value, ())
 
 
 def match(spec: Any, *, message: str | None = None) -> BaseMatcher:
@@ -127,6 +126,16 @@ def regex(pattern: str | re.Pattern[str]) -> RegexMatcher:
 def one_of(*options: Any) -> Any:
     """Require ``actual`` to satisfy at least one of the given specs (first match wins)."""
     return one_of_matcher(*options)
+
+
+def all_of(*options: Any) -> Any:
+    """Require ``actual`` to satisfy all given specs (AND semantics)."""
+    return all_of_matcher(*options)
+
+
+def not_(inner: Any) -> Any:
+    """Require ``actual`` to not satisfy ``inner``."""
+    return not_matcher(inner)
 
 
 def optional(inner: Any) -> Any:
@@ -238,15 +247,41 @@ def tool_call(
     return object_matcher(fields, extra="ignore")
 
 
+def llm_criteria(
+    *,
+    criteria: Sequence[str],
+    threshold: int,
+    model: str,
+    temperature: float | None = None,
+    timeout_s: float | None = None,
+    judge_context: str | None = None,
+    judge_fn: Callable[[str, Sequence[str], str | None], Any] | None = None,
+    evaluation_mode: Literal["single", "per_criterion"] = "single",
+) -> LLMCriteriaMatcher:
+    """Judge ``actual`` text against criteria with an LLM and threshold."""
+    return llm_criteria_matcher(
+        criteria=criteria,
+        threshold=threshold,
+        model=model,
+        temperature=temperature,
+        timeout_s=timeout_s,
+        judge_context=judge_context,
+        judge_fn=judge_fn,
+        evaluation_mode=evaluation_mode,
+    )
+
+
 __all__ = [
     "BaseMatcher",
     "ForbidRule",
+    "AllOfMatcher",
     "ListMatcher",
     "ListOfMatcher",
     "MatchError",
     "MatchResult",
     "ObjectMatcher",
     "Path",
+    "NotMatcher",
     "PredicateMatcher",
     "RequireRule",
     "RegexMatcher",
@@ -258,9 +293,12 @@ __all__ = [
     "list",
     "list_of",
     "check",
+    "async_check",
     "contains",
+    "all_of",
     "match",
     "number",
+    "not_",
     "object",
     "one_of",
     "optional",
@@ -269,4 +307,5 @@ __all__ = [
     "string",
     "tool_call",
     "transform",
+    "llm_criteria",
 ]
