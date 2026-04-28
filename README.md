@@ -2,6 +2,48 @@
 
 Agent specification kit library.
 
+## Results browser UI
+
+A read-only web UI is available for browsing recorded runs, scenarios, traces,
+and comparing experiments side by side.
+
+End-user (the SPA bundle ships in the wheel):
+
+```bash
+pip install 'agent-spec-kit[ui]'
+agent-spec-kit ui --open      # http://127.0.0.1:8765
+```
+
+What's there:
+
+- Runs list with experiment / status filters and a column picker.
+- Run detail page: scenarios + repeats table next to a collapsible run side panel
+  (summary, git, metadata, failure-kind / tag / parameter breakdowns).
+- Trace drawer: nested expandable event tree with per-field toggles for
+  ``args`` / ``result`` / ``input`` / ``output`` / ``metadata``, plus a failure
+  card mirroring the CLI failure box.
+- Compare page: pick **N ≥ 2** experiments (URL: ``/compare?experiments=A,B,C``);
+  rows are scenarios, cells repeat per experiment, mismatch rows highlight in
+  amber.
+
+### Frontend development (contributors)
+
+The SPA lives in [`frontend/`](frontend/). Built assets land in
+``src/agent_spec_kit/web/dist/`` so they're packaged into the wheel.
+
+```bash
+# one-shot: build the SPA into src/agent_spec_kit/web/dist/
+./scripts/build_ui.sh
+
+# dev loop: backend on :8765, Vite on :5173 with /api proxied
+npm --prefix frontend install
+uv run agent-spec-kit ui --port 8765 --no-frontend &   # API only
+npm --prefix frontend run dev                          # http://localhost:5173
+```
+
+CI should run ``./scripts/build_ui.sh --ci`` before ``uv build`` so the
+distributed wheel includes the bundle.
+
 ## LangChain / LangGraph
 
 Install the optional stack:

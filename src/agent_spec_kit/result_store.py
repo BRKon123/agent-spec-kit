@@ -418,32 +418,341 @@ class LocalResultStore:
             )
             conn.commit()
 
-    def list_runs(self, *, limit: int = 20) -> list[dict[str, Any]]:
+    def list_runs(
+        self,
+        *,
+        limit: int = 20,
+        offset: int = 0,
+        experiment_id: str | None = None,
+        status: str | None = None,
+    ) -> list[dict[str, Any]]:
+        clauses: list[str] = []
+        params: list[Any] = []
+        if experiment_id is not None:
+            clauses.append("r.experiment_id = ?")
+            params.append(experiment_id)
+        if status is not None:
+            clauses.append("r.status = ?")
+            params.append(status)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        sql = f"""
+            SELECT r.run_id, r.experiment_id, e.name AS experiment_name, r.status,
+                   r.started_at, r.finished_at, r.summary_json, r.metadata_json
+            FROM runs r
+            JOIN experiments e ON e.experiment_id = r.experiment_id
+            {where}
+            ORDER BY r.started_at DESC
+            LIMIT ? OFFSET ?
+        """
+        params.extend([limit, offset])
         with self._connect() as conn:
-            rows = conn.execute(
-                """
-                SELECT r.run_id, e.name AS experiment_name, r.status, r.started_at, r.summary_json
-                FROM runs r
-                JOIN experiments e ON e.experiment_id = r.experiment_id
-                ORDER BY r.started_at DESC
-                LIMIT ?
-                """,
-                (limit,),
-            ).fetchall()
+            rows = conn.execute(sql, params).fetchall()
         out: list[dict[str, Any]] = []
         for row in rows:
             summary = json.loads(row["summary_json"]) if row["summary_json"] else {}
             out.append(
                 {
                     "run_id": row["run_id"],
+                    "experiment_id": row["experiment_id"],
                     "experiment_name": row["experiment_name"],
                     "status": row["status"],
                     "started_at": row["started_at"],
+                    "finished_at": row["finished_at"],
                     "scenario_passed": summary.get("scenario_passed", 0),
                     "scenario_count": summary.get("scenario_count", 0),
+                    "scenario_failed": summary.get("scenario_failed", 0),
+                    "repeat_pass_rate": summary.get("repeat_pass_rate", 0.0),
+                    "mean_duration_ms": summary.get("mean_duration_ms", 0.0),
+                    "summary": summary,
+                    "metadata": json.loads(row["metadata_json"]) if row["metadata_json"] else {},
                 }
             )
         return out
+
+    def list_experiments(self) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT e.experiment_id, e.name, e.created_at,
+                       COUNT(r.run_id) AS run_count,
+                       MAX(r.started_at) AS last_run_at,
+                       (
+                           SELECT r2.status FROM runs r2
+                           WHERE r2.experiment_id = e.experiment_id
+                           ORDER BY r2.started_at DESC LIMIT 1
+                       ) AS last_run_status,
+                       (
+                           SELECT r2.run_id FROM runs r2
+                           WHERE r2.experiment_id = e.experiment_id
+                           ORDER BY r2.started_at DESC LIMIT 1
+                       ) AS last_run_id
+                FROM experiments e
+                LEFT JOIN runs r ON r.experiment_id = e.experiment_id
+                GROUP BY e.experiment_id
+                ORDER BY last_run_at DESC NULLS LAST, e.name ASC
+                """
+            ).fetchall()
+        return [
+            {
+                "experiment_id": row["experiment_id"],
+                "name": row["name"],
+                "created_at": row["created_at"],
+                "run_count": row["run_count"],
+                "last_run_at": row["last_run_at"],
+                "last_run_status": row["last_run_status"],
+                "last_run_id": row["last_run_id"],
+            }
+            for row in rows
+        ]
+
+    def list_scenarios_for_run(self, run_id: str) -> list[dict[str, Any]]:
+        """Return all scenarios for a run, each with its repeats inlined."""
+        with self._connect() as conn:
+            scenario_rows = conn.execute(
+                """
+                SELECT scenario_result_id, run_id, scenario_name, scenario_module, scenario_file,
+                       scenario_key, parameter_key, parameters_json, tags_json, status,
+                       repeats_total, repeats_passed, repeats_failed, duration_ms, summary_json
+                FROM scenario_results
+                WHERE run_id = ?
+                ORDER BY scenario_module, scenario_name, parameter_key
+                """,
+                (run_id,),
+            ).fetchall()
+            repeat_rows = conn.execute(
+                """
+                SELECT rr.repeat_result_id, rr.scenario_result_id, rr.repeat_index,
+                       rr.status, rr.started_at, rr.finished_at, rr.duration_ms,
+                       rr.output_preview, rr.failure_kind, rr.failure_message,
+                       (SELECT COUNT(*) FROM assertions a WHERE a.repeat_result_id = rr.repeat_result_id)
+                           AS assertion_count,
+                       (SELECT COUNT(*) FROM assertions a WHERE a.repeat_result_id = rr.repeat_result_id
+                            AND a.status = 'passed') AS assertion_passed
+                FROM repeat_results rr
+                JOIN scenario_results sr ON sr.scenario_result_id = rr.scenario_result_id
+                WHERE sr.run_id = ?
+                ORDER BY rr.scenario_result_id, rr.repeat_index
+                """,
+                (run_id,),
+            ).fetchall()
+
+        repeats_by_scenario: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for row in repeat_rows:
+            repeats_by_scenario[row["scenario_result_id"]].append(
+                {
+                    "repeat_result_id": row["repeat_result_id"],
+                    "repeat_index": row["repeat_index"],
+                    "status": row["status"],
+                    "started_at": row["started_at"],
+                    "finished_at": row["finished_at"],
+                    "duration_ms": row["duration_ms"],
+                    "output_preview": row["output_preview"],
+                    "failure_kind": row["failure_kind"],
+                    "failure_message": row["failure_message"],
+                    "assertion_count": row["assertion_count"],
+                    "assertion_passed": row["assertion_passed"],
+                }
+            )
+
+        out: list[dict[str, Any]] = []
+        for row in scenario_rows:
+            out.append(
+                {
+                    "scenario_result_id": row["scenario_result_id"],
+                    "run_id": row["run_id"],
+                    "scenario_name": row["scenario_name"],
+                    "scenario_module": row["scenario_module"],
+                    "scenario_file": row["scenario_file"],
+                    "scenario_key": row["scenario_key"],
+                    "parameter_key": row["parameter_key"],
+                    "parameters": json.loads(row["parameters_json"]) if row["parameters_json"] else {},
+                    "tags": json.loads(row["tags_json"]) if row["tags_json"] else [],
+                    "status": row["status"],
+                    "repeats_total": row["repeats_total"],
+                    "repeats_passed": row["repeats_passed"],
+                    "repeats_failed": row["repeats_failed"],
+                    "duration_ms": row["duration_ms"],
+                    "summary": json.loads(row["summary_json"]) if row["summary_json"] else {},
+                    "repeats": repeats_by_scenario.get(row["scenario_result_id"], []),
+                }
+            )
+        return out
+
+    def get_repeat(self, repeat_result_id: str) -> dict[str, Any] | None:
+        """Return the repeat row plus its scenario context and blob paths, or None."""
+        with self._connect() as conn:
+            row = conn.execute(
+                """
+                SELECT rr.*, sr.scenario_name, sr.scenario_module, sr.scenario_key,
+                       sr.parameter_key, sr.parameters_json, sr.tags_json, sr.run_id
+                FROM repeat_results rr
+                JOIN scenario_results sr ON sr.scenario_result_id = rr.scenario_result_id
+                WHERE rr.repeat_result_id = ?
+                """,
+                (repeat_result_id,),
+            ).fetchone()
+            if row is None:
+                return None
+            assertions = conn.execute(
+                """
+                SELECT assertion_id, assertion_type, actor, turn_index, status, message,
+                       details_json, counterexample_blob_path
+                FROM assertions WHERE repeat_result_id = ?
+                ORDER BY assertion_id
+                """,
+                (repeat_result_id,),
+            ).fetchall()
+        return {
+            "repeat_result_id": row["repeat_result_id"],
+            "scenario_result_id": row["scenario_result_id"],
+            "run_id": row["run_id"],
+            "scenario_name": row["scenario_name"],
+            "scenario_module": row["scenario_module"],
+            "scenario_key": row["scenario_key"],
+            "parameter_key": row["parameter_key"],
+            "parameters": json.loads(row["parameters_json"]) if row["parameters_json"] else {},
+            "tags": json.loads(row["tags_json"]) if row["tags_json"] else [],
+            "repeat_index": row["repeat_index"],
+            "status": row["status"],
+            "started_at": row["started_at"],
+            "finished_at": row["finished_at"],
+            "duration_ms": row["duration_ms"],
+            "output_preview": row["output_preview"],
+            "failure_kind": row["failure_kind"],
+            "failure_message": row["failure_message"],
+            "events_blob_path": row["events_blob_path"],
+            "transcript_blob_path": row["transcript_blob_path"],
+            "assertions_blob_path": row["assertions_blob_path"],
+            "counterexample_blob_path": row["counterexample_blob_path"],
+            "raw_error_blob_path": row["raw_error_blob_path"],
+            "assertions": [
+                {
+                    "assertion_id": a["assertion_id"],
+                    "assertion_type": a["assertion_type"],
+                    "actor": a["actor"],
+                    "turn_index": a["turn_index"],
+                    "status": a["status"],
+                    "message": a["message"],
+                    "details": json.loads(a["details_json"]) if a["details_json"] else {},
+                    "counterexample_blob_path": a["counterexample_blob_path"],
+                }
+                for a in assertions
+            ],
+        }
+
+    def compare_experiments_most_recent(
+        self, experiment_ids: list[str]
+    ) -> dict[str, Any]:
+        """
+        Pivot view across N experiments. For each experiment, pick its latest run.
+        Then for every (scenario_key, parameter_key) seen in any of those runs,
+        pick the latest repeat from that run as the cell value.
+        Missing cells are None.
+        """
+        if not experiment_ids:
+            return {"experiments": [], "rows": []}
+
+        with self._connect() as conn:
+            placeholders = ",".join("?" for _ in experiment_ids)
+            exp_rows = conn.execute(
+                f"""
+                SELECT e.experiment_id, e.name,
+                       (SELECT r.run_id FROM runs r
+                         WHERE r.experiment_id = e.experiment_id
+                         ORDER BY r.started_at DESC LIMIT 1) AS latest_run_id,
+                       (SELECT r.started_at FROM runs r
+                         WHERE r.experiment_id = e.experiment_id
+                         ORDER BY r.started_at DESC LIMIT 1) AS latest_run_started_at
+                FROM experiments e
+                WHERE e.experiment_id IN ({placeholders})
+                """,
+                experiment_ids,
+            ).fetchall()
+            exp_meta = {
+                row["experiment_id"]: {
+                    "experiment_id": row["experiment_id"],
+                    "name": row["name"],
+                    "latest_run_id": row["latest_run_id"],
+                    "latest_run_started_at": row["latest_run_started_at"],
+                }
+                for row in exp_rows
+            }
+
+            run_ids = [m["latest_run_id"] for m in exp_meta.values() if m["latest_run_id"]]
+            if not run_ids:
+                ordered = [exp_meta[eid] for eid in experiment_ids if eid in exp_meta]
+                return {"experiments": ordered, "rows": []}
+
+            run_placeholders = ",".join("?" for _ in run_ids)
+            scenario_rows = conn.execute(
+                f"""
+                SELECT sr.scenario_result_id, sr.run_id, sr.scenario_name, sr.scenario_key,
+                       sr.parameter_key, sr.parameters_json, sr.tags_json, sr.status AS scenario_status,
+                       sr.duration_ms AS scenario_duration_ms,
+                       sr.repeats_passed, sr.repeats_failed, sr.repeats_total,
+                       r.experiment_id
+                FROM scenario_results sr
+                JOIN runs r ON r.run_id = sr.run_id
+                WHERE sr.run_id IN ({run_placeholders})
+                """,
+                run_ids,
+            ).fetchall()
+            latest_repeat_rows = conn.execute(
+                f"""
+                SELECT rr.scenario_result_id, rr.repeat_result_id, rr.repeat_index,
+                       rr.status, rr.duration_ms, rr.failure_kind, rr.failure_message
+                FROM repeat_results rr
+                JOIN scenario_results sr ON sr.scenario_result_id = rr.scenario_result_id
+                WHERE sr.run_id IN ({run_placeholders})
+                  AND rr.repeat_index = (
+                      SELECT MAX(rr2.repeat_index) FROM repeat_results rr2
+                      WHERE rr2.scenario_result_id = rr.scenario_result_id
+                  )
+                """,
+                run_ids,
+            ).fetchall()
+
+        latest_repeat_by_scenario_id: dict[str, dict[str, Any]] = {
+            row["scenario_result_id"]: {
+                "repeat_result_id": row["repeat_result_id"],
+                "repeat_index": row["repeat_index"],
+                "status": row["status"],
+                "duration_ms": row["duration_ms"],
+                "failure_kind": row["failure_kind"],
+                "failure_message": row["failure_message"],
+            }
+            for row in latest_repeat_rows
+        }
+
+        # row_key -> { display, cells: { exp_id -> cell or None } }
+        rows_by_key: dict[tuple[str, str], dict[str, Any]] = {}
+        for row in scenario_rows:
+            row_key = (row["scenario_key"], row["parameter_key"])
+            if row_key not in rows_by_key:
+                rows_by_key[row_key] = {
+                    "scenario_key": row["scenario_key"],
+                    "parameter_key": row["parameter_key"],
+                    "scenario_name": row["scenario_name"],
+                    "parameters": json.loads(row["parameters_json"]) if row["parameters_json"] else {},
+                    "tags": json.loads(row["tags_json"]) if row["tags_json"] else [],
+                    "cells": {eid: None for eid in exp_meta},
+                }
+            latest_repeat = latest_repeat_by_scenario_id.get(row["scenario_result_id"])
+            cell: dict[str, Any] = {
+                "scenario_result_id": row["scenario_result_id"],
+                "run_id": row["run_id"],
+                "scenario_status": row["scenario_status"],
+                "scenario_duration_ms": row["scenario_duration_ms"],
+                "repeats_passed": row["repeats_passed"],
+                "repeats_failed": row["repeats_failed"],
+                "repeats_total": row["repeats_total"],
+                "latest_repeat": latest_repeat,
+            }
+            rows_by_key[row_key]["cells"][row["experiment_id"]] = cell
+
+        ordered_experiments = [exp_meta[eid] for eid in experiment_ids if eid in exp_meta]
+        ordered_rows = sorted(rows_by_key.values(), key=lambda r: (r["scenario_key"], r["parameter_key"]))
+        return {"experiments": ordered_experiments, "rows": ordered_rows}
 
     def get_run(self, run_id: str) -> dict[str, Any] | None:
         with self._connect() as conn:

@@ -272,6 +272,37 @@ def _build_jobs(scenarios: list[ScenarioDef]) -> list[tuple[ScenarioDef, int, in
     return jobs
 
 
+def _run_ui(*, host: str, port: int, open_browser: bool, serve_frontend: bool) -> int:
+    try:
+        import uvicorn
+
+        from agent_spec_kit.web.server import DIST_DIR, create_app
+    except ImportError as e:
+        emit_error(
+            "the `ui` command requires the [ui] extra. "
+            "Install with: pip install 'agent-spec-kit[ui]'"
+        )
+        emit_note(f"  (import error: {e})")
+        return 2
+
+    if serve_frontend and not (DIST_DIR / "index.html").exists():
+        emit_note(
+            f"frontend bundle missing at {DIST_DIR}; serving API only. "
+            "Run `npm --prefix frontend install && npm --prefix frontend run build`"
+            " to build the SPA."
+        )
+
+    app = create_app(serve_frontend=serve_frontend)
+    url = f"http://{host}:{port}/"
+    emit_note(f"agent-spec-kit ui listening on {url}")
+    if open_browser:
+        import webbrowser
+
+        webbrowser.open(url)
+    uvicorn.run(app, host=host, port=port, log_level="info")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent-spec-kit")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -292,6 +323,17 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("runs", help="show recent runs")
     show_p = sub.add_parser("show", help="show one run")
     show_p.add_argument("run_id", help="run id")
+    ui_p = sub.add_parser("ui", help="serve the results browser (requires the [ui] extra)")
+    ui_p.add_argument("--host", default="127.0.0.1")
+    ui_p.add_argument("--port", type=int, default=8765)
+    ui_p.add_argument(
+        "--open", dest="open_browser", action="store_true", help="open the UI in your browser"
+    )
+    ui_p.add_argument(
+        "--no-frontend",
+        action="store_true",
+        help="serve API only; useful when running Vite dev server separately",
+    )
     args = parser.parse_args(argv)
     store = LocalResultStore(StorageConfig())
     if args.cmd == "runs":
@@ -329,6 +371,13 @@ def main(argv: list[str] | None = None) -> int:
                 msg = failure["failure_message"] or "(no message)"
                 print(f"- {key}\n  {msg}")
         return 0
+    if args.cmd == "ui":
+        return _run_ui(
+            host=args.host,
+            port=args.port,
+            open_browser=args.open_browser,
+            serve_frontend=not args.no_frontend,
+        )
     if args.cmd != "run":
         return 2
 

@@ -6,6 +6,14 @@ dist/
 wheels/
 *.egg-info
 
+# Frontend build/install artifacts
+frontend/node_modules/
+# `dist/` above also matches src/agent_spec_kit/web/dist/, but keep the directory
+# tracked via .gitkeep so editable installs can mount it once built.
+!src/agent_spec_kit/web/dist/
+src/agent_spec_kit/web/dist/*
+!src/agent_spec_kit/web/dist/.gitkeep
+
 # Virtual environments
 .venv
 
