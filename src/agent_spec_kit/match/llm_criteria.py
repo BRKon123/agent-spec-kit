@@ -18,8 +18,8 @@ JudgeFn = Callable[[str, Sequence[str], str | None], Any]
 @dataclass(frozen=True, slots=True)
 class LLMCriteriaMatcher(BaseMatcher):
     criteria: tuple[str, ...]
-    threshold: int
     model: str
+    threshold: int | None = None
     temperature: float | None = None
     timeout_s: float | None = None
     judge_context: str | None = None
@@ -31,9 +31,11 @@ class LLMCriteriaMatcher(BaseMatcher):
             raise ValueError("criteria must contain at least one item")
         if any(not c.strip() for c in self.criteria):
             raise ValueError("criteria must not contain empty strings")
-        if self.threshold < 1:
+        threshold = len(self.criteria) if self.threshold is None else self.threshold
+        object.__setattr__(self, "threshold", threshold)
+        if threshold < 1:
             raise ValueError("threshold must be >= 1")
-        if self.threshold > len(self.criteria):
+        if threshold > len(self.criteria):
             raise ValueError("threshold must be <= number of criteria")
         if ":" not in self.model:
             raise ValueError("model must be provider-prefixed, e.g. 'openai:gpt-5-nano'")
@@ -70,6 +72,9 @@ class LLMCriteriaMatcher(BaseMatcher):
         if judged.passed_count >= self.threshold:
             return MatchResult.success()
         failed = [g for g in judged.criteria if not g.passed]
+        failed_lines = "\n".join(
+            f"- [{g.index}] criterion: {g.criterion}\n  rationale: {g.rationale}" for g in failed
+        )
         details = {
             "passed_count": judged.passed_count,
             "threshold": self.threshold,
@@ -89,7 +94,9 @@ class LLMCriteriaMatcher(BaseMatcher):
                 code="llm_criteria_threshold",
                 message=(
                     f"LLM criteria threshold failed: passed {judged.passed_count}/{len(self.criteria)} "
-                    f"(required {self.threshold})"
+                    f"(required {self.threshold}).\n"
+                    f"Failed criteria:\n"
+                    f"{failed_lines}"
                 ),
                 expected=f"passed_count >= {self.threshold}",
                 actual=str(judged.passed_count),
@@ -101,7 +108,7 @@ class LLMCriteriaMatcher(BaseMatcher):
 def llm_criteria_matcher(
     *,
     criteria: Sequence[str],
-    threshold: int,
+    threshold: int | None = None,
     model: str,
     temperature: float | None = None,
     timeout_s: float | None = None,

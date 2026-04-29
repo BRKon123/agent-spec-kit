@@ -82,7 +82,7 @@ Implement the `AdaptedAgent` protocol (`async def run_turn(user_message: str) ->
 
 ## Async LLM Criteria Checker
 
-Use `agent_spec_kit.match.llm_criteria(...)` to evaluate output against a rubric and pass when at least `threshold` criteria pass.
+Use `agent_spec_kit.match.llm_criteria(...)` to evaluate output against a rubric and pass when at least `threshold` criteria pass. If `threshold` is omitted, all criteria must pass.
 
 - `model` uses provider-prefixed routing: `<provider>:<model_name>`, for example `openai:gpt-5-nano` or `anthropic:claude-sonnet-4-5`.
 - Prefer pass/fail criteria over broad numeric scoring for more stable judge outputs.

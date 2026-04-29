@@ -260,15 +260,18 @@ def tool_call(
 def llm_criteria(
     *,
     criteria: Sequence[str],
-    threshold: int,
+    threshold: int | None = None,
     model: str,
     temperature: float | None = None,
     timeout_s: float | None = None,
     judge_context: str | None = None,
     judge_fn: Callable[[str, Sequence[str], str | None], Any] | None = None,
-    evaluation_mode: Literal["single", "per_criterion"] = "single",
+    evaluation_mode: Literal["single", "per_criterion"] = "per_criterion",
 ) -> LLMCriteriaMatcher:
-    """Judge ``actual`` text against criteria with an LLM and threshold."""
+    """Judge ``actual`` text against criteria with an LLM and threshold.
+
+    If ``threshold`` is omitted, all criteria must pass.
+    """
     return llm_criteria_matcher(
         criteria=criteria,
         threshold=threshold,

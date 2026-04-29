@@ -48,9 +48,9 @@ async def test_arithmetic_with_llm_criteria_checks(s):
                 criteria=[
                     "contains 20",
                     "contains 23",
-                    "contains final",
+                    "contains brutus",
                 ],
-                threshold=2,
+                threshold=3,
                 model="openai:gpt-5-nano",
             )
         )

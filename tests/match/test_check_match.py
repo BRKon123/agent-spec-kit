@@ -107,7 +107,33 @@ def test_llm_criteria_fails_threshold_with_details() -> None:
     r = asyncio.run(m.async_check(matcher, "candidate output"))
     assert not r.ok
     assert r.errors[0].code == "llm_criteria_threshold"
+    assert (
+        "Failed criteria:\n"
+        "- [0] criterion: a\n"
+        "  rationale: wrong\n"
+        "- [2] criterion: c\n"
+        "  rationale: missing"
+    ) in r.errors[0].message
     assert r.errors[0].witness_json is not None
+
+
+def test_llm_criteria_default_threshold_requires_all_criteria() -> None:
+    async def judge_fn(_actual: str, _criteria: Sequence[str], _ctx: str | None):
+        return {
+            "criteria": [
+                {"passed": True, "rationale": "good"},
+                {"passed": False, "rationale": "missing"},
+            ]
+        }
+
+    matcher = m.llm_criteria(
+        criteria=["a", "b"],
+        model="openai:gpt-5-nano",
+        judge_fn=judge_fn,
+    )
+    r = asyncio.run(m.async_check(matcher, "candidate output"))
+    assert not r.ok
+    assert r.errors[0].expected == "passed_count >= 2"
 
 
 def test_nested_async_matcher_inside_tool_call_result() -> None:
