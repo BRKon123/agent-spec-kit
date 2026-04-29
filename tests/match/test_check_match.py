@@ -167,3 +167,16 @@ def test_all_of_with_nested_async_matcher() -> None:
     )
     r = asyncio.run(m.async_check(spec, "incident summary"))
     assert r.ok
+
+
+def test_contains_is_case_insensitive_by_default() -> None:
+    r = m.check(m.contains("hello"), "HeLLo there")
+    assert r.ok
+
+
+def test_contains_can_be_case_sensitive() -> None:
+    ok = m.check(m.contains("Hello", case_sensitive=True), "Hello there")
+    assert ok.ok
+
+    fail = m.check(m.contains("hello", case_sensitive=True), "Hello there")
+    assert not fail.ok

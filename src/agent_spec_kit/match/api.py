@@ -204,18 +204,28 @@ def transform(fn: Callable[[Any], Any], inner: Any) -> TransformMatcher:
     return transform_matcher(fn, inner)
 
 
-def contains(substring: str) -> PredicateMatcher:
-    """Match when ``substring`` appears in ``str(actual)``."""
+def contains(substring: str, *, case_sensitive: bool = False) -> PredicateMatcher:
+    """Match when ``substring`` appears in ``str(actual)``.
+
+    Matching is case-insensitive by default; set ``case_sensitive=True`` to
+    require exact casing.
+    """
 
     def pred(actual: Any) -> bool:
         try:
-            return substring in str(actual)
+            haystack = str(actual)
+            needle = substring
+            if not case_sensitive:
+                haystack = haystack.casefold()
+                needle = needle.casefold()
+            return needle in haystack
         except Exception:
             return False
 
+    mode = "case-sensitive" if case_sensitive else "case-insensitive"
     return PredicateMatcher(
         pred,
-        message=f"expected value to contain substring {substring!r}",
+        message=f"expected value to contain {mode} substring {substring!r}",
     )
 
 
