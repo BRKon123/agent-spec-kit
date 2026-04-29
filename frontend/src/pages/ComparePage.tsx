@@ -211,15 +211,7 @@ export function ComparePage() {
           experiments={compare.data.experiments}
           rows={compare.data.rows}
           columnVisibility={columnVisibility}
-          onRowClick={(row) => {
-            for (const exp of compare.data.experiments) {
-              const cell = row.cells[exp.experiment_id];
-              if (cell?.latest_repeat) {
-                onCellClick(cell);
-                return;
-              }
-            }
-          }}
+          onCellClick={onCellClick}
         />
       ) : null}
 
@@ -236,12 +228,12 @@ function CompareTableView({
   experiments,
   rows,
   columnVisibility,
-  onRowClick,
+  onCellClick,
 }: {
   experiments: CompareExperimentMeta[];
   rows: import("@/lib/types").CompareRow[];
   columnVisibility: Record<string, boolean>;
-  onRowClick: (row: import("@/lib/types").CompareRow) => void;
+  onCellClick: (cell: CompareCell | null) => void;
 }) {
   if (rows.length === 0) {
     return (
@@ -253,6 +245,7 @@ function CompareTableView({
   }
   const showField = (id: string) => columnVisibility[id] ?? true;
   const cellFieldVisible = (id: string) => columnVisibility[`cell:${id}`] ?? true;
+  const [hoveredExperimentGroup, setHoveredExperimentGroup] = useState<string | null>(null);
 
   return (
     <Card>
@@ -308,20 +301,12 @@ function CompareTableView({
                 .filter((s): s is NonNullable<typeof s> => Boolean(s));
               const distinct = new Set(statuses);
               const mismatch = distinct.size > 1;
-              const hasClickableRepeat = experiments.some(
-                (e) => Boolean(row.cells[e.experiment_id]?.latest_repeat),
-              );
-              const handleRowClick = () => {
-                if (hasClickableRepeat) onRowClick(row);
-              };
               return (
                 <tr
                   key={`${row.scenario_key}|${row.parameter_key}`}
-                  onClick={handleRowClick}
                   className={cn(
                     "border-b border-slate-100",
                     mismatch && "bg-amber-50/60",
-                    hasClickableRepeat && "cursor-pointer hover:bg-slate-100/60",
                   )}
                 >
                   {showField("scenario_name") && (
@@ -329,9 +314,7 @@ function CompareTableView({
                       className={cn(
                         "sticky left-0 bg-white px-3 py-2 align-top border-b border-slate-100 min-w-[16rem] overflow-hidden",
                         mismatch && "bg-amber-50/60 border-l-2 border-l-amber-400",
-                        hasClickableRepeat && "cursor-pointer",
                       )}
-                      onClick={handleRowClick}
                     >
                       <div className="font-medium whitespace-nowrap">
                         {row.scenario_name}
@@ -359,9 +342,7 @@ function CompareTableView({
                     <td
                       className={cn(
                         "px-3 py-2 align-top border-b border-slate-100 overflow-hidden",
-                        hasClickableRepeat && "cursor-pointer",
                       )}
-                      onClick={handleRowClick}
                     >
                       <div className="flex flex-wrap gap-1 min-w-[10rem]">
                         {row.tags.map((t) => (
@@ -377,6 +358,8 @@ function CompareTableView({
                   )}
                   {experiments.map((e) => {
                     const cell = row.cells[e.experiment_id];
+                    const experimentGroupKey = `${row.scenario_key}|${row.parameter_key}|${e.experiment_id}`;
+                    const isExperimentHovered = hoveredExperimentGroup === experimentGroupKey;
                     return PER_EXP_FIELDS.filter((f) => cellFieldVisible(f.id)).map(
                       (f, i) => (
                         <td
@@ -384,9 +367,14 @@ function CompareTableView({
                           className={cn(
                             "px-3 py-2 align-top border-b border-slate-100 max-w-[18rem] overflow-hidden",
                             i === 0 && "border-l border-slate-200",
-                            hasClickableRepeat && "cursor-pointer",
+                            isExperimentHovered && "bg-slate-100/60",
+                            cell?.latest_repeat && "cursor-pointer",
                           )}
-                          onClick={handleRowClick}
+                          onMouseEnter={() => setHoveredExperimentGroup(experimentGroupKey)}
+                          onMouseLeave={() => setHoveredExperimentGroup((prev) =>
+                            prev === experimentGroupKey ? null : prev,
+                          )}
+                          onClick={() => onCellClick(cell ?? null)}
                         >
                           {cell ? (
                             <CompareCellView field={f.id} cell={cell} />
