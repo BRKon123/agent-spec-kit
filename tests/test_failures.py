@@ -54,6 +54,55 @@ def test_counterexample_list_length_tool_calls_shows_counts_and_names() -> None:
     assert cx.check_kind == "assert_tool_calls"
 
 
+def test_counterexample_tool_call_mismatch_notes_do_not_repeat_full_list() -> None:
+    r = m.check(m.list([1], allow_extras=True), [2])
+    assert not r.ok
+    record = FailureRecord(
+        scenario_name="t_tools_mismatch",
+        step_index=1,
+        step_kind="assert_tool_calls",
+        turn_index=0,
+        actual=[2],
+        matcher_spec=[1],
+        matcher_errors=r.errors,
+        error=None,
+    )
+    cx = counterexample_from_failure(record)
+    notes_joined = "\n".join(cx.notes)
+    assert "could not match expected element at index" in notes_joined
+    assert "full tool-call list" not in notes_joined.lower()
+
+
+def test_counterexample_uses_deepest_inner_path_for_tool_call_mismatch() -> None:
+    spec = m.list([m.object({"args": {"a": 7}})], allow_extras=True)
+    actual = [
+        {
+            "name": "multiply_integers",
+            "args": {"a": 6, "b": 7},
+            "result": "42",
+            "error": None,
+            "children": [],
+            "metadata": {"tool_call_id": "call_1"},
+        }
+    ]
+    r = m.check(spec, actual)
+    assert not r.ok
+    record = FailureRecord(
+        scenario_name="t_deep_path",
+        step_index=1,
+        step_kind="assert_tool_calls",
+        turn_index=0,
+        actual=actual,
+        matcher_spec=spec,
+        matcher_errors=r.errors,
+        error=None,
+    )
+    cx = counterexample_from_failure(record)
+    assert cx.path == "$[0].args.a"
+    assert "mismatch at $[0].args.a" in cx.headline
+    assert isinstance(cx.actual_min, str) and '"tool_call_id": "call_1"' in cx.actual_min
+
+
 def test_counterexample_assert_that_uses_message_not_empty_tuple() -> None:
     record = FailureRecord(
         scenario_name="t_env",

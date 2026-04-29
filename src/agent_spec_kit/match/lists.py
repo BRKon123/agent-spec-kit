@@ -14,6 +14,74 @@ from agent_spec_kit.match.types import MatchError, MatchResult, Path, _short_rep
 _MAX_PERM = 9  # exhaustive permutation search for multiset (factorial growth)
 
 
+def _path_depth(error: MatchError) -> int:
+    return len(error.path)
+
+
+def _pick_representative_error(errors: list[MatchError]) -> MatchError | None:
+    """
+    Pick the most useful inner matcher error to surface.
+
+    Prefer deeper paths because they usually point to the precise nested mismatch,
+    e.g. path=(2, "arguments", "query") is more useful than path=(2,).
+    """
+    if not errors:
+        return None
+    return max(errors, key=_path_depth)
+
+
+def _error_payload(error: MatchError) -> dict[str, Any]:
+    return {
+        "path": list(error.path),
+        "code": error.code,
+        "message": error.message,
+        "expected": error.expected,
+        "actual": error.actual,
+        "witness_json": error.witness_json,
+    }
+
+
+def _with_inner_error(outer: MatchError, inner: MatchError | None) -> MatchResult:
+    if inner is None:
+        return MatchResult.failure(outer)
+    return MatchResult(ok=False, errors=(outer, inner))
+
+
+@dataclass(frozen=True, slots=True)
+class _ComparisonFailure:
+    expected_index: int
+    actual_index: int
+    errors: tuple[MatchError, ...]
+
+
+def _pick_representative_comparison(
+    failures: list[_ComparisonFailure],
+) -> tuple[_ComparisonFailure, MatchError] | None:
+    """
+    Pick the most useful failed expected/actual comparison.
+
+    This is used by unordered matchers, where many possible pairings are tried.
+    The returned comparison is a debugging hint, not necessarily a complete proof
+    of why the global assignment failed.
+    """
+    best_failure: _ComparisonFailure | None = None
+    best_error: MatchError | None = None
+
+    for failure in failures:
+        candidate = _pick_representative_error(list(failure.errors))
+        if candidate is None:
+            continue
+
+        if best_error is None or _path_depth(candidate) > _path_depth(best_error):
+            best_failure = failure
+            best_error = candidate
+
+    if best_failure is None or best_error is None:
+        return None
+
+    return best_failure, best_error
+
+
 def _actual_tool_names_from_list(actual: list[Any]) -> list[str]:
     names: list[str] = []
     for item in actual:
@@ -102,12 +170,49 @@ def _ordered_exact(
             )
         )
     errors: list[MatchError] = []
+    first_failed_index: int | None = None
+    first_failed_inner: MatchError | None = None
     for i, (em, val) in enumerate(zip(elements, actual, strict=True)):
         r = em.check(val, path + (i,))
         if not r.ok:
             errors.extend(r.errors)
+            if first_failed_index is None:
+                first_failed_index = i
+                first_failed_inner = _pick_representative_error(list(r.errors))
     if errors:
-        return MatchResult(ok=False, errors=tuple(errors))
+        witness: dict[str, Any] = {
+            "mode": "ordered_exact",
+            "first_failed_index": first_failed_index,
+            "actual_witness": actual[:12],
+        }
+        if first_failed_inner is not None:
+            witness["inner_error"] = _error_payload(first_failed_inner)
+
+        outer = MatchError(
+            path=path if first_failed_index is None else path + (first_failed_index,),
+            code="ordered_element_mismatch",
+            message=(
+                f"list item at index {first_failed_index} did not match the expected matcher for that position"
+                if first_failed_index is not None
+                else "one or more list items did not match their expected positions"
+            ),
+            expected="each list item to match the expected matcher at the same index",
+            actual=_short_repr(actual),
+            witness_json=json.dumps(witness, default=str),
+        )
+        if first_failed_inner is not None and first_failed_index is not None:
+            outer = MatchError(
+                path=outer.path,
+                code=outer.code,
+                message=(
+                    f"{outer.message}; representative mismatch at expected index {first_failed_index} "
+                    f"(actual index {first_failed_index}): {first_failed_inner.message}"
+                ),
+                expected=outer.expected,
+                actual=outer.actual,
+                witness_json=outer.witness_json,
+            )
+        return MatchResult(ok=False, errors=(outer, *tuple(errors)))
     return MatchResult.success()
 
 
@@ -136,74 +241,157 @@ async def _ordered_exact_async(
             )
         )
     errors: list[MatchError] = []
+    first_failed_index: int | None = None
+    first_failed_inner: MatchError | None = None
     for i, (em, val) in enumerate(zip(elements, actual, strict=True)):
         r = await em.async_check(val, path + (i,))
         if not r.ok:
             errors.extend(r.errors)
+            if first_failed_index is None:
+                first_failed_index = i
+                first_failed_inner = _pick_representative_error(list(r.errors))
     if errors:
-        return MatchResult(ok=False, errors=tuple(errors))
+        witness: dict[str, Any] = {
+            "mode": "ordered_exact",
+            "first_failed_index": first_failed_index,
+            "actual_witness": actual[:12],
+        }
+        if first_failed_inner is not None:
+            witness["inner_error"] = _error_payload(first_failed_inner)
+
+        outer = MatchError(
+            path=path if first_failed_index is None else path + (first_failed_index,),
+            code="ordered_element_mismatch",
+            message=(
+                f"list item at index {first_failed_index} did not match the expected matcher for that position"
+                if first_failed_index is not None
+                else "one or more list items did not match their expected positions"
+            ),
+            expected="each list item to match the expected matcher at the same index",
+            actual=_short_repr(actual),
+            witness_json=json.dumps(witness, default=str),
+        )
+        if first_failed_inner is not None and first_failed_index is not None:
+            outer = MatchError(
+                path=outer.path,
+                code=outer.code,
+                message=(
+                    f"{outer.message}; representative mismatch at expected index {first_failed_index} "
+                    f"(actual index {first_failed_index}): {first_failed_inner.message}"
+                ),
+                expected=outer.expected,
+                actual=outer.actual,
+                witness_json=outer.witness_json,
+            )
+        return MatchResult(ok=False, errors=(outer, *tuple(errors)))
     return MatchResult.success()
 
 
 def _ordered_subsequence(
     elements: tuple[BaseMatcher, ...], actual: list[Any], path: Path
 ) -> MatchResult:
+    # This preserves the current greedy subsequence semantics. The first expected
+    # matcher that cannot be placed is reported as the list-level failure, and the
+    # closest/deepest inner matcher error from the attempted placements is attached.
     ai = 0
-    for em in elements:
+    for expected_index, em in enumerate(elements):
+        tried_errors: list[MatchError] = []
+        tried_positions: list[int] = []
         while ai < len(actual):
-            r = em.check(actual[ai], path + (ai,))
+            actual_index = ai
+            r = em.check(actual[actual_index], path + (actual_index,))
             if r.ok:
                 ai += 1
                 break
+            tried_positions.append(actual_index)
+            tried_errors.extend(r.errors)
             ai += 1
         else:
-            return MatchResult.failure(
-                MatchError(
-                    path=path,
-                    code="missing_element",
-                    message=(
-                        "could not find each expected value in order from left to right "
-                        "(extra values in between are allowed)"
-                    ),
-                    expected="each value in order, left to right",
-                    actual=_short_repr(actual),
-                    witness_json=json.dumps(
-                        {"mode": "ordered_subsequence", "actual_witness": actual[:12]},
-                        default=str,
-                    ),
-                )
+            inner = _pick_representative_error(tried_errors)
+            witness: dict[str, Any] = {
+                "mode": "ordered_subsequence",
+                "expected_index": expected_index,
+                "searched_actual_positions": tried_positions,
+                "actual_witness": actual[:12],
+            }
+            if inner is not None:
+                witness["inner_error"] = _error_payload(inner)
+
+            message = (
+                f"could not match expected element at index {expected_index} while preserving order"
             )
+            if tried_positions:
+                message += (
+                    f"; searched actual positions {tried_positions[0]} through {tried_positions[-1]}"
+                )
+            else:
+                message += "; no actual items were left to search"
+            if inner is not None:
+                message += f"; closest underlying mismatch was: {inner.message}"
+
+            outer = MatchError(
+                path=path + (expected_index,),
+                code="missing_element",
+                message=message,
+                expected="expected value to appear after the previous match",
+                actual=_short_repr(actual),
+                witness_json=json.dumps(witness, default=str),
+            )
+            return _with_inner_error(outer, inner)
     return MatchResult.success()
 
 
 async def _ordered_subsequence_async(
     elements: tuple[BaseMatcher, ...], actual: list[Any], path: Path
 ) -> MatchResult:
+    # This preserves the current greedy subsequence semantics. The first expected
+    # matcher that cannot be placed is reported as the list-level failure, and the
+    # closest/deepest inner matcher error from the attempted placements is attached.
     ai = 0
-    for em in elements:
+    for expected_index, em in enumerate(elements):
+        tried_errors: list[MatchError] = []
+        tried_positions: list[int] = []
         while ai < len(actual):
-            r = await em.async_check(actual[ai], path + (ai,))
+            actual_index = ai
+            r = await em.async_check(actual[actual_index], path + (actual_index,))
             if r.ok:
                 ai += 1
                 break
+            tried_positions.append(actual_index)
+            tried_errors.extend(r.errors)
             ai += 1
         else:
-            return MatchResult.failure(
-                MatchError(
-                    path=path,
-                    code="missing_element",
-                    message=(
-                        "could not find each expected value in order from left to right "
-                        "(extra values in between are allowed)"
-                    ),
-                    expected="each value in order, left to right",
-                    actual=_short_repr(actual),
-                    witness_json=json.dumps(
-                        {"mode": "ordered_subsequence", "actual_witness": actual[:12]},
-                        default=str,
-                    ),
-                )
+            inner = _pick_representative_error(tried_errors)
+            witness: dict[str, Any] = {
+                "mode": "ordered_subsequence",
+                "expected_index": expected_index,
+                "searched_actual_positions": tried_positions,
+                "actual_witness": actual[:12],
+            }
+            if inner is not None:
+                witness["inner_error"] = _error_payload(inner)
+
+            message = (
+                f"could not match expected element at index {expected_index} while preserving order"
             )
+            if tried_positions:
+                message += (
+                    f"; searched actual positions {tried_positions[0]} through {tried_positions[-1]}"
+                )
+            else:
+                message += "; no actual items were left to search"
+            if inner is not None:
+                message += f"; closest underlying mismatch was: {inner.message}"
+
+            outer = MatchError(
+                path=path + (expected_index,),
+                code="missing_element",
+                message=message,
+                expected="expected value to appear after the previous match",
+                actual=_short_repr(actual),
+                witness_json=json.dumps(witness, default=str),
+            )
+            return _with_inner_error(outer, inner)
     return MatchResult.success()
 
 
@@ -211,58 +399,106 @@ def _multiset_by_permutation(
     specs: list[BaseMatcher], actual: list[Any], path: Path
 ) -> MatchResult:
     n = len(specs)
+    failures: list[_ComparisonFailure] = []
     for perm in itertools.permutations(range(n)):
-        for i, j in enumerate(perm):
-            r = specs[i].check(actual[j], path + (j,))
+        for expected_index, actual_index in enumerate(perm):
+            r = specs[expected_index].check(actual[actual_index], path + (actual_index,))
             if not r.ok:
+                failures.append(
+                    _ComparisonFailure(
+                        expected_index=expected_index,
+                        actual_index=actual_index,
+                        errors=tuple(r.errors),
+                    )
+                )
                 break
         else:
             return MatchResult.success()
-    return MatchResult.failure(
-        MatchError(
-            path=path,
-            code="unordered_mismatch",
-            message=(
-                "the list does not match when order is ignored: each expected value "
-                "must correspond to a different position in the list"
-            ),
-            expected="each value matched to a different position (order ignored)",
-            actual=_short_repr(actual),
-            witness_json=json.dumps(
-                {"mode": "unordered_permutation", "actual_witness": actual[:12]},
-                default=str,
-            ),
-        )
+    picked = _pick_representative_comparison(failures)
+    witness: dict[str, Any] = {
+        "mode": "unordered_permutation",
+        "actual_witness": actual[:12],
+    }
+    inner: MatchError | None = None
+    message = (
+        "the list does not match when order is ignored: each expected value "
+        "must correspond to a different position in the list"
     )
+    if picked is not None:
+        failure, inner = picked
+        witness["representative_failed_comparison"] = {
+            "expected_index": failure.expected_index,
+            "actual_index": failure.actual_index,
+            "inner_error": _error_payload(inner),
+        }
+        message += (
+            f"; representative failed comparison was expected element "
+            f"{failure.expected_index} against actual item {failure.actual_index}: "
+            f"{inner.message}"
+        )
+
+    outer = MatchError(
+        path=path,
+        code="unordered_mismatch",
+        message=message,
+        expected="each value matched to a different position (order ignored)",
+        actual=_short_repr(actual),
+        witness_json=json.dumps(witness, default=str),
+    )
+    return _with_inner_error(outer, inner)
 
 
 async def _multiset_by_permutation_async(
     specs: list[BaseMatcher], actual: list[Any], path: Path
 ) -> MatchResult:
     n = len(specs)
+    failures: list[_ComparisonFailure] = []
     for perm in itertools.permutations(range(n)):
-        for i, j in enumerate(perm):
-            r = await specs[i].async_check(actual[j], path + (j,))
+        for expected_index, actual_index in enumerate(perm):
+            r = await specs[expected_index].async_check(actual[actual_index], path + (actual_index,))
             if not r.ok:
+                failures.append(
+                    _ComparisonFailure(
+                        expected_index=expected_index,
+                        actual_index=actual_index,
+                        errors=tuple(r.errors),
+                    )
+                )
                 break
         else:
             return MatchResult.success()
-    return MatchResult.failure(
-        MatchError(
-            path=path,
-            code="unordered_mismatch",
-            message=(
-                "the list does not match when order is ignored: each expected value "
-                "must correspond to a different position in the list"
-            ),
-            expected="each value matched to a different position (order ignored)",
-            actual=_short_repr(actual),
-            witness_json=json.dumps(
-                {"mode": "unordered_permutation", "actual_witness": actual[:12]},
-                default=str,
-            ),
-        )
+    picked = _pick_representative_comparison(failures)
+    witness: dict[str, Any] = {
+        "mode": "unordered_permutation",
+        "actual_witness": actual[:12],
+    }
+    inner: MatchError | None = None
+    message = (
+        "the list does not match when order is ignored: each expected value "
+        "must correspond to a different position in the list"
     )
+    if picked is not None:
+        failure, inner = picked
+        witness["representative_failed_comparison"] = {
+            "expected_index": failure.expected_index,
+            "actual_index": failure.actual_index,
+            "inner_error": _error_payload(inner),
+        }
+        message += (
+            f"; representative failed comparison was expected element "
+            f"{failure.expected_index} against actual item {failure.actual_index}: "
+            f"{inner.message}"
+        )
+
+    outer = MatchError(
+        path=path,
+        code="unordered_mismatch",
+        message=message,
+        expected="each value matched to a different position (order ignored)",
+        actual=_short_repr(actual),
+        witness_json=json.dumps(witness, default=str),
+    )
+    return _with_inner_error(outer, inner)
 
 
 def _unordered_injective_dfs(
@@ -271,6 +507,7 @@ def _unordered_injective_dfs(
     n = len(specs)
     m = len(actual)
     used = [False] * m
+    failures: list[_ComparisonFailure] = []
 
     def dfs(i: int) -> bool:
         if i == n:
@@ -280,6 +517,13 @@ def _unordered_injective_dfs(
                 continue
             r = specs[i].check(actual[j], path + (j,))
             if not r.ok:
+                failures.append(
+                    _ComparisonFailure(
+                        expected_index=i,
+                        actual_index=j,
+                        errors=tuple(r.errors),
+                    )
+                )
                 continue
             used[j] = True
             if dfs(i + 1):
@@ -289,6 +533,11 @@ def _unordered_injective_dfs(
 
     if dfs(0):
         return MatchResult.success()
+    # In unordered matching, a representative failed comparison is only a debugging
+    # hint. The actual failure is global: no complete injective assignment exists.
+    # We surface the deepest inner error encountered because it is usually the most
+    # actionable mismatch for the user.
+    picked = _pick_representative_comparison(failures)
     if allow_extras:
         msg = (
             "could not match each expected value to a different item in the list "
@@ -299,27 +548,38 @@ def _unordered_injective_dfs(
             "the list does not match when order is ignored: each expected value "
             "must correspond to a different position in the list"
         )
-    return MatchResult.failure(
-        MatchError(
-            path=path,
-            code="unordered_mismatch",
-            message=msg,
-            expected=(
-                "each value to a different item (order ignored, extras allowed)"
-                if allow_extras
-                else "each value to a different position (order ignored)"
-            ),
-            actual=_short_repr(actual),
-            witness_json=json.dumps(
-                {
-                    "mode": "unordered_injective",
-                    "allow_extras": allow_extras,
-                    "actual_witness": actual[:12],
-                },
-                default=str,
-            ),
+    witness: dict[str, Any] = {
+        "mode": "unordered_injective",
+        "allow_extras": allow_extras,
+        "actual_witness": actual[:12],
+    }
+    inner: MatchError | None = None
+    if picked is not None:
+        failure, inner = picked
+        witness["representative_failed_comparison"] = {
+            "expected_index": failure.expected_index,
+            "actual_index": failure.actual_index,
+            "inner_error": _error_payload(inner),
+        }
+        msg += (
+            f"; representative failed comparison was expected element "
+            f"{failure.expected_index} against actual item {failure.actual_index}: "
+            f"{inner.message}"
         )
+
+    outer = MatchError(
+        path=path,
+        code="unordered_mismatch",
+        message=msg,
+        expected=(
+            "each value to a different item (order ignored, extras allowed)"
+            if allow_extras
+            else "each value to a different position (order ignored)"
+        ),
+        actual=_short_repr(actual),
+        witness_json=json.dumps(witness, default=str),
     )
+    return _with_inner_error(outer, inner)
 
 
 async def _unordered_injective_dfs_async(
@@ -328,6 +588,7 @@ async def _unordered_injective_dfs_async(
     n = len(specs)
     m = len(actual)
     used = [False] * m
+    failures: list[_ComparisonFailure] = []
 
     async def dfs(i: int) -> bool:
         if i == n:
@@ -337,6 +598,13 @@ async def _unordered_injective_dfs_async(
                 continue
             r = await specs[i].async_check(actual[j], path + (j,))
             if not r.ok:
+                failures.append(
+                    _ComparisonFailure(
+                        expected_index=i,
+                        actual_index=j,
+                        errors=tuple(r.errors),
+                    )
+                )
                 continue
             used[j] = True
             if await dfs(i + 1):
@@ -346,6 +614,11 @@ async def _unordered_injective_dfs_async(
 
     if await dfs(0):
         return MatchResult.success()
+    # In unordered matching, a representative failed comparison is only a debugging
+    # hint. The actual failure is global: no complete injective assignment exists.
+    # We surface the deepest inner error encountered because it is usually the most
+    # actionable mismatch for the user.
+    picked = _pick_representative_comparison(failures)
     if allow_extras:
         msg = (
             "could not match each expected value to a different item in the list "
@@ -356,27 +629,38 @@ async def _unordered_injective_dfs_async(
             "the list does not match when order is ignored: each expected value "
             "must correspond to a different position in the list"
         )
-    return MatchResult.failure(
-        MatchError(
-            path=path,
-            code="unordered_mismatch",
-            message=msg,
-            expected=(
-                "each value to a different item (order ignored, extras allowed)"
-                if allow_extras
-                else "each value to a different position (order ignored)"
-            ),
-            actual=_short_repr(actual),
-            witness_json=json.dumps(
-                {
-                    "mode": "unordered_injective",
-                    "allow_extras": allow_extras,
-                    "actual_witness": actual[:12],
-                },
-                default=str,
-            ),
+    witness: dict[str, Any] = {
+        "mode": "unordered_injective",
+        "allow_extras": allow_extras,
+        "actual_witness": actual[:12],
+    }
+    inner: MatchError | None = None
+    if picked is not None:
+        failure, inner = picked
+        witness["representative_failed_comparison"] = {
+            "expected_index": failure.expected_index,
+            "actual_index": failure.actual_index,
+            "inner_error": _error_payload(inner),
+        }
+        msg += (
+            f"; representative failed comparison was expected element "
+            f"{failure.expected_index} against actual item {failure.actual_index}: "
+            f"{inner.message}"
         )
+
+    outer = MatchError(
+        path=path,
+        code="unordered_mismatch",
+        message=msg,
+        expected=(
+            "each value to a different item (order ignored, extras allowed)"
+            if allow_extras
+            else "each value to a different position (order ignored)"
+        ),
+        actual=_short_repr(actual),
+        witness_json=json.dumps(witness, default=str),
     )
+    return _with_inner_error(outer, inner)
 
 
 @dataclass(frozen=True, slots=True)
@@ -556,12 +840,48 @@ class ListOfMatcher(BaseMatcher):
                 )
             )
         errors: list[MatchError] = []
+        first_failed_index: int | None = None
+        first_failed_inner: MatchError | None = None
         for i, val in enumerate(actual):
             r = self.inner.check(val, path + (i,))
             if not r.ok:
                 errors.extend(r.errors)
+                if first_failed_index is None:
+                    first_failed_index = i
+                    first_failed_inner = _pick_representative_error(list(r.errors))
         if errors:
-            return MatchResult(ok=False, errors=tuple(errors))
+            witness: dict[str, Any] = {
+                "mode": "list_of",
+                "first_failed_index": first_failed_index,
+                "actual_witness": actual[:12],
+            }
+            if first_failed_inner is not None:
+                witness["inner_error"] = _error_payload(first_failed_inner)
+            outer = MatchError(
+                path=path if first_failed_index is None else path + (first_failed_index,),
+                code="list_of_element_mismatch",
+                message=(
+                    f"list item at index {first_failed_index} did not match the list_of matcher"
+                    if first_failed_index is not None
+                    else "one or more list items did not match the list_of matcher"
+                ),
+                expected="every list item to match the inner matcher",
+                actual=_short_repr(actual),
+                witness_json=json.dumps(witness, default=str),
+            )
+            if first_failed_inner is not None and first_failed_index is not None:
+                outer = MatchError(
+                    path=outer.path,
+                    code=outer.code,
+                    message=(
+                        f"{outer.message}; representative mismatch at index {first_failed_index}: "
+                        f"{first_failed_inner.message}"
+                    ),
+                    expected=outer.expected,
+                    actual=outer.actual,
+                    witness_json=outer.witness_json,
+                )
+            return MatchResult(ok=False, errors=(outer, *tuple(errors)))
         return MatchResult.success()
 
     async def async_check(self, actual: Any, path: Path) -> MatchResult:
@@ -576,12 +896,48 @@ class ListOfMatcher(BaseMatcher):
                 )
             )
         errors: list[MatchError] = []
+        first_failed_index: int | None = None
+        first_failed_inner: MatchError | None = None
         for i, val in enumerate(actual):
             r = await self.inner.async_check(val, path + (i,))
             if not r.ok:
                 errors.extend(r.errors)
+                if first_failed_index is None:
+                    first_failed_index = i
+                    first_failed_inner = _pick_representative_error(list(r.errors))
         if errors:
-            return MatchResult(ok=False, errors=tuple(errors))
+            witness: dict[str, Any] = {
+                "mode": "list_of",
+                "first_failed_index": first_failed_index,
+                "actual_witness": actual[:12],
+            }
+            if first_failed_inner is not None:
+                witness["inner_error"] = _error_payload(first_failed_inner)
+            outer = MatchError(
+                path=path if first_failed_index is None else path + (first_failed_index,),
+                code="list_of_element_mismatch",
+                message=(
+                    f"list item at index {first_failed_index} did not match the list_of matcher"
+                    if first_failed_index is not None
+                    else "one or more list items did not match the list_of matcher"
+                ),
+                expected="every list item to match the inner matcher",
+                actual=_short_repr(actual),
+                witness_json=json.dumps(witness, default=str),
+            )
+            if first_failed_inner is not None and first_failed_index is not None:
+                outer = MatchError(
+                    path=outer.path,
+                    code=outer.code,
+                    message=(
+                        f"{outer.message}; representative mismatch at index {first_failed_index}: "
+                        f"{first_failed_inner.message}"
+                    ),
+                    expected=outer.expected,
+                    actual=outer.actual,
+                    witness_json=outer.witness_json,
+                )
+            return MatchResult(ok=False, errors=(outer, *tuple(errors)))
         return MatchResult.success()
 
 

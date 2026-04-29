@@ -195,12 +195,11 @@ def _summarize_matcher_counterexample(record: FailureRecord, err: MatchError, wi
         focused = _deref_match_path(record.actual, err.path)
         if focused is not _MISSING:
             exp_line = _short(f"{err.code}: expected {err.expected}", 200)
-            act_line = f"At {path_s}: {_short_repr(focused)}"
             try:
                 full = json.dumps(record.actual, indent=2, default=str)
             except TypeError:
                 full = repr(record.actual)
-            notes.append(f"Full tool-call list:\n{_short(full, 1200)}")
+            act_line = _short(full, 1200)
             notes.append(err.message)
             return exp_line, act_line, notes
 
@@ -302,14 +301,21 @@ def _counterexample_base(
 def counterexample_from_failure(record: FailureRecord) -> Counterexample:
     """Build a counterexample from a failure record (matcher-first, display caps)."""
     if record.matcher_errors:
-        err = record.matcher_errors[0]
+        outer_err = record.matcher_errors[0]
+        err = max(record.matcher_errors, key=lambda e: len(e.path))
         wit = _witness_dict(err)
         path_s = _path_to_str(err.path)
         exp_s, act_s, note_list = _summarize_matcher_counterexample(record, err, wit)
+        if err is not outer_err:
+            note_list.insert(0, outer_err.message)
         if len(record.matcher_errors) > 1:
             note_list.append(f"(+{len(record.matcher_errors) - 1} more matcher error(s))")
+        if err is not outer_err:
+            headline_message = f"{outer_err.message}; mismatch at {path_s}: {err.message}"
+        else:
+            headline_message = err.message
         return _counterexample_base(
-            headline=f"{record.scenario_name}: {err.message}",
+            headline=f"{record.scenario_name}: {headline_message}",
             record=record,
             path_s=path_s,
             expected_summary=_short(exp_s, 600),

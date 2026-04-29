@@ -30,10 +30,14 @@ def test_error_nested_object_path() -> None:
 def test_error_list_ordered_exact_element_path() -> None:
     r = m.check(m.list([1, 2, 3]), [1, 9, 3])
     assert not r.ok
-    assert len(r.errors) == 1
-    e = r.errors[0]
-    assert e.path == (1,)
-    assert e.code == "equality"
+    assert len(r.errors) >= 2
+    outer = r.errors[0]
+    assert outer.path == (1,)
+    assert outer.code == "ordered_element_mismatch"
+    assert "index 1" in outer.message
+    inner = r.errors[1]
+    assert inner.path == (1,)
+    assert inner.code == "equality"
 
 
 def test_error_list_ordered_exact_length_message() -> None:

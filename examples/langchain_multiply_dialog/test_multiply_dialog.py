@@ -71,7 +71,7 @@ async def test_multiply_dialog_simulated_student(s):
         .assert_output(m.one_of(m.contains("20"), m.contains("twenty")), actor="agent")
         .simulate_conversation(max_turns=2)
         .assert_tool_calls(
-            [m.tool_call("multiply_integers", args={"a": 3, "b": 9})],
+            [m.tool_call("multiply_integers", args={"a": 3, "b": 10})],
             ordered=True,
             allow_extras=True,
             actor="agent",
