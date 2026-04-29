@@ -198,10 +198,7 @@ class Scenario:
         seed_actor: str | None = None,
         seed_input: str | None = None,
     ) -> Scenario:
-        """Queue a simulation segment. ``max_turns`` is per *round trip* when both user and
-        agent exist (each round is two ``run_turn`` steps); with a single actor it is one
-        ``run_turn`` per count (unchanged from previous behaviour for solo runs).
-        """
+        """Queue a simulation segment. ``max_turns`` counts simulation messages/turns."""
         self._ensure_mode("simulation")
         if max_turns < 1:
             raise ValueError("max_turns must be >= 1")
@@ -459,9 +456,7 @@ class Scenario:
             if r0.ok and last_actor_for_stop is not None:
                 return
 
-        # In dual-control, ``max_turns`` is the number of full round trips (user+agent or
-        # agent+user), i.e. 2 ``run_turn`` calls per count. Solo: one side per count.
-        turn_budget = (2 * step.max_turns) if self._other_actor_exists() else step.max_turns
+        turn_budget = step.max_turns
         while turns_in_segment < turn_budget:
             n = self._next_actor
             if n is None:  # pragma: no cover
@@ -490,10 +485,10 @@ class Scenario:
                 self._turn_results.append(
                     ConversationTurn(actor="user", output=step.message)
                 )
-                tr = await self.adapted_agent.run_turn(step.message)
+                turn_result = await self.adapted_agent.run_turn(step.message)
             else:
-                tr = await self.user.run_turn(step.message)  # type: ignore[union-attr]
-            self._turn_results.append(ConversationTurn.from_turn(target, tr))
+                turn_result = await self.user.run_turn(step.message)  # type: ignore[union-attr]
+            self._turn_results.append(ConversationTurn.from_turn(target, turn_result))
             return
         if isinstance(step, _ActionStep):
             kwargs = _resolve_fixture_kwargs(step.fn, self.fixture_values)
@@ -509,15 +504,15 @@ class Scenario:
             if not self._turn_results:
                 msg = "assert_output/assert_tool_calls require a preceding user_message step in the queue"
                 raise AssertionError(msg)
-            tr = self._conversation_for_assert(step.actor)
-            r = await match_async_check(step.matcher, tr.output)
+            conversation_turn = self._conversation_for_assert(step.actor)
+            r = await match_async_check(step.matcher, conversation_turn.output)
             _raise_match_step(
                 self,
                 step_kind="assert_output",
                 label="assert_output",
                 result=r,
                 matcher_spec=step.matcher,
-                actual=tr.output,
+                actual=conversation_turn.output,
             )
             return
         if isinstance(step, _ToolCallsAssertStep):
@@ -526,8 +521,8 @@ class Scenario:
                 raise AssertionError(msg)
             if step.turn != "last":
                 raise ValueError("only turn='last' is supported")
-            tr = self._conversation_for_assert(step.actor)
-            actual = _tool_dicts_from_conversation_turn(tr)
+            conversation_turn = self._conversation_for_assert(step.actor)
+            actual = _tool_dicts_from_conversation_turn(conversation_turn)
             list_spec = _coerce_tool_calls_list_spec(
                 step.spec,
                 ordered=step.ordered,

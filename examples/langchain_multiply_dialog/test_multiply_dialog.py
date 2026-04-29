@@ -19,7 +19,7 @@ import agent_spec_kit.match as m
     agent_fixture="adapted_agent",
     repeats=1,
     tags=("langchain", "example", "multiply-dialog", "smoke"),
-    timeout_s=120.0,
+    timeout_s=90.0,
 )
 async def test_multiply_dialog_scripted_user_messages(s):
     """Two explicit user turns; after each, require multiply_integers and the product."""
@@ -52,7 +52,7 @@ async def test_multiply_dialog_scripted_user_messages(s):
     user_fixture="user_simulator",
     repeats=1,
     tags=("langchain", "example", "multiply-dialog", "simulation"),
-    timeout_s=180.0,
+    timeout_s=90.0,
 )
 async def test_multiply_dialog_simulated_student(s):
     """Student model asks 4×5 then 3×8; after each tutor reply, assert tool use and product."""
@@ -60,7 +60,7 @@ async def test_multiply_dialog_simulated_student(s):
         s.simulate_conversation(
             seed_actor="user",
             seed_input="Session start. Produce only your first question.",
-            max_turns=1,
+            max_turns=2,
         )
         .assert_tool_calls(
             [m.tool_call("multiply_integers", args={"a": 4, "b": 5})],
@@ -69,14 +69,14 @@ async def test_multiply_dialog_simulated_student(s):
             actor="agent",
         )
         .assert_output(m.one_of(m.contains("20"), m.contains("twenty")), actor="agent")
-        .simulate_conversation(max_turns=1)
+        .simulate_conversation(max_turns=2)
         .assert_tool_calls(
             [m.tool_call("multiply_integers", args={"a": 3, "b": 9})],
             ordered=True,
             allow_extras=True,
             actor="agent",
         )
-        .assert_output(m.contains("24"), actor="agent")
+        .assert_output(m.contains("27"), actor="agent")
     )
 
 
@@ -85,7 +85,7 @@ async def test_multiply_dialog_simulated_student(s):
     user_fixture="user_simulator_with_tools",
     repeats=1,
     tags=("langchain", "example", "multiply-dialog", "simulation", "user-tools"),
-    timeout_s=180.0,
+    timeout_s=90.0,
 )
 async def test_multiply_dialog_simulated_student_user_tools(s):
     """Like simulated student, but the student agent calls ``student_checkpoint`` each turn."""
@@ -93,7 +93,7 @@ async def test_multiply_dialog_simulated_student_user_tools(s):
         s.simulate_conversation(
             seed_actor="user",
             seed_input="Session start. Produce only your first question.",
-            max_turns=1,
+            max_turns=2,
         )
         .assert_tool_calls(
             [m.tool_call("student_checkpoint")],
@@ -108,7 +108,7 @@ async def test_multiply_dialog_simulated_student_user_tools(s):
             actor="agent",
         )
         .assert_output(m.one_of(m.contains("20"), m.contains("twenty")), actor="agent")
-        .simulate_conversation(max_turns=1)
+        .simulate_conversation(max_turns=2)
         .assert_tool_calls(
             [m.tool_call("student_checkpoint")],
             ordered=True,

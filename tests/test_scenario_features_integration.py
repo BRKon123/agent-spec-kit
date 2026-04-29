@@ -144,7 +144,7 @@ def test_assert_tool_calls_targets_agent_explicitly_in_simulation() -> None:
     )
     u = _Scripted([TurnResult(output="u speaks", events=())])
     s = create_scenario(a, user=u)
-    s.simulate_conversation(seed_actor="user", seed_input="h", max_turns=1)
+    s.simulate_conversation(seed_actor="user", seed_input="h", max_turns=2)
     s.assert_tool_calls([m.tool_call("use_tool_a")], actor="agent", ordered=True, allow_extras=True)
     _run(s.materialise())
 
@@ -287,8 +287,8 @@ def test_cartesian_injects_both_axes_and_case_objects() -> None:
     assert r.case_id == "a=a1+b=b1"
 
 
-def test_dual_max_turns_is_round_trips() -> None:
-    """In dual control, max_turns=1 means one user + one agent (two ``run_turn``)."""
+def test_dual_max_turns_is_per_message() -> None:
+    """In dual control, max_turns counts simulation messages/turns."""
     a = _Scripted(
         [TurnResult(output="a1", events=()), TurnResult(output="a2", events=())]
     )
@@ -296,12 +296,12 @@ def test_dual_max_turns_is_round_trips() -> None:
         [TurnResult(output="u1", events=()), TurnResult(output="u2", events=())]
     )
     s = create_scenario(a, user=u)
-    s.simulate_conversation(seed_actor="user", seed_input="s0", max_turns=1)
+    s.simulate_conversation(seed_actor="user", seed_input="s0", max_turns=2)
     _run(s.materialise())
     assert len(s.turn_results) == 2
 
 
-def test_solo_max_turns_still_per_utterance() -> None:
+def test_solo_max_turns_is_per_message() -> None:
     a = _Scripted(
         [
             TurnResult(output="1", events=()),

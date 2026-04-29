@@ -68,7 +68,7 @@ def test_dual_user_seed_then_agent() -> None:
     a = _Scripted(["agent1", "agent2"])
     u = _Scripted(["user_visible"])
     s = create_scenario(a, user=u)
-    s.simulate_conversation(seed_actor="user", seed_input="hidden", max_turns=1)
+    s.simulate_conversation(seed_actor="user", seed_input="hidden", max_turns=2)
     _run(s.materialise())
     assert u.received[0] == "hidden"
     assert a.received[0] == "user_visible"
@@ -83,7 +83,7 @@ def test_interleaved_assert_then_continuation() -> None:
     a = _Scripted(["A1", "A2", "A3"])
     u = _Scripted(["U1", "U2"])
     s = create_scenario(a, user=u)
-    # max_turns=1 round is two utterances; stop after one user line in segment 1
+    # max_turns counts utterances; stop after one user line in segment 1
     s.simulate_conversation(
         seed_actor="user",
         seed_input="h1",
@@ -102,6 +102,6 @@ def test_assert_output_defaults_to_last_speaker() -> None:
     a = _Scripted(["A1"])
     u = _Scripted(["U1"])
     s = create_scenario(a, user=u)
-    s.simulate_conversation(seed_actor="user", seed_input="h", max_turns=1)
+    s.simulate_conversation(seed_actor="user", seed_input="h", max_turns=2)
     s.assert_output(m.contains("A1"))
     _run(s.materialise())
