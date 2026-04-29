@@ -35,9 +35,6 @@ def build_repeat_trace(
 
     blob_errors: dict[str, str] = {}
 
-    events, err = load_blob_safely(rec["events_blob_path"])
-    if err:
-        blob_errors["events"] = err
     transcript, err = load_blob_safely(rec["transcript_blob_path"])
     if err:
         blob_errors["transcript"] = err
@@ -67,7 +64,6 @@ def build_repeat_trace(
         "failure_kind": rec["failure_kind"],
         "failure_message": rec["failure_message"],
         "assertions": rec["assertions"],
-        "events": events,
         "transcript": transcript,
         "counterexample": counterexample,
         "raw_error": raw_error,

@@ -153,7 +153,6 @@ export interface RepeatTrace {
   failure_kind?: string | null;
   failure_message?: string | null;
   assertions: AssertionRow[];
-  events: AgentEventNode[][] | null;
   transcript: ConversationTurn[] | null;
   counterexample: Counterexample | null;
   raw_error: { error: string } | null;

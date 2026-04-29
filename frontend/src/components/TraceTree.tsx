@@ -6,7 +6,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { JsonView } from "@/components/JsonView";
-import type { AgentEventNode } from "@/lib/types";
+import type { AgentEventNode, ConversationTurn } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function shortRepr(v: unknown, max = 72): string {
@@ -178,27 +178,78 @@ export function TraceNode({
   );
 }
 
-export function TraceTree({ roots }: { roots: AgentEventNode[][] | null }) {
-  if (!roots || roots.length === 0) {
+function isRootAgentTurnShell(node: AgentEventNode): boolean {
+  if (typeof node.tool_name === "string") return false;
+  const hasTurnFields = "agent_output" in node || "user_input" in node;
+  if (!hasTurnFields) return false;
+  const sp = node.source_path;
+  return !sp || sp.length === 0;
+}
+
+function flattenRootAgentShells(nodes: AgentEventNode[]): AgentEventNode[] {
+  const out: AgentEventNode[] = [];
+  for (const n of nodes) {
+    if (isRootAgentTurnShell(n)) {
+      out.push(...flattenRootAgentShells(n.children ?? []));
+    } else {
+      out.push(n);
+    }
+  }
+  return out;
+}
+
+function flattenUserChildren(events: AgentEventNode[]): AgentEventNode[] {
+  if (events.length === 1 && isRootAgentTurnShell(events[0])) {
+    return flattenRootAgentShells(events[0].children ?? []);
+  }
+  return events;
+}
+
+export function TraceTree({
+  transcript,
+}: {
+  transcript: ConversationTurn[] | null;
+}) {
+  if (!transcript || transcript.length === 0) {
     return (
       <div className="text-xs text-slate-500">No event trace recorded.</div>
     );
   }
+  const showHeaders = transcript.length > 1;
   return (
     <div className="space-y-3">
-      {roots.map((groupOrNode, gi) => {
-        // Each turn-group is an array of root events for that turn.
-        const group = Array.isArray(groupOrNode) ? groupOrNode : [groupOrNode];
+      {transcript.map((turn, ti) => {
+        let nodes: AgentEventNode[];
+        if (turn.actor === "user") {
+          const userNode: AgentEventNode = {
+            content: turn.output,
+            error: turn.error ?? null,
+            children: flattenUserChildren(turn.events ?? []),
+          };
+          nodes = [userNode];
+        } else {
+          nodes = turn.events ?? [];
+        }
         return (
-          <div key={gi} className="space-y-2">
-            {roots.length > 1 && (
+          <div key={ti} className="space-y-2">
+            {showHeaders && (
               <div className="text-[10px] uppercase tracking-wide text-slate-500">
-                Turn {gi + 1}
+                Turn {ti + 1} — {turn.actor}
               </div>
             )}
-            {group.map((node, i) => (
-              <TraceNode key={node.event_id ?? i} node={node} depth={0} />
-            ))}
+            {nodes.length === 0 ? (
+              <div className="text-xs text-slate-400 italic px-2">
+                (no events recorded for this turn)
+              </div>
+            ) : (
+              nodes.map((node, i) => (
+                <TraceNode
+                  key={node.event_id ?? i}
+                  node={node}
+                  depth={0}
+                />
+              ))
+            )}
           </div>
         );
       })}

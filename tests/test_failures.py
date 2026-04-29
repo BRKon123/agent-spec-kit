@@ -210,6 +210,35 @@ def test_conversation_trace_user_turn_keeps_non_root_agent_as_child() -> None:
     assert roots[0].children[0].source_path == ("sub",)
 
 
+def test_conversation_trace_scripted_user_message_emits_user_then_agent() -> None:
+    """When ``s.user_message(...)`` synthesizes an actor=user ConversationTurn
+    with no events, the failure trace shows a ``UserTurnEvent`` followed by the
+    agent's ``AgentTurnEvent`` root — matching how console renders user turns."""
+    from agent_spec_kit.events import UserTurnEvent
+
+    user_ct = ConversationTurn(actor="user", output="Compute (4*5)+3.")
+    agent_tr = TurnResult(
+        output="answer",
+        events=(
+            AgentTurnEvent(
+                user_input="Compute (4*5)+3.",
+                agent_output="answer",
+                children=[ToolCallEvent(tool_name="multiply_numbers", result=20)],
+            ),
+        ),
+    )
+    turns = (user_ct, ConversationTurn.from_turn("agent", agent_tr))
+    roots = conversation_turns_to_event_trace(turns, max_agent_turns=5)
+    assert len(roots) == 2
+    assert isinstance(roots[0], UserTurnEvent)
+    assert roots[0].content == "Compute (4*5)+3."
+    assert roots[0].children == []
+    assert isinstance(roots[1], AgentTurnEvent)
+    assert roots[1].agent_output == "answer"
+    assert isinstance(roots[1].children[0], ToolCallEvent)
+    assert roots[1].children[0].tool_name == "multiply_numbers"
+
+
 def test_conversation_trace_windows_last_five_agent_turns() -> None:
     """Earlier agent+user pair is dropped when more than 5 agent turns are present."""
     parts: list[ConversationTurn] = []

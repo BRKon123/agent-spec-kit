@@ -87,7 +87,7 @@ export function TraceDrawer({
               )}
               <section>
                 <h3 className="text-sm font-semibold mb-2">Event trace</h3>
-                <TraceTree roots={t.events as never} />
+                <TraceTree transcript={t.transcript} />
               </section>
               {t.assertions && t.assertions.length > 0 && (
                 <section>

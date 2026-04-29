@@ -113,7 +113,6 @@ class LocalResultStore:
             output_preview TEXT,
             failure_kind TEXT,
             failure_message TEXT,
-            events_blob_path TEXT,
             transcript_blob_path TEXT,
             assertions_blob_path TEXT,
             counterexample_blob_path TEXT,
@@ -235,9 +234,9 @@ class LocalResultStore:
                 """
                 INSERT INTO repeat_results (
                     repeat_result_id, scenario_result_id, repeat_index, status, started_at, finished_at,
-                    duration_ms, output_preview, failure_kind, failure_message, events_blob_path,
+                    duration_ms, output_preview, failure_kind, failure_message,
                     transcript_blob_path, assertions_blob_path, counterexample_blob_path, raw_error_blob_path
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(repeat_result_id) DO UPDATE SET
                     status=excluded.status,
                     finished_at=excluded.finished_at,
@@ -245,7 +244,6 @@ class LocalResultStore:
                     output_preview=excluded.output_preview,
                     failure_kind=excluded.failure_kind,
                     failure_message=excluded.failure_message,
-                    events_blob_path=excluded.events_blob_path,
                     transcript_blob_path=excluded.transcript_blob_path,
                     assertions_blob_path=excluded.assertions_blob_path,
                     counterexample_blob_path=excluded.counterexample_blob_path,
@@ -262,7 +260,6 @@ class LocalResultStore:
                     result.output_preview,
                     result.failure_kind,
                     result.failure_message,
-                    result.events_blob_path,
                     result.transcript_blob_path,
                     result.assertions_blob_path,
                     result.counterexample_blob_path,
@@ -620,7 +617,6 @@ class LocalResultStore:
             "output_preview": row["output_preview"],
             "failure_kind": row["failure_kind"],
             "failure_message": row["failure_message"],
-            "events_blob_path": row["events_blob_path"],
             "transcript_blob_path": row["transcript_blob_path"],
             "assertions_blob_path": row["assertions_blob_path"],
             "counterexample_blob_path": row["counterexample_blob_path"],

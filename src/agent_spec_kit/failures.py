@@ -139,7 +139,7 @@ def _deref_match_path(root: Any, path: tuple[Any, ...]) -> Any:
 def _format_scenario_location(*, step_index: int, step_kind: str, turn_index: int | None) -> str:
     turn_part = ""
     if turn_index is not None:
-        turn_part = f"after user message #{turn_index + 1}"
+        turn_part = f"after turn #{turn_index + 1}"
     else:
         turn_part = "before any completed user turn"
     labels = {

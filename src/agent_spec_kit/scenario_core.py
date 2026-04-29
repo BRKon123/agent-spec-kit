@@ -487,6 +487,9 @@ class Scenario:
                 if self.adapted_agent is None:
                     msg = "user_message requires a scenario with an agent (adapted_agent) when not in user-only mode"
                     raise TypeError(msg)
+                self._turn_results.append(
+                    ConversationTurn(actor="user", output=step.message)
+                )
                 tr = await self.adapted_agent.run_turn(step.message)
             else:
                 tr = await self.user.run_turn(step.message)  # type: ignore[union-attr]

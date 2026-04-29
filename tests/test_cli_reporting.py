@@ -179,7 +179,7 @@ def test_emit_failure_detail_includes_check_kind_and_event_trace() -> None:
                 actual_min="act",
                 notes=(),
                 check_kind="assert_tool_calls",
-                location_detail="Queued step 1 — assert_tool_calls — after user message #1",
+                location_detail="Queued step 1 — assert_tool_calls — after turn #1",
                 events=(root,),
             ),
         ),

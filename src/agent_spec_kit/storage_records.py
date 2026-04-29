@@ -92,7 +92,6 @@ class RepeatResultRecord:
     output_preview: str | None
     failure_kind: str | None
     failure_message: str | None
-    events_blob_path: str | None
     transcript_blob_path: str | None
     assertions_blob_path: str | None
     counterexample_blob_path: str | None

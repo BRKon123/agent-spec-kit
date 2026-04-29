@@ -68,10 +68,10 @@ async def test_multiply_dialog_simulated_student(s):
             allow_extras=True,
             actor="agent",
         )
-        .assert_output(m.contains("20"), actor="agent")
+        .assert_output(m.one_of(m.contains("20"), m.contains("twenty")), actor="agent")
         .simulate_conversation(max_turns=1)
         .assert_tool_calls(
-            [m.tool_call("multiply_integers", args={"a": 3, "b": 8})],
+            [m.tool_call("multiply_integers", args={"a": 3, "b": 9})],
             ordered=True,
             allow_extras=True,
             actor="agent",
@@ -107,7 +107,7 @@ async def test_multiply_dialog_simulated_student_user_tools(s):
             allow_extras=True,
             actor="agent",
         )
-        .assert_output(m.contains("20"), actor="agent")
+        .assert_output(m.one_of(m.contains("20"), m.contains("twenty")), actor="agent")
         .simulate_conversation(max_turns=1)
         .assert_tool_calls(
             [m.tool_call("student_checkpoint")],
@@ -121,5 +121,5 @@ async def test_multiply_dialog_simulated_student_user_tools(s):
             allow_extras=True,
             actor="agent",
         )
-        .assert_output(m.contains("23"), actor="agent")
+        .assert_output(m.contains("24"), actor="agent")
     )

@@ -84,6 +84,36 @@ def test_raise_unless_ok_raises_scenario_assertion_failed() -> None:
         s.raise_unless_ok(r, actual=s.last_turn.output, label="post_check")
 
 
+def test_user_message_to_agent_synthesizes_user_turn() -> None:
+    """`s.user_message(...)` against an agent-only scenario records both a user
+    ConversationTurn (with the scripted text as ``output``) and the agent's reply,
+    so transcripts model "what the user said" + "what the agent did"."""
+    agent = ScriptedAgent([TurnResult(output="ack", events=())])
+    s = create_scenario(agent)
+    s.user_message("hi")
+    _run(s.materialise())
+    assert len(s.turn_results) == 2
+    user_t, agent_t = s.turn_results
+    assert user_t.actor == "user"
+    assert user_t.output == "hi"
+    assert user_t.events == ()
+    assert agent_t.actor == "agent"
+    assert agent_t.output == "ack"
+    assert s.last_turn is agent_t
+
+
+def test_user_message_user_only_does_not_synthesize_extra_user_turn() -> None:
+    """In user-only mode, `user_message` already produces a real user turn
+    (the user fixture's run_turn output); we must not double-record."""
+    user = ScriptedAgent([TurnResult(output="from user model", events=())])
+    s = create_scenario(user=user)
+    s.user_message("hi")
+    _run(s.materialise())
+    assert len(s.turn_results) == 1
+    assert s.turn_results[0].actor == "user"
+    assert s.turn_results[0].output == "from user model"
+
+
 def test_materialise_suffix_only() -> None:
     agent = ScriptedAgent(
         [
@@ -94,10 +124,12 @@ def test_materialise_suffix_only() -> None:
     s = create_scenario(agent)
     s.user_message("a")
     _run(s.materialise())
-    assert len(s.turn_results) == 1
+    assert len(s.turn_results) == 2
+    assert s.turn_results[0].actor == "user" and s.turn_results[0].output == "a"
+    assert s.turn_results[1].actor == "agent" and s.turn_results[1].output == "first"
     s.user_message("b")
     _run(s.materialise())
-    assert len(s.turn_results) == 2
+    assert len(s.turn_results) == 4
     assert agent.messages == ["a", "b"]
 
 
@@ -230,7 +262,8 @@ def test_branching_with_check_tool_calls_then_second_materialise() -> None:
     if s.check_tool_calls([m.tool_call("alpha")]).ok:
         s.user_message("second").assert_output(m.contains("step2"))
         _run(s.materialise())
-    assert len(s.turn_results) == 2
+    assert len(s.turn_results) == 4
+    assert [t.actor for t in s.turn_results] == ["user", "agent", "user", "agent"]
 
 
 def test_assert_output_llm_criteria_works_during_materialise() -> None:
@@ -305,7 +338,10 @@ def test_last_turn_and_turn_results() -> None:
     s.user_message("1").user_message("2")
     _run(s.materialise())
     assert s.last_turn.output == "b"
-    assert len(s.turn_results) == 2
+    assert len(s.turn_results) == 4
+    assert [t.actor for t in s.turn_results] == ["user", "agent", "user", "agent"]
+    assert s.turn_results[0].output == "1"
+    assert s.turn_results[2].output == "2"
 
 
 def test_unordered_tool_calls_allow_extras_false() -> None:

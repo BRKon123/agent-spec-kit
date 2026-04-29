@@ -126,29 +126,26 @@ def _write_repeat_blobs(
 ) -> tuple[RepeatResultRecord, list[AssertionResultRecord]]:
     repeat_id = f"{scenario_result_id}_r{result.repeat_index:03d}"
     run_blob_dir = store.sqlite_path.parent / "blobs" / run_id
+    blob_stem = repeat_id
 
-    events_blob = write_json_blob(
-        run_blob_dir / f"repeat_{result.repeat_index:03d}_events.json.gz",
-        _to_jsonable([turn.events for turn in result.turn_results]),
-    )
     transcript_blob = write_json_blob(
-        run_blob_dir / f"repeat_{result.repeat_index:03d}_transcript.json.gz",
+        run_blob_dir / f"{blob_stem}_transcript.json.gz",
         _to_jsonable(result.turn_results),
     )
     assertions_blob = write_json_blob(
-        run_blob_dir / f"repeat_{result.repeat_index:03d}_assertions.json.gz",
+        run_blob_dir / f"{blob_stem}_assertions.json.gz",
         _to_jsonable(result.assertions),
     )
     counterexample_blob = None
     if result.counterexample is not None:
         counterexample_blob = write_json_blob(
-            run_blob_dir / f"repeat_{result.repeat_index:03d}_counterexample.json.gz",
+            run_blob_dir / f"{blob_stem}_counterexample.json.gz",
             _to_jsonable(result.counterexample),
         )
     raw_error_blob = None
     if result.raw_error:
         raw_error_blob = write_json_blob(
-            run_blob_dir / f"repeat_{result.repeat_index:03d}_raw_error.json.gz",
+            run_blob_dir / f"{blob_stem}_raw_error.json.gz",
             {"error": result.raw_error},
         )
 
@@ -163,7 +160,6 @@ def _write_repeat_blobs(
         output_preview=result.output_preview,
         failure_kind=result.failure_kind,
         failure_message=result.failure_message,
-        events_blob_path=events_blob,
         transcript_blob_path=transcript_blob,
         assertions_blob_path=assertions_blob,
         counterexample_blob_path=counterexample_blob,
@@ -174,7 +170,8 @@ def _write_repeat_blobs(
         cx_blob = None
         if isinstance(a.get("counterexample"), dict):
             cx_blob = write_json_blob(
-                run_blob_dir / f"repeat_{result.repeat_index:03d}_assertion_{idx + 1:03d}_counterexample.json.gz",
+                run_blob_dir
+                / f"{blob_stem}_assertion_{idx + 1:03d}_counterexample.json.gz",
                 _to_jsonable(a.get("counterexample")),
             )
         assertions.append(
@@ -303,6 +300,28 @@ def _run_ui(*, host: str, port: int, open_browser: bool, serve_frontend: bool) -
     return 0
 
 
+def _run_clear(*, skip_prompt: bool, input_fn: Any = input) -> int:
+    import shutil
+
+    root = StorageConfig().root
+    if not root.exists():
+        emit_note(f"local result store {root} does not exist; nothing to clear.")
+        return 0
+    resolved = root.resolve()
+    print(f"About to delete the local result store at: {resolved}")
+    if not skip_prompt:
+        try:
+            answer = input_fn("Type 'yes' to confirm: ").strip().lower()
+        except EOFError:
+            answer = ""
+        if answer != "yes":
+            emit_note("aborted (no changes made).")
+            return 1
+    shutil.rmtree(root)
+    emit_note(f"deleted {resolved}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent-spec-kit")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -334,7 +353,19 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="serve API only; useful when running Vite dev server separately",
     )
+    clear_p = sub.add_parser(
+        "clear",
+        help="delete the local result store (all runs, scenarios, blobs)",
+    )
+    clear_p.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help="skip the interactive 'yes' confirmation",
+    )
     args = parser.parse_args(argv)
+    if args.cmd == "clear":
+        return _run_clear(skip_prompt=args.yes)
     store = LocalResultStore(StorageConfig())
     if args.cmd == "runs":
         rows = store.list_runs(limit=20)

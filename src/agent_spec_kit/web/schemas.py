@@ -133,7 +133,6 @@ class RepeatTrace(BaseModel):
     failure_kind: str | None = None
     failure_message: str | None = None
     assertions: list[AssertionRow] = Field(default_factory=list)
-    events: Any | None = None
     transcript: Any | None = None
     counterexample: Any | None = None
     raw_error: Any | None = None
