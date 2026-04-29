@@ -159,11 +159,6 @@ export function TraceNode({
       {hasBody && (
         <CollapsibleContent>
           <div className="px-2 py-2 space-y-2">
-            {presentFields.map(([label, value]) => (
-              <FieldToggle key={label} label={label}>
-                <JsonView value={value} />
-              </FieldToggle>
-            ))}
             {children.length > 0 && (
               <div className="pl-3 border-l border-slate-200 space-y-2">
                 {children.map((child, i) => (
@@ -171,6 +166,11 @@ export function TraceNode({
                 ))}
               </div>
             )}
+            {presentFields.map(([label, value]) => (
+              <FieldToggle key={label} label={label}>
+                <JsonView value={value} />
+              </FieldToggle>
+            ))}
           </div>
         </CollapsibleContent>
       )}
