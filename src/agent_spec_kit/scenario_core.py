@@ -559,6 +559,7 @@ class Scenario:
                 error=e,
                 events=_last_turn_events_tuple(self),
                 turn_results=tuple(self._turn_results),
+                assertion_index_after_turn=_assertion_index_after_turn(self, step_kind="assert_that"),
             )
             raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from e
         except Exception as e:
@@ -574,6 +575,7 @@ class Scenario:
                 error=AssertionError(f"assert_that callable raised: {e}"),
                 events=_last_turn_events_tuple(self),
                 turn_results=tuple(self._turn_results),
+                assertion_index_after_turn=_assertion_index_after_turn(self, step_kind="assert_that"),
             )
             raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from e
         if result is False:
@@ -589,6 +591,7 @@ class Scenario:
                 error=AssertionError("assert_that callable returned False"),
                 events=_last_turn_events_tuple(self),
                 turn_results=tuple(self._turn_results),
+                assertion_index_after_turn=_assertion_index_after_turn(self, step_kind="assert_that"),
             )
             raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from None
 
@@ -600,6 +603,29 @@ def _last_turn_events_tuple(scenario: Scenario) -> tuple[Any, ...] | None:
     if not ev:
         return None
     return tuple(ev)
+
+
+def _assertion_index_after_turn(scenario: Scenario, *, step_kind: str) -> int | None:
+    step_types = {
+        "assert_output": _OutputAssertStep,
+        "assert_tool_calls": _ToolCallsAssertStep,
+        "assert_that": _EnvAssertStep,
+    }
+    step_type = step_types.get(step_kind)
+    if step_type is None:
+        return None
+    if scenario._executed_until < 0 or scenario._executed_until >= len(scenario._steps):
+        return None
+    start = 0
+    for i in range(scenario._executed_until, -1, -1):
+        if isinstance(scenario._steps[i], (_UserMessageStep, _SimulateStep)):
+            start = i + 1
+            break
+    count = 0
+    for i in range(start, scenario._executed_until + 1):
+        if isinstance(scenario._steps[i], step_type):
+            count += 1
+    return count if count > 0 else None
 
 
 def _raise_match_step(
@@ -625,6 +651,7 @@ def _raise_match_step(
         headline_prefix=label,
         events=_last_turn_events_tuple(scenario),
         turn_results=tuple(scenario._turn_results),
+        assertion_index_after_turn=_assertion_index_after_turn(scenario, step_kind=step_kind),
     )
 
 

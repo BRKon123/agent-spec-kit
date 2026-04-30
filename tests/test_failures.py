@@ -121,6 +121,27 @@ def test_counterexample_assert_that_uses_message_not_empty_tuple() -> None:
     assert "structured" in cx.actual_min.lower() or "fixture" in cx.actual_min.lower()
 
 
+def test_counterexample_location_detail_includes_assertion_index_after_turn() -> None:
+    turns = (ConversationTurn(actor="agent", output="out", error=None, events=()),)
+    record = FailureRecord(
+        scenario_name="t_location",
+        step_index=3,
+        step_kind="assert_output",
+        turn_index=0,
+        actual="actual",
+        matcher_spec=None,
+        matcher_errors=(),
+        error=AssertionError("mismatch"),
+        turn_results=turns,
+        assertion_index_after_turn=2,
+    )
+    cx = counterexample_from_failure(record)
+    assert (
+        cx.location_detail
+        == "2nd assert_output after turn #1 (agentturn) (final assistant text for that turn)"
+    )
+
+
 def test_raise_scenario_match_failure_raises_subclass() -> None:
     r = m.check(m.list([1]), [2])
     assert not r.ok

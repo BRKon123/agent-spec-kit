@@ -136,20 +136,52 @@ def _deref_match_path(root: Any, path: tuple[Any, ...]) -> Any:
     return cur
 
 
-def _format_scenario_location(*, step_index: int, step_kind: str, turn_index: int | None) -> str:
-    turn_part = ""
-    if turn_index is not None:
-        turn_part = f"after turn #{turn_index + 1}"
+def _ordinal(n: int) -> str:
+    if 10 <= (n % 100) <= 20:
+        suffix = "th"
     else:
-        turn_part = "before any completed user turn"
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
+def _format_scenario_location(
+    *,
+    step_kind: str,
+    turn_index: int | None,
+    assertion_index_after_turn: int | None,
+    turn_actor: str | None,
+) -> str:
     labels = {
-        "assert_output": "assert_output (final assistant text for that turn)",
-        "assert_tool_calls": "assert_tool_calls (tool call list for that turn)",
-        "assert_that": "assert_that (environment / fixture check)",
-        "scenario_body": "scenario body (Python assert in test function)",
+        "assert_output": (
+            "assert_output",
+            "(final assistant text for that turn)",
+        ),
+        "assert_tool_calls": (
+            "assert_tool_calls",
+            "(tool call list for that turn)",
+        ),
+        "assert_that": ("assert_that", "(environment / fixture check)"),
+        "scenario_body": ("scenario body", "(Python assert in test function)"),
     }
-    kind = labels.get(step_kind, step_kind)
-    return f"Queued step {step_index} — {kind} — {turn_part}"
+    kind_base, kind_suffix = labels.get(step_kind, (step_kind, ""))
+    kind = kind_base
+    if assertion_index_after_turn is not None and assertion_index_after_turn > 0:
+        kind = f"{_ordinal(assertion_index_after_turn)} {kind}"
+    if turn_index is None:
+        suffix = f" {kind_suffix}" if kind_suffix else ""
+        return f"{kind} before any completed user turn{suffix}"
+    role = f" ({turn_actor}turn)" if turn_actor in {"agent", "user"} else ""
+    suffix = f" {kind_suffix}" if kind_suffix else ""
+    return f"{kind} after turn #{turn_index + 1}{role}{suffix}"
+
+
+def _turn_actor_for_record(record: FailureRecord) -> str | None:
+    if record.turn_index is None or record.turn_results is None:
+        return None
+    if record.turn_index < 0 or record.turn_index >= len(record.turn_results):
+        return None
+    actor = record.turn_results[record.turn_index].actor
+    return actor if isinstance(actor, str) else None
 
 
 def _summarize_list_length_mismatch(
@@ -229,6 +261,7 @@ class FailureRecord:
     events: tuple[Any, ...] | None = None
     # When set, counterexample uses conversation_turns_to_event_trace (up to 5 recent agent turns).
     turn_results: tuple[ConversationTurn, ...] | None = None
+    assertion_index_after_turn: int | None = None
 
 
 @dataclass(slots=True)
@@ -281,9 +314,10 @@ def _counterexample_base(
     if record.turn_index is not None:
         loc += f", turn {record.turn_index}"
     detail = _format_scenario_location(
-        step_index=record.step_index,
         step_kind=record.step_kind,
         turn_index=record.turn_index,
+        assertion_index_after_turn=record.assertion_index_after_turn,
+        turn_actor=_turn_actor_for_record(record),
     )
     return Counterexample(
         headline=headline,
@@ -382,6 +416,7 @@ def raise_scenario_match_failure(
     headline_prefix: str = "",
     events: tuple[Any, ...] | None = None,
     turn_results: tuple[ConversationTurn, ...] | None = None,
+    assertion_index_after_turn: int | None = None,
 ) -> None:
     """Raise :class:`ScenarioAssertionFailed` from a failed :class:`MatchResult`."""
     record = FailureRecord(
@@ -395,6 +430,7 @@ def raise_scenario_match_failure(
         error=None,
         events=events,
         turn_results=turn_results,
+        assertion_index_after_turn=assertion_index_after_turn,
     )
     cx = counterexample_from_failure(record)
     if headline_prefix:
