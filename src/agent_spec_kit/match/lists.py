@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from agent_spec_kit.match.protocol import BaseMatcher, coerce_any
-from agent_spec_kit.match.types import MatchError, MatchResult, Path, _short_repr
+from agent_spec_kit.match.types import MatchError, MatchResult, Path, _short_repr, path_to_str
 
 _MAX_PERM = 9  # exhaustive permutation search for multiset (factorial growth)
 
@@ -322,12 +322,17 @@ def _ordered_subsequence(
             )
             if tried_positions:
                 message += (
-                    f"; searched actual positions {tried_positions[0]} through {tried_positions[-1]}"
+                    f"\nsearched actual positions {tried_positions[0]} through {tried_positions[-1]}"
                 )
             else:
-                message += "; no actual items were left to search"
+                message += (
+                    f"\nno actual items were left to search"
+                )
             if inner is not None:
-                message += f"; closest underlying mismatch was: {inner.message}"
+                message += (
+                    f"\nclosest underlying mismatch was (at {path_to_str(inner.path)}): "
+                    f"{inner.message}"
+                )
 
             outer = MatchError(
                 path=path + (expected_index,),
@@ -376,12 +381,15 @@ async def _ordered_subsequence_async(
             )
             if tried_positions:
                 message += (
-                    f"; searched actual positions {tried_positions[0]} through {tried_positions[-1]}"
+                    f"\nsearched actual positions {tried_positions[0]} through {tried_positions[-1]}"
                 )
             else:
-                message += "; no actual items were left to search"
+                message += "\nno actual items were left to search"
             if inner is not None:
-                message += f"; closest underlying mismatch was: {inner.message}"
+                message += (
+                    f"\nclosest underlying mismatch was (at {path_to_str(inner.path)}): "
+                    f"{inner.message}"
+                )
 
             outer = MatchError(
                 path=path + (expected_index,),

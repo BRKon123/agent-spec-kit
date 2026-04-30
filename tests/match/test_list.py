@@ -143,6 +143,7 @@ def test_ordered_subsequence_missing_expected_reports_attempts_and_inner() -> No
     assert "expected element at index 1" in r.errors[0].message
     assert "searched actual positions" in r.errors[0].message
     assert "closest underlying mismatch" in r.errors[0].message
+    assert "closest underlying mismatch was (at $[1].name):" in r.errors[0].message
     assert len(r.errors) == 2
     witness = json.loads(r.errors[0].witness_json or "{}")
     assert witness["mode"] == "ordered_subsequence"
@@ -235,6 +236,7 @@ def test_async_ordered_subsequence_failure_parity() -> None:
     r = asyncio.run(m.async_check(spec, actual))
     assert not r.ok
     assert r.errors[0].code == "missing_element"
+    assert "closest underlying mismatch was (at $[1].name):" in r.errors[0].message
     witness = json.loads(r.errors[0].witness_json or "{}")
     assert witness["mode"] == "ordered_subsequence"
     assert witness["expected_index"] == 1

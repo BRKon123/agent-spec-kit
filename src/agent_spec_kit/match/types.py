@@ -9,6 +9,18 @@ PathPart = str | int
 Path = tuple[PathPart, ...]
 
 
+def path_to_str(path: Path) -> str:
+    if not path:
+        return "$"
+    out = "$"
+    for p in path:
+        if isinstance(p, int):
+            out += f"[{p}]"
+        else:
+            out += f".{p}"
+    return out
+
+
 def _short_repr(value: Any, *, max_len: int = 200) -> str:
     s = repr(value)
     if len(s) > max_len:

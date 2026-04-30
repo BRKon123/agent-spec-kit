@@ -7,7 +7,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from agent_spec_kit.match.types import MatchError, _short_repr
+from agent_spec_kit.match.types import MatchError, MatchResult, _short_repr, path_to_str
 from agent_spec_kit.run import ConversationTurn
 
 _MISSING = object()
@@ -98,18 +98,6 @@ def conversation_turns_to_event_trace(
             else:
                 out.append(AgentTurnEvent(agent_output=ct.output, error=ct.error))
     return tuple(out)
-
-
-def _path_to_str(path: tuple[Any, ...]) -> str:
-    if not path:
-        return "$"
-    out = "$"
-    for p in path:
-        if isinstance(p, int):
-            out += f"[{p}]"
-        else:
-            out += f".{p}"
-    return out
 
 
 def _short(s: str, max_len: int = 400) -> str:
@@ -222,7 +210,7 @@ def _summarize_matcher_counterexample(record: FailureRecord, err: MatchError, wi
     if err.code == "list_length_mismatch":
         return _summarize_list_length_mismatch(err, wit, record)
 
-    path_s = _path_to_str(err.path)
+    path_s = path_to_str(err.path)
     if path_s not in ("$", "()") and record.step_kind == "assert_tool_calls" and isinstance(record.actual, list):
         focused = _deref_match_path(record.actual, err.path)
         if focused is not _MISSING:
@@ -338,7 +326,7 @@ def counterexample_from_failure(record: FailureRecord) -> Counterexample:
         outer_err = record.matcher_errors[0]
         err = max(record.matcher_errors, key=lambda e: len(e.path))
         wit = _witness_dict(err)
-        path_s = _path_to_str(err.path)
+        path_s = path_to_str(err.path)
         exp_s, act_s, note_list = _summarize_matcher_counterexample(record, err, wit)
         if err is not outer_err:
             note_list.insert(0, outer_err.message)
