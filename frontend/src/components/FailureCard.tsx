@@ -7,18 +7,20 @@ export function FailureCard({
   rawError,
   blobErrors,
   failureMessage,
+  assertionType,
 }: {
   counterexample: Counterexample | null;
   rawError: { error: string } | null;
   blobErrors: Record<string, string>;
   failureMessage?: string | null;
+  assertionType?: string | null;
 }) {
   const cx = counterexample;
   return (
     <Card className="border-rose-200 bg-rose-50/40">
       <CardHeader className="border-rose-200 bg-rose-50/70">
         <CardTitle className="text-sm text-rose-900">
-          {cx?.headline ?? failureMessage ?? "Failure"}
+          {assertionType ?? cx?.headline ?? failureMessage ?? "Failure"}
         </CardTitle>
         {cx?.location_detail && (
           <p className="text-xs text-rose-800/80">{cx.location_detail}</p>

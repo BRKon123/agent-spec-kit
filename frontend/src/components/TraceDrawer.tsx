@@ -23,6 +23,9 @@ export function TraceDrawer({
 }) {
   const trace = useRepeatTrace(repeatId ?? undefined);
   const t = trace.data;
+  const primaryAssertionType =
+    t?.assertions?.find((a) => a.status !== "passed")?.assertion_type ??
+    t?.assertions?.[0]?.assertion_type;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -89,37 +92,6 @@ export function TraceDrawer({
                 <h3 className="text-sm font-semibold mb-2">Event trace</h3>
                 <TraceTree transcript={t.transcript} />
               </section>
-              {t.assertions && t.assertions.length > 0 && (
-                <section>
-                  <h3 className="text-sm font-semibold mb-2">Assertions</h3>
-                  <ul className="space-y-1.5">
-                    {t.assertions.map((a) => (
-                      <li
-                        key={a.assertion_id}
-                        className="rounded-md border border-slate-200 bg-white p-2 text-xs"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Badge status={a.status} />
-                          <span className="font-mono text-slate-700">
-                            {a.assertion_type}
-                          </span>
-                          {a.actor && (
-                            <span className="text-slate-500">actor={a.actor}</span>
-                          )}
-                          {a.turn_index != null && (
-                            <span className="text-slate-500">turn={a.turn_index}</span>
-                          )}
-                        </div>
-                        {a.message && (
-                          <div className="mt-1 text-slate-700 whitespace-pre-wrap">
-                            {a.message}
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
               {(t.status !== "passed" || t.counterexample || t.raw_error) && (
                 <section>
                   <h3 className="text-sm font-semibold mb-2">Failure</h3>
@@ -128,6 +100,7 @@ export function TraceDrawer({
                     rawError={t.raw_error}
                     blobErrors={t.blob_errors}
                     failureMessage={t.failure_message}
+                    assertionType={primaryAssertionType}
                   />
                 </section>
               )}

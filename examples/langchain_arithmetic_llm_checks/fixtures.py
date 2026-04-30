@@ -16,6 +16,7 @@ from agent_spec_kit.integrations.langchain_adapter import wrap_langchain_agent
 
 _LLM_MODEL_CASES = (
     ek.case("gpt-5-nano", id="gpt5nano"),
+    ek.case("gpt-4.1-nano-2025-04-14", id="gpt41nano"),
 )
 
 _ARITHMETIC_SYSTEM = (

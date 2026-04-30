@@ -34,7 +34,7 @@ async def test_arithmetic_with_llm_criteria_checks(s):
                     "add_numbers",
                     args={"a": 20, "b": 3},
                     result=m.llm_criteria(
-                        criteria=["contains 23"],
+                        criteria=["contains 25"],
                         threshold=1,
                         model="openai:gpt-5-nano",
                     ),

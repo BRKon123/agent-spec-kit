@@ -129,8 +129,8 @@ export function ComparePage() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Compare experiments</h1>
           <p className="text-xs text-slate-500">
-            Pick two or more experiments. Cells show the most recent repeat per
-            scenario in each experiment&apos;s latest run.
+            Pick two or more experiments. Cells show the most recent repeat for
+            each scenario in each experiment.
           </p>
         </div>
         <ColumnPicker
@@ -239,7 +239,7 @@ function CompareTableView({
     return (
       <EmptyState
         title="No scenarios to compare"
-        description="The selected experiments don't share any scenarios in their latest runs."
+        description="No scenarios were found across the selected experiments."
       />
     );
   }

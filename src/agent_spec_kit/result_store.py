@@ -674,39 +674,54 @@ class LocalResultStore:
                 for row in exp_rows
             }
 
-            run_ids = [m["latest_run_id"] for m in exp_meta.values() if m["latest_run_id"]]
-            if not run_ids:
+            has_any_runs = any(m["latest_run_id"] for m in exp_meta.values())
+            if not has_any_runs:
                 ordered = [exp_meta[eid] for eid in experiment_ids if eid in exp_meta]
                 return {"experiments": ordered, "rows": []}
 
-            run_placeholders = ",".join("?" for _ in run_ids)
             scenario_rows = conn.execute(
                 f"""
                 SELECT sr.scenario_result_id, sr.run_id, sr.scenario_name, sr.scenario_key,
                        sr.parameter_key, sr.parameters_json, sr.tags_json, sr.status AS scenario_status,
                        sr.duration_ms AS scenario_duration_ms,
                        sr.repeats_passed, sr.repeats_failed, sr.repeats_total,
-                       r.experiment_id
+                       r.experiment_id, r.started_at AS run_started_at
                 FROM scenario_results sr
                 JOIN runs r ON r.run_id = sr.run_id
-                WHERE sr.run_id IN ({run_placeholders})
+                WHERE r.experiment_id IN ({placeholders})
+                ORDER BY r.started_at DESC, sr.scenario_result_id DESC
                 """,
-                run_ids,
+                experiment_ids,
             ).fetchall()
-            latest_repeat_rows = conn.execute(
-                f"""
-                SELECT rr.scenario_result_id, rr.repeat_result_id, rr.repeat_index,
-                       rr.status, rr.duration_ms, rr.failure_kind, rr.failure_message
-                FROM repeat_results rr
-                JOIN scenario_results sr ON sr.scenario_result_id = rr.scenario_result_id
-                WHERE sr.run_id IN ({run_placeholders})
-                  AND rr.repeat_index = (
-                      SELECT MAX(rr2.repeat_index) FROM repeat_results rr2
-                      WHERE rr2.scenario_result_id = rr.scenario_result_id
-                  )
-                """,
-                run_ids,
-            ).fetchall()
+
+        # Keep only the most recent run per (experiment, scenario_key, parameter_key).
+        latest_scenario_rows: list[sqlite3.Row] = []
+        seen_triplets: set[tuple[str, str, str]] = set()
+        for row in scenario_rows:
+            triplet = (row["experiment_id"], row["scenario_key"], row["parameter_key"])
+            if triplet in seen_triplets:
+                continue
+            seen_triplets.add(triplet)
+            latest_scenario_rows.append(row)
+
+        latest_repeat_rows: list[sqlite3.Row] = []
+        if latest_scenario_rows:
+            scenario_ids = [row["scenario_result_id"] for row in latest_scenario_rows]
+            with self._connect() as conn:
+                scenario_placeholders = ",".join("?" for _ in scenario_ids)
+                latest_repeat_rows = conn.execute(
+                    f"""
+                    SELECT rr.scenario_result_id, rr.repeat_result_id, rr.repeat_index,
+                           rr.status, rr.duration_ms, rr.failure_kind, rr.failure_message
+                    FROM repeat_results rr
+                    WHERE rr.scenario_result_id IN ({scenario_placeholders})
+                      AND rr.repeat_index = (
+                          SELECT MAX(rr2.repeat_index) FROM repeat_results rr2
+                          WHERE rr2.scenario_result_id = rr.scenario_result_id
+                      )
+                    """,
+                    scenario_ids,
+                ).fetchall()
 
         latest_repeat_by_scenario_id: dict[str, dict[str, Any]] = {
             row["scenario_result_id"]: {
@@ -722,7 +737,7 @@ class LocalResultStore:
 
         # row_key -> { display, cells: { exp_id -> cell or None } }
         rows_by_key: dict[tuple[str, str], dict[str, Any]] = {}
-        for row in scenario_rows:
+        for row in latest_scenario_rows:
             row_key = (row["scenario_key"], row["parameter_key"])
             if row_key not in rows_by_key:
                 rows_by_key[row_key] = {
