@@ -43,11 +43,13 @@ function nodeKind(node: AgentEventNode):
     return { kind: "user_turn", label: `UserTurn: ${c}${e}` };
   }
   if ("agent_output" in node || "user_input" in node) {
-    const path =
-      node.source_path && node.source_path.length
-        ? node.source_path.join(".")
-        : "root";
-    return { kind: "agent_turn", label: `AgentTurn (${path})` };
+    const path = node.source_path && node.source_path.length
+      ? node.source_path.join(".")
+      : "";
+    const o = shortRepr(node.agent_output);
+    const e = node.error ? `  [error: ${shortRepr(node.error)}]` : "";
+    const prefix = path ? `AgentTurn (${path})` : "AgentTurn";
+    return { kind: "agent_turn", label: `${prefix}: ${o}${e}` };
   }
   return { kind: "unknown", label: "Event" };
 }

@@ -82,8 +82,22 @@ class AgentTurnEvent(BaseEvent):
     error: str | None = None
 
     def _rich_node_label(self) -> str:
-        path = ".".join(self.source_path) if self.source_path else "root"
-        return f"AgentTurn ({path})"
+        if not self.source_path:
+            prefix = "AgentTurn"
+        else:
+            path = ".".join(self.source_path)
+            prefix = f"AgentTurn ({path})"
+        s = self.agent_output
+        s = s if s is not None else ""
+        if not isinstance(s, str):
+            s = repr(s)
+        if self.error:
+            t = f"{s}  [error: {self.error!r}]"
+        else:
+            t = s
+        if len(t) > 72:
+            t = t[:69] + "..."
+        return f"{prefix}: {t}"
 
 
 @dataclass

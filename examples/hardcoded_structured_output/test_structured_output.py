@@ -88,7 +88,7 @@ async def test_hardcoded_structured_output_assertion(s):
         .assert_output(
             m.object(
                 {
-                    "status": "o",
+                    "status": "ok",
                     "task": "plan_trip",
                     "destination": "Lisbon",
                     "days": 3,

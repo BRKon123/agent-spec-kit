@@ -321,8 +321,10 @@ def test_conversation_trace_windows_last_five_agent_turns() -> None:
         parts.append(ConversationTurn.from_turn("user", u))
         parts.append(ConversationTurn.from_turn("agent", a))
     roots = conversation_turns_to_event_trace(parts, max_agent_turns=5)
-    labels = " ".join(r._rich_node_label() for r in roots)
+    from agent_spec_kit.events import UserTurnEvent
+
+    user_contents = [r.content for r in roots if isinstance(r, UserTurnEvent)]
     # Oldest full round (u0, a0) is dropped; window starts with u1.
-    assert "u0" not in labels
-    assert "u1" in labels
-    assert "u5" in labels
+    assert "u0" not in user_contents
+    assert "u1" in user_contents
+    assert "u5" in user_contents
