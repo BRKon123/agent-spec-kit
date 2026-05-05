@@ -112,6 +112,28 @@ class AssertionRow(BaseModel):
     counterexample_blob_path: str | None = None
 
 
+class PhaseErrorRow(BaseModel):
+    phase_error_id: str
+    repeat_result_id: str
+    phase: Literal["fuzz", "shrink", "extract"]
+    sub_phase: str | None = None
+    error_kind: str
+    message: str
+    traceback_blob_path: str | None = None
+    occurred_at: str
+
+
+class FuzzTrialSummary(BaseModel):
+    trial_id: str
+    repeat_result_id: str
+    trial_index: int
+    seed: int | None = None
+    status: Status
+    summary_label: str = ""
+    failure_kind: str | None = None
+    failure_message: str | None = None
+
+
 class RepeatTrace(BaseModel):
     """Full trace payload for a single repeat: header + blob contents."""
 
@@ -137,6 +159,8 @@ class RepeatTrace(BaseModel):
     counterexample: Any | None = None
     raw_error: Any | None = None
     blob_errors: dict[str, str] = Field(default_factory=dict)
+    phase_errors: list[PhaseErrorRow] = Field(default_factory=list)
+    fuzz_trials: list[FuzzTrialSummary] = Field(default_factory=list)
 
 
 class CompareCellLatestRepeat(BaseModel):
@@ -178,3 +202,4 @@ class CompareExperimentMeta(BaseModel):
 class CompareResponse(BaseModel):
     experiments: list[CompareExperimentMeta]
     rows: list[CompareRow]
+    excluded_fuzz_scenarios: list[dict[str, str]] = Field(default_factory=list)

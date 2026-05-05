@@ -150,6 +150,68 @@ def list_scenarios_for_run(
 
 
 @router.get(
+    "/runs/{run_id}/fuzz-trials",
+    responses={404: {"model": ProblemDetail}},
+)
+def list_fuzz_trials_for_run_api(
+    run_id: str,
+    request: Request,
+    store: Annotated[LocalResultStore, Depends(get_store)],
+) -> Any:
+    if store.get_run(run_id) is None:
+        return problem_response(
+            status=404,
+            title="Run not found",
+            detail=f"No run with id {run_id!r}",
+            instance=str(request.url.path),
+        )
+    return store.list_fuzz_trials_for_run(run_id)
+
+
+@router.get(
+    "/fuzz-trials/{trial_id}",
+    responses={404: {"model": ProblemDetail}},
+)
+def get_fuzz_trial_detail(
+    trial_id: str,
+    request: Request,
+    store: Annotated[LocalResultStore, Depends(get_store)],
+) -> Any:
+    row = store.get_fuzz_trial(trial_id)
+    if row is None:
+        return problem_response(
+            status=404,
+            title="Fuzz trial not found",
+            detail=f"No fuzz trial with id {trial_id!r}",
+            instance=str(request.url.path),
+        )
+    transcript, err = loaders.load_blob_safely(row.get("transcript_blob_path"))
+    blob_errors: dict[str, str] = {}
+    if err:
+        blob_errors["transcript"] = err
+    return {**row, "transcript": transcript, "blob_errors": blob_errors}
+
+
+@router.get(
+    "/runs/{run_id}/regressions",
+    responses={404: {"model": ProblemDetail}},
+)
+def list_regressions_api(
+    run_id: str,
+    request: Request,
+    store: Annotated[LocalResultStore, Depends(get_store)],
+) -> Any:
+    if store.get_run(run_id) is None:
+        return problem_response(
+            status=404,
+            title="Run not found",
+            detail=f"No run with id {run_id!r}",
+            instance=str(request.url.path),
+        )
+    return store.list_regressions_for_run(run_id)
+
+
+@router.get(
     "/repeats/{repeat_result_id}/trace",
     response_model=RepeatTrace,
     responses={404: {"model": ProblemDetail}},

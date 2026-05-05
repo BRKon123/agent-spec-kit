@@ -6,7 +6,7 @@ import io
 import json
 import sys
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
 from rich import box
 from rich.console import Console
@@ -17,6 +17,7 @@ from rich.table import Table
 from rich.text import Text
 
 from agent_spec_kit.events import print_rich_event_trace
+from agent_spec_kit.failures import Counterexample, conversation_turns_to_event_trace
 from agent_spec_kit.runner import JobResult
 
 if TYPE_CHECKING:
@@ -89,6 +90,13 @@ def _failure_compact_for_table(r: "JobResult") -> str:
     return _table_cell_compact(r.detail or "")
 
 
+def _failure_compact_for_trial(trial: dict[str, Any]) -> str:
+    kind = str(trial.get("failure_kind") or "").strip()
+    if kind:
+        return _table_cell_compact(kind)
+    return _table_cell_compact(str(trial.get("failure_message") or ""))
+
+
 def _table_cell_compact(s: str, *, max_len: int = 200) -> str:
     """Single-line cell text; cap length like the failure column."""
     t = (s or "").replace("\n", " ")
@@ -117,7 +125,7 @@ def emit_failure_detail(r: "JobResult", *, file: TextIO | None = None) -> None:
     else:
         lines.append(f"[bold]Where:[/bold] {escape(cx.location)}")
     if _meaningful_path(cx.path):
-        lines.append(f"[bold]Path:[/bold] {escape(cx.path)}")
+        lines.append(f"[bold]Path:[/bold] {escape(str(cx.path))}")
     lines.append(f"[bold]Expected:[/bold] {escape(str(cx.expected_summary))}")
     lines.append("[bold]Actual:[/bold]")
     body = str(cx.actual_min)
@@ -146,6 +154,85 @@ def emit_failure_detail(r: "JobResult", *, file: TextIO | None = None) -> None:
     )
 
 
+def _trial_counterexample(
+    *,
+    r: JobResult,
+    trial: dict[str, Any],
+) -> Counterexample:
+    total_trials = len(r.fuzz_trials)
+    trial_index = int(trial.get("trial_index", 0)) + 1
+    turns = tuple(trial.get("turn_results") or ())
+    raw_cx = trial.get("counterexample")
+    if isinstance(raw_cx, dict):
+        return Counterexample(
+            headline=str(raw_cx.get("headline") or trial.get("failure_message") or "trial failed"),
+            location=str(raw_cx.get("location") or f"trial {trial_index}"),
+            path=(str(raw_cx["path"]) if raw_cx.get("path") is not None else None),
+            expected_summary=str(raw_cx.get("expected_summary") or "expected trial to pass"),
+            actual_min=raw_cx.get("actual_min"),
+            notes=tuple(str(x) for x in (raw_cx.get("notes") or ())),
+            check_kind=(str(raw_cx["check_kind"]) if raw_cx.get("check_kind") is not None else None),
+            location_detail=(
+                str(raw_cx["location_detail"])
+                if raw_cx.get("location_detail") is not None
+                else f"fuzz trial {trial_index}/{total_trials}"
+            ),
+            events=conversation_turns_to_event_trace(turns) if turns else None,
+        )
+    failure_kind = str(trial.get("failure_kind") or "trial_failure")
+    failure_message = str(trial.get("failure_message") or "trial failed")
+    actual: dict[str, Any] = {"trial_index": trial_index, "user_turns": list(trial.get("user_turns") or ())}
+    if turns:
+        actual["last_output"] = str(turns[-1].output) if turns[-1].output is not None else None
+    notes: list[str] = []
+    summary_label = trial.get("summary_label")
+    if summary_label:
+        notes.append(f"trial summary: {summary_label}")
+    return Counterexample(
+        headline=failure_message,
+        location=f"trial {trial_index}",
+        path=None,
+        expected_summary=f"{failure_kind}: expected trial to pass",
+        actual_min=actual,
+        notes=tuple(notes),
+        check_kind=failure_kind,
+        location_detail=f"fuzz trial {trial_index}/{total_trials}",
+        events=conversation_turns_to_event_trace(turns) if turns else None,
+    )
+
+
+def emit_trial_failure_detail(r: JobResult, *, file: TextIO | None = None) -> None:
+    if not r.fuzz_trials:
+        return
+    for trial in r.fuzz_trials:
+        if str(trial.get("status", "passed")) == "passed":
+            continue
+        trial_idx = int(trial.get("trial_index", 0)) + 1
+        cx = _trial_counterexample(r=r, trial=trial)
+        synthetic = JobResult(
+            ok=False,
+            scenario_name=r.scenario_name,
+            case_id=r.case_id,
+            repeat_index=r.repeat_index,
+            repeat_total=r.repeat_total,
+            detail=str(trial.get("failure_message") or r.detail),
+            duration_s=float(trial.get("duration_s", 0.0) or 0.0),
+            counterexample=Counterexample(
+                headline=cx.headline,
+                location=cx.location,
+                path=cx.path,
+                expected_summary=cx.expected_summary,
+                actual_min=cx.actual_min,
+                notes=cx.notes,
+                check_kind=cx.check_kind,
+                location_detail=f"{cx.location_detail} (repeat {r.repeat_index}/{r.repeat_total})",
+                events=cx.events,
+            ),
+            param_cells=dict(r.param_cells),
+        )
+        emit_failure_detail(synthetic, file=file)
+
+
 def emit_summary_table(results: Sequence[JobResult], *, file: TextIO | None = None) -> None:
     c = _console(file or sys.stdout)
     param_keys = _param_column_keys(results)
@@ -154,26 +241,48 @@ def emit_summary_table(results: Sequence[JobResult], *, file: TextIO | None = No
     for axis in param_keys:
         tbl.add_column(axis, overflow="fold", max_width=32)
     tbl.add_column("Repeat", justify="center")
+    tbl.add_column("Trial", justify="center")
     tbl.add_column("Time (s)", justify="right")
     tbl.add_column("Result", justify="center")
     tbl.add_column("Failure (compact)", overflow="fold", max_width=56)
     for r in results:
         test_cell = r.scenario_name if param_keys else r.display_name
         rep = f"{r.repeat_index}/{r.repeat_total}"
-        res_txt = "[green]pass[/]" if r.ok else "[red]fail[/]"
-        fail = ""
-        if not r.ok:
-            fail = _failure_compact_for_table(r)
         param_vals = [escape(_table_cell_compact(r.param_cells.get(p, "—"))) for p in param_keys]
-        row = [
-            _table_cell_compact(test_cell),
-            *param_vals,
-            rep,
-            f"{r.duration_s:.2f}",
-            res_txt,
-            fail,
-        ]
-        tbl.add_row(*row)
+        if r.fuzz_trials:
+            total_trials = len(r.fuzz_trials)
+            for trial in r.fuzz_trials:
+                tix = int(trial.get("trial_index", 0)) + 1
+                trial_status = str(trial.get("status", "passed"))
+                trial_ok = trial_status == "passed"
+                res_txt = "[green]pass[/]" if trial_ok else "[red]fail[/]"
+                fail = "" if trial_ok else _failure_compact_for_trial(trial)
+                td = float(trial.get("duration_s", 0.0) or 0.0)
+                row = [
+                    _table_cell_compact(test_cell),
+                    *param_vals,
+                    rep,
+                    f"{tix}/{total_trials}",
+                    f"{td:.2f}",
+                    res_txt,
+                    fail,
+                ]
+                tbl.add_row(*row)
+        else:
+            res_txt = "[green]pass[/]" if r.ok else "[red]fail[/]"
+            fail = ""
+            if not r.ok:
+                fail = _failure_compact_for_table(r)
+            row = [
+                _table_cell_compact(test_cell),
+                *param_vals,
+                rep,
+                "—",
+                f"{r.duration_s:.2f}",
+                res_txt,
+                fail,
+            ]
+            tbl.add_row(*row)
     c.print(Rule(style="dim"))
     c.print(tbl)
     passed = sum(1 for x in results if x.ok)
@@ -206,6 +315,7 @@ __all__ = [
     "emit_error",
     "emit_failure_detail",
     "emit_job_compact",
+    "emit_trial_failure_detail",
     "emit_list_table",
     "emit_note",
     "emit_summary_table",

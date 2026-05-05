@@ -5,6 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useEffect, useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useRepeatTrace } from "@/api/queries";
 import { TraceTree } from "@/components/TraceTree";
@@ -23,6 +25,35 @@ export function TraceDrawer({
 }) {
   const trace = useRepeatTrace(repeatId ?? undefined);
   const t = trace.data;
+  const hasFuzzTrials = Boolean(t?.fuzz_trials && t.fuzz_trials.length > 0);
+  const [panelWidth, setPanelWidth] = useState<number>(760);
+  const dragState = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragState.current) return;
+      const delta = dragState.current.startX - e.clientX;
+      const next = dragState.current.startWidth + delta;
+      setPanelWidth(Math.max(420, Math.min(window.innerWidth - 40, next)));
+    };
+    const onUp = () => {
+      dragState.current = null;
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const onResizeStart = (e: ReactMouseEvent<HTMLDivElement>) => {
+    dragState.current = { startX: e.clientX, startWidth: panelWidth };
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+  };
   const primaryAssertionType =
     t?.assertions?.find((a) => a.status !== "passed")?.assertion_type ??
     t?.assertions?.[0]?.assertion_type;
@@ -30,8 +61,14 @@ export function TraceDrawer({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         side="right"
-        className="flex flex-col p-0 max-w-[min(64rem,95vw)]"
+        className="flex flex-col p-0 max-w-none"
+        style={{ width: `${panelWidth}px` }}
       >
+        <div
+          className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-slate-200/80"
+          onMouseDown={onResizeStart}
+          title="Drag to resize panel"
+        />
         <DialogHeader>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -78,7 +115,7 @@ export function TraceDrawer({
           )}
           {t && (
             <>
-              {t.output_preview && (
+              {!hasFuzzTrials && t.output_preview && (
                 <div className="rounded-md border border-slate-200 bg-white p-3">
                   <div className="text-[11px] uppercase tracking-wide text-slate-500 mb-1">
                     Final output
@@ -88,11 +125,61 @@ export function TraceDrawer({
                   </div>
                 </div>
               )}
-              <section>
-                <h3 className="text-sm font-semibold mb-2">Event trace</h3>
-                <TraceTree transcript={t.transcript} />
-              </section>
-              {(t.status !== "passed" || t.counterexample || t.raw_error) && (
+              {t.phase_errors && t.phase_errors.length > 0 && (
+                <section>
+                  <h3 className="text-sm font-semibold mb-2">Phase errors</h3>
+                  <div className="space-y-2">
+                    {t.phase_errors.map((pe) => (
+                      <div
+                        key={pe.phase_error_id}
+                        className="rounded-md border border-rose-200 bg-rose-50/80 p-3 text-sm"
+                      >
+                        <div className="text-xs font-mono text-rose-700 mb-1">
+                          {pe.phase}
+                          {pe.sub_phase ? ` / ${pe.sub_phase}` : ""} · {pe.error_kind}
+                        </div>
+                        <div className="text-rose-900 whitespace-pre-wrap break-words">
+                          {pe.message}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+              {t.fuzz_trials && t.fuzz_trials.length > 0 && (
+                <section>
+                  <h3 className="text-sm font-semibold mb-2">Fuzz trials</h3>
+                  <div className="overflow-x-auto rounded-md border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-50 text-slate-500 text-left">
+                        <tr>
+                          <th className="px-2 py-1.5">#</th>
+                          <th className="px-2 py-1.5">What</th>
+                          <th className="px-2 py-1.5">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {t.fuzz_trials.map((ft) => (
+                          <tr key={ft.trial_id} className="border-t border-slate-100">
+                            <td className="px-2 py-1.5 tabular-nums">{ft.trial_index}</td>
+                            <td className="px-2 py-1.5 text-slate-700">{ft.summary_label || "—"}</td>
+                            <td className="px-2 py-1.5">
+                              <Badge status={ft.status} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+              {!hasFuzzTrials && (
+                <section>
+                  <h3 className="text-sm font-semibold mb-2">Event trace</h3>
+                  <TraceTree transcript={t.transcript} />
+                </section>
+              )}
+              {!hasFuzzTrials && (t.status !== "passed" || t.counterexample || t.raw_error) && (
                 <section>
                   <h3 className="text-sm font-semibold mb-2">Failure</h3>
                   <FailureCard

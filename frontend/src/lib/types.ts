@@ -134,6 +134,47 @@ export interface Counterexample {
   events?: AgentEventNode[];
 }
 
+export interface PhaseErrorRow {
+  phase_error_id: string;
+  repeat_result_id: string;
+  phase: "fuzz" | "shrink" | "extract";
+  sub_phase?: string | null;
+  error_kind: string;
+  message: string;
+  traceback_blob_path?: string | null;
+  occurred_at: string;
+}
+
+export interface FuzzTrialSummary {
+  trial_id: string;
+  repeat_result_id: string;
+  trial_index: number;
+  seed?: number | null;
+  status: Status;
+  summary_label?: string;
+  failure_kind?: string | null;
+  failure_message?: string | null;
+}
+
+export interface FuzzTrialRunRow extends FuzzTrialSummary {
+  user_turns: string[];
+  behaviour_labels: string[];
+  behaviour_details: Record<string, unknown>[];
+  failure_signature?: Record<string, unknown> | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+  duration_ms?: number | null;
+  transcript_blob_path?: string | null;
+  scenario_key?: string;
+  parameter_key?: string;
+  scenario_name?: string;
+}
+
+export interface FuzzTrialDetail extends FuzzTrialRunRow {
+  transcript: ConversationTurn[] | null;
+  blob_errors: Record<string, string>;
+}
+
 export interface RepeatTrace {
   repeat_result_id: string;
   scenario_result_id: string;
@@ -157,6 +198,8 @@ export interface RepeatTrace {
   counterexample: Counterexample | null;
   raw_error: { error: string } | null;
   blob_errors: Record<string, string>;
+  phase_errors?: PhaseErrorRow[];
+  fuzz_trials?: FuzzTrialSummary[];
 }
 
 export interface CompareCellLatestRepeat {
@@ -198,4 +241,5 @@ export interface CompareExperimentMeta {
 export interface CompareResponse {
   experiments: CompareExperimentMeta[];
   rows: CompareRow[];
+  excluded_fuzz_scenarios?: { scenario_key: string; parameter_key: string; scenario_name: string }[];
 }

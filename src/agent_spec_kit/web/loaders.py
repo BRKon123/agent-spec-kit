@@ -45,6 +45,22 @@ def build_repeat_trace(
     if err:
         blob_errors["raw_error"] = err
 
+    phase_errors = store.list_phase_errors(repeat_result_id)
+    fuzz_rows = store.list_fuzz_trials(repeat_result_id)
+    fuzz_trials = [
+        {
+            "trial_id": ft["trial_id"],
+            "repeat_result_id": ft["repeat_result_id"],
+            "trial_index": ft["trial_index"],
+            "seed": ft.get("seed"),
+            "status": ft["status"],
+            "summary_label": ft.get("summary_label", ""),
+            "failure_kind": ft.get("failure_kind"),
+            "failure_message": ft.get("failure_message"),
+        }
+        for ft in fuzz_rows
+    ]
+
     return {
         "repeat_result_id": rec["repeat_result_id"],
         "scenario_result_id": rec["scenario_result_id"],
@@ -68,4 +84,6 @@ def build_repeat_trace(
         "counterexample": counterexample,
         "raw_error": raw_error,
         "blob_errors": blob_errors,
+        "phase_errors": phase_errors,
+        "fuzz_trials": fuzz_trials,
     }

@@ -207,12 +207,23 @@ export function ComparePage() {
       ) : compare.isError ? (
         <InlineError error={compare.error} onRetry={() => compare.refetch()} />
       ) : compare.data ? (
-        <CompareTableView
-          experiments={compare.data.experiments}
-          rows={compare.data.rows}
-          columnVisibility={columnVisibility}
-          onCellClick={onCellClick}
-        />
+        <>
+          {compare.data.excluded_fuzz_scenarios &&
+            compare.data.excluded_fuzz_scenarios.length > 0 && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <span className="font-semibold">Fuzz scenarios excluded from this compare: </span>
+                {compare.data.excluded_fuzz_scenarios
+                  .map((x) => `${x.scenario_name} (${x.scenario_key})`)
+                  .join(" · ")}
+              </div>
+            )}
+          <CompareTableView
+            experiments={compare.data.experiments}
+            rows={compare.data.rows}
+            columnVisibility={columnVisibility}
+            onCellClick={onCellClick}
+          />
+        </>
       ) : null}
 
       <TraceDrawer

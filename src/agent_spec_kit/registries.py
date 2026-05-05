@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from agent_spec_kit.fuzz_config import ExtractionConfig, ShrinkConfig
 from agent_spec_kit.param_cases import Case
 
 
@@ -36,6 +37,9 @@ class ScenarioDef:
     timeout_s: float | None
     source: str
     fixture_param_names: tuple[str, ...]
+    shrinking: ShrinkConfig | None = None
+    extraction: ExtractionConfig | None = None
+    regression_id: str | None = None
 
 
 _fixtures: dict[str, FixtureDef] = {}

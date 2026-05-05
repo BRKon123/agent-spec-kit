@@ -14,10 +14,14 @@ from typing import cast
 
 from agent_spec_kit.storage_records import (
     AssertionResultRecord,
+    FuzzTrialRecord,
+    PhaseErrorRecord,
+    RegressionExtractionRecord,
     RepeatResultRecord,
     RunRecord,
     RunSummary,
     ScenarioResultRecord,
+    ShrinkResultRecord,
     Status,
     StorageConfig,
 )
@@ -137,10 +141,85 @@ class LocalResultStore:
         CREATE INDEX IF NOT EXISTS idx_repeat_scenario ON repeat_results(scenario_result_id);
         CREATE INDEX IF NOT EXISTS idx_repeat_status ON repeat_results(status);
         CREATE INDEX IF NOT EXISTS idx_assertion_status ON assertions(status);
+        CREATE TABLE IF NOT EXISTS fuzz_trials (
+            trial_id TEXT PRIMARY KEY,
+            repeat_result_id TEXT NOT NULL,
+            trial_index INTEGER NOT NULL,
+            seed INTEGER,
+            status TEXT NOT NULL,
+            user_turns_json TEXT NOT NULL,
+            behaviour_labels_json TEXT NOT NULL,
+            behaviour_details_json TEXT NOT NULL,
+            summary_label TEXT NOT NULL,
+            failure_signature_json TEXT,
+            failure_kind TEXT,
+            failure_message TEXT,
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            duration_ms INTEGER,
+            transcript_blob_path TEXT,
+            FOREIGN KEY (repeat_result_id) REFERENCES repeat_results(repeat_result_id)
+        );
+        CREATE TABLE IF NOT EXISTS shrink_results (
+            shrink_id TEXT PRIMARY KEY,
+            repeat_result_id TEXT NOT NULL,
+            source_trial_id TEXT,
+            status TEXT NOT NULL,
+            passes_applied_json TEXT NOT NULL,
+            original_user_turns_json TEXT NOT NULL,
+            shrunk_user_turns_json TEXT NOT NULL,
+            candidates_evaluated INTEGER NOT NULL,
+            duration_ms INTEGER,
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            FOREIGN KEY (repeat_result_id) REFERENCES repeat_results(repeat_result_id)
+        );
+        CREATE TABLE IF NOT EXISTS regression_extractions (
+            regression_id TEXT PRIMARY KEY,
+            run_id TEXT NOT NULL,
+            scenario_result_id TEXT NOT NULL,
+            shrink_id TEXT,
+            source_scenario_key TEXT NOT NULL,
+            target_file TEXT NOT NULL,
+            function_name TEXT NOT NULL,
+            fingerprint TEXT NOT NULL,
+            duplicate_policy TEXT NOT NULL,
+            status TEXT NOT NULL,
+            written_at TEXT,
+            FOREIGN KEY (run_id) REFERENCES runs(run_id)
+        );
+        CREATE TABLE IF NOT EXISTS phase_errors (
+            phase_error_id TEXT PRIMARY KEY,
+            repeat_result_id TEXT NOT NULL,
+            phase TEXT NOT NULL,
+            sub_phase TEXT,
+            error_kind TEXT NOT NULL,
+            message TEXT NOT NULL,
+            traceback_blob_path TEXT,
+            occurred_at TEXT NOT NULL,
+            FOREIGN KEY (repeat_result_id) REFERENCES repeat_results(repeat_result_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_fuzz_trials_repeat ON fuzz_trials(repeat_result_id);
+        CREATE INDEX IF NOT EXISTS idx_regression_run ON regression_extractions(run_id);
+        CREATE INDEX IF NOT EXISTS idx_phase_errors_repeat ON phase_errors(repeat_result_id);
         """
         with self._connect() as conn:
             conn.executescript(schema)
+            self._migrate_schema(conn)
             conn.commit()
+
+    def _migrate_schema(self, conn: sqlite3.Connection) -> None:
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(scenario_results)").fetchall()}
+        if "fuzz_config_json" not in cols:
+            conn.execute("ALTER TABLE scenario_results ADD COLUMN fuzz_config_json TEXT")
+        ft_cols = {row[1] for row in conn.execute("PRAGMA table_info(fuzz_trials)").fetchall()}
+        if "per_step_user_turns_json" not in ft_cols:
+            conn.execute("ALTER TABLE fuzz_trials ADD COLUMN per_step_user_turns_json TEXT")
+        sh_cols = {row[1] for row in conn.execute("PRAGMA table_info(shrink_results)").fetchall()}
+        if "generative_step_index" not in sh_cols:
+            conn.execute("ALTER TABLE shrink_results ADD COLUMN generative_step_index INTEGER")
+        if "step_kind" not in sh_cols:
+            conn.execute("ALTER TABLE shrink_results ADD COLUMN step_kind TEXT")
 
     def _ensure_experiment(self, conn: sqlite3.Connection, run: RunRecord) -> None:
         conn.execute(
@@ -199,14 +278,16 @@ class LocalResultStore:
                 INSERT INTO scenario_results (
                     scenario_result_id, run_id, scenario_name, scenario_module, scenario_file,
                     scenario_key, parameter_key, parameters_json, tags_json, status,
-                    repeats_total, repeats_passed, repeats_failed, duration_ms, summary_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    repeats_total, repeats_passed, repeats_failed, duration_ms, summary_json,
+                    fuzz_config_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(scenario_result_id) DO UPDATE SET
                     status=excluded.status,
                     repeats_passed=excluded.repeats_passed,
                     repeats_failed=excluded.repeats_failed,
                     duration_ms=excluded.duration_ms,
-                    summary_json=excluded.summary_json
+                    summary_json=excluded.summary_json,
+                    fuzz_config_json=excluded.fuzz_config_json
                 """,
                 (
                     result.scenario_result_id,
@@ -224,6 +305,7 @@ class LocalResultStore:
                     result.repeats_failed,
                     result.duration_ms,
                     json.dumps(result.summary, default=str),
+                    result.fuzz_config_json,
                 ),
             )
             conn.commit()
@@ -295,6 +377,291 @@ class LocalResultStore:
                 ),
             )
             conn.commit()
+
+    def save_fuzz_trial(self, result: FuzzTrialRecord) -> None:
+        per_step_json: str | None = None
+        if result.per_step_user_turns is not None:
+            per_step_json = json.dumps([list(t) for t in result.per_step_user_turns], default=str)
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO fuzz_trials (
+                    trial_id, repeat_result_id, trial_index, seed, status,
+                    user_turns_json, behaviour_labels_json, behaviour_details_json, summary_label,
+                    failure_signature_json, failure_kind, failure_message,
+                    started_at, finished_at, duration_ms, transcript_blob_path,
+                    per_step_user_turns_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(trial_id) DO UPDATE SET
+                    status=excluded.status,
+                    finished_at=excluded.finished_at,
+                    duration_ms=excluded.duration_ms,
+                    failure_kind=excluded.failure_kind,
+                    failure_message=excluded.failure_message,
+                    transcript_blob_path=excluded.transcript_blob_path,
+                    per_step_user_turns_json=excluded.per_step_user_turns_json
+                """,
+                (
+                    result.trial_id,
+                    result.repeat_result_id,
+                    result.trial_index,
+                    result.seed,
+                    result.status,
+                    json.dumps(list(result.user_turns), default=str),
+                    json.dumps(list(result.behaviour_labels), default=str),
+                    json.dumps(list(result.behaviour_details), default=str),
+                    result.summary_label,
+                    result.failure_signature_json,
+                    result.failure_kind,
+                    result.failure_message,
+                    result.started_at,
+                    result.finished_at,
+                    result.duration_ms,
+                    result.transcript_blob_path,
+                    per_step_json,
+                ),
+            )
+            conn.commit()
+
+    def save_shrink_result(self, result: ShrinkResultRecord) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO shrink_results (
+                    shrink_id, repeat_result_id, source_trial_id, status, passes_applied_json,
+                    original_user_turns_json, shrunk_user_turns_json, candidates_evaluated,
+                    duration_ms, started_at, finished_at,
+                    generative_step_index, step_kind
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(shrink_id) DO UPDATE SET
+                    status=excluded.status,
+                    finished_at=excluded.finished_at,
+                    duration_ms=excluded.duration_ms,
+                    generative_step_index=excluded.generative_step_index,
+                    step_kind=excluded.step_kind
+                """,
+                (
+                    result.shrink_id,
+                    result.repeat_result_id,
+                    result.source_trial_id,
+                    result.status,
+                    json.dumps(list(result.passes_applied), default=str),
+                    json.dumps(list(result.original_user_turns), default=str),
+                    json.dumps(list(result.shrunk_user_turns), default=str),
+                    result.candidates_evaluated,
+                    result.duration_ms,
+                    result.started_at,
+                    result.finished_at,
+                    result.generative_step_index,
+                    result.step_kind,
+                ),
+            )
+            conn.commit()
+
+    def save_regression(self, result: RegressionExtractionRecord) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO regression_extractions (
+                    regression_id, run_id, scenario_result_id, shrink_id, source_scenario_key,
+                    target_file, function_name, fingerprint, duplicate_policy, status, written_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(regression_id) DO UPDATE SET
+                    status=excluded.status,
+                    written_at=excluded.written_at
+                """,
+                (
+                    result.regression_id,
+                    result.run_id,
+                    result.scenario_result_id,
+                    result.shrink_id,
+                    result.source_scenario_key,
+                    result.target_file,
+                    result.function_name,
+                    result.fingerprint,
+                    result.duplicate_policy,
+                    result.status,
+                    result.written_at,
+                ),
+            )
+            conn.commit()
+
+    def save_phase_error(self, result: PhaseErrorRecord) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO phase_errors (
+                    phase_error_id, repeat_result_id, phase, sub_phase, error_kind,
+                    message, traceback_blob_path, occurred_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    result.phase_error_id,
+                    result.repeat_result_id,
+                    result.phase,
+                    result.sub_phase,
+                    result.error_kind,
+                    result.message,
+                    result.traceback_blob_path,
+                    result.occurred_at,
+                ),
+            )
+            conn.commit()
+
+    def list_fuzz_trials(self, repeat_result_id: str) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT trial_id, repeat_result_id, trial_index, seed, status,
+                       user_turns_json, behaviour_labels_json, behaviour_details_json, summary_label,
+                       failure_signature_json, failure_kind, failure_message,
+                       started_at, finished_at, duration_ms, transcript_blob_path
+                FROM fuzz_trials WHERE repeat_result_id = ?
+                ORDER BY trial_index
+                """,
+                (repeat_result_id,),
+            ).fetchall()
+        out: list[dict[str, Any]] = []
+        for row in rows:
+            out.append(
+                {
+                    "trial_id": row["trial_id"],
+                    "repeat_result_id": row["repeat_result_id"],
+                    "trial_index": row["trial_index"],
+                    "seed": row["seed"],
+                    "status": row["status"],
+                    "user_turns": json.loads(row["user_turns_json"]),
+                    "behaviour_labels": json.loads(row["behaviour_labels_json"]),
+                    "behaviour_details": json.loads(row["behaviour_details_json"]),
+                    "summary_label": row["summary_label"],
+                    "failure_signature": json.loads(row["failure_signature_json"])
+                    if row["failure_signature_json"]
+                    else None,
+                    "failure_kind": row["failure_kind"],
+                    "failure_message": row["failure_message"],
+                    "started_at": row["started_at"],
+                    "finished_at": row["finished_at"],
+                    "duration_ms": row["duration_ms"],
+                    "transcript_blob_path": row["transcript_blob_path"],
+                }
+            )
+        return out
+
+    def get_fuzz_trial(self, trial_id: str) -> dict[str, Any] | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                """
+                SELECT ft.*, sr.run_id, sr.scenario_name, sr.scenario_module, sr.scenario_key,
+                       sr.parameter_key, sr.parameters_json, sr.tags_json, sr.fuzz_config_json
+                FROM fuzz_trials ft
+                JOIN repeat_results rr ON rr.repeat_result_id = ft.repeat_result_id
+                JOIN scenario_results sr ON sr.scenario_result_id = rr.scenario_result_id
+                WHERE ft.trial_id = ?
+                """,
+                (trial_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "trial_id": row["trial_id"],
+            "repeat_result_id": row["repeat_result_id"],
+            "trial_index": row["trial_index"],
+            "seed": row["seed"],
+            "status": row["status"],
+            "user_turns": json.loads(row["user_turns_json"]),
+            "behaviour_labels": json.loads(row["behaviour_labels_json"]),
+            "behaviour_details": json.loads(row["behaviour_details_json"]),
+            "summary_label": row["summary_label"],
+            "failure_signature": json.loads(row["failure_signature_json"])
+            if row["failure_signature_json"]
+            else None,
+            "failure_kind": row["failure_kind"],
+            "failure_message": row["failure_message"],
+            "started_at": row["started_at"],
+            "finished_at": row["finished_at"],
+            "duration_ms": row["duration_ms"],
+            "transcript_blob_path": row["transcript_blob_path"],
+            "run_id": row["run_id"],
+            "scenario_name": row["scenario_name"],
+            "scenario_module": row["scenario_module"],
+            "scenario_key": row["scenario_key"],
+            "parameter_key": row["parameter_key"],
+            "parameters": json.loads(row["parameters_json"]) if row["parameters_json"] else {},
+            "tags": json.loads(row["tags_json"]) if row["tags_json"] else [],
+            "fuzz_config_json": row["fuzz_config_json"],
+        }
+
+    def list_fuzz_trials_for_run(self, run_id: str) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT ft.trial_id, ft.repeat_result_id, ft.trial_index, ft.seed, ft.status,
+                       ft.user_turns_json, ft.behaviour_labels_json, ft.behaviour_details_json,
+                       ft.summary_label, ft.failure_signature_json, ft.failure_kind, ft.failure_message,
+                       ft.started_at, ft.finished_at, ft.duration_ms, ft.transcript_blob_path,
+                       sr.scenario_key, sr.parameter_key, sr.scenario_name
+                FROM fuzz_trials ft
+                JOIN repeat_results rr ON rr.repeat_result_id = ft.repeat_result_id
+                JOIN scenario_results sr ON sr.scenario_result_id = rr.scenario_result_id
+                WHERE sr.run_id = ?
+                ORDER BY sr.scenario_key, sr.parameter_key, rr.repeat_index, ft.trial_index
+                """,
+                (run_id,),
+            ).fetchall()
+        out: list[dict[str, Any]] = []
+        for row in rows:
+            out.append(
+                {
+                    "trial_id": row["trial_id"],
+                    "repeat_result_id": row["repeat_result_id"],
+                    "trial_index": row["trial_index"],
+                    "seed": row["seed"],
+                    "status": row["status"],
+                    "user_turns": json.loads(row["user_turns_json"]),
+                    "behaviour_labels": json.loads(row["behaviour_labels_json"]),
+                    "behaviour_details": json.loads(row["behaviour_details_json"]),
+                    "summary_label": row["summary_label"],
+                    "failure_signature": json.loads(row["failure_signature_json"])
+                    if row["failure_signature_json"]
+                    else None,
+                    "failure_kind": row["failure_kind"],
+                    "failure_message": row["failure_message"],
+                    "started_at": row["started_at"],
+                    "finished_at": row["finished_at"],
+                    "duration_ms": row["duration_ms"],
+                    "transcript_blob_path": row["transcript_blob_path"],
+                    "scenario_key": row["scenario_key"],
+                    "parameter_key": row["parameter_key"],
+                    "scenario_name": row["scenario_name"],
+                }
+            )
+        return out
+
+    def list_regressions_for_run(self, run_id: str) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT regression_id, run_id, scenario_result_id, shrink_id, source_scenario_key,
+                       target_file, function_name, fingerprint, duplicate_policy, status, written_at
+                FROM regression_extractions WHERE run_id = ?
+                ORDER BY written_at DESC NULLS LAST, regression_id
+                """,
+                (run_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def list_phase_errors(self, repeat_result_id: str) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT phase_error_id, repeat_result_id, phase, sub_phase, error_kind,
+                       message, traceback_blob_path, occurred_at
+                FROM phase_errors WHERE repeat_result_id = ?
+                ORDER BY occurred_at
+                """,
+                (repeat_result_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
 
     def _percentile(self, values: list[int], p: float) -> int:
         if not values:
@@ -382,6 +749,43 @@ class LocalResultStore:
         elif scenario_failed > 0:
             status = "failed"
 
+        with self._connect() as conn:
+            ft_row = conn.execute(
+                """
+                SELECT COUNT(*) AS n,
+                       COALESCE(SUM(CASE WHEN ft.status != 'passed' THEN 1 ELSE 0 END), 0) AS failed
+                FROM fuzz_trials ft
+                JOIN repeat_results rr ON rr.repeat_result_id = ft.repeat_result_id
+                JOIN scenario_results sr ON sr.scenario_result_id = rr.scenario_result_id
+                WHERE sr.run_id = ?
+                """,
+                (run_id,),
+            ).fetchone()
+            reg_row = conn.execute(
+                """
+                SELECT
+                    SUM(CASE WHEN status IN ('written', 'partial') THEN 1 ELSE 0 END) AS written,
+                    SUM(CASE WHEN status = 'skipped_duplicate' THEN 1 ELSE 0 END) AS skipped
+                FROM regression_extractions WHERE run_id = ?
+                """,
+                (run_id,),
+            ).fetchone()
+            pe_row = conn.execute(
+                """
+                SELECT COUNT(*) AS n FROM phase_errors pe
+                JOIN repeat_results rr ON rr.repeat_result_id = pe.repeat_result_id
+                JOIN scenario_results sr ON sr.scenario_result_id = rr.scenario_result_id
+                WHERE sr.run_id = ?
+                """,
+                (run_id,),
+            ).fetchone()
+
+        fuzz_trials_total = int(ft_row["n"] or 0) if ft_row else 0
+        fuzz_trials_failed = int(ft_row["failed"] or 0) if ft_row else 0
+        regressions_written = int(reg_row["written"] or 0) if reg_row else 0
+        regressions_skipped = int(reg_row["skipped"] or 0) if reg_row else 0
+        phase_errors_total = int(pe_row["n"] or 0) if pe_row else 0
+
         return RunSummary(
             status=cast(Status, status),
             scenario_count=scenario_count,
@@ -401,6 +805,11 @@ class LocalResultStore:
             failure_kinds=failure_kinds,
             tag_breakdown=tag_breakdown,
             parameter_breakdown=parameter_breakdown,
+            fuzz_trials_total=fuzz_trials_total,
+            fuzz_trials_failed=fuzz_trials_failed,
+            regressions_written=regressions_written,
+            regressions_skipped=regressions_skipped,
+            phase_errors_total=phase_errors_total,
         )
 
     def finish_run(self, run_id: str, summary: RunSummary) -> None:
@@ -509,7 +918,8 @@ class LocalResultStore:
                 """
                 SELECT scenario_result_id, run_id, scenario_name, scenario_module, scenario_file,
                        scenario_key, parameter_key, parameters_json, tags_json, status,
-                       repeats_total, repeats_passed, repeats_failed, duration_ms, summary_json
+                       repeats_total, repeats_passed, repeats_failed, duration_ms, summary_json,
+                       fuzz_config_json
                 FROM scenario_results
                 WHERE run_id = ?
                 ORDER BY scenario_module, scenario_name, parameter_key
@@ -552,27 +962,58 @@ class LocalResultStore:
             )
 
         out: list[dict[str, Any]] = []
-        for row in scenario_rows:
-            out.append(
-                {
-                    "scenario_result_id": row["scenario_result_id"],
-                    "run_id": row["run_id"],
-                    "scenario_name": row["scenario_name"],
-                    "scenario_module": row["scenario_module"],
-                    "scenario_file": row["scenario_file"],
-                    "scenario_key": row["scenario_key"],
-                    "parameter_key": row["parameter_key"],
-                    "parameters": json.loads(row["parameters_json"]) if row["parameters_json"] else {},
-                    "tags": json.loads(row["tags_json"]) if row["tags_json"] else [],
-                    "status": row["status"],
-                    "repeats_total": row["repeats_total"],
-                    "repeats_passed": row["repeats_passed"],
-                    "repeats_failed": row["repeats_failed"],
-                    "duration_ms": row["duration_ms"],
-                    "summary": json.loads(row["summary_json"]) if row["summary_json"] else {},
-                    "repeats": repeats_by_scenario.get(row["scenario_result_id"], []),
-                }
-            )
+        with self._connect() as conn:
+            for row in scenario_rows:
+                summary = json.loads(row["summary_json"]) if row["summary_json"] else {}
+                fuzz_cfg_raw = row["fuzz_config_json"]
+                if fuzz_cfg_raw:
+                    agg = conn.execute(
+                        """
+                        SELECT COUNT(*) AS trials_total,
+                               COALESCE(SUM(CASE WHEN ft.status = 'passed' THEN 1 ELSE 0 END), 0)
+                                   AS trials_passed
+                        FROM fuzz_trials ft
+                        JOIN repeat_results rr ON rr.repeat_result_id = ft.repeat_result_id
+                        WHERE rr.scenario_result_id = ?
+                        """,
+                        (row["scenario_result_id"],),
+                    ).fetchone()
+                    trials_total = int(agg["trials_total"] or 0)
+                    trials_passed = int(agg["trials_passed"] or 0)
+                    try:
+                        cfg_obj = json.loads(fuzz_cfg_raw)
+                    except json.JSONDecodeError:
+                        cfg_obj = {}
+                    summary = {
+                        **summary,
+                        "fuzz": {
+                            "trials_total": trials_total,
+                            "trials_passed": trials_passed,
+                            "trials_failed": max(0, trials_total - trials_passed),
+                            "config": cfg_obj,
+                        },
+                    }
+                out.append(
+                    {
+                        "scenario_result_id": row["scenario_result_id"],
+                        "run_id": row["run_id"],
+                        "scenario_name": row["scenario_name"],
+                        "scenario_module": row["scenario_module"],
+                        "scenario_file": row["scenario_file"],
+                        "scenario_key": row["scenario_key"],
+                        "parameter_key": row["parameter_key"],
+                        "parameters": json.loads(row["parameters_json"]) if row["parameters_json"] else {},
+                        "tags": json.loads(row["tags_json"]) if row["tags_json"] else [],
+                        "status": row["status"],
+                        "repeats_total": row["repeats_total"],
+                        "repeats_passed": row["repeats_passed"],
+                        "repeats_failed": row["repeats_failed"],
+                        "duration_ms": row["duration_ms"],
+                        "summary": summary,
+                        "fuzz_config_json": fuzz_cfg_raw,
+                        "repeats": repeats_by_scenario.get(row["scenario_result_id"], []),
+                    }
+                )
         return out
 
     def get_repeat(self, repeat_result_id: str) -> dict[str, Any] | None:
@@ -646,7 +1087,7 @@ class LocalResultStore:
         Missing cells are None.
         """
         if not experiment_ids:
-            return {"experiments": [], "rows": []}
+            return {"experiments": [], "rows": [], "excluded_fuzz_scenarios": []}
 
         with self._connect() as conn:
             placeholders = ",".join("?" for _ in experiment_ids)
@@ -677,7 +1118,7 @@ class LocalResultStore:
             has_any_runs = any(m["latest_run_id"] for m in exp_meta.values())
             if not has_any_runs:
                 ordered = [exp_meta[eid] for eid in experiment_ids if eid in exp_meta]
-                return {"experiments": ordered, "rows": []}
+                return {"experiments": ordered, "rows": [], "excluded_fuzz_scenarios": []}
 
             scenario_rows = conn.execute(
                 f"""
@@ -685,7 +1126,8 @@ class LocalResultStore:
                        sr.parameter_key, sr.parameters_json, sr.tags_json, sr.status AS scenario_status,
                        sr.duration_ms AS scenario_duration_ms,
                        sr.repeats_passed, sr.repeats_failed, sr.repeats_total,
-                       r.experiment_id, r.started_at AS run_started_at
+                       r.experiment_id, r.started_at AS run_started_at,
+                       sr.fuzz_config_json
                 FROM scenario_results sr
                 JOIN runs r ON r.run_id = sr.run_id
                 WHERE r.experiment_id IN ({placeholders})
@@ -735,9 +1177,19 @@ class LocalResultStore:
             for row in latest_repeat_rows
         }
 
+        excluded_fuzz_scenarios: list[dict[str, str]] = []
         # row_key -> { display, cells: { exp_id -> cell or None } }
         rows_by_key: dict[tuple[str, str], dict[str, Any]] = {}
         for row in latest_scenario_rows:
+            if row["fuzz_config_json"]:
+                excluded_fuzz_scenarios.append(
+                    {
+                        "scenario_key": row["scenario_key"],
+                        "parameter_key": row["parameter_key"],
+                        "scenario_name": row["scenario_name"],
+                    }
+                )
+                continue
             row_key = (row["scenario_key"], row["parameter_key"])
             if row_key not in rows_by_key:
                 rows_by_key[row_key] = {
@@ -763,7 +1215,11 @@ class LocalResultStore:
 
         ordered_experiments = [exp_meta[eid] for eid in experiment_ids if eid in exp_meta]
         ordered_rows = sorted(rows_by_key.values(), key=lambda r: (r["scenario_key"], r["parameter_key"]))
-        return {"experiments": ordered_experiments, "rows": ordered_rows}
+        return {
+            "experiments": ordered_experiments,
+            "rows": ordered_rows,
+            "excluded_fuzz_scenarios": excluded_fuzz_scenarios,
+        }
 
     def get_run(self, run_id: str) -> dict[str, Any] | None:
         with self._connect() as conn:

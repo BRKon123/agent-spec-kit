@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from typing import Any
 
 from agent_spec_kit.judges.base import CRITERIA_JUDGE_SYSTEM_PROMPT, LLMCriteriaJudgeResult
+from agent_spec_kit.judges.structured import call_structured
 
 
 class _CriterionRow(BaseModel):
@@ -44,42 +45,15 @@ async def judge_with_openai(
     judge_context: str | None,
     evaluation_mode: str,
 ) -> LLMCriteriaJudgeResult:
-    try:
-        from openai import AsyncOpenAI, BadRequestError
-    except ImportError as e:  # pragma: no cover - import guard
-        raise RuntimeError("openai package is required for openai:* model routing") from e
-
-    client = AsyncOpenAI(timeout=timeout_s)
-    
-    async def _parse_response(messages: list[dict[str, str]]):
-        kwargs: dict[str, Any] = {
-            "model": model,
-            "messages": messages,
-            "response_format": _CriteriaResponse,
-        }
-        if temperature is not None:
-            kwargs["temperature"] = temperature
-        try:
-            return await client.beta.chat.completions.parse(**kwargs)
-        except BadRequestError as e:
-            # Some models (e.g. gpt-5-nano variants) reject explicit temperature.
-            msg = str(e).lower()
-            if "temperature" not in msg or temperature is None:
-                raise
-            kwargs.pop("temperature", None)
-            return await client.beta.chat.completions.parse(**kwargs)
-
     if evaluation_mode == "single":
-        completion = await _parse_response(
-            [
-                {"role": "system", "content": CRITERIA_JUDGE_SYSTEM_PROMPT},
-                {"role": "user", "content": _build_prompt(actual, criteria, judge_context)},
-            ]
+        parsed = await call_structured(
+            model=model_route,
+            system=CRITERIA_JUDGE_SYSTEM_PROMPT,
+            user=_build_prompt(actual, criteria, judge_context),
+            response_model=_CriteriaResponse,
+            temperature=temperature,
+            timeout_s=timeout_s,
         )
-        message = completion.choices[0].message
-        parsed = message.parsed
-        if parsed is None:
-            raise RuntimeError("OpenAI judge returned no structured parsed response")
         payload = {"criteria": [row.model_dump() for row in parsed.criteria]}
         return LLMCriteriaJudgeResult.from_mapping(
             payload,
@@ -92,18 +66,15 @@ async def judge_with_openai(
         raise ValueError(f"unsupported evaluation_mode {evaluation_mode!r}")
 
     async def _judge_single(criterion: str) -> dict[str, Any]:
-        completion = await _parse_response(
-            [
-                {"role": "system", "content": CRITERIA_JUDGE_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": _build_prompt(actual, [criterion], judge_context),
-                },
-            ]
+        parsed = await call_structured(
+            model=model_route,
+            system=CRITERIA_JUDGE_SYSTEM_PROMPT,
+            user=_build_prompt(actual, [criterion], judge_context),
+            response_model=_CriteriaResponse,
+            temperature=temperature,
+            timeout_s=timeout_s,
         )
-        message = completion.choices[0].message
-        parsed = message.parsed
-        if parsed is None or not parsed.criteria:
+        if not parsed.criteria:
             raise RuntimeError("OpenAI per-criterion judge returned empty structured response")
         return parsed.criteria[0].model_dump()
 
@@ -116,4 +87,4 @@ async def judge_with_openai(
     )
 
 
-__all__ = ["judge_with_openai"]
+__all__ = ["judge_with_openai", "_CriteriaResponse", "_CriterionRow"]

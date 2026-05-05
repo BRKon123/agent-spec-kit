@@ -6,6 +6,7 @@ import inspect
 from collections.abc import Callable, Iterable
 from typing import Any, TypeVar, cast, overload
 
+from agent_spec_kit.fuzz_config import ExtractionConfig, ShrinkConfig
 from agent_spec_kit.param_cases import Case, normalize_cases
 from agent_spec_kit.registries import (
     FixtureDef,
@@ -98,6 +99,9 @@ def scenario(
     repeats: int = 1,
     tags: tuple[str, ...] = (),
     timeout_s: float | None = None,
+    shrinking: ShrinkConfig | None = None,
+    extraction: ExtractionConfig | None = None,
+    regression_id: str | None = None,
 ) -> Callable[[F], F]: ...
 
 
@@ -113,6 +117,9 @@ def scenario(
     repeats: int = 1,
     tags: tuple[str, ...] = (),
     timeout_s: float | None = None,
+    shrinking: ShrinkConfig | None = None,
+    extraction: ExtractionConfig | None = None,
+    regression_id: str | None = None,
 ) -> Callable[[F], F] | F:
     """Register a scenario. At least one of ``agent_fixture`` or ``user_fixture`` must be set."""
 
@@ -127,6 +134,8 @@ def scenario(
             raise ValueError("repeats must be >= 1")
         if timeout_s is not None and timeout_s <= 0:
             raise ValueError("timeout_s must be > 0 when set")
+        if extraction is not None and not extraction.target_file.strip():
+            raise TypeError(f"{f.__name__}: extraction.target_file must be non-empty")
 
         sig = inspect.signature(f)
         params = list(sig.parameters.items())
@@ -159,6 +168,9 @@ def scenario(
             timeout_s=timeout_s,
             source=_fixture_source(f),
             fixture_param_names=fixture_param_names,
+            shrinking=shrinking,
+            extraction=extraction,
+            regression_id=regression_id,
         )
         register_scenario(definition)
         return f

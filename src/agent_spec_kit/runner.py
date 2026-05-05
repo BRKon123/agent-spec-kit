@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
+import json
 import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -18,7 +20,11 @@ from agent_spec_kit.failures import (
 )
 from agent_spec_kit.fixture_graph import TeardownFn, resolve_fixtures, scenario_case_runs
 from agent_spec_kit.registries import ScenarioDef, find_scenario, reset_registries
-from agent_spec_kit.scenario_core import _invoke_maybe_async, create_scenario
+from agent_spec_kit.scenario_core import (
+    _invoke_maybe_async,
+    create_scenario,
+    scenario_fuzz_metadata,
+)
 from agent_spec_kit.param_cases import Case
 
 
@@ -54,12 +60,35 @@ class JobResult:
     raw_error: str | None = None
     #: Keys are @parametrize axis names; values are ``name`` or ``id`` (see :func:`_param_cell_labels`).
     param_cells: dict[str, str] = field(default_factory=dict)
+    #: JSON string for ``scenario_results.fuzz_config_json`` when the scenario fuzzed.
+    fuzz_config_json: str | None = None
+    #: Trial summaries from ``fuzz_conversation`` (passed to the result store).
+    fuzz_trials: tuple[dict[str, Any], ...] = ()
+    shrink_result: dict[str, Any] | None = None
+    shrink_results: tuple[dict[str, Any], ...] = ()
+    regression_extraction: dict[str, Any] | None = None
+    phase_errors: tuple[dict[str, Any], ...] = ()
     # Back-compat: some call sites use scenario_name for display; case_id is the param slice
     @property
     def display_name(self) -> str:
         if self.case_id == "default":
             return self.scenario_name
         return f"{self.scenario_name} [{self.case_id}]"
+
+
+def _scenario_body_may_use_generative_orchestrator(scenario_def: ScenarioDef) -> bool:
+    """Avoid probing (and double fixture resolve) for scenarios that cannot need the orchestrator."""
+    try:
+        src = inspect.getsource(scenario_def.fn)
+    except (OSError, TypeError):
+        return True
+    if "fuzz_conversation(" in src:
+        return True
+    if "simulate_conversation(" in src and (
+        scenario_def.shrinking is not None or scenario_def.extraction is not None
+    ):
+        return True
+    return False
 
 
 def _format_error(exc: BaseException) -> str:
@@ -126,6 +155,8 @@ async def run_scenario_job(
     case_index: int = 0,
     repeat_index: int,
     repeat_total: int,
+    enable_shrink: bool = False,
+    enable_extract: bool = False,
 ) -> JobResult:
     """Resolve fixtures, run the scenario, auto-materialise if needed, teardown."""
     t0 = time.perf_counter()
@@ -150,6 +181,50 @@ async def run_scenario_job(
     param_case = runs[case_index]
     case_id = _case_id_suffix(param_case)
     param_labels = _param_cell_labels(param_case)
+
+    if _scenario_body_may_use_generative_orchestrator(scenario_def):
+        from agent_spec_kit.isolated_generative import (
+            probe_error_job_result,
+            probe_generative_scenario,
+            run_full_generative_repeat,
+            run_single_fuzz_trial_async,
+        )
+
+        probe = await probe_generative_scenario(scenario_def, case_index=case_index)
+        generative_takeover = probe.applies or (not probe.ok) or (probe.mode is not None)
+        if generative_takeover:
+            if not probe.ok:
+                msg = probe.phase_errors[0]["message"] if probe.phase_errors else "probe failed"
+                kind = probe.phase_errors[0].get("error_kind") if probe.phase_errors else "error"
+                return probe_error_job_result(
+                    scenario_def,
+                    case_id=probe.case_id,
+                    param_labels=probe.param_labels,
+                    repeat_index=repeat_index,
+                    repeat_total=repeat_total,
+                    probe=probe,
+                    message=msg,
+                    status="failed" if kind == "FuzzTrialsMismatch" else "error",
+                    failure_kind=str(kind) if kind else "error",
+                )
+            return await run_full_generative_repeat(
+                scenario_def,
+                case_index=case_index,
+                repeat_index=repeat_index,
+                repeat_total=repeat_total,
+                probe=probe,
+                enable_shrink=enable_shrink,
+                enable_extract=enable_extract,
+                submit_trial=lambda ti, msgs: run_single_fuzz_trial_async(
+                    scenario_def,
+                    param_case=param_case,
+                    trial_index=ti,
+                    fuzz_messages_by_index=msgs,
+                ),
+                process_pool=None,
+                pool_paths=None,
+            )
+
     teardowns: list[TeardownFn] = []
     ok = False
     detail: str | None = None
@@ -298,6 +373,12 @@ async def run_scenario_job(
                 pass
 
     duration_s = time.perf_counter() - t0
+    fuzz_cfg_json: str | None = None
+    fuzz_trials_out: tuple[dict[str, Any], ...] = ()
+    if s is not None:
+        meta = scenario_fuzz_metadata(s)
+        if meta is not None:
+            fuzz_cfg_json = json.dumps(meta, default=str)
     return JobResult(
         ok=ok,
         scenario_name=scenario_def.name,
@@ -317,21 +398,59 @@ async def run_scenario_job(
         turn_results=tuple(s._turn_results) if s is not None else (),
         assertions=tuple(assertions),
         raw_error=raw_error,
+        fuzz_config_json=fuzz_cfg_json,
+        fuzz_trials=fuzz_trials_out,
+        shrink_result=None,
+        shrink_results=(),
+        regression_extraction=None,
+        phase_errors=(),
     )
 
 
 @dataclass(slots=True)
-class WorkerJob:
+class ScenarioRepeatJob:
+    """One non-generative scenario repeat (full body in the worker)."""
+
     paths: tuple[str, ...]
     scenario_module: str
     scenario_name: str
     case_index: int
     repeat_index: int
     repeat_total: int
+    enable_shrink: bool = False
+    enable_extract: bool = False
 
 
-def worker_run_job(job: WorkerJob) -> JobResult:
-    """Process-pool entry: fresh registries, import paths, run one job."""
+WorkerJob = ScenarioRepeatJob
+
+
+@dataclass(slots=True)
+class FuzzTrialJob:
+    paths: tuple[str, ...]
+    scenario_module: str
+    scenario_name: str
+    case_index: int
+    repeat_index: int
+    repeat_total: int
+    trial_index: int
+    fuzz_messages_items: tuple[tuple[int, tuple[str, ...]], ...]
+
+
+@dataclass(slots=True)
+class ShrinkVerifyJob:
+    paths: tuple[str, ...]
+    scenario_module: str
+    scenario_name: str
+    case_index: int
+    generative_step_index: int
+    candidate_turns: tuple[str, ...]
+    captured_items: tuple[tuple[int, tuple[str, ...]], ...]
+    target_sig_dict: dict[str, Any]
+    confirm_runs: int
+
+
+def worker_run_full_repeat_job(job: ScenarioRepeatJob) -> JobResult:
+    """Process-pool entry: fresh registries, import paths, run one full repeat."""
     reset_registries()
     paths = [Path(p) for p in job.paths]
     import_paths(paths)
@@ -353,8 +472,102 @@ def worker_run_job(job: WorkerJob) -> JobResult:
             case_index=job.case_index,
             repeat_index=job.repeat_index,
             repeat_total=job.repeat_total,
+            enable_shrink=job.enable_shrink,
+            enable_extract=job.enable_extract,
         )
     )
 
 
-__all__ = ["JobResult", "WorkerJob", "run_scenario_job", "worker_run_job"]
+def worker_run_job(job: ScenarioRepeatJob) -> JobResult:
+    """Back-compat alias for :func:`worker_run_full_repeat_job`."""
+    return worker_run_full_repeat_job(job)
+
+
+def worker_run_fuzz_trial(job: FuzzTrialJob) -> dict[str, Any]:
+    """Run a single generative fuzz/simulate trial in an isolated process."""
+    from agent_spec_kit.fixture_graph import scenario_case_runs
+    from agent_spec_kit.isolated_generative import run_single_fuzz_trial_async
+
+    reset_registries()
+    paths = [Path(p) for p in job.paths]
+    import_paths(paths)
+    sdef = find_scenario(module=job.scenario_module, name=job.scenario_name)
+    if sdef is None:
+        return {
+            "trial_index": job.trial_index,
+            "seed": job.trial_index,
+            "status": "error",
+            "ok": False,
+            "failure_message": f"scenario not found: {job.scenario_module}.{job.scenario_name}",
+            "failure_kind": "error",
+            "user_turns": (),
+            "per_step_user_turns": (),
+            "behaviour_labels": (),
+            "behaviour_details": (),
+            "summary_label": "",
+            "duration_s": 0.0,
+            "turn_results": (),
+            "failure_signature": None,
+        }
+    runs = scenario_case_runs(sdef)
+    param_case = runs[job.case_index]
+    fuzz_map = dict(job.fuzz_messages_items)
+    return asyncio.run(
+        run_single_fuzz_trial_async(
+            sdef,
+            param_case=param_case,
+            trial_index=job.trial_index,
+            fuzz_messages_by_index=fuzz_map,
+        )
+    )
+
+
+def worker_verify_shrink_candidate(job: ShrinkVerifyJob) -> Any:
+    from agent_spec_kit.fixture_graph import scenario_case_runs
+    from agent_spec_kit.generative import FailureSignature
+    from agent_spec_kit.isolated_generative import ShrinkVerifyOutcome, verify_shrink_candidate_async
+
+    reset_registries()
+    paths = [Path(p) for p in job.paths]
+    import_paths(paths)
+    sdef = find_scenario(module=job.scenario_module, name=job.scenario_name)
+    if sdef is None:
+        return ShrinkVerifyOutcome(matched=False, failure_signature_json=None, duration_ms=0)
+    runs = scenario_case_runs(sdef)
+    param_case = runs[job.case_index]
+    captured = dict(job.captured_items)
+    target = FailureSignature.from_dict(job.target_sig_dict)
+    if target is None:
+        return ShrinkVerifyOutcome(matched=False, failure_signature_json=None, duration_ms=0)
+
+    async def inner() -> ShrinkVerifyOutcome:
+        from agent_spec_kit.isolated_generative import record_generative_steps_in_worker
+
+        steps = await record_generative_steps_in_worker(sdef, param_case=param_case)
+        return await verify_shrink_candidate_async(
+            sdef,
+            param_case=param_case,
+            original_steps=steps,
+            generative_step_index=job.generative_step_index,
+            candidate_turns=job.candidate_turns,
+            captured_per_step=captured,
+            target_sig=target,
+            confirm_runs=job.confirm_runs,
+        )
+
+    return asyncio.run(inner())
+
+
+__all__ = [
+    "FuzzTrialJob",
+    "JobResult",
+    "ScenarioRepeatJob",
+    "ShrinkVerifyJob",
+    "WorkerJob",
+    "_scenario_body_may_use_generative_orchestrator",
+    "run_scenario_job",
+    "worker_run_full_repeat_job",
+    "worker_run_fuzz_trial",
+    "worker_run_job",
+    "worker_verify_shrink_candidate",
+]

@@ -18,11 +18,9 @@ from agent_spec_kit.match.api import async_check as match_async_check
 from agent_spec_kit.match.api import check as match_check
 from agent_spec_kit.match.lists import list_matcher
 from agent_spec_kit.match.types import MatchResult
+from agent_spec_kit.fuzz_config import FuzzConfig
 from agent_spec_kit.param_cases import Case
 from agent_spec_kit.run import AdaptedAgent, ConversationTurn, TurnResult
-
-InteractionMode = Literal["direct", "simulation"]
-
 
 @dataclass
 class _UserMessageStep:
@@ -63,6 +61,13 @@ class _SimulateStep:
     seed_input: str | None
 
 
+@dataclass
+class _FuzzConversationStep:
+    fuzz_config: FuzzConfig
+    trials: int
+    max_user_turns: int
+
+
 _Step = (
     _UserMessageStep
     | _ActionStep
@@ -70,6 +75,7 @@ _Step = (
     | _OutputAssertStep
     | _ToolCallsAssertStep
     | _SimulateStep
+    | _FuzzConversationStep
 )
 
 
@@ -145,13 +151,14 @@ class Scenario:
     _steps: list[_Step] = field(default_factory=list)
     _executed_until: int = 0
     _turn_results: list[ConversationTurn] = field(default_factory=list)
-    _interaction_mode: InteractionMode | None = None
     # Simulation resumption
     _simulation_started: bool = False
     _next_actor: str | None = None
     _next_input: str = ""
     # Per-run parameter cases (name -> Case)
     _case_values: dict[str, Case[Any]] = field(default_factory=dict)
+    #: When True, :meth:`materialise` is a no-op (used to capture queued steps without executing).
+    _recording: bool = False
 
     @property
     def turn_results(self) -> tuple[ConversationTurn, ...]:
@@ -167,13 +174,6 @@ class Scenario:
     def has_pending_steps(self) -> bool:
         return self._executed_until < len(self._steps)
 
-    def _ensure_mode(self, mode: InteractionMode) -> None:
-        if self._interaction_mode is None:
-            self._interaction_mode = mode
-        elif self._interaction_mode != mode:
-            m = "use either user_message (direct) or simulate_conversation (simulation) in a scenario, not both"
-            raise TypeError(m)
-
     def _route_user_message(self, text: str) -> str:
         """If only `user` exists, user_message drives the user; else the agent (including dual: agent)."""
         if self.adapted_agent is not None and self.user is not None:
@@ -186,7 +186,6 @@ class Scenario:
         raise TypeError(msg)
 
     def user_message(self, text: str) -> Scenario:
-        self._ensure_mode("direct")
         self._steps.append(_UserMessageStep(message=text))
         return self
 
@@ -199,7 +198,6 @@ class Scenario:
         seed_input: str | None = None,
     ) -> Scenario:
         """Queue a simulation segment. ``max_turns`` counts simulation messages/turns."""
-        self._ensure_mode("simulation")
         if max_turns < 1:
             raise ValueError("max_turns must be >= 1")
         self._steps.append(
@@ -208,6 +206,27 @@ class Scenario:
                 stop_condition=stop_condition,
                 seed_actor=seed_actor,
                 seed_input=seed_input,
+            )
+        )
+        return self
+
+    def fuzz_conversation(
+        self,
+        *,
+        fuzz_config: FuzzConfig,
+        trials: int,
+        max_user_turns: int,
+    ) -> Scenario:
+        """Queue a fuzz segment: ``trials`` runs of up to ``max_user_turns`` generated user lines."""
+        if trials < 1:
+            raise ValueError("trials must be >= 1")
+        if max_user_turns < 1:
+            raise ValueError("max_user_turns must be >= 1")
+        self._steps.append(
+            _FuzzConversationStep(
+                fuzz_config=fuzz_config,
+                trials=trials,
+                max_user_turns=max_user_turns,
             )
         )
         return self
@@ -360,6 +379,8 @@ class Scenario:
         )
 
     async def materialise(self) -> Scenario:
+        if self._recording:
+            return self
         while self._executed_until < len(self._steps):
             step = self._steps[self._executed_until]
             await self._dispatch_step(step)
@@ -403,15 +424,12 @@ class Scenario:
         self._next_actor = self._other_actor(ct.actor) if self._other_actor_exists() else ct.actor
 
     async def _run_simulation_segment(self, step: _SimulateStep) -> None:
-        first = not self._simulation_started
+        first = not self._simulation_started and not self._turn_results
         if first:
             if step.seed_actor is None or step.seed_input is None:
                 msg = "the first simulate_conversation requires seed_actor= and seed_input=..."
                 raise TypeError(msg)
-        else:
-            if step.seed_actor is not None or step.seed_input is not None:
-                msg = "continued simulate_conversation may not set seed_actor or seed_input"
-                raise TypeError(msg)
+        # Continued segments: ignore any provided seeds (resume uses _next_actor / _next_input).
 
         turns_in_segment = 0
         last_output_for_stop: str | None = None
@@ -474,21 +492,26 @@ class Scenario:
             last_actor_for_stop = tnext.actor
             turns_in_segment += 1
 
+    async def _dispatch_user_message_text(self, text: str) -> None:
+        target = self._route_user_message(text)
+        if target == "agent":
+            if self.adapted_agent is None:
+                msg = "user_message requires a scenario with an agent (adapted_agent) when not in user-only mode"
+                raise TypeError(msg)
+            self._turn_results.append(ConversationTurn(actor="user", output=text))
+            turn_result = await self.adapted_agent.run_turn(text)
+        else:
+            turn_result = await self.user.run_turn(text)  # type: ignore[union-attr]
+        ct = ConversationTurn.from_turn(target, turn_result)
+        self._turn_results.append(ct)
+        out_v = ct.output if isinstance(ct.output, str) else (str(ct.output) if ct.output is not None else "")
+        self._next_input = out_v
+        self._next_actor = self._other_actor(ct.actor) if self._other_actor_exists() else ct.actor
+        self._simulation_started = True
+
     async def _dispatch_step(self, step: _Step) -> None:
         if isinstance(step, _UserMessageStep):
-            self._ensure_mode("direct")
-            target = self._route_user_message(step.message)
-            if target == "agent":
-                if self.adapted_agent is None:
-                    msg = "user_message requires a scenario with an agent (adapted_agent) when not in user-only mode"
-                    raise TypeError(msg)
-                self._turn_results.append(
-                    ConversationTurn(actor="user", output=step.message)
-                )
-                turn_result = await self.adapted_agent.run_turn(step.message)
-            else:
-                turn_result = await self.user.run_turn(step.message)  # type: ignore[union-attr]
-            self._turn_results.append(ConversationTurn.from_turn(target, turn_result))
+            await self._dispatch_user_message_text(step.message)
             return
         if isinstance(step, _ActionStep):
             kwargs = _resolve_fixture_kwargs(step.fn, self.fixture_values)
@@ -497,6 +520,10 @@ class Scenario:
         if isinstance(step, _SimulateStep):
             await self._run_simulation_segment(step)
             return
+        if isinstance(step, _FuzzConversationStep):
+            raise RuntimeError(
+                "fuzz_conversation must run via the generative orchestrator; was the runner bypassed?"
+            )
         if isinstance(step, _EnvAssertStep):
             await self._run_env_assert(step.fn)
             return
@@ -618,7 +645,7 @@ def _assertion_index_after_turn(scenario: Scenario, *, step_kind: str) -> int | 
         return None
     start = 0
     for i in range(scenario._executed_until, -1, -1):
-        if isinstance(scenario._steps[i], (_UserMessageStep, _SimulateStep)):
+        if isinstance(scenario._steps[i], (_UserMessageStep, _SimulateStep, _FuzzConversationStep)):
             start = i + 1
             break
     count = 0
@@ -666,12 +693,32 @@ def _coerce_tool_calls_list_spec(
     return list_matcher(elements, mode=mode, allow_extras=allow_extras)
 
 
+def scenario_fuzz_metadata(s: Scenario) -> dict[str, Any] | None:
+    """Return JSON-serialisable fuzz step metadata if the scenario queues ``fuzz_conversation``."""
+    fuzz_steps = [st for st in s._steps if isinstance(st, _FuzzConversationStep)]
+    if not fuzz_steps:
+        return None
+    st0 = fuzz_steps[0]
+    meta: dict[str, Any] = {
+        "strategy_kind": type(st0.fuzz_config.strategy).__name__,
+        "seed": st0.fuzz_config.seed,
+        "seed_inputs": list(st0.fuzz_config.seed_inputs),
+        "trials": st0.trials,
+        "max_user_turns": st0.max_user_turns,
+    }
+    if len(fuzz_steps) > 1:
+        meta["fuzz_step_count"] = len(fuzz_steps)
+        meta["trials_by_step"] = [x.trials for x in fuzz_steps]
+    return meta
+
+
 def create_scenario(
     *args: Any,
     user: AdaptedAgent | None = None,
     case_values: dict[str, Case[Any]] | None = None,
     fixture_values: dict[str, Any] | None = None,
     scenario_name: str = "",
+    recording: bool = False,
     **fixtures: Any,
 ) -> Scenario:
     """Build a :class:`Scenario`.
@@ -699,7 +746,8 @@ def create_scenario(
         fixture_values=fv,
         scenario_name=scenario_name,
         _case_values=cv,
+        _recording=recording,
     )
 
 
-__all__ = ["Scenario", "create_scenario"]
+__all__ = ["Scenario", "create_scenario", "scenario_fuzz_metadata"]

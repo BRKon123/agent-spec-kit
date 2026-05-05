@@ -3,10 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from collections.abc import Sequence
 
+from pydantic import BaseModel
+
 from agent_spec_kit.judges.base import CRITERIA_JUDGE_SYSTEM_PROMPT, LLMCriteriaJudgeResult
+from agent_spec_kit.judges.structured import call_structured
+
+
+class _CriterionRow(BaseModel):
+    passed: bool
+    rationale: str
+
+
+class _CriteriaResponse(BaseModel):
+    criteria: list[_CriterionRow]
 
 
 def _build_prompt(actual: str, criteria: Sequence[str], judge_context: str | None) -> str:
@@ -34,29 +45,16 @@ async def judge_with_anthropic(
     judge_context: str | None,
     evaluation_mode: str,
 ) -> LLMCriteriaJudgeResult:
-    try:
-        from anthropic import AsyncAnthropic
-    except ImportError as e:  # pragma: no cover - import guard
-        raise RuntimeError("anthropic package is required for anthropic:* model routing") from e
-
-    client = AsyncAnthropic(timeout=timeout_s)
-    request_kwargs: dict[str, object] = {
-        "model": model,
-        "max_tokens": 1200,
-        "system": CRITERIA_JUDGE_SYSTEM_PROMPT + " Return JSON only.",
-    }
-    if temperature is not None:
-        request_kwargs["temperature"] = temperature
-
     if evaluation_mode == "single":
-        response = await client.messages.create(
-            **request_kwargs,
-            messages=[{"role": "user", "content": _build_prompt(actual, criteria, judge_context)}],
+        parsed = await call_structured(
+            model=model_route,
+            system=CRITERIA_JUDGE_SYSTEM_PROMPT + " Return JSON only.",
+            user=_build_prompt(actual, criteria, judge_context),
+            response_model=_CriteriaResponse,
+            temperature=temperature,
+            timeout_s=timeout_s,
         )
-        text_blocks = [b.text for b in response.content if getattr(b, "type", "") == "text"]
-        if not text_blocks:
-            raise RuntimeError("Anthropic judge returned no text blocks")
-        payload = json.loads(text_blocks[0])
+        payload = {"criteria": [row.model_dump() for row in parsed.criteria]}
         return LLMCriteriaJudgeResult.from_mapping(
             payload,
             expected_criteria=criteria,
@@ -68,24 +66,19 @@ async def judge_with_anthropic(
         raise ValueError(f"unsupported evaluation_mode {evaluation_mode!r}")
 
     async def _judge_single(criterion: str) -> dict[str, object]:
-        response = await client.messages.create(
-            **request_kwargs,
-            messages=[{"role": "user", "content": _build_prompt(actual, [criterion], judge_context)}],
-        )
-        text_blocks = [b.text for b in response.content if getattr(b, "type", "") == "text"]
-        if not text_blocks:
-            raise RuntimeError("Anthropic per-criterion judge returned no text blocks")
-        payload = json.loads(text_blocks[0])
-        parsed = LLMCriteriaJudgeResult.from_mapping(
-            payload,
-            expected_criteria=(criterion,),
+        parsed = await call_structured(
             model=model_route,
-            require_exact_len=True,
+            system=CRITERIA_JUDGE_SYSTEM_PROMPT + " Return JSON only.",
+            user=_build_prompt(actual, [criterion], judge_context),
+            response_model=_CriteriaResponse,
+            temperature=temperature,
+            timeout_s=timeout_s,
         )
-        return {
-            "passed": parsed.criteria[0].passed,
-            "rationale": parsed.criteria[0].rationale,
-        }
+        if not parsed.criteria:
+            raise RuntimeError("Anthropic per-criterion judge returned empty structured response")
+        row = parsed.criteria[0]
+        return {"passed": row.passed, "rationale": row.rationale}
+
     rows = await asyncio.gather(*(_judge_single(criterion) for criterion in criteria))
     return LLMCriteriaJudgeResult.from_mapping(
         {"criteria": list(rows)},
@@ -94,4 +87,4 @@ async def judge_with_anthropic(
     )
 
 
-__all__ = ["judge_with_anthropic"]
+__all__ = ["judge_with_anthropic", "_CriteriaResponse", "_CriterionRow"]

@@ -26,6 +26,14 @@ class ResultStore(Protocol):
 
     def save_assertion_result(self, result: "AssertionResultRecord") -> None: ...
 
+    def save_fuzz_trial(self, result: "FuzzTrialRecord") -> None: ...
+
+    def save_shrink_result(self, result: "ShrinkResultRecord") -> None: ...
+
+    def save_regression(self, result: "RegressionExtractionRecord") -> None: ...
+
+    def save_phase_error(self, result: "PhaseErrorRecord") -> None: ...
+
     def compute_run_summary(self, run_id: str) -> "RunSummary": ...
 
     def finish_run(self, run_id: str, summary: "RunSummary") -> None: ...
@@ -78,6 +86,73 @@ class ScenarioResultRecord:
     repeats_failed: int
     duration_ms: int | None
     summary: dict[str, Any] = field(default_factory=dict)
+    fuzz_config_json: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class FuzzTrialRecord:
+    trial_id: str
+    repeat_result_id: str
+    trial_index: int
+    seed: int | None
+    status: Status
+    user_turns: tuple[str, ...]
+    behaviour_labels: tuple[str, ...]
+    behaviour_details: tuple[dict[str, Any], ...]
+    summary_label: str
+    failure_signature_json: str | None
+    failure_kind: str | None
+    failure_message: str | None
+    started_at: str
+    finished_at: str | None
+    duration_ms: int | None
+    transcript_blob_path: str | None
+    #: Per original step index: user-side turns (empty for non-generative steps).
+    per_step_user_turns: tuple[tuple[str, ...], ...] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ShrinkResultRecord:
+    shrink_id: str
+    repeat_result_id: str
+    source_trial_id: str | None
+    status: Status
+    passes_applied: tuple[str, ...]
+    original_user_turns: tuple[str, ...]
+    shrunk_user_turns: tuple[str, ...]
+    candidates_evaluated: int
+    duration_ms: int | None
+    started_at: str
+    finished_at: str | None
+    generative_step_index: int | None = None
+    step_kind: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RegressionExtractionRecord:
+    regression_id: str
+    run_id: str
+    scenario_result_id: str
+    shrink_id: str | None
+    source_scenario_key: str
+    target_file: str
+    function_name: str
+    fingerprint: str
+    duplicate_policy: str
+    status: str
+    written_at: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class PhaseErrorRecord:
+    phase_error_id: str
+    repeat_result_id: str
+    phase: Literal["fuzz", "shrink", "extract"]
+    sub_phase: str | None
+    error_kind: str
+    message: str
+    traceback_blob_path: str | None
+    occurred_at: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,6 +206,11 @@ class RunSummary:
     failure_kinds: dict[str, int]
     tag_breakdown: dict[str, int]
     parameter_breakdown: dict[str, dict[str, Any]]
+    fuzz_trials_total: int = 0
+    fuzz_trials_failed: int = 0
+    regressions_written: int = 0
+    regressions_skipped: int = 0
+    phase_errors_total: int = 0
 
     def as_json(self) -> dict[str, Any]:
         return {
@@ -152,5 +232,10 @@ class RunSummary:
             "failure_kinds": self.failure_kinds,
             "tag_breakdown": self.tag_breakdown,
             "parameter_breakdown": self.parameter_breakdown,
+            "fuzz_trials_total": self.fuzz_trials_total,
+            "fuzz_trials_failed": self.fuzz_trials_failed,
+            "regressions_written": self.regressions_written,
+            "regressions_skipped": self.regressions_skipped,
+            "phase_errors_total": self.phase_errors_total,
         }
 

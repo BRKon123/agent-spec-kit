@@ -1,0 +1,111 @@
+"""Shrink passes for isolated generative failures."""
+
+from __future__ import annotations
+
+import os
+from collections.abc import Awaitable, Callable, Sequence
+
+from agent_spec_kit.fuzz_config import ShrinkConfig, ShrinkPassSpec
+
+
+def _simplify_message(msg: str) -> tuple[str, ...]:
+    """Deterministic variants (shortest first)."""
+    m = msg.strip()
+    out: list[str] = []
+    if m:
+        out.append(m)
+        if len(m) > 1:
+            out.append(m[:-1])
+        if m.lower() != m:
+            out.append(m.lower())
+        if m.upper() != m:
+            out.append(m.upper())
+    return tuple(dict.fromkeys(out))
+
+
+def _candidates_remove_one(turns: tuple[str, ...]) -> list[tuple[str, ...]]:
+    if len(turns) <= 1:
+        return []
+    out: list[tuple[str, ...]] = []
+    for i in range(len(turns)):
+        out.append(turns[:i] + turns[i + 1 :])
+    return out
+
+
+def _candidates_simplify_messages(turns: tuple[str, ...]) -> list[tuple[str, ...]]:
+    out: list[tuple[str, ...]] = []
+    for i, msg in enumerate(turns):
+        for variant in _simplify_message(msg):
+            if variant == msg:
+                continue
+            cand = turns[:i] + (variant,) + turns[i + 1 :]
+            out.append(cand)
+    return out
+
+
+async def _apply_pass(
+    current: tuple[str, ...],
+    spec: ShrinkPassSpec,
+    *,
+    verify_batch: Callable[[Sequence[tuple[str, ...]]], Awaitable[list[bool]]],
+) -> tuple[tuple[str, ...], int]:
+    candidates_evaluated = 0
+    if spec.kind == "remove_user_turns":
+        changed = True
+        while changed:
+            changed = False
+            cands = _candidates_remove_one(current)
+            if not cands:
+                break
+            results = await verify_batch(cands)
+            candidates_evaluated += len(cands)
+            wins = [c for c, ok in zip(cands, results, strict=True) if ok]
+            if wins:
+                current = min(wins, key=lambda c: (len(c), sum(len(x) for x in c)))
+                changed = True
+        return current, candidates_evaluated
+
+    if spec.kind == "simplify_user_messages":
+        changed = True
+        while changed:
+            changed = False
+            cands = _candidates_simplify_messages(current)
+            if not cands:
+                break
+            results = await verify_batch(cands)
+            candidates_evaluated += len(cands)
+            wins = [c for c, ok in zip(cands, results, strict=True) if ok]
+            if wins:
+                current = min(wins, key=lambda c: (len(c), sum(len(x) for x in c)))
+                changed = True
+        return current, candidates_evaluated
+
+    if spec.kind == "llm_semantic_simplify":
+        if not (os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")):
+            return current, candidates_evaluated
+        raise RuntimeError("llm_semantic_simplify is not implemented yet (API key present)")
+
+    return current, candidates_evaluated
+
+
+async def shrink_user_turns(
+    *,
+    original: tuple[str, ...],
+    shrinking: ShrinkConfig,
+    verify_batch: Callable[[Sequence[tuple[str, ...]]], Awaitable[list[bool]]],
+) -> tuple[tuple[str, ...], int]:
+    """Return ``(shrunk_turns, total_candidates_evaluated)``.
+
+    ``verify_batch(candidates)`` returns a list of bools parallel to ``candidates``; ``True`` means the
+    candidate still reproduces the target failure (same semantics as the old per-candidate ``verify``).
+    """
+    current = original
+    total_candidates = 0
+    for spec in shrinking.passes:
+        cur, n = await _apply_pass(current, spec, verify_batch=verify_batch)
+        total_candidates += n
+        current = cur
+    return current, total_candidates
+
+
+__all__ = ["shrink_user_turns"]

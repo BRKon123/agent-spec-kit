@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import type {
   CompareResponse,
   ExperimentSummary,
+  FuzzTrialDetail,
+  FuzzTrialRunRow,
   RepeatTrace,
   RunDetail,
   RunListItem,
@@ -21,6 +23,8 @@ export const queryKeys = {
   scenarios: (runId: string) => ["scenarios", runId] as const,
   trace: (id: string) => ["trace", id] as const,
   compare: (ids: string[]) => ["compare", [...ids].sort().join(",")] as const,
+  fuzzTrials: (runId: string) => ["fuzzTrials", runId] as const,
+  fuzzTrial: (trialId: string) => ["fuzzTrial", trialId] as const,
 };
 
 export function useExperiments() {
@@ -70,6 +74,24 @@ export function useRepeatTrace(repeatId: string | undefined) {
     queryFn: () => fetchJson<RepeatTrace>(`/api/repeats/${repeatId}/trace`),
     enabled: Boolean(repeatId),
     staleTime: 60_000,
+  });
+}
+
+export function useFuzzTrialsForRun(runId: string | undefined) {
+  return useQuery<FuzzTrialRunRow[]>({
+    queryKey: runId ? queryKeys.fuzzTrials(runId) : ["fuzzTrials", "_none_"],
+    queryFn: () => fetchJson<FuzzTrialRunRow[]>(`/api/runs/${runId}/fuzz-trials`),
+    enabled: Boolean(runId),
+    staleTime: 30_000,
+  });
+}
+
+export function useFuzzTrial(trialId: string | undefined) {
+  return useQuery<FuzzTrialDetail>({
+    queryKey: trialId ? queryKeys.fuzzTrial(trialId) : ["fuzzTrial", "_none_"],
+    queryFn: () => fetchJson<FuzzTrialDetail>(`/api/fuzz-trials/${trialId}`),
+    enabled: Boolean(trialId),
+    staleTime: 30_000,
   });
 }
 

@@ -1,4 +1,4 @@
-"""Tests for :meth:`Scenario.simulate_conversation` and mode locking."""
+"""Tests for :meth:`Scenario.simulate_conversation` and mixing with ``user_message``."""
 
 from __future__ import annotations
 
@@ -30,20 +30,22 @@ class _Scripted:
         return TurnResult(output=o, events=())
 
 
-def test_mode_lock_user_message_after_simulate() -> None:
+def test_user_message_after_simulate_allowed() -> None:
     a = _Scripted(["hi"])
     s = create_scenario(a)
     s.simulate_conversation(seed_actor="agent", seed_input="start", max_turns=1)
-    with pytest.raises(TypeError, match="not both"):
-        s.user_message("x")
+    s.user_message("x")
+    _run(s.materialise())
+    assert "x" in a.received
 
 
-def test_mode_lock_simulate_after_user_message() -> None:
-    a = _Scripted(["hi"])
+def test_simulate_after_user_message_allowed() -> None:
+    a = _Scripted(["hi", "h2"])
     s = create_scenario(a)
     s.user_message("u")
-    with pytest.raises(TypeError, match="not both"):
-        s.simulate_conversation(seed_actor="user", seed_input="s", max_turns=1)
+    s.simulate_conversation(seed_actor="user", seed_input="s", max_turns=2)
+    _run(s.materialise())
+    assert len(a.received) >= 1
 
 
 def test_first_simulate_requires_seed() -> None:
@@ -54,14 +56,13 @@ def test_first_simulate_requires_seed() -> None:
         _run(s.materialise())
 
 
-def test_continuation_rejects_seed() -> None:
+def test_continuation_ignores_reseed() -> None:
     a = _Scripted(["a", "b", "c"])
     u = _Scripted(["u0", "u1"])
     s = create_scenario(a, user=u)
     s.simulate_conversation(seed_actor="user", seed_input="seed", max_turns=1)
     s.simulate_conversation(max_turns=1, seed_input="nope")
-    with pytest.raises(TypeError, match="seed|reseed|continuation|may not"):
-        _run(s.materialise())
+    _run(s.materialise())
 
 
 def test_dual_user_seed_then_agent() -> None:

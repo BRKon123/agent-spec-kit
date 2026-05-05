@@ -4,19 +4,20 @@ import { ChevronLeft, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useRun, useScenariosForRun } from "@/api/queries";
+import { useFuzzTrialsForRun, useRun, useScenariosForRun } from "@/api/queries";
 import { ApiError } from "@/api/http";
 import {
   ScenarioTable,
   collectParameterAxes,
-  type ScenarioRepeatRow,
 } from "@/components/ScenarioTable";
 import { ColumnPicker, type ColumnPickerOption } from "@/components/ColumnPicker";
 import { useStoredColumnVisibility } from "@/lib/columnPrefs";
 import { InlineError, InlineLoading, EmptyState } from "@/components/Inline";
+import { FuzzTrialSidePanel } from "@/components/FuzzTrialSidePanel";
 import { RunSidePanel } from "@/components/RunSidePanel";
 import { TraceDrawer } from "@/components/TraceDrawer";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import type { ScenarioRow } from "@/lib/types";
 import { formatDateTime, formatDuration } from "@/lib/utils";
 
 const BASE_OPTIONS: ColumnPickerOption[] = [
@@ -49,9 +50,11 @@ export function RunDetailPage() {
   const { runId = "" } = useParams<{ runId: string }>();
   const run = useRun(runId);
   const scenarios = useScenariosForRun(runId);
+  const fuzzTrials = useFuzzTrialsForRun(runId);
   const [sideOpen, setSideOpen] = useState(true);
   const [traceRepeatId, setTraceRepeatId] = useState<string | null>(null);
   const [traceOpen, setTraceOpen] = useState(false);
+  const [selectedTrialId, setSelectedTrialId] = useState<string | null>(null);
 
   const paramAxes = useMemo(
     () => collectParameterAxes(scenarios.data ?? []),
@@ -86,9 +89,12 @@ export function RunDetailPage() {
     );
   }
 
-  const onScenarioRowClick = (row: ScenarioRepeatRow) => {
-    if (!row.repeat.repeat_result_id) return;
-    setTraceRepeatId(row.repeat.repeat_result_id);
+  const onScenarioRowClick = (scenario: ScenarioRow) => {
+    const preferred =
+      scenario.repeats.find((r) => r.status !== "passed") ?? scenario.repeats[0];
+    if (!preferred?.repeat_result_id) return;
+    setSelectedTrialId(null);
+    setTraceRepeatId(preferred.repeat_result_id);
     setTraceOpen(true);
   };
 
@@ -172,8 +178,14 @@ export function RunDetailPage() {
             {scenarios.data && scenarios.data.length > 0 && (
               <ScenarioTable
                 scenarios={scenarios.data}
+                fuzzTrials={fuzzTrials.data ?? []}
                 visibility={columnVisibility}
-                onRowClick={onScenarioRowClick}
+                onScenarioRowClick={onScenarioRowClick}
+                onTrialRowClick={(trialId) => {
+                  setTraceOpen(false);
+                  setTraceRepeatId(null);
+                  setSelectedTrialId(trialId);
+                }}
               />
             )}
           </CardContent>
@@ -185,7 +197,11 @@ export function RunDetailPage() {
             {run.isError && !(run.error instanceof ApiError && run.error.status === 404) && (
               <InlineError error={run.error} onRetry={() => run.refetch()} />
             )}
-            {run.data && <RunSidePanel run={run.data} />}
+            {selectedTrialId ? (
+              <FuzzTrialSidePanel trialId={selectedTrialId} />
+            ) : (
+              run.data && <RunSidePanel run={run.data} />
+            )}
           </aside>
         )}
       </div>

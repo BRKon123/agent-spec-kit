@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import io
 
-from agent_spec_kit.cli_reporting import emit_failure_detail, emit_job_compact, emit_summary_table
+from agent_spec_kit.cli_reporting import (
+    emit_failure_detail,
+    emit_job_compact,
+    emit_summary_table,
+    emit_trial_failure_detail,
+)
 from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
 from agent_spec_kit.failures import Counterexample
 from agent_spec_kit.runner import JobResult
@@ -246,3 +251,91 @@ def test_emit_summary_table_includes_param_columns() -> None:
     assert "A task" in out
     # First column is scenario name, not the composite ``[case_id]`` suffix.
     assert "llm_model=fast" not in out
+
+
+def test_emit_summary_table_expands_fuzz_trials_with_trial_column() -> None:
+    buf = io.StringIO()
+    emit_summary_table(
+        [
+            JobResult(
+                ok=False,
+                scenario_name="g_case",
+                repeat_index=1,
+                repeat_total=1,
+                detail="aggregate failure",
+                duration_s=3.0,
+                counterexample=None,
+                fuzz_trials=(
+                    {
+                        "trial_index": 0,
+                        "status": "passed",
+                        "duration_s": 0.4,
+                        "failure_kind": None,
+                        "failure_message": None,
+                    },
+                    {
+                        "trial_index": 1,
+                        "status": "failed",
+                        "duration_s": 0.6,
+                        "failure_kind": "assert_tool_calls",
+                        "failure_message": "wrong list length",
+                    },
+                ),
+            )
+        ],
+        file=buf,
+    )
+    out = buf.getvalue()
+    assert "Trial" in out
+    assert "1/2" in out and "2/2" in out
+    assert "assert_tool_calls" in out
+
+
+def test_emit_trial_failure_detail_renders_failed_trials() -> None:
+    buf = io.StringIO()
+    emit_trial_failure_detail(
+        JobResult(
+            ok=False,
+            scenario_name="g_case",
+            case_id="llm_model=fast",
+            repeat_index=1,
+            repeat_total=1,
+            detail="aggregate",
+            duration_s=1.0,
+            counterexample=None,
+            param_cells={"llm_model": "fast"},
+            fuzz_trials=(
+                {
+                    "trial_index": 0,
+                    "status": "passed",
+                    "duration_s": 0.1,
+                    "failure_message": None,
+                    "failure_kind": None,
+                },
+                {
+                    "trial_index": 1,
+                    "status": "failed",
+                    "duration_s": 0.2,
+                    "failure_message": "trial failed details",
+                    "failure_kind": "assert_tool_calls",
+                    "summary_label": "behaviour: nonsense",
+                    "user_turns": ("hello",),
+                    "counterexample": {
+                        "headline": "assert_tool_calls: strict mismatch",
+                        "location": "step 1, turn 3",
+                        "path": "$[0]",
+                        "expected_summary": "assert_tool_calls",
+                        "actual_min": {"tool": "none"},
+                        "notes": ("from trial",),
+                        "check_kind": "assert_tool_calls",
+                        "location_detail": "2nd assert_tool_calls after turn #4",
+                    },
+                },
+            ),
+        ),
+        file=buf,
+    )
+    out = buf.getvalue()
+    assert "FAIL" in out
+    assert "assert_tool_calls" in out
+    assert "2nd assert_tool_calls after turn #4" in out

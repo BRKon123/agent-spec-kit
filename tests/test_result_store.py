@@ -262,6 +262,8 @@ def test_compare_uses_latest_per_scenario_across_runs(tmp_path: Path) -> None:
     )
 
     result = store.compare_experiments_most_recent(["exp_default", "exp_trial"])
+    assert "excluded_fuzz_scenarios" in result
+    assert result["excluded_fuzz_scenarios"] == []
     rows_by_key = {
         (row["scenario_key"], row["parameter_key"]): row for row in result["rows"]
     }
@@ -275,4 +277,124 @@ def test_compare_uses_latest_per_scenario_across_runs(tmp_path: Path) -> None:
     hardcoded_row = rows_by_key[("test_hardcoded_structured_output_assertion", "default")]
     assert hardcoded_row["cells"]["exp_default"] is not None
     assert hardcoded_row["cells"]["exp_trial"] is None
+
+
+def test_compare_excludes_fuzzed_scenario_rows(tmp_path: Path) -> None:
+    store = LocalResultStore(StorageConfig(root=tmp_path / ".agent_spec_kit"))
+    store.create_run(
+        RunRecord(
+            run_id="run_fuzz",
+            experiment_name="default",
+            experiment_id="exp_default",
+            started_at="2026-04-28T12:00:00+00:00",
+            status="passed",
+            command="x",
+            notes=None,
+            metadata={},
+            git_commit=None,
+            git_branch=None,
+            git_dirty=None,
+            python_version="3.12",
+            package_version="0.1.0",
+        )
+    )
+    store.create_run(
+        RunRecord(
+            run_id="run_plain",
+            experiment_name="trial",
+            experiment_id="exp_trial",
+            started_at="2026-04-28T12:01:00+00:00",
+            status="passed",
+            command="x",
+            notes=None,
+            metadata={},
+            git_commit=None,
+            git_branch=None,
+            git_dirty=None,
+            python_version="3.12",
+            package_version="0.1.0",
+        )
+    )
+    store.save_scenario_result(
+        ScenarioResultRecord(
+            scenario_result_id="sr_fuzz",
+            run_id="run_fuzz",
+            scenario_name="fuzzed",
+            scenario_module="m",
+            scenario_file="f.py",
+            scenario_key="fuzzed",
+            parameter_key="default",
+            parameters={},
+            tags=(),
+            status="failed",
+            repeats_total=1,
+            repeats_passed=0,
+            repeats_failed=1,
+            duration_ms=10,
+            summary={},
+            fuzz_config_json='{"trials": 3}',
+        )
+    )
+    store.save_repeat_result(
+        RepeatResultRecord(
+            repeat_result_id="rr_fuzz",
+            scenario_result_id="sr_fuzz",
+            repeat_index=1,
+            status="failed",
+            started_at="2026-04-28T12:00:00+00:00",
+            finished_at="2026-04-28T12:00:01+00:00",
+            duration_ms=10,
+            output_preview="x",
+            failure_kind="assert",
+            failure_message="m",
+            transcript_blob_path=None,
+            assertions_blob_path=None,
+            counterexample_blob_path=None,
+            raw_error_blob_path=None,
+        )
+    )
+    store.save_scenario_result(
+        ScenarioResultRecord(
+            scenario_result_id="sr_plain",
+            run_id="run_plain",
+            scenario_name="plain",
+            scenario_module="m",
+            scenario_file="f.py",
+            scenario_key="plain",
+            parameter_key="default",
+            parameters={},
+            tags=(),
+            status="passed",
+            repeats_total=1,
+            repeats_passed=1,
+            repeats_failed=0,
+            duration_ms=10,
+            summary={},
+            fuzz_config_json=None,
+        )
+    )
+    store.save_repeat_result(
+        RepeatResultRecord(
+            repeat_result_id="rr_plain",
+            scenario_result_id="sr_plain",
+            repeat_index=1,
+            status="passed",
+            started_at="2026-04-28T12:01:00+00:00",
+            finished_at="2026-04-28T12:01:01+00:00",
+            duration_ms=10,
+            output_preview="ok",
+            failure_kind=None,
+            failure_message=None,
+            transcript_blob_path=None,
+            assertions_blob_path=None,
+            counterexample_blob_path=None,
+            raw_error_blob_path=None,
+        )
+    )
+    cmp = store.compare_experiments_most_recent(["exp_default", "exp_trial"])
+    assert len(cmp["excluded_fuzz_scenarios"]) == 1
+    assert cmp["excluded_fuzz_scenarios"][0]["scenario_key"] == "fuzzed"
+    keys = {(r["scenario_key"], r["parameter_key"]) for r in cmp["rows"]}
+    assert ("fuzzed", "default") not in keys
+    assert ("plain", "default") in keys
 
