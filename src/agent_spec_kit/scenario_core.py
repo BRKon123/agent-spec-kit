@@ -140,6 +140,68 @@ def _tool_dicts_from_conversation_turn(turn: ConversationTurn) -> list[dict[str,
     return out
 
 
+def _normalize_tool_dict(ev: dict[str, Any]) -> dict[str, Any]:
+    """JSON/dict counterpart of :func:`_normalize_tool_event`."""
+    nested: list[dict[str, Any]] = []
+    for ch in ev.get("children") or []:
+        if not isinstance(ch, dict):
+            continue
+        if ch.get("tool_name"):
+            nested.append(_normalize_tool_dict(ch))
+        elif ch.get("agent_output") is not None or ch.get("user_input") is not None:
+            for ch2 in ch.get("children") or []:
+                if isinstance(ch2, dict) and ch2.get("tool_name"):
+                    nested.append(_normalize_tool_dict(ch2))
+    return {
+        "name": ev.get("tool_name", ""),
+        "args": ev.get("args"),
+        "result": ev.get("result"),
+        "error": ev.get("error"),
+        "children": nested,
+        "metadata": dict(ev.get("metadata") or {}),
+    }
+
+
+def tool_dicts_from_turn_data(turn: ConversationTurn | dict[str, Any]) -> list[dict[str, Any]]:
+    """Tool-call dicts for matcher/counterexample panels from a turn object or transcript JSON."""
+    if isinstance(turn, ConversationTurn):
+        return _tool_dicts_from_conversation_turn(turn)
+    if not isinstance(turn, dict):
+        return []
+    out: list[dict[str, Any]] = []
+    for root in turn.get("events") or []:
+        if not isinstance(root, dict):
+            continue
+        if root.get("tool_name"):
+            out.append(_normalize_tool_dict(root))
+        elif root.get("agent_output") is not None or root.get("user_input") is not None:
+            for ch in root.get("children") or []:
+                if isinstance(ch, dict) and ch.get("tool_name"):
+                    out.append(_normalize_tool_dict(ch))
+    return out
+
+
+def tool_dicts_from_transcript(
+    transcript: Any, *, turn_index: int | None = None
+) -> list[dict[str, Any]]:
+    """Extract tool calls from a serialized transcript (last agent turn by default)."""
+    if not isinstance(transcript, list) or not transcript:
+        return []
+    if turn_index is not None:
+        if 0 <= turn_index < len(transcript):
+            turn = transcript[turn_index]
+            if isinstance(turn, (ConversationTurn, dict)):
+                return tool_dicts_from_turn_data(turn)
+        return []
+    for turn in reversed(transcript):
+        if isinstance(turn, ConversationTurn):
+            if turn.actor == "agent":
+                return tool_dicts_from_turn_data(turn)
+        elif isinstance(turn, dict) and turn.get("actor") == "agent":
+            return tool_dicts_from_turn_data(turn)
+    return []
+
+
 @dataclass
 class Scenario:
     """Queued scenario steps; run with :meth:`materialise`."""

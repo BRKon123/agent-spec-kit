@@ -7,6 +7,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, TypeAlias
 
+from agent_spec_kit.console_format import format_value_for_console
+
 
 def new_event_id(*, prefix: str = "") -> str:
     """Return a new opaque event id, optionally prefixed for debugging."""
@@ -66,10 +68,11 @@ class ToolCallEvent(BaseEvent):
         if self.error:
             return f"{self.tool_name}  error={self.error!r}"
         if self.result is not None:
-            s = repr(self.result)
-            if len(s) > 72:
-                s = s[:69] + "..."
-            return f"{self.tool_name}  result={s}"
+            formatted = format_value_for_console(self.result)
+            if "\n" in formatted:
+                indented = "\n".join(f"    {line}" for line in formatted.splitlines())
+                return f"{self.tool_name}\n  result:\n{indented}"
+            return f"{self.tool_name}  result={formatted}"
         return f"{self.tool_name}  (pending)"
 
 
@@ -128,7 +131,7 @@ def print_rich_event_trace(
     console: Any,
     roots: Sequence[BaseEvent],
     *,
-    title: str = "Event trace (till failure)",
+    title: str = "Event trace",
 ) -> None:
     """
     Pretty-print one or more event trees (e.g. ``TurnResult.events``) using Rich.

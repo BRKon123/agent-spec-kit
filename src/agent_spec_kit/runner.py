@@ -305,6 +305,7 @@ async def run_scenario_job(
                     "notes": list(counterexample.notes),
                     "check_kind": counterexample.check_kind,
                     "location_detail": counterexample.location_detail,
+                    "events": counterexample.events,
                 },
             }
         )
@@ -357,6 +358,7 @@ async def run_scenario_job(
                     "notes": list(counterexample.notes),
                     "check_kind": counterexample.check_kind,
                     "location_detail": counterexample.location_detail,
+                    "events": counterexample.events,
                 },
             }
         )

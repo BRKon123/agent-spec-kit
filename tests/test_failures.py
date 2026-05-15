@@ -50,8 +50,60 @@ def test_counterexample_list_length_tool_calls_shows_counts_and_names() -> None:
     cx = counterexample_from_failure(record)
     assert "expected 2 tool call" in cx.expected_summary or "2" in cx.expected_summary
     assert "a" in cx.expected_summary and "b" in cx.expected_summary
-    assert "agent recorded 1" in cx.actual_min
+    assert any("agent recorded 1" in n for n in cx.notes)
+    assert isinstance(cx.actual_min, list) and len(cx.actual_min) == 1
     assert cx.check_kind == "assert_tool_calls"
+
+
+def test_counterexample_tool_calls_notes_skip_truncated_json_preview() -> None:
+    """Notes must not prepend a truncated ``actual_witness`` JSON blob when Actual has the full list."""
+    spec = m.list([m.object({"args": {"window_minutes": 30}})], allow_extras=True)
+    actual = [
+        {
+            "name": "open_incident",
+            "args": {"severity": "high"},
+            "result": "ok",
+            "error": None,
+            "children": [
+                {
+                    "name": "pull_logs",
+                    "args": {"source": "edge"},
+                    "result": "logs",
+                    "error": None,
+                    "children": [
+                        {
+                            "name": "score_anomaly",
+                            "args": {"source": "edge", "anomaly_score": 0.72, "window_minutes": 15},
+                            "result": "scored",
+                            "error": None,
+                            "children": [],
+                            "metadata": {},
+                        }
+                    ],
+                    "metadata": {},
+                }
+            ],
+            "metadata": {},
+        }
+    ]
+    r = m.check(spec, actual)
+    assert not r.ok
+    record = FailureRecord(
+        scenario_name="t_nested",
+        step_index=1,
+        step_kind="assert_tool_calls",
+        turn_index=0,
+        actual=actual,
+        matcher_spec=spec,
+        matcher_errors=r.errors,
+        error=None,
+    )
+    cx = counterexample_from_failure(record)
+    assert isinstance(cx.actual_min, list)
+    assert len(cx.actual_min) == 1
+    notes_joined = "\n".join(cx.notes)
+    assert not notes_joined.lstrip().startswith("[")
+    assert not notes_joined.lstrip().startswith("{")
 
 
 def test_counterexample_tool_call_mismatch_notes_do_not_repeat_full_list() -> None:
@@ -100,7 +152,8 @@ def test_counterexample_uses_deepest_inner_path_for_tool_call_mismatch() -> None
     cx = counterexample_from_failure(record)
     assert cx.path == "$[0].args.a"
     assert "mismatch at $[0].args.a" in cx.headline
-    assert isinstance(cx.actual_min, str) and '"tool_call_id": "call_1"' in cx.actual_min
+    assert isinstance(cx.actual_min, list)
+    assert cx.actual_min[0]["metadata"]["tool_call_id"] == "call_1"
 
 
 def test_counterexample_assert_that_uses_message_not_empty_tuple() -> None:

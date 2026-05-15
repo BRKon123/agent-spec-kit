@@ -164,6 +164,42 @@ def test_emit_failure_detail_shows_non_root_path() -> None:
     assert "witness" not in out.lower()
 
 
+def test_emit_failure_detail_pretty_prints_json_strings_in_actual() -> None:
+    buf = io.StringIO()
+    emit_failure_detail(
+        JobResult(
+            ok=False,
+            scenario_name="t_json",
+            repeat_index=1,
+            repeat_total=1,
+            detail="d",
+            duration_s=0.1,
+            counterexample=Counterexample(
+                headline="h",
+                location="step 1, turn 0",
+                path="$[0].args",
+                expected_summary="exp",
+                actual_min=[
+                    {
+                        "name": "demo",
+                        "args": {},
+                        "result": '{"opened": true, "ticket_id": "INC-1"}',
+                        "error": None,
+                        "children": [],
+                        "metadata": {},
+                    }
+                ],
+                notes=(),
+                check_kind="assert_tool_calls",
+            ),
+        ),
+        file=buf,
+    )
+    out = buf.getvalue()
+    assert '"opened": true' in out
+    assert '{"opened": true, "ticket_id": "INC-1"}' not in out
+
+
 def test_emit_failure_detail_includes_check_kind_and_event_trace() -> None:
     root = AgentTurnEvent(user_input="hi", agent_output="out", turn_index=0)
     root.children.append(ToolCallEvent(tool_name="demo_tool", args={"k": 1}, result=2))
@@ -193,7 +229,8 @@ def test_emit_failure_detail_includes_check_kind_and_event_trace() -> None:
     text = buf.getvalue()
     assert "Check: assert_tool_calls" in text
     assert "Where:" in text
-    assert "Event trace (till failure)" in text
+    assert "Event trace" in text
+    assert "till failure" not in text
     assert "demo_tool" in text
     assert "Hint:" not in text
 

@@ -6,6 +6,44 @@ from pathlib import Path
 from typing import Any
 
 from agent_spec_kit.result_store import LocalResultStore, read_json_blob
+from agent_spec_kit.scenario_core import tool_dicts_from_transcript
+
+
+def _counterexample_actual_min_needs_repair(actual_min: Any, *, check_kind: str | None) -> bool:
+    if check_kind != "assert_tool_calls":
+        return False
+    if isinstance(actual_min, list):
+        return False
+    if not isinstance(actual_min, str):
+        return True
+    stripped = actual_min.rstrip()
+    return stripped.endswith("...") or stripped.startswith(("[", "{"))
+
+
+def repair_counterexample_for_display(
+    counterexample: Any,
+    transcript: Any,
+    *,
+    turn_index: int | None = None,
+) -> Any:
+    """
+    Upgrade legacy counterexamples whose ``actual_min`` was stored as a truncated string.
+
+    Older builds set ``actual_min`` to a capped JSON string; rehydrate from the transcript
+    blob when possible so the UI can show the full tool-call list without re-running.
+    """
+    if not isinstance(counterexample, dict):
+        return counterexample
+    check_kind = counterexample.get("check_kind")
+    actual_min = counterexample.get("actual_min")
+    if not _counterexample_actual_min_needs_repair(actual_min, check_kind=check_kind):
+        return counterexample
+    tools = tool_dicts_from_transcript(transcript, turn_index=turn_index)
+    if not tools:
+        return counterexample
+    repaired = dict(counterexample)
+    repaired["actual_min"] = tools
+    return repaired
 
 
 def load_blob_safely(path: str | None) -> tuple[Any | None, str | None]:
@@ -44,6 +82,17 @@ def build_repeat_trace(
     raw_error, err = load_blob_safely(rec["raw_error_blob_path"])
     if err:
         blob_errors["raw_error"] = err
+
+    failed_turn_index: int | None = None
+    for assertion in rec.get("assertions") or []:
+        if assertion.get("status") != "passed" and assertion.get("turn_index") is not None:
+            failed_turn_index = int(assertion["turn_index"])
+            break
+    counterexample = repair_counterexample_for_display(
+        counterexample,
+        transcript,
+        turn_index=failed_turn_index,
+    )
 
     phase_errors = store.list_phase_errors(repeat_result_id)
     fuzz_rows = store.list_fuzz_trials(repeat_result_id)

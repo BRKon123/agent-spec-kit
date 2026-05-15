@@ -37,13 +37,15 @@ export function FailureCard({
               <KV k="Path" v={<span className="font-mono">{cx.path}</span>} />
             )}
             <KV k="Expected" v={<span>{cx.expected_summary}</span>} />
-            <div>
+            <div className="min-h-0">
               <div className="text-[11px] uppercase tracking-wide text-rose-800/80 mb-1">
                 Actual
               </div>
               <JsonView
                 value={cx.actual_min}
                 className="bg-white border-rose-200"
+                maxHeightClass="max-h-[min(70vh,48rem)]"
+                scrollable
               />
             </div>
             {cx.notes && cx.notes.length > 0 && (
@@ -71,7 +73,12 @@ export function FailureCard({
             <div className="text-[11px] uppercase tracking-wide text-rose-800/80 mb-1">
               Raw error
             </div>
-            <JsonView value={rawError.error} className="bg-white border-rose-200" />
+            <JsonView
+              value={rawError.error}
+              className="bg-white border-rose-200"
+              maxHeightClass="max-h-[min(70vh,48rem)]"
+              scrollable
+            />
           </div>
         )}
         {Object.keys(blobErrors).length > 0 && (

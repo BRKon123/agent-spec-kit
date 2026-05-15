@@ -107,6 +107,45 @@ def _short(s: str, max_len: int = 400) -> str:
     return s[: max_len - 3] + "..."
 
 
+def _format_actual_value(value: Any) -> str:
+    """Serialize ``value`` for display without length caps (UI scrolls)."""
+    if isinstance(value, (dict, list)):
+        try:
+            return json.dumps(value, default=str, indent=2)
+        except TypeError:
+            return repr(value)
+    return str(value)
+
+
+def _should_prepend_act_summary_to_notes(
+    act_summary: str, record: FailureRecord, actual_min: Any
+) -> bool:
+    """Skip JSON dumps in notes when Actual already shows the full tool-call list."""
+    if not act_summary.strip():
+        return False
+    if record.step_kind == "assert_tool_calls" and isinstance(actual_min, list):
+        stripped = act_summary.lstrip()
+        if stripped.startswith(("[", "{")):
+            return False
+    return True
+
+
+def _counterexample_actual(
+    record: FailureRecord,
+    err: MatchError | None,
+    wit: dict[str, Any],
+) -> Any:
+    """Full actual payload for counterexample panels (no truncation)."""
+    if record.step_kind == "assert_tool_calls" and isinstance(record.actual, list):
+        return record.actual
+    aw = wit.get("actual_witness")
+    if aw is not None:
+        return aw
+    if isinstance(record.actual, (dict, list)):
+        return record.actual
+    return _format_actual_value(record.actual)
+
+
 def _deref_match_path(root: Any, path: tuple[Any, ...]) -> Any:
     """Follow ``path`` through dicts and lists; return ``_MISSING`` if traversal fails."""
     cur: Any = root
@@ -215,25 +254,12 @@ def _summarize_matcher_counterexample(record: FailureRecord, err: MatchError, wi
         focused = _deref_match_path(record.actual, err.path)
         if focused is not _MISSING:
             exp_line = _short(f"{err.code}: expected {err.expected}", 200)
-            try:
-                full = json.dumps(record.actual, indent=2, default=str)
-            except TypeError:
-                full = repr(record.actual)
-            act_line = _short(full, 1200)
             notes.append(err.message)
-            return exp_line, act_line, notes
+            return exp_line, "", notes
 
     actual_min: Any = wit.get("actual_witness", record.actual)
-    if isinstance(actual_min, (dict, list)):
-        try:
-            actual_str = json.dumps(actual_min, default=str, indent=2)
-        except TypeError:
-            actual_str = repr(actual_min)
-    else:
-        actual_str = str(actual_min)
-    actual_str = _short(actual_str, 800)
     notes.append(err.message)
-    return _short(f"{err.code}: expected {err.expected}", 200), actual_str, notes
+    return _short(f"{err.code}: expected {err.expected}", 200), _format_actual_value(actual_min), notes
 
 
 @dataclass(slots=True)
@@ -327,7 +353,7 @@ def counterexample_from_failure(record: FailureRecord) -> Counterexample:
         err = max(record.matcher_errors, key=lambda e: len(e.path))
         wit = _witness_dict(err)
         path_s = path_to_str(err.path)
-        exp_s, act_s, note_list = _summarize_matcher_counterexample(record, err, wit)
+        exp_s, act_summary, note_list = _summarize_matcher_counterexample(record, err, wit)
         if err is not outer_err:
             note_list.insert(0, outer_err.message)
         if len(record.matcher_errors) > 1:
@@ -336,13 +362,17 @@ def counterexample_from_failure(record: FailureRecord) -> Counterexample:
             headline_message = f"{outer_err.message}; mismatch at {path_s}: {err.message}"
         else:
             headline_message = err.message
+        actual_min_val = _counterexample_actual(record, err, wit)
+        notes_final = list(note_list)
+        if _should_prepend_act_summary_to_notes(act_summary, record, actual_min_val):
+            notes_final.insert(0, act_summary)
         return _counterexample_base(
             headline=f"{record.scenario_name}: {headline_message}",
             record=record,
             path_s=path_s,
             expected_summary=_short(exp_s, 600),
-            actual_min=act_s,
-            notes=tuple(note_list),
+            actual_min=actual_min_val,
+            notes=tuple(notes_final),
         )
     if record.error is not None:
         msg = str(record.error) or type(record.error).__name__
@@ -359,7 +389,7 @@ def counterexample_from_failure(record: FailureRecord) -> Counterexample:
         elif record.actual in ((), None):
             act = "No structured value (see assertion message above)."
         else:
-            act = _short(repr(record.actual), 400)
+            act = _format_actual_value(record.actual)
         return _counterexample_base(
             headline=headline,
             record=record,

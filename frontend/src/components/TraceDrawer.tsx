@@ -13,6 +13,7 @@ import { TraceTree } from "@/components/TraceTree";
 import { FailureCard } from "@/components/FailureCard";
 import { InlineError, InlineLoading } from "@/components/Inline";
 import { formatDuration } from "@/lib/utils";
+import type { AgentEventNode } from "@/lib/types";
 
 export function TraceDrawer({
   repeatId,
@@ -61,7 +62,7 @@ export function TraceDrawer({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         side="right"
-        className="flex flex-col p-0 max-w-none"
+        className="flex h-full max-h-screen flex-col p-0 max-w-none"
         style={{ width: `${panelWidth}px` }}
       >
         <div
@@ -108,7 +109,7 @@ export function TraceDrawer({
             </div>
           )}
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 space-y-4">
           {trace.isLoading && <InlineLoading label="Loading trace…" />}
           {trace.isError && (
             <InlineError error={trace.error} onRetry={() => trace.refetch()} />
@@ -120,7 +121,7 @@ export function TraceDrawer({
                   <div className="text-[11px] uppercase tracking-wide text-slate-500 mb-1">
                     Final output
                   </div>
-                  <div className="text-sm whitespace-pre-wrap break-words">
+                  <div className="text-sm whitespace-pre-wrap break-words max-h-[min(40vh,24rem)] overflow-auto">
                     {t.output_preview}
                   </div>
                 </div>
@@ -176,7 +177,16 @@ export function TraceDrawer({
               {!hasFuzzTrials && (
                 <section>
                   <h3 className="text-sm font-semibold mb-2">Event trace</h3>
-                  <TraceTree transcript={t.transcript} />
+                  <TraceTree
+                    transcript={t.transcript}
+                    roots={
+                      t.status !== "passed" &&
+                      Array.isArray(t.counterexample?.events) &&
+                      (t.counterexample?.events?.length ?? 0) > 0
+                        ? (t.counterexample!.events as AgentEventNode[])
+                        : null
+                    }
+                  />
                 </section>
               )}
               {!hasFuzzTrials && (t.status !== "passed" || t.counterexample || t.raw_error) && (

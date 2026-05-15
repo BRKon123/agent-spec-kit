@@ -276,19 +276,19 @@ class _LangChainAdaptedAgent:
         self._turn_index = turn_index
 
     async def run_turn(self, user_message: str) -> TurnResult:
+        root_turn = AgentTurnEvent(
+            turn_index=self._turn_index,
+            event_id=new_event_id(prefix="turn:"),
+            source_path=(),
+            metadata={},
+            user_input=None,
+            agent_output=None,
+            error=None,
+        )
         try:
             inp = self._initial_input_factory(user_message)
             cfg = _resolve_dynamic(self._config, user_message)
             ctx = _resolve_dynamic(self._context, user_message)
-            root_turn = AgentTurnEvent(
-                turn_index=self._turn_index,
-                event_id=new_event_id(prefix="turn:"),
-                source_path=(),
-                metadata={},
-                user_input=None,
-                agent_output=None,
-                error=None,
-            )
             norm = UpdatesNormalizer(root_turn, turn_index=self._turn_index)
             kwargs: dict[str, Any] = {
                 "stream_mode": self._stream_mode,
@@ -311,11 +311,13 @@ class _LangChainAdaptedAgent:
                 error=None,
             )
         except Exception as e:
+            err = str(e)
+            root_turn.error = err
             return TurnResult(
                 output=None,
-                events=(),
+                events=(root_turn,),
                 status="error",
-                error=str(e),
+                error=err,
             )
 
 

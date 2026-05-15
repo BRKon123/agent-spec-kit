@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import io
-import json
 import sys
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, TextIO
@@ -16,6 +15,7 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
+from agent_spec_kit.console_format import format_actual_for_console
 from agent_spec_kit.events import print_rich_event_trace
 from agent_spec_kit.failures import Counterexample, conversation_turns_to_event_trace
 from agent_spec_kit.runner import JobResult
@@ -128,12 +128,7 @@ def emit_failure_detail(r: "JobResult", *, file: TextIO | None = None) -> None:
         lines.append(f"[bold]Path:[/bold] {escape(str(cx.path))}")
     lines.append(f"[bold]Expected:[/bold] {escape(str(cx.expected_summary))}")
     lines.append("[bold]Actual:[/bold]")
-    body = str(cx.actual_min)
-    try:
-        parsed = json.loads(body)
-        body = json.dumps(parsed, indent=2, default=str)
-    except (json.JSONDecodeError, TypeError):
-        pass
+    body = format_actual_for_console(cx.actual_min)
     panel_inner = "\n".join(lines) + "\n\n" + escape(body)
     for n in cx.notes:
         panel_inner += "\n" + escape(n)
@@ -142,7 +137,7 @@ def emit_failure_detail(r: "JobResult", *, file: TextIO | None = None) -> None:
         trace_buf = io.StringIO()
         trace_console = Console(file=trace_buf, width=trace_w, highlight=False, force_terminal=False)
         panel_inner += "\n\n────────────────────────────────────────\n"
-        print_rich_event_trace(trace_console, cx.events, title="Event trace (till failure)")
+        print_rich_event_trace(trace_console, cx.events, title="Event trace")
         panel_inner += trace_buf.getvalue().rstrip("\n")
     c.print(
         Panel(
