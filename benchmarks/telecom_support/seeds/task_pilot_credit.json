@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "task_id": "task_pilot_credit",
+    "customer_id": "CUST-003",
+    "line_id": "LINE-3001",
+    "verification_token": "1978-11-05",
+    "postcode": "M1 1AE",
+    "credit_eligible": false,
+    "ineligible_credit_reason": "user_dispute_without_billing_error"
+  },
+  "customers": [
+    {
+      "customer_id": "CUST-003",
+      "name": "Jordan Lee",
+      "dob_check_token": "1978-11-05",
+      "account_status": "active"
+    }
+  ],
+  "plans": [
+    {
+      "plan_id": "PLAN-BASIC",
+      "plan_type": "basic",
+      "data_allowance_mb": 5000,
+      "roaming_rules_json": "{\"eu\": false}",
+      "price": 15.0
+    }
+  ],
+  "lines": [
+    {
+      "line_id": "LINE-3001",
+      "customer_id": "CUST-003",
+      "phone_number": "+447700900003",
+      "plan_id": "PLAN-BASIC",
+      "sim_status": "active",
+      "roaming_enabled": 0,
+      "data_enabled": 1
+    }
+  ],
+  "devices": [
+    {
+      "device_id": "DEV-003",
+      "line_id": "LINE-3001",
+      "model": "Galaxy S23",
+      "os": "Android 13",
+      "sim_type": "physical",
+      "settings_json": "{\"airplane_mode\": false}"
+    }
+  ],
+  "network_outages": []
+}

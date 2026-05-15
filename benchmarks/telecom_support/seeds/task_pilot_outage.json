@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "task_id": "task_pilot_outage",
+    "customer_id": "CUST-002",
+    "line_id": "LINE-2001",
+    "verification_token": "1990-07-21",
+    "postcode": "E1 6AN",
+    "credit_eligible": false
+  },
+  "customers": [
+    {
+      "customer_id": "CUST-002",
+      "name": "Sam Taylor",
+      "dob_check_token": "1990-07-21",
+      "account_status": "active"
+    }
+  ],
+  "plans": [
+    {
+      "plan_id": "PLAN-STANDARD",
+      "plan_type": "standard",
+      "data_allowance_mb": 15000,
+      "roaming_rules_json": "{\"eu\": false}",
+      "price": 22.0
+    }
+  ],
+  "lines": [
+    {
+      "line_id": "LINE-2001",
+      "customer_id": "CUST-002",
+      "phone_number": "+447700900002",
+      "plan_id": "PLAN-STANDARD",
+      "sim_status": "active",
+      "roaming_enabled": 0,
+      "data_enabled": 0
+    }
+  ],
+  "devices": [
+    {
+      "device_id": "DEV-002",
+      "line_id": "LINE-2001",
+      "model": "iPhone 15",
+      "os": "iOS 17",
+      "sim_type": "esim",
+      "settings_json": "{\"airplane_mode\": false}"
+    }
+  ],
+  "network_outages": [
+    {
+      "postcode": "E1 6AN",
+      "service_type": "mobile",
+      "status": "active",
+      "started_at": "2026-05-14T08:00:00+00:00",
+      "affected_services_json": "[\"voice\", \"data\"]"
+    }
+  ]
+}

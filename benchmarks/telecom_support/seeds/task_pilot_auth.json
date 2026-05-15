@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "task_id": "task_pilot_auth",
+    "customer_id": "CUST-001",
+    "line_id": "LINE-1001",
+    "verification_token": "1985-03-12",
+    "postcode": "SW1A1AA",
+    "credit_eligible": false
+  },
+  "customers": [
+    {
+      "customer_id": "CUST-001",
+      "name": "Alex Morgan",
+      "dob_check_token": "1985-03-12",
+      "account_status": "active"
+    }
+  ],
+  "plans": [
+    {
+      "plan_id": "PLAN-PLUS",
+      "plan_type": "unlimited_plus",
+      "data_allowance_mb": 50000,
+      "roaming_rules_json": "{\"eu\": true}",
+      "price": 35.0
+    }
+  ],
+  "lines": [
+    {
+      "line_id": "LINE-1001",
+      "customer_id": "CUST-001",
+      "phone_number": "+447700900001",
+      "plan_id": "PLAN-PLUS",
+      "sim_status": "active",
+      "roaming_enabled": 1,
+      "data_enabled": 1
+    }
+  ],
+  "devices": [
+    {
+      "device_id": "DEV-001",
+      "line_id": "LINE-1001",
+      "model": "Pixel 8",
+      "os": "Android 14",
+      "sim_type": "physical",
+      "settings_json": "{\"airplane_mode\": false}"
+    }
+  ],
+  "network_outages": []
+}
