@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal, cast
 
-from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
+from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent, collect_event_errors
 from agent_spec_kit.failures import (
     FailureRecord,
     ScenarioAssertionFailed,
@@ -481,6 +481,8 @@ class Scenario:
             if out_v is not None:
                 out_v = str(out_v)
         self._turn_results.append(ct)
+        if ct.actor == "agent":
+            _raise_if_agent_turn_errors(self, ct)
         s = out_v or ""
         self._next_input = s
         self._next_actor = self._other_actor(ct.actor) if self._other_actor_exists() else ct.actor
@@ -566,6 +568,8 @@ class Scenario:
             turn_result = await self.user.run_turn(text)  # type: ignore[union-attr]
         ct = ConversationTurn.from_turn(target, turn_result)
         self._turn_results.append(ct)
+        if target == "agent":
+            _raise_if_agent_turn_errors(self, ct)
         out_v = ct.output if isinstance(ct.output, str) else (str(ct.output) if ct.output is not None else "")
         self._next_input = out_v
         self._next_actor = self._other_actor(ct.actor) if self._other_actor_exists() else ct.actor
@@ -683,6 +687,44 @@ class Scenario:
                 assertion_index_after_turn=_assertion_index_after_turn(self, step_kind="assert_that"),
             )
             raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from None
+
+
+def _agent_turn_error_messages(ct: ConversationTurn) -> tuple[str, ...]:
+    if ct.actor != "agent":
+        return ()
+    msgs: list[str] = []
+    if ct.error:
+        msgs.append(ct.error)
+    if ct.status == "error" and ct.error is None:
+        msgs.append("agent turn failed")
+    for root in ct.events:
+        for err in collect_event_errors(root):
+            if err not in msgs:
+                msgs.append(err)
+    return tuple(msgs)
+
+
+def _raise_if_agent_turn_errors(scenario: Scenario, ct: ConversationTurn) -> None:
+    errs = _agent_turn_error_messages(ct)
+    if not errs:
+        return
+    headline = errs[0]
+    if len(errs) > 1:
+        headline = f"{headline} (+{len(errs) - 1} more agent error(s))"
+    turn_idx = len(scenario._turn_results) - 1
+    record = FailureRecord(
+        scenario_name=scenario.scenario_name or "(scenario)",
+        step_index=scenario._executed_until,
+        step_kind="agent_error",
+        turn_index=turn_idx,
+        actual=errs,
+        matcher_spec=None,
+        matcher_errors=(),
+        error=AssertionError(headline),
+        events=_last_turn_events_tuple(scenario),
+        turn_results=tuple(scenario._turn_results),
+    )
+    raise ScenarioAssertionFailed(counterexample_from_failure(record), record=record) from None
 
 
 def _last_turn_events_tuple(scenario: Scenario) -> tuple[Any, ...] | None:

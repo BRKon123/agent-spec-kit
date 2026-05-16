@@ -9,6 +9,7 @@ from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
 from agent_spec_kit.failures import (
     FailureRecord,
     ScenarioAssertionFailed,
+    collect_agent_errors,
     conversation_turns_to_event_trace,
     counterexample_from_failure,
     raise_scenario_match_failure,
@@ -381,3 +382,33 @@ def test_conversation_trace_windows_last_five_agent_turns() -> None:
     assert "u0" not in user_contents
     assert "u1" in user_contents
     assert "u5" in user_contents
+
+
+def test_collect_agent_errors_from_events_and_actual() -> None:
+    root = AgentTurnEvent(agent_output="x", error="root parse failed")
+    root.children.append(
+        AgentTurnEvent(
+            agent_output="",
+            error="nested specialist failed",
+            source_path=("network_specialist",),
+        )
+    )
+    errs = collect_agent_errors(actual=("root parse failed",), events=(root,))
+    assert errs == ("root parse failed", "network_specialist: nested specialist failed")
+
+
+def test_counterexample_agent_error_expected_and_actual() -> None:
+    err = "Failed to parse NetworkAssessment"
+    record = FailureRecord(
+        scenario_name="t",
+        step_index=0,
+        step_kind="agent_error",
+        turn_index=0,
+        actual=(err,),
+        matcher_spec=None,
+        matcher_errors=(),
+        error=AssertionError(err),
+    )
+    cx = counterexample_from_failure(record)
+    assert cx.expected_summary == "agent turn completes without runtime errors"
+    assert err in (cx.actual_min if isinstance(cx.actual_min, str) else "\n".join(map(str, cx.actual_min)))

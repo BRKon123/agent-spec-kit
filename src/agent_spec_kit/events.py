@@ -127,6 +127,36 @@ class UserTurnEvent(BaseEvent):
 AgentEvent: TypeAlias = ToolCallEvent | AgentTurnEvent | UserTurnEvent
 
 
+def collect_event_errors(
+    roots: AgentEvent | Sequence[AgentEvent],
+    *,
+    include_tools: bool = True,
+) -> tuple[str, ...]:
+    """Collect non-empty ``error`` strings from an event tree (depth-first)."""
+
+    def _walk(node: AgentEvent, out: list[str]) -> None:
+        if isinstance(node, AgentTurnEvent) and node.error:
+            if node.source_path:
+                label = ".".join(node.source_path)
+                out.append(f"{label}: {node.error}")
+            else:
+                out.append(node.error)
+        elif include_tools and isinstance(node, ToolCallEvent) and node.error:
+            name = node.tool_name or "tool"
+            out.append(f"{name}: {node.error}")
+        for ch in node.children:
+            _walk(ch, out)
+
+    if isinstance(roots, AgentTurnEvent | ToolCallEvent | UserTurnEvent):
+        items: Sequence[AgentEvent] = (roots,)
+    else:
+        items = roots
+    found: list[str] = []
+    for root in items:
+        _walk(root, found)
+    return tuple(found)
+
+
 def print_rich_event_trace(
     console: Any,
     roots: Sequence[BaseEvent],
@@ -160,6 +190,7 @@ __all__ = [
     "BaseEvent",
     "ToolCallEvent",
     "UserTurnEvent",
+    "collect_event_errors",
     "new_event_id",
     "print_rich_event_trace",
 ]

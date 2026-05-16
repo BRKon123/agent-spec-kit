@@ -15,7 +15,7 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.run import AgentRunResultEvent
 
-from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent, new_event_id
+from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent, collect_event_errors, new_event_id
 from agent_spec_kit.run import TurnResult
 
 _Dynamic = Any | Callable[[str], Any]
@@ -202,6 +202,15 @@ class _PydanticAdaptedAgent:
                     final_output = ev.result.output
 
             root.agent_output = final_output
+            errs = collect_event_errors(root)
+            err = root.error or (errs[0] if errs else None)
+            if err is not None:
+                return TurnResult(
+                    output=final_output,
+                    events=(root,),
+                    status="error",
+                    error=err,
+                )
             return TurnResult(
                 output=final_output,
                 events=(root,),

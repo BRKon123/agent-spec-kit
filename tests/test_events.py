@@ -7,6 +7,7 @@ from agent_spec_kit import (
     BaseEvent,
     ToolCallEvent,
     UserTurnEvent,
+    collect_event_errors,
     new_event_id,
     print_rich_event_trace,
 )
@@ -53,6 +54,23 @@ def test_rich_node_labels() -> None:
         == "AgentTurn (nested): pong"
     )
     assert UserTurnEvent(content="ping")._rich_node_label() == "UserTurn: ping"
+
+
+def test_collect_event_errors_nested_subgraph_and_tool() -> None:
+    root = AgentTurnEvent(agent_output="ok")
+    root.children.append(
+        AgentTurnEvent(
+            agent_output="",
+            error="Failed to parse NetworkAssessment",
+            source_path=("network_specialist",),
+        )
+    )
+    root.children.append(ToolCallEvent(tool_name="demo", error="tool failed"))
+    errs = collect_event_errors(root)
+    assert errs == (
+        "network_specialist: Failed to parse NetworkAssessment",
+        "demo: tool failed",
+    )
 
 
 def test_print_rich_event_trace_smoke() -> None:

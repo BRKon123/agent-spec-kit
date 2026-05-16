@@ -15,6 +15,33 @@ from agent_spec_kit.failures import Counterexample
 from agent_spec_kit.runner import JobResult
 
 
+def test_emit_summary_table_failure_column_agent_error() -> None:
+    buf = io.StringIO()
+    emit_summary_table(
+        [
+            JobResult(
+                ok=False,
+                scenario_name="t_agent_err",
+                repeat_index=1,
+                repeat_total=1,
+                detail="agent error",
+                duration_s=0.01,
+                counterexample=Counterexample(
+                    headline="parse failed",
+                    location="step 0, turn 1",
+                    path=None,
+                    expected_summary="e",
+                    actual_min=["err"],
+                    notes=(),
+                    check_kind="agent_error",
+                ),
+            )
+        ],
+        file=buf,
+    )
+    assert "agent error during turn" in buf.getvalue()
+
+
 def test_emit_summary_table_failure_column_short_check_kind() -> None:
     """Failure column shows check_kind, not the long detail headline."""
     buf = io.StringIO()
@@ -198,6 +225,45 @@ def test_emit_failure_detail_pretty_prints_json_strings_in_actual() -> None:
     out = buf.getvalue()
     assert '"opened": true' in out
     assert '{"opened": true, "ticket_id": "INC-1"}' not in out
+
+
+def test_emit_failure_detail_shows_full_agent_errors_from_event_trace() -> None:
+    err = (
+        "Failed to parse structured output for tool 'NetworkAssessment': "
+        "6 validation errors for NetworkAssessment evidence.0"
+    )
+    root = AgentTurnEvent(agent_output="partial", error=err)
+    root.children.append(
+        ToolCallEvent(tool_name="run_network_diagnostics_specialist", result=None, error=None)
+    )
+    buf = io.StringIO()
+    emit_failure_detail(
+        JobResult(
+            ok=False,
+            scenario_name="test_t05_full",
+            repeat_index=1,
+            repeat_total=1,
+            detail=err,
+            duration_s=0.1,
+            counterexample=Counterexample(
+                headline=f"test_t05_full: {err}",
+                location="step 0, turn 1",
+                path=None,
+                expected_summary="agent turn completes without runtime errors",
+                actual_min=[err],
+                notes=(),
+                check_kind="agent_error",
+                location_detail="agent error after turn #2 (agentturn)",
+                events=(root,),
+            ),
+        ),
+        file=buf,
+    )
+    out = buf.getvalue()
+    assert "Agent errors:" in out
+    assert "NetworkAssessment" in out
+    assert "validation errors" in out
+    assert "evidence.0" in out
 
 
 def test_emit_failure_detail_includes_check_kind_and_event_trace() -> None:

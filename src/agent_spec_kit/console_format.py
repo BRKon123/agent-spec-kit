@@ -63,8 +63,9 @@ def format_actual_for_console(
     max_len: int = CONSOLE_ACTUAL_MAX_LEN,
 ) -> str:
     """Pretty-print ``actual_min`` for failure panels; truncate only for the console."""
-    if isinstance(actual_min, (dict, list)):
-        body = json.dumps(pretty_json_value(actual_min), indent=2, default=str)
+    if isinstance(actual_min, (dict, list, tuple)):
+        payload = list(actual_min) if isinstance(actual_min, tuple) else actual_min
+        body = json.dumps(pretty_json_value(payload), indent=2, default=str)
     elif isinstance(actual_min, str):
         parsed = try_parse_json_string(actual_min)
         if parsed is not None:

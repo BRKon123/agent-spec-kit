@@ -10,6 +10,7 @@ from agent_spec_kit.events import (
     BaseEvent,
     ToolCallEvent,
     UserTurnEvent,
+    collect_event_errors,
     new_event_id,
     print_rich_event_trace,
 )
@@ -40,6 +41,7 @@ __all__ = [
     "fixture",
     "scenario",
     "__version__",
+    "collect_event_errors",
     "new_event_id",
     "print_rich_event_trace",
     "wrap_langchain_agent",

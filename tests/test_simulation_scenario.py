@@ -31,7 +31,7 @@ class _Scripted:
 
 
 def test_user_message_after_simulate_allowed() -> None:
-    a = _Scripted(["hi"])
+    a = _Scripted(["hi", "after-x"])
     s = create_scenario(a)
     s.simulate_conversation(seed_actor="agent", seed_input="start", max_turns=1)
     s.user_message("x")
@@ -41,7 +41,8 @@ def test_user_message_after_simulate_allowed() -> None:
 
 def test_simulate_after_user_message_allowed() -> None:
     a = _Scripted(["hi", "h2"])
-    s = create_scenario(a)
+    u = _Scripted(["u1", "u2"])
+    s = create_scenario(a, user=u)
     s.user_message("u")
     s.simulate_conversation(seed_actor="user", seed_input="s", max_turns=2)
     _run(s.materialise())

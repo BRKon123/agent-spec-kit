@@ -29,6 +29,12 @@ def test_format_actual_for_console_indents_json() -> None:
     assert "'{\"ok\": true}'" not in text
 
 
+def test_format_actual_for_console_formats_tuple_as_json_list() -> None:
+    text = format_actual_for_console(("err one", "err two"))
+    assert '"err one"' in text
+    assert '"err two"' in text
+
+
 def test_format_actual_for_console_truncates_only_in_console() -> None:
     huge = {"x": "y" * (CONSOLE_ACTUAL_MAX_LEN + 100)}
     text = format_actual_for_console(huge)

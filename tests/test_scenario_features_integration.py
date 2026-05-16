@@ -13,6 +13,7 @@ from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
 from agent_spec_kit.fixture_graph import scenario_case_runs
 from agent_spec_kit.param_cases import normalize_case
 from agent_spec_kit.registries import iter_scenarios, reset_registries
+from agent_spec_kit.failures import ScenarioAssertionFailed
 from agent_spec_kit.run import TurnResult
 from agent_spec_kit.runner import JobResult, run_scenario_job
 
@@ -99,7 +100,9 @@ def test_simulation_stops_when_turn_status_not_ok() -> None:
     a = _Scripted([bad, TurnResult(output="never", events=())])
     s = create_scenario(a)
     s.simulate_conversation(seed_actor="agent", seed_input="s", max_turns=3)
-    _run(s.materialise())
+    with pytest.raises(ScenarioAssertionFailed) as exc:
+        _run(s.materialise())
+    assert exc.value.counterexample.check_kind == "agent_error"
     assert len(s.turn_results) == 1
     assert s.turn_results[0].status == "error"
 
@@ -318,8 +321,28 @@ def test_solo_max_turns_is_per_message() -> None:
 def test_conversation_turn_exposes_error_fields() -> None:
     a = _Scripted([TurnResult(output="e", events=(), status="error", error="x")])
     s = create_scenario(a)
-    s.simulate_conversation(seed_actor="agent", seed_input="s", max_turns=2)
-    _run(s.materialise())
-    t0 = s.turn_results[0]
-    assert t0.status == "error" and t0.error == "x"
+    with pytest.raises(ScenarioAssertionFailed) as exc:
+        _run(s.simulate_conversation(seed_actor="agent", seed_input="s", max_turns=2).materialise())
+    assert exc.value.counterexample.check_kind == "agent_error"
+    assert "x" in exc.value.counterexample.headline
+
+
+def test_scenario_fails_when_agent_event_tree_has_error() -> None:
+    root = AgentTurnEvent(agent_output="partial")
+    root.children.append(
+        AgentTurnEvent(
+            agent_output="",
+            error="Failed to parse structured output for tool 'NetworkAssessment'",
+            source_path=("network_specialist",),
+        )
+    )
+    a = _Scripted([TurnResult(output="partial", events=(root,), status="ok", error=None)])
+    s = create_scenario(a)
+    with pytest.raises(ScenarioAssertionFailed) as exc:
+        _run(s.user_message("hello").materialise())
+    cx = exc.value.counterexample
+    assert cx.check_kind == "agent_error"
+    assert "NetworkAssessment" in cx.headline
+    assert cx.expected_summary == "agent turn completes without runtime errors"
+    assert cx.events is not None
 

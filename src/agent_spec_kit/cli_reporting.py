@@ -17,7 +17,11 @@ from rich.text import Text
 
 from agent_spec_kit.console_format import format_actual_for_console
 from agent_spec_kit.events import print_rich_event_trace
-from agent_spec_kit.failures import Counterexample, conversation_turns_to_event_trace
+from agent_spec_kit.failures import (
+    Counterexample,
+    collect_agent_errors,
+    conversation_turns_to_event_trace,
+)
 from agent_spec_kit.runner import JobResult
 
 if TYPE_CHECKING:
@@ -86,6 +90,8 @@ def _failure_compact_for_table(r: "JobResult") -> str:
         kind = cx.check_kind
         if kind == "assert_that":
             return "assertion failure in env"
+        if kind == "agent_error":
+            return "agent error during turn"
         return kind
     return _table_cell_compact(r.detail or "")
 
@@ -126,6 +132,11 @@ def emit_failure_detail(r: "JobResult", *, file: TextIO | None = None) -> None:
         lines.append(f"[bold]Where:[/bold] {escape(cx.location)}")
     if _meaningful_path(cx.path):
         lines.append(f"[bold]Path:[/bold] {escape(str(cx.path))}")
+    agent_errs = collect_agent_errors(actual=cx.actual_min, events=cx.events)
+    if agent_errs:
+        lines.append("[bold]Agent errors:[/bold]")
+        for err in agent_errs:
+            lines.append(escape(err))
     lines.append(f"[bold]Expected:[/bold] {escape(str(cx.expected_summary))}")
     lines.append("[bold]Actual:[/bold]")
     body = format_actual_for_console(cx.actual_min)

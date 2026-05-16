@@ -10,7 +10,13 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 
-from agent_spec_kit.events import AgentEvent, AgentTurnEvent, ToolCallEvent, new_event_id
+from agent_spec_kit.events import (
+    AgentEvent,
+    AgentTurnEvent,
+    ToolCallEvent,
+    collect_event_errors,
+    new_event_id,
+)
 from agent_spec_kit.run import TurnResult
 
 _Dynamic = Any | Callable[[str], Any]
@@ -304,6 +310,15 @@ class _LangChainAdaptedAgent:
                     norm.feed(ns, {node_name: partial})
             norm.finalize()
             out = root_turn_output((root_turn,))
+            errs = collect_event_errors(root_turn)
+            err = root_turn.error or (errs[0] if errs else None)
+            if err is not None:
+                return TurnResult(
+                    output=out,
+                    events=(root_turn,),
+                    status="error",
+                    error=err,
+                )
             return TurnResult(
                 output=out,
                 events=(root_turn,),

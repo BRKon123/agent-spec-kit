@@ -109,12 +109,60 @@ def _short(s: str, max_len: int = 400) -> str:
 
 def _format_actual_value(value: Any) -> str:
     """Serialize ``value`` for display without length caps (UI scrolls)."""
-    if isinstance(value, (dict, list)):
+    if isinstance(value, (dict, list, tuple)):
         try:
-            return json.dumps(value, default=str, indent=2)
+            payload = list(value) if isinstance(value, tuple) else value
+            return json.dumps(payload, default=str, indent=2)
         except TypeError:
             return repr(value)
     return str(value)
+
+
+def collect_agent_errors(
+    *,
+    actual: Any = None,
+    events: tuple[Any, ...] | None = None,
+    turn_results: tuple[ConversationTurn, ...] | None = None,
+) -> tuple[str, ...]:
+    """Collect non-empty agent/tool error strings for failure panels (full text, deduped)."""
+    from agent_spec_kit.events import collect_event_errors
+
+    found: list[str] = []
+
+    def add(msg: str) -> None:
+        text = msg.strip()
+        if text and text not in found:
+            found.append(text)
+
+    if isinstance(actual, (list, tuple)):
+        for item in actual:
+            add(str(item))
+    elif isinstance(actual, str):
+        stripped = actual.strip()
+        if stripped.startswith("["):
+            try:
+                parsed = json.loads(stripped)
+            except json.JSONDecodeError:
+                parsed = None
+            if isinstance(parsed, list):
+                for item in parsed:
+                    add(str(item))
+            else:
+                add(actual)
+        else:
+            add(actual)
+    elif actual not in ((), None):
+        add(str(actual))
+
+    trace_events = events
+    if trace_events is None and turn_results:
+        trace_events = conversation_turns_to_event_trace(turn_results)
+    if trace_events:
+        for root in trace_events:
+            for err in collect_event_errors(root):
+                add(err)
+
+    return tuple(found)
 
 
 def _should_prepend_act_summary_to_notes(
@@ -189,6 +237,7 @@ def _format_scenario_location(
         ),
         "assert_that": ("assert_that", "(environment / fixture check)"),
         "scenario_body": ("scenario body", "(Python assert in test function)"),
+        "agent_error": ("agent error", "(runtime error during agent execution)"),
     }
     kind_base, kind_suffix = labels.get(step_kind, (step_kind, ""))
     kind = kind_base
@@ -379,9 +428,18 @@ def counterexample_from_failure(record: FailureRecord) -> Counterexample:
         headline = f"{record.scenario_name}: {msg}"
         if record.step_kind == "assert_that":
             exp = f"assert_that failed: {msg}" if msg else "assert_that failed"
+        elif record.step_kind == "agent_error":
+            exp = "agent turn completes without runtime errors"
         else:
             exp = msg if isinstance(record.error, AssertionError) and msg else type(record.error).__name__
-        if record.step_kind == "assert_that" and record.actual in ((), None, False):
+        if record.step_kind == "agent_error":
+            errs = collect_agent_errors(
+                actual=record.actual,
+                events=_trace_events_for_record(record),
+                turn_results=record.turn_results,
+            )
+            act = list(errs) if errs else "No structured value (see assertion message above)."
+        elif record.step_kind == "assert_that" and record.actual in ((), None, False):
             if record.actual is False:
                 act = "assert_that callable returned False (no further detail)."
             else:
@@ -461,6 +519,7 @@ __all__ = [
     "FailureRecord",
     "ScenarioAssertionFailed",
     "conversation_turns_to_event_trace",
+    "collect_agent_errors",
     "counterexample_from_failure",
     "raise_scenario_match_failure",
 ]
