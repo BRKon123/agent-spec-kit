@@ -32,6 +32,7 @@ from agent_spec_kit.cli_reporting import (
 )
 from agent_spec_kit.discovery import collect_module_paths, import_paths
 from agent_spec_kit.fixture_graph import scenario_case_runs
+from agent_spec_kit.parallel_workers import parse_num_workers, resolve_num_workers
 from agent_spec_kit.result_store import LocalResultStore, write_json_blob
 from agent_spec_kit.registries import ScenarioDef, find_scenario, iter_scenarios, reset_registries
 from agent_spec_kit.runner import (
@@ -712,7 +713,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     run_p.add_argument("--list", action="store_true", help="print discovered scenarios and exit")
     run_p.add_argument("--fail-fast", action="store_true", help="stop after first failure")
-    run_p.add_argument("-n", type=int, default=1, help="worker processes (default: 1 serial in-process)")
+    run_p.add_argument(
+        "-n",
+        type=parse_num_workers,
+        default=1,
+        metavar="num",
+        help=(
+            "worker processes: integer, 'auto' (os.cpu_count(), like pytest -n auto), "
+            "or 'logical' (logical CPUs when psutil is available)"
+        ),
+    )
     run_p.add_argument("--experiment", default="default", help="experiment name (default: default)")
     run_p.add_argument("--metadata", action="append", default=[], help="metadata key=value (repeatable)")
     run_p.add_argument("--notes", default=None, help="optional run notes")
@@ -892,8 +902,9 @@ def main(argv: list[str] | None = None) -> int:
         print("0 passed, 0 failed (no scenarios)")
         return 0
 
-    eff_n = 1 if args.fail_fast and args.n > 1 else args.n
-    if args.fail_fast and args.n > 1:
+    n_workers = resolve_num_workers(args.n)
+    eff_n = 1 if args.fail_fast and n_workers > 1 else n_workers
+    if args.fail_fast and n_workers > 1:
         emit_note("--fail-fast runs serially (-n ignored)")
 
     paired = asyncio.run(

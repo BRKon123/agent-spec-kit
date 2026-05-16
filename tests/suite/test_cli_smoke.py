@@ -179,6 +179,42 @@ async def test_two(s):
     assert "2 passed" in r.stdout
 
 
+def test_cli_n_auto(tmp_path: Path) -> None:
+    (tmp_path / "fixtures.py").write_text(
+        """
+from __future__ import annotations
+import agent_spec_kit as ek
+from agent_spec_kit.run import TurnResult
+
+@ek.fixture
+async def agent():
+    class A:
+        async def run_turn(self, user_message: str) -> TurnResult:
+            return TurnResult(output="ok", events=())
+    return A()
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "test_parallel.py").write_text(
+        """
+from __future__ import annotations
+import agent_spec_kit as ek
+
+@ek.scenario(agent_fixture="agent", repeats=1, tags=())
+async def test_one(s):
+    pass
+
+@ek.scenario(agent_fixture="agent", repeats=1, tags=())
+async def test_two(s):
+    pass
+""",
+        encoding="utf-8",
+    )
+    r = _run_cli(["run", str(tmp_path), "-n", "auto"], cwd=tmp_path)
+    assert r.returncode == 0, r.stderr + r.stdout
+    assert "2 passed" in r.stdout
+
+
 def test_cli_run_metadata_validation(tmp_path: Path) -> None:
     r = _run_cli(["run", str(tmp_path), "--metadata", "bad"], cwd=tmp_path)
     assert r.returncode == 2
