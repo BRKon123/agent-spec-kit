@@ -18,6 +18,7 @@ class TelcoStore:
         "authenticated_customer_id",
         "seed_meta",
         "_ticket_seq",
+        "_sim_order_seq",
     )
 
     def __init__(self, db_path: Path) -> None:
@@ -25,6 +26,7 @@ class TelcoStore:
         self.authenticated_customer_id: str | None = None
         self.seed_meta: dict[str, Any] = {}
         self._ticket_seq = 0
+        self._sim_order_seq = 0
         conn = self.connect()
         try:
             conn.executescript(_SCHEMA_PATH.read_text(encoding="utf-8"))
@@ -40,6 +42,10 @@ class TelcoStore:
     def next_ticket_id(self) -> str:
         self._ticket_seq += 1
         return f"TCK-{self._ticket_seq:05d}"
+
+    def next_sim_order_id(self) -> str:
+        self._sim_order_seq += 1
+        return f"SIM-{self._sim_order_seq:05d}"
 
     def row_to_dict(self, row: sqlite3.Row | None) -> dict[str, Any] | None:
         if row is None:

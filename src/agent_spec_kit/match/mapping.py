@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 from collections.abc import Mapping
 from typing import Any
 
@@ -16,11 +17,23 @@ def actual_as_mapping(value: Any) -> dict[str, Any] | None:
     Supported:
 
     - ``dict``
+    - JSON object strings (``json.loads`` when the parsed value is a ``dict``)
     - :class:`pydantic.BaseModel` (:meth:`~pydantic.BaseModel.model_dump`)
     - :func:`dataclasses.dataclass` instances (:func:`dataclasses.asdict`)
     - other :class:`collections.abc.Mapping` (excluding ``str`` / ``bytes``)
     - :class:`typing.NamedTuple` / ``namedtuple`` instances (``_asdict()``)
     """
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.startswith("{"):
+            try:
+                parsed = json.loads(stripped)
+            except json.JSONDecodeError:
+                return None
+            if isinstance(parsed, dict):
+                return parsed
+        return None
+
     if isinstance(value, dict):
         return value
 

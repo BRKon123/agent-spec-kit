@@ -1,12 +1,12 @@
-"""Permissive LangChain tools for TelcoSupportBench-Lite (no business-policy gates)."""
+"""Permissive LangChain tools for TelcoSupportBench (no business-policy gates)."""
 
 from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
-from langchain_core.tools import tool
+from langchain_core.tools import BaseTool, tool
 
 from store.store import TelcoStore
 
@@ -33,8 +33,8 @@ def _line_row(store: TelcoStore, line_id: str) -> dict[str, Any] | None:
         conn.close()
 
 
-def make_tools(store: TelcoStore, *, variant: str = "reference") -> list:
-    """Build 15 tools closing over ``store``. ``variant`` selects fault wrappers only."""
+def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> list[BaseTool]:
+    """Root coordinator tools (15) plus heartbeat_ping; specialist delegates added in agents/reference.py."""
 
     skip_ticket_insert = variant == "fault_missing_ticket"
 
@@ -283,14 +283,32 @@ def make_tools(store: TelcoStore, *, variant: str = "reference") -> list:
         """Order a replacement SIM (physical or eSIM) for a line."""
         if _line_row(store, line_id.strip()) is None:
             return json.dumps({"error": "unknown_line_id"})
+        order_id = store.next_sim_order_id()
         conn = store.connect()
         try:
+            conn.execute(
+                "INSERT INTO sim_orders (order_id, line_id, sim_type, address_id, status, created_at) "
+                "VALUES (?,?,?,?,?,?)",
+                (
+                    order_id,
+                    line_id.strip(),
+                    sim_type.strip(),
+                    address_id.strip(),
+                    "ordered",
+                    _now(),
+                ),
+            )
             store.audit(
                 conn,
                 customer_id=store.authenticated_customer_id,
                 action="order_replacement_sim",
                 detail=json.dumps(
-                    {"line_id": line_id.strip(), "sim_type": sim_type.strip(), "address_id": address_id.strip()}
+                    {
+                        "order_id": order_id,
+                        "line_id": line_id.strip(),
+                        "sim_type": sim_type.strip(),
+                        "address_id": address_id.strip(),
+                    }
                 ),
             )
             conn.commit()
@@ -299,6 +317,7 @@ def make_tools(store: TelcoStore, *, variant: str = "reference") -> list:
         return json.dumps(
             {
                 "ok": True,
+                "order_id": order_id,
                 "line_id": line_id.strip(),
                 "sim_type": sim_type.strip(),
                 "address_id": address_id.strip(),
@@ -335,33 +354,9 @@ def make_tools(store: TelcoStore, *, variant: str = "reference") -> list:
         return json.dumps({"ok": True, "customer_id": customer_id.strip()})
 
     @tool
-    def run_specialist_diagnostic(line_id: str, specialist_type: str) -> str:
-        """Run a specialist diagnostic (internally checks outage, line diagnostic, and plan)."""
-        if _line_row(store, line_id.strip()) is None:
-            return json.dumps({"error": "unknown_line_id"})
-        line = _line_row(store, line_id.strip())
-        assert line is not None
-        postcode = str(store.seed_meta.get("postcode", "SW1A1AA"))
-        outage_json = check_outage.invoke({"postcode": postcode, "service_type": "mobile"})
-        line_json = run_line_diagnostic.invoke({"line_id": line_id.strip()})
-        plan_json = get_plan_details.invoke({"plan_id": line["plan_id"]})
-        if variant == "fault_wrong_nested_tool":
-            # Deliberately skip outage check in reported bundle order for fault detection.
-            inner = {"line_diagnostic": json.loads(line_json), "plan": json.loads(plan_json)}
-        else:
-            inner = {
-                "outage": json.loads(outage_json),
-                "line_diagnostic": json.loads(line_json),
-                "plan": json.loads(plan_json),
-            }
-        return json.dumps(
-            {
-                "ok": True,
-                "line_id": line_id.strip(),
-                "specialist_type": specialist_type.strip(),
-                "results": inner,
-            }
-        )
+    def heartbeat_ping() -> str:
+        """Health check sidecar; may be called in parallel with specialist delegates."""
+        return json.dumps({"status": "ok", "heartbeat": "ping"})
 
     return [
         authenticate_customer,
@@ -378,5 +373,198 @@ def make_tools(store: TelcoStore, *, variant: str = "reference") -> list:
         order_replacement_sim,
         schedule_store_appointment,
         add_audit_note,
-        run_specialist_diagnostic,
+        heartbeat_ping,
     ]
+
+
+def make_network_specialist_tools(store: TelcoStore, *, variant: str = "reference") -> list[BaseTool]:
+    """Nested tools for NetworkDiagnosticsSpecialist subgraph."""
+
+    validate_anomaly_args = variant != "fault_wrong_nested_tool"
+
+    @tool
+    def pull_network_events(line_id: str, window_minutes: int) -> str:
+        """Pull recent network events for a line within a time window."""
+        if _line_row(store, line_id.strip()) is None:
+            return json.dumps({"error": "unknown_line_id"})
+        conn = store.connect()
+        try:
+            cur = conn.execute(
+                "SELECT event_type, detail, occurred_at FROM network_events WHERE line_id = ? "
+                "ORDER BY occurred_at DESC LIMIT 50",
+                (line_id.strip(),),
+            )
+            events = [dict(r) for r in cur.fetchall()]
+        finally:
+            conn.close()
+        return json.dumps(
+            {
+                "line_id": line_id.strip(),
+                "window_minutes": window_minutes,
+                "events": events,
+                "count": len(events),
+            }
+        )
+
+    @tool
+    def check_outage(postcode: str, service_type: str) -> str:
+        """List known network outages for a postcode and service type."""
+        conn = store.connect()
+        try:
+            cur = conn.execute(
+                "SELECT id, postcode, service_type, status, started_at, affected_services_json "
+                "FROM network_outages WHERE postcode = ? AND service_type = ?",
+                (postcode.strip().upper(), service_type.strip().lower()),
+            )
+            rows = [dict(r) for r in cur.fetchall()]
+        finally:
+            conn.close()
+        return json.dumps({"postcode": postcode.strip().upper(), "service_type": service_type, "outages": rows})
+
+    @tool
+    def run_line_diagnostic(line_id: str) -> str:
+        """Run line/network diagnostic and store results."""
+        row = _line_row(store, line_id.strip())
+        if row is None:
+            return json.dumps({"error": "unknown_line_id"})
+        result = {
+            "line_id": line_id.strip(),
+            "sim_status": row["sim_status"],
+            "data_enabled": bool(row["data_enabled"]),
+            "roaming_enabled": bool(row["roaming_enabled"]),
+            "signal": "weak" if not row["data_enabled"] else "ok",
+        }
+        conn = store.connect()
+        try:
+            conn.execute(
+                "INSERT INTO diagnostics (line_id, kind, result_json, created_at) VALUES (?,?,?,?)",
+                (line_id.strip(), "line", json.dumps(result), _now()),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return json.dumps({"ok": True, "diagnostic": result})
+
+    @tool
+    def score_signal_anomaly(
+        source: Literal["events", "synthetic"],
+        anomaly_score: float,
+        window_minutes: int | None = None,
+        override_reason: str | None = None,
+    ) -> str:
+        """Score signal anomaly from events or synthetic source."""
+        if validate_anomaly_args:
+            if source == "events" and window_minutes is None:
+                raise ValueError("window_minutes required when source is events")
+            if source == "events" and override_reason:
+                raise ValueError("override_reason forbidden when source is events")
+        return json.dumps(
+            {
+                "anomaly_score": anomaly_score,
+                "risk_band": "elevated" if anomaly_score >= 0.5 else "low",
+                "source": source,
+                "window_minutes": window_minutes,
+            }
+        )
+
+    @tool
+    def classify_fault_domain(line_id: str) -> str:
+        """Classify likely fault domain from line state and seed context."""
+        row = _line_row(store, line_id.strip())
+        if row is None:
+            return json.dumps({"error": "unknown_line_id"})
+        domain = str(store.seed_meta.get("fault_domain", "unknown"))
+        if domain == "unknown":
+            if not row["data_enabled"]:
+                domain = "device"
+            elif not row["roaming_enabled"] and store.seed_meta.get("roaming_issue"):
+                domain = "roaming"
+            elif store.seed_meta.get("network_outage_active"):
+                domain = "network"
+        return json.dumps({"line_id": line_id.strip(), "fault_domain": domain})
+
+    return [
+        pull_network_events,
+        check_outage,
+        run_line_diagnostic,
+        score_signal_anomaly,
+        classify_fault_domain,
+    ]
+
+
+def make_billing_specialist_tools(store: TelcoStore, *, variant: str = "reference") -> list[BaseTool]:
+    """Nested tools for BillingPolicySpecialist subgraph."""
+
+    del variant  # reserved for billing fault variants
+
+    @tool
+    def pull_billing_events(customer_id: str, window_days: int) -> str:
+        """Pull recent billing events for a customer."""
+        if _customer_row(store, customer_id.strip()) is None:
+            return json.dumps({"error": "unknown_customer_id"})
+        conn = store.connect()
+        try:
+            cur = conn.execute(
+                "SELECT event_type, amount, detail, occurred_at FROM billing_events "
+                "WHERE customer_id = ? ORDER BY occurred_at DESC LIMIT 50",
+                (customer_id.strip(),),
+            )
+            events = [dict(r) for r in cur.fetchall()]
+        finally:
+            conn.close()
+        return json.dumps(
+            {
+                "customer_id": customer_id.strip(),
+                "window_days": window_days,
+                "events": events,
+                "count": len(events),
+            }
+        )
+
+    @tool
+    def classify_credit_eligibility(customer_id: str) -> str:
+        """Classify whether the customer is eligible for a credit under policy."""
+        if _customer_row(store, customer_id.strip()) is None:
+            return json.dumps({"error": "unknown_customer_id"})
+        meta = store.seed_meta
+        if meta.get("duplicate_charge"):
+            code = "duplicate_charge"
+            eligible = True
+        elif meta.get("credit_eligible"):
+            code = "verified_long_outage"
+            eligible = True
+        elif meta.get("plan_change_billing_error"):
+            code = "plan_change_error"
+            eligible = False
+        elif meta.get("short_outage"):
+            code = "ineligible_short_outage"
+            eligible = False
+        else:
+            code = "insufficient_evidence"
+            eligible = False
+        return json.dumps(
+            {
+                "customer_id": customer_id.strip(),
+                "eligible": eligible,
+                "reason_code": code,
+            }
+        )
+
+    @tool
+    def calculate_credit_amount(customer_id: str, reason_code: str) -> str:
+        """Calculate credit amount when eligible."""
+        amount = float(store.seed_meta.get("credit_amount", 0.0))
+        return json.dumps(
+            {
+                "customer_id": customer_id.strip(),
+                "reason_code": reason_code.strip(),
+                "amount": amount,
+            }
+        )
+
+    return [pull_billing_events, classify_credit_eligibility, calculate_credit_amount]
+
+
+def make_tools(store: TelcoStore, *, variant: str = "reference") -> list[BaseTool]:
+    """Backward-compatible alias: coordinator tools only."""
+    return make_coordinator_tools(store, variant=variant)

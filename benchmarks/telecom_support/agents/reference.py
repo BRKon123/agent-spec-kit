@@ -1,33 +1,113 @@
-"""Build LangGraph ReAct agents for the telco benchmark."""
+"""Build coordinator + specialist LangGraph agents for the telco benchmark."""
 
 from __future__ import annotations
 
+import json
 import os
+from typing import Any
 
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
+from langchain.tools import tool
+from langchain_core.tools import BaseTool
 
-from agents.prompts import fault_system_prompt, reference_system_prompt
+from agents.prompts import (
+    billing_specialist_prompt,
+    fault_system_prompt,
+    network_specialist_prompt,
+    reference_system_prompt,
+)
+from agents.schemas import BillingDecision, NetworkAssessment
 from store.store import TelcoStore
-from store.tools import make_tools
+from store.tools import (
+    make_billing_specialist_tools,
+    make_coordinator_tools,
+    make_network_specialist_tools,
+)
 
 
 def require_api_key() -> None:
     if not os.environ.get("OPENAI_API_KEY", "").strip():
         raise RuntimeError(
-            "TelcoSupportBench-Lite requires OPENAI_API_KEY "
+            "TelcoSupportBench requires OPENAI_API_KEY "
             "(install dependency-groups dev and export the key)."
         )
+
+
+def _structured_response_json(out: dict[str, Any]) -> str:
+    sr = out.get("structured_response")
+    if sr is not None:
+        if hasattr(sr, "model_dump_json"):
+            return sr.model_dump_json()
+        return json.dumps(sr) if isinstance(sr, dict) else str(sr)
+    last = out["messages"][-1]
+    content = getattr(last, "content", last)
+    return str(content)
 
 
 def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
     require_api_key()
     from langchain_openai import ChatOpenAI
 
-    tools = make_tools(store, variant=variant)
+    llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
+
+    network_specialist = create_agent(
+        llm,
+        tools=make_network_specialist_tools(store, variant=variant),
+        response_format=NetworkAssessment,
+        system_prompt=network_specialist_prompt(variant=variant),
+    )
+    billing_specialist = create_agent(
+        llm,
+        tools=make_billing_specialist_tools(store, variant=variant),
+        response_format=BillingDecision,
+        system_prompt=billing_specialist_prompt(variant=variant),
+    )
+
+    @tool
+    def run_network_diagnostics_specialist(line_id: str, complaint: str) -> str:
+        """Delegate connectivity/roaming/outage diagnostics to NetworkDiagnosticsSpecialist."""
+        out = network_specialist.invoke(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": (
+                            f"line_id={line_id.strip()}\n"
+                            f"postcode={store.seed_meta.get('postcode', 'SW1A1AA')}\n"
+                            f"complaint: {complaint.strip()}"
+                        ),
+                    }
+                ]
+            }
+        )
+        return _structured_response_json(out)
+
+    @tool
+    def run_billing_policy_specialist(customer_id: str, issue: str) -> str:
+        """Delegate refund/compensation policy to BillingPolicySpecialist."""
+        out = billing_specialist.invoke(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": (
+                            f"customer_id={customer_id.strip()}\n"
+                            f"issue: {issue.strip()}"
+                        ),
+                    }
+                ]
+            }
+        )
+        return _structured_response_json(out)
+
+    coordinator_tools: list[BaseTool] = [
+        *make_coordinator_tools(store, variant=variant),
+        run_network_diagnostics_specialist,
+        run_billing_policy_specialist,
+    ]
     prompt = (
         reference_system_prompt()
         if variant == "reference"
         else fault_system_prompt(variant)
     )
-    llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
-    return create_react_agent(llm, tools, prompt=prompt)
+    return create_agent(llm, tools=coordinator_tools, system_prompt=prompt)

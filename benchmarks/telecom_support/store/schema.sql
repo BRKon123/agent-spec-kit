@@ -90,3 +90,29 @@ CREATE TABLE IF NOT EXISTS audit_log (
     detail TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS network_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    line_id TEXT NOT NULL REFERENCES lines(line_id),
+    event_type TEXT NOT NULL,
+    detail TEXT NOT NULL,
+    occurred_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS billing_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id TEXT NOT NULL REFERENCES customers(customer_id),
+    event_type TEXT NOT NULL,
+    amount REAL NOT NULL,
+    detail TEXT NOT NULL,
+    occurred_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sim_orders (
+    order_id TEXT PRIMARY KEY,
+    line_id TEXT NOT NULL REFERENCES lines(line_id),
+    sim_type TEXT NOT NULL,
+    address_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);

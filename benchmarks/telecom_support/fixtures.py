@@ -37,6 +37,7 @@ def _wrap_agent(store: TelcoStore, variant: str):
         lambda msg: {"messages": [HumanMessage(content=msg)]},
         stream_mode="updates",
         version="v2",
+        subgraphs=True,
     )
 
 

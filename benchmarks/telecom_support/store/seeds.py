@@ -18,10 +18,13 @@ _TABLE_ORDER = (
     "devices",
     "usage_events",
     "network_outages",
+    "network_events",
+    "billing_events",
     "diagnostics",
     "tickets",
     "credits",
     "appointments",
+    "sim_orders",
     "audit_log",
 )
 

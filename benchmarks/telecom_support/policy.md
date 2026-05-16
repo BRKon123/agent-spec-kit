@@ -1,4 +1,4 @@
-# TelcoSupportBench-Lite — Domain Policy
+# TelcoSupportBench — Domain Policy
 
 The support agent must follow these rules. Tools do not enforce them; evaluation oracles judge compliance.
 
@@ -47,3 +47,14 @@ Created or escalated tickets must include a specific reason derived from diagnos
 ## P10 — Auditability
 
 Sensitive actions (credits, SIM orders, escalations) should be accompanied by `add_audit_note` explaining the action.
+
+## Specialist delegation
+
+- **NetworkDiagnosticsSpecialist** (`run_network_diagnostics_specialist`): connectivity, roaming, outage, device/SIM, escalation analysis. Returns a structured `NetworkAssessment` (fault domain, severity, evidence, recommended action, user explanation).
+- **BillingPolicySpecialist** (`run_billing_policy_specialist`): refunds, duplicate charges, outage compensation, plan-change billing. Returns a structured `BillingDecision` (eligibility, reason code, amount, policy quote, user explanation).
+
+The coordinator must not apply `apply_bill_credit` when the billing specialist returns `eligible=false`. Credits with an amount require `requires_audit_note=true` on the specialist decision and should be followed by `add_audit_note` at the coordinator.
+
+## Structured specialist outputs
+
+Oracles may assert on specialist results (JSON) and nested tool traces. Conditional fields (e.g. escalation reason when severity is high and action is create_ticket) are evaluated in scenario matchers, not in tools.
