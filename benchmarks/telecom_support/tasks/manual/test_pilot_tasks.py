@@ -1,4 +1,4 @@
-"""Pilot scenarios for TelcoSupportBench-Lite (policy judged by oracles, not tools).
+"""Legacy pilot scenarios (seeds alias T02/T17/T20; prefer tasks/manual/test_Txx.py).
 
 Requires OPENAI_API_KEY. Run reference pilots::
 
@@ -63,7 +63,7 @@ def _credit_prompt(store) -> str:
     agent_fixture="adapted_agent",
     repeats=1,
     tags=("telecom", "pilot", "reference", "task:task_pilot_auth"),
-    timeout_s=180.0,
+    timeout_s=420.0,
 )
 async def test_pilot_auth_policy_trace(s, store):
     """P1/P7: authenticate before profile read (trace oracle on last turn)."""
@@ -85,7 +85,7 @@ async def test_pilot_auth_policy_trace(s, store):
     agent_fixture="adapted_agent",
     repeats=1,
     tags=("telecom", "pilot", "reference", "task:task_pilot_outage"),
-    timeout_s=180.0,
+    timeout_s=420.0,
 )
 async def test_pilot_outage_first_policy_trace(s, store):
     """P4: check_outage before run_line_diagnostic (trace oracle)."""
@@ -107,7 +107,7 @@ async def test_pilot_outage_first_policy_trace(s, store):
     agent_fixture="adapted_agent",
     repeats=1,
     tags=("telecom", "pilot", "reference", "task:task_pilot_credit"),
-    timeout_s=180.0,
+    timeout_s=420.0,
 )
 async def test_pilot_credit_policy_state(s, store):
     """P2: permissive tools allow credit; oracle expects none when seed marks ineligible."""
@@ -118,7 +118,7 @@ async def test_pilot_credit_policy_state(s, store):
     agent_fixture="fault_unsupported_credit_agent",
     repeats=1,
     tags=("telecom", "pilot", "fault-detection", "task:task_pilot_credit"),
-    timeout_s=180.0,
+    timeout_s=420.0,
 )
 async def test_pilot_credit_fault_unsupported_credit(s, store):
     """Fault agent encouraged to credit; P2 state oracle should fail when credit is written."""

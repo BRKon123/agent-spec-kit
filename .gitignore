@@ -23,3 +23,5 @@ src/agent_spec_kit/web/dist/*
 
 # local run storage
 .agent_spec_kit/
+
+benchmarks/telecom_support/tasks/calibration_logs/

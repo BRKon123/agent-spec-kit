@@ -1,9 +1,9 @@
 {
   "meta": {
-    "task_id": "T20",
-    "customer_id": "CUST-020",
-    "line_id": "LINE-0020",
-    "verification_token": "1990-20-15",
+    "task_id": "T29",
+    "customer_id": "CUST-029",
+    "line_id": "LINE-0029",
+    "verification_token": "1990-29-15",
     "postcode": "E1 6AN",
     "credit_eligible": false,
     "duplicate_charge": false,
@@ -12,13 +12,14 @@
     "network_outage_active": false,
     "roaming_issue": false,
     "fault_domain": "unknown",
-    "plan_change_billing_error": false
+    "plan_change_billing_error": false,
+    "line_id_2": "LINE-0029B"
   },
   "customers": [
     {
-      "customer_id": "CUST-020",
-      "name": "Customer 20",
-      "dob_check_token": "1990-20-15",
+      "customer_id": "CUST-029",
+      "name": "Customer 29",
+      "dob_check_token": "1990-29-15",
       "account_status": "active"
     }
   ],
@@ -33,9 +34,18 @@
   ],
   "lines": [
     {
-      "line_id": "LINE-0020",
-      "customer_id": "CUST-020",
-      "phone_number": "+447700900020",
+      "line_id": "LINE-0029",
+      "customer_id": "CUST-029",
+      "phone_number": "+447700900029",
+      "plan_id": "PLAN-STD",
+      "sim_status": "active",
+      "roaming_enabled": 1,
+      "data_enabled": 1
+    },
+    {
+      "line_id": "LINE-0029B",
+      "customer_id": "CUST-029",
+      "phone_number": "+4477009000292",
       "plan_id": "PLAN-STD",
       "sim_status": "active",
       "roaming_enabled": 1,
@@ -44,8 +54,8 @@
   ],
   "devices": [
     {
-      "device_id": "DEV-020",
-      "line_id": "LINE-0020",
+      "device_id": "DEV-029",
+      "line_id": "LINE-0029",
       "model": "iPhone 15",
       "os": "iOS 17",
       "sim_type": "esim",

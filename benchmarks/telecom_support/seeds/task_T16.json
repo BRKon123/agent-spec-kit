@@ -1,14 +1,14 @@
 {
   "meta": {
-    "task_id": "T20",
-    "customer_id": "CUST-020",
-    "line_id": "LINE-0020",
-    "verification_token": "1990-20-15",
+    "task_id": "T16",
+    "customer_id": "CUST-016",
+    "line_id": "LINE-0016",
+    "verification_token": "1990-16-15",
     "postcode": "E1 6AN",
     "credit_eligible": false,
-    "duplicate_charge": false,
+    "duplicate_charge": true,
     "short_outage": false,
-    "credit_amount": 15.0,
+    "credit_amount": 9.99,
     "network_outage_active": false,
     "roaming_issue": false,
     "fault_domain": "unknown",
@@ -16,9 +16,9 @@
   },
   "customers": [
     {
-      "customer_id": "CUST-020",
-      "name": "Customer 20",
-      "dob_check_token": "1990-20-15",
+      "customer_id": "CUST-016",
+      "name": "Customer 16",
+      "dob_check_token": "1990-16-15",
       "account_status": "active"
     }
   ],
@@ -33,9 +33,9 @@
   ],
   "lines": [
     {
-      "line_id": "LINE-0020",
-      "customer_id": "CUST-020",
-      "phone_number": "+447700900020",
+      "line_id": "LINE-0016",
+      "customer_id": "CUST-016",
+      "phone_number": "+447700900016",
       "plan_id": "PLAN-STD",
       "sim_status": "active",
       "roaming_enabled": 1,
@@ -44,8 +44,8 @@
   ],
   "devices": [
     {
-      "device_id": "DEV-020",
-      "line_id": "LINE-0020",
+      "device_id": "DEV-016",
+      "line_id": "LINE-0016",
       "model": "iPhone 15",
       "os": "iOS 17",
       "sim_type": "esim",
@@ -54,5 +54,13 @@
   ],
   "network_outages": [],
   "network_events": [],
-  "billing_events": []
+  "billing_events": [
+    {
+      "customer_id": "CUST-016",
+      "event_type": "duplicate_charge",
+      "amount": 9.99,
+      "detail": "duplicate plan fee",
+      "occurred_at": "2026-05-01T00:00:00+00:00"
+    }
+  ]
 }

@@ -7,21 +7,82 @@ from typing import Literal
 
 OracleVerdict = Literal["Pass", "Fail"]
 
+_PASS_ALL: tuple[OracleVerdict, OracleVerdict, OracleVerdict, OracleVerdict] = (
+    "Pass",
+    "Pass",
+    "Pass",
+    "Pass",
+)
+
+# Reference calibration targets — all 50 tasks explicit (no .get default).
+_CALIB: dict[str, tuple[OracleVerdict, OracleVerdict, OracleVerdict, OracleVerdict]] = {
+    "T01": _PASS_ALL,
+    "T02": _PASS_ALL,
+    "T03": _PASS_ALL,
+    "T04": _PASS_ALL,
+    "T05": _PASS_ALL,
+    "T06": _PASS_ALL,
+    "T07": ("Pass", "Pass", "Fail", "Fail"),
+    "T08": ("Pass", "Pass", "Fail", "Fail"),
+    "T09": ("Pass", "Pass", "Fail", "Fail"),
+    "T10": ("Pass", "Pass", "Fail", "Fail"),
+    "T11": _PASS_ALL,
+    "T12": _PASS_ALL,
+    "T13": _PASS_ALL,
+    "T14": _PASS_ALL,
+    "T15": ("Pass", "Pass", "Fail", "Fail"),
+    "T16": ("Pass", "Fail", "Pass", "Fail"),
+    "T17": _PASS_ALL,
+    "T18": ("Pass", "Fail", "Pass", "Fail"),
+    "T19": _PASS_ALL,
+    "T20": _PASS_ALL,
+    "T21": ("Pass", "Fail", "Pass", "Fail"),
+    "T22": ("Pass", "Fail", "Fail", "Fail"),
+    "T23": ("Pass", "Pass", "Fail", "Fail"),
+    "T24": ("Pass", "Pass", "Fail", "Fail"),
+    "T25": ("Pass", "Fail", "Fail", "Fail"),
+    "T26": ("Pass", "Fail", "Pass", "Fail"),
+    "T27": _PASS_ALL,
+    "T28": _PASS_ALL,
+    "T29": _PASS_ALL,
+    "T30": _PASS_ALL,
+    "T31": ("Pass", "Fail", "Fail", "Fail"),
+    "T32": ("Pass", "Fail", "Fail", "Fail"),
+    "T33": ("Pass", "Pass", "Fail", "Fail"),
+    "T34": ("Pass", "Pass", "Fail", "Fail"),
+    "T35": _PASS_ALL,
+    "T36": _PASS_ALL,
+    "T37": _PASS_ALL,
+    "T38": _PASS_ALL,
+    "T39": ("Pass", "Fail", "Fail", "Fail"),
+    "T40": ("Pass", "Pass", "Fail", "Fail"),
+    "T41": _PASS_ALL,
+    "T42": _PASS_ALL,
+    "T43": _PASS_ALL,
+    "T44": _PASS_ALL,
+    "T45": _PASS_ALL,
+    "T46": ("Pass", "Fail", "Fail", "Fail"),
+    "T47": ("Pass", "Fail", "Fail", "Fail"),
+    "T48": _PASS_ALL,
+    "T49": _PASS_ALL,
+    "T50": ("Fail", "Pass", "Fail", "Fail"),
+}
+
 
 @dataclass(frozen=True, slots=True)
 class TaskSpec:
     task_id: str
     category: str
     description: str
+    calibration_o: OracleVerdict
+    calibration_s: OracleVerdict
+    calibration_t: OracleVerdict
+    calibration_f: OracleVerdict
     uses_network_specialist: bool = False
     uses_billing_specialist: bool = False
     user_sim: bool = False
     fuzz: bool = False
     shrink_candidate: bool = False
-    calibration_o: OracleVerdict = "Pass"
-    calibration_s: OracleVerdict = "Pass"
-    calibration_t: OracleVerdict = "Pass"
-    calibration_f: OracleVerdict = "Pass"
 
 
 _USER_SIM = frozenset(
@@ -39,29 +100,6 @@ _FUZZ = frozenset(
 _SHRINK = frozenset({"T17", "T22", "T32", "T39", "T44", "T46"})
 _NETWORK = frozenset({"T05", "T06", "T09", "T10", "T13", "T27", "T33", "T38", "T40"})
 _BILLING = frozenset({"T14", "T16", "T17", "T18", "T22", "T23", "T24", "T25"})
-
-# Reference calibration targets from benchmark design (documentation until scenarios exist)
-_CALIB: dict[str, tuple[OracleVerdict, OracleVerdict, OracleVerdict, OracleVerdict]] = {
-    "T07": ("Pass", "Pass", "Fail", "Fail"),
-    "T08": ("Pass", "Pass", "Fail", "Fail"),
-    "T09": ("Pass", "Pass", "Fail", "Fail"),
-    "T10": ("Pass", "Pass", "Fail", "Fail"),
-    "T15": ("Pass", "Pass", "Fail", "Fail"),
-    "T21": ("Pass", "Fail", "Pass", "Fail"),
-    "T22": ("Pass", "Fail", "Fail", "Fail"),
-    "T23": ("Pass", "Pass", "Fail", "Fail"),
-    "T24": ("Pass", "Pass", "Fail", "Fail"),
-    "T25": ("Pass", "Fail", "Fail", "Fail"),
-    "T31": ("Pass", "Fail", "Fail", "Fail"),
-    "T32": ("Pass", "Fail", "Fail", "Fail"),
-    "T33": ("Pass", "Pass", "Fail", "Fail"),
-    "T34": ("Pass", "Pass", "Fail", "Fail"),
-    "T39": ("Pass", "Fail", "Fail", "Fail"),
-    "T40": ("Pass", "Pass", "Fail", "Fail"),
-    "T46": ("Pass", "Fail", "Fail", "Fail"),
-    "T47": ("Pass", "Fail", "Fail", "Fail"),
-    "T50": ("Fail", "Pass", "Fail", "Fail"),
-}
 
 _TASK_ROWS: list[tuple[str, str, str]] = [
     ("T01", "Data connectivity", "Mobile data is disabled on the customer's line"),
@@ -118,9 +156,13 @@ _TASK_ROWS: list[tuple[str, str, str]] = [
 
 
 def _build_catalog() -> dict[str, TaskSpec]:
+    task_ids = {tid for tid, _, _ in _TASK_ROWS}
+    assert set(_CALIB) == task_ids, f"_CALIB mismatch: missing={task_ids - set(_CALIB)} extra={set(_CALIB) - task_ids}"
+    assert len(_CALIB) == 50
+
     out: dict[str, TaskSpec] = {}
     for tid, category, description in _TASK_ROWS:
-        o, s, t, f = _CALIB.get(tid, ("Pass", "Pass", "Pass", "Pass"))
+        o, s, t, f = _CALIB[tid]
         out[tid] = TaskSpec(
             task_id=tid,
             category=category,

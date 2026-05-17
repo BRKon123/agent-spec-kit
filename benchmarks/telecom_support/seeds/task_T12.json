@@ -1,24 +1,25 @@
 {
   "meta": {
-    "task_id": "T20",
-    "customer_id": "CUST-020",
-    "line_id": "LINE-0020",
-    "verification_token": "1990-20-15",
+    "task_id": "T12",
+    "customer_id": "CUST-012",
+    "line_id": "LINE-0012",
+    "verification_token": "1990-12-15",
     "postcode": "E1 6AN",
     "credit_eligible": false,
     "duplicate_charge": false,
     "short_outage": false,
     "credit_amount": 15.0,
     "network_outage_active": false,
-    "roaming_issue": false,
+    "roaming_issue": true,
     "fault_domain": "unknown",
-    "plan_change_billing_error": false
+    "plan_change_billing_error": false,
+    "plan_eu_roaming": false
   },
   "customers": [
     {
-      "customer_id": "CUST-020",
-      "name": "Customer 20",
-      "dob_check_token": "1990-20-15",
+      "customer_id": "CUST-012",
+      "name": "Customer 12",
+      "dob_check_token": "1990-12-15",
       "account_status": "active"
     }
   ],
@@ -27,15 +28,15 @@
       "plan_id": "PLAN-STD",
       "plan_type": "standard",
       "data_allowance_mb": 15000,
-      "roaming_rules_json": "{\"eu\": true, \"us\": false}",
+      "roaming_rules_json": "{\"eu\": false, \"us\": false}",
       "price": 22.0
     }
   ],
   "lines": [
     {
-      "line_id": "LINE-0020",
-      "customer_id": "CUST-020",
-      "phone_number": "+447700900020",
+      "line_id": "LINE-0012",
+      "customer_id": "CUST-012",
+      "phone_number": "+447700900012",
       "plan_id": "PLAN-STD",
       "sim_status": "active",
       "roaming_enabled": 1,
@@ -44,8 +45,8 @@
   ],
   "devices": [
     {
-      "device_id": "DEV-020",
-      "line_id": "LINE-0020",
+      "device_id": "DEV-012",
+      "line_id": "LINE-0012",
       "model": "iPhone 15",
       "os": "iOS 17",
       "sim_type": "esim",

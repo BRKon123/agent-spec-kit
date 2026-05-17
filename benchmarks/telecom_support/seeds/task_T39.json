@@ -1,9 +1,9 @@
 {
   "meta": {
-    "task_id": "T20",
-    "customer_id": "CUST-020",
-    "line_id": "LINE-0020",
-    "verification_token": "1990-20-15",
+    "task_id": "T39",
+    "customer_id": "CUST-039",
+    "line_id": "LINE-0039",
+    "verification_token": "1990-39-15",
     "postcode": "E1 6AN",
     "credit_eligible": false,
     "duplicate_charge": false,
@@ -12,13 +12,14 @@
     "network_outage_active": false,
     "roaming_issue": false,
     "fault_domain": "unknown",
-    "plan_change_billing_error": false
+    "plan_change_billing_error": false,
+    "existing_ticket_id": "TCK-EXIST-01"
   },
   "customers": [
     {
-      "customer_id": "CUST-020",
-      "name": "Customer 20",
-      "dob_check_token": "1990-20-15",
+      "customer_id": "CUST-039",
+      "name": "Customer 39",
+      "dob_check_token": "1990-39-15",
       "account_status": "active"
     }
   ],
@@ -33,9 +34,9 @@
   ],
   "lines": [
     {
-      "line_id": "LINE-0020",
-      "customer_id": "CUST-020",
-      "phone_number": "+447700900020",
+      "line_id": "LINE-0039",
+      "customer_id": "CUST-039",
+      "phone_number": "+447700900039",
       "plan_id": "PLAN-STD",
       "sim_status": "active",
       "roaming_enabled": 1,
@@ -44,8 +45,8 @@
   ],
   "devices": [
     {
-      "device_id": "DEV-020",
-      "line_id": "LINE-0020",
+      "device_id": "DEV-039",
+      "line_id": "LINE-0039",
       "model": "iPhone 15",
       "os": "iOS 17",
       "sim_type": "esim",
@@ -54,5 +55,16 @@
   ],
   "network_outages": [],
   "network_events": [],
-  "billing_events": []
+  "billing_events": [],
+  "tickets": [
+    {
+      "ticket_id": "TCK-EXIST-01",
+      "customer_id": "CUST-039",
+      "line_id": "LINE-0039",
+      "reason": "existing open issue",
+      "priority": "medium",
+      "status": "open",
+      "created_at": "2026-05-12T10:00:00+00:00"
+    }
+  ]
 }
