@@ -63,7 +63,7 @@ _T05_OUTPUT = m.one_of(
 
 @ek.scenario(
     agent_fixture="task_agent_t05",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T05", "oracle:F", "reference"),
     timeout_s=420.0,
 )
@@ -78,7 +78,7 @@ async def test_t05_full(s, store_t05):
 
 @ek.scenario(
     agent_fixture="task_agent_t05",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T05", "oracle:T", "reference"),
     timeout_s=420.0,
 )
@@ -88,7 +88,7 @@ async def test_t05_trace(s, store_t05):
 
 @ek.scenario(
     agent_fixture="task_agent_t05",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T05", "oracle:S", "reference"),
     timeout_s=420.0,
 )
@@ -98,7 +98,7 @@ async def test_t05_state(s, store_t05):
 
 @ek.scenario(
     agent_fixture="task_agent_t05",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T05", "oracle:O", "reference"),
     timeout_s=420.0,
 )

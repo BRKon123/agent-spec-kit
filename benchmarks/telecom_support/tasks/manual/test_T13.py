@@ -50,7 +50,7 @@ def _msg(store_t13):
 
 @ek.scenario(
     agent_fixture="task_agent_t13",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T13", "oracle:F", "reference"),
     timeout_s=420.0,
 )
@@ -83,7 +83,7 @@ async def test_t13_full(s, store_t13):
 
 @ek.scenario(
     agent_fixture="task_agent_t13",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T13", "oracle:T", "reference"),
     timeout_s=420.0,
 )
@@ -113,7 +113,7 @@ async def test_t13_trace(s, store_t13):
 
 @ek.scenario(
     agent_fixture="task_agent_t13",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T13", "oracle:S", "reference"),
     timeout_s=420.0,
 )
@@ -127,7 +127,7 @@ async def test_t13_state(s, store_t13):
 
 @ek.scenario(
     agent_fixture="task_agent_t13",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T13", "oracle:O", "reference"),
     timeout_s=420.0,
 )

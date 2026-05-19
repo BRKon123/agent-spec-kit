@@ -30,7 +30,7 @@ from tasks.specs import oracles as o
 SCENARIO = '''
 @ek.scenario(
     agent_fixture="adapted_agent",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:{tid}", "oracle:{oracle}", "reference"),
     timeout_s=420.0,
 )

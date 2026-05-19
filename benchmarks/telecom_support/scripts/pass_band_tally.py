@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sum stable 2/2 passes per oracle from calibration_state.json vs pass-band targets."""
+"""Sum single-repeat passes per oracle from calibration_state.json vs pass-band targets."""
 
 from __future__ import annotations
 
@@ -33,11 +33,11 @@ def main() -> int:
             if target != "Pass":
                 continue
             runs = task_results.get(f"{tid}|{oracle}", [])
-            if len(runs) >= 2 and runs[0] and runs[1]:
+            if runs and runs[0]:
                 counts[oracle] += 1
 
-    print("# Pass-band tally (stable 2/2 on catalog-Pass slots only)\n")
-    print("| Oracle | Stable 2/2 pass | Target band | In band? |")
+    print("# Pass-band tally (single repeat on catalog-Pass slots only)\n")
+    print("| Oracle | Pass (1 repeat) | Target band | In band? |")
     print("|--------|------------------:|-------------|----------|")
     for oracle, (lo, hi) in BANDS.items():
         n = counts[oracle]

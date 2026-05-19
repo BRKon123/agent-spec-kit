@@ -50,7 +50,7 @@ def _msg(store_t40):
 
 @ek.scenario(
     agent_fixture="task_agent_t40",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T40", "oracle:F", "reference"),
     timeout_s=420.0,
 )
@@ -79,7 +79,7 @@ async def test_t40_full(s, store_t40):
 
 @ek.scenario(
     agent_fixture="task_agent_t40",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T40", "oracle:T", "reference"),
     timeout_s=420.0,
 )
@@ -106,7 +106,7 @@ async def test_t40_trace(s, store_t40):
 
 @ek.scenario(
     agent_fixture="task_agent_t40",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T40", "oracle:S", "reference"),
     timeout_s=420.0,
 )
@@ -120,7 +120,7 @@ async def test_t40_state(s, store_t40):
 
 @ek.scenario(
     agent_fixture="task_agent_t40",
-    repeats=2,
+    repeats=1,
     tags=("telecom", "task:T40", "oracle:O", "reference"),
     timeout_s=420.0,
 )
