@@ -41,13 +41,27 @@ async def task_agent_t12(store_t12):
 def _msg(store_t12):
     meta = store_t12.seed_meta
     return (
-        f"I am traveling to the US and my plan {meta.get('plan_id', 'PLAN-STD')} may not "
-        f"include the destination. After you verify my account, please explain plan limits "
-        f"and roaming."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"Flying to the US next week — does plan {meta.get('plan_id', 'PLAN-STD')} actually include "
+        f"data there or will I get stung with roaming charges? Once you've looked me up, can you "
+        f"explain what's included and what roaming would cost? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T12_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("get_plan_details"),
+]
+
+_T12_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Explains whether the plan covers the US or roaming for that destination",
+        "Mentions plan limits, roaming rules, or add-ons in customer-friendly language",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -57,20 +71,12 @@ def _msg(store_t12):
     timeout_s=420.0,
 )
 async def test_t12_full(s, store_t12):
-    meta = store_t12.seed_meta
     (
-            s.user_message(_msg(store_t12))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_plan_details"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t12))
-            .assert_output(m.contains("plan"))
-        )
+        s.user_message(_msg(store_t12))
+        .assert_tool_calls(_T12_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t12))
+        .assert_output(_T12_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -80,18 +86,7 @@ async def test_t12_full(s, store_t12):
     timeout_s=420.0,
 )
 async def test_t12_trace(s, store_t12):
-    meta = store_t12.seed_meta
-    (
-            s.user_message(_msg(store_t12))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_plan_details"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t12)).assert_tool_calls(_T12_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -101,11 +96,7 @@ async def test_t12_trace(s, store_t12):
     timeout_s=420.0,
 )
 async def test_t12_state(s, store_t12):
-    meta = store_t12.seed_meta
-    (
-            s.user_message(_msg(store_t12))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t12))
-        )
+    (s.user_message(_msg(store_t12)).assert_that(lambda: o.assert_no_credit_rows(store_t12)))
 
 
 @ek.scenario(
@@ -115,8 +106,4 @@ async def test_t12_state(s, store_t12):
     timeout_s=420.0,
 )
 async def test_t12_output(s, store_t12):
-    meta = store_t12.seed_meta
-    (
-            s.user_message(_msg(store_t12))
-            .assert_output(m.contains("plan"))
-        )
+    (s.user_message(_msg(store_t12)).assert_output(_T12_OUTPUT))

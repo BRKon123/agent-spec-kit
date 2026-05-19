@@ -40,20 +40,33 @@ async def task_agent_t04(store_t04):
 
 def _msg1(store_t04):
     meta = store_t04.seed_meta
-    # calibration: turn 1 diagnostic + troubleshooting; turn 2 records action and opens ticket
     return (
-        f"Mobile data is not working; line diagnostic may fail after restart."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"My mobile data's been dead all day on line {meta['line_id']}. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
     )
+
 
 def _msg2(store_t04):
     meta = store_t04.seed_meta
     return (
-        f"I am still authenticated as {meta['customer_id']}. "
-        f"I completed the device restart on line {meta['line_id']}."
+        f"I restarted my phone like you asked — still no data on {meta['line_id']}. "
+        f"Can you log that and open a support ticket? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
     )
 
+
+_T04_TRACE = [
+    m.tool_call("record_user_action"),
+    m.tool_call("create_support_ticket"),
+]
+
+_T04_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Confirms a support ticket was created or gives a ticket reference",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -63,21 +76,13 @@ def _msg2(store_t04):
     timeout_s=420.0,
 )
 async def test_t04_full(s, store_t04):
-    meta = store_t04.seed_meta
     (
-            s.user_message(_msg1(store_t04))
-            .user_message(_msg2(store_t04))
-            .assert_tool_calls(
-                [
-                    m.tool_call("record_user_action"),
-                    m.tool_call("create_support_ticket"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_ticket_exists(store_t04))
-            .assert_output(m.contains("ticket"))
-        )
+        s.user_message(_msg1(store_t04))
+        .user_message(_msg2(store_t04))
+        .assert_tool_calls(_T04_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_ticket_exists(store_t04))
+        .assert_output(_T04_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -87,19 +92,11 @@ async def test_t04_full(s, store_t04):
     timeout_s=420.0,
 )
 async def test_t04_trace(s, store_t04):
-    meta = store_t04.seed_meta
     (
-            s.user_message(_msg1(store_t04))
+        s.user_message(_msg1(store_t04))
         .user_message(_msg2(store_t04))
-            .assert_tool_calls(
-                [
-                    m.tool_call("record_user_action"),
-                    m.tool_call("create_support_ticket"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        .assert_tool_calls(_T04_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -109,12 +106,11 @@ async def test_t04_trace(s, store_t04):
     timeout_s=420.0,
 )
 async def test_t04_state(s, store_t04):
-    meta = store_t04.seed_meta
     (
-            s.user_message(_msg1(store_t04))
+        s.user_message(_msg1(store_t04))
         .user_message(_msg2(store_t04))
-            .assert_that(lambda: o.assert_ticket_exists(store_t04))
-        )
+        .assert_that(lambda: o.assert_ticket_exists(store_t04))
+    )
 
 
 @ek.scenario(
@@ -124,9 +120,8 @@ async def test_t04_state(s, store_t04):
     timeout_s=420.0,
 )
 async def test_t04_output(s, store_t04):
-    meta = store_t04.seed_meta
     (
-            s.user_message(_msg1(store_t04))
+        s.user_message(_msg1(store_t04))
         .user_message(_msg2(store_t04))
-            .assert_output(m.contains("ticket"))
-        )
+        .assert_output(_T04_OUTPUT)
+    )

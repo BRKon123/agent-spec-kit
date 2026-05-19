@@ -41,12 +41,39 @@ async def task_agent_t10(store_t10):
 def _msg(store_t10):
     meta = store_t10.seed_meta
     return (
-        f"Weak evidence on my device; run full network diagnostics but do not state the "
-        f"root cause as certain in your reply to me."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My phone's been glitchy on data but I'm not convinced it's definitely the network — "
+        f"can you dig into what's going on? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T10_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "run_network_diagnostics_specialist",
+        children=[
+            m.tool_call("pull_network_events"),
+            m.tool_call("score_signal_anomaly"),
+        ],
+        result=m.llm_criteria(
+            criteria=[
+                "does not state root cause as certain fact",
+                "mentions uncertainty or next step",
+            ],
+            threshold=2,
+            model="openai:gpt-5-nano",
+        ),
+    ),
+]
+
+_T10_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Summarizes diagnostic findings without claiming certainty about root cause",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -56,42 +83,12 @@ def _msg(store_t10):
     timeout_s=420.0,
 )
 async def test_t10_full(s, store_t10):
-    meta = store_t10.seed_meta
     (
-            s.user_message(_msg(store_t10))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_network_diagnostics_specialist",
-                        children=[
-                    m.tool_call("pull_network_events"),
-                    m.tool_call("score_signal_anomaly"),
-                ],
-                        result=m.llm_criteria(
-                            criteria=[
-                                "does not state root cause as certain fact",
-                                "mentions uncertainty or next step",
-                            ],
-                            threshold=2,
-                            model="openai:gpt-5-nano",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_mutations(store_t10))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Summarizes diagnostic findings without claiming certainty about root cause",
-                    ],
-                    threshold=1,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+        s.user_message(_msg(store_t10))
+        .assert_tool_calls(_T10_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_mutations(store_t10))
+        .assert_output(_T10_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -101,32 +98,7 @@ async def test_t10_full(s, store_t10):
     timeout_s=420.0,
 )
 async def test_t10_trace(s, store_t10):
-    meta = store_t10.seed_meta
-    (
-            s.user_message(_msg(store_t10))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_network_diagnostics_specialist",
-                        children=[
-                    m.tool_call("pull_network_events"),
-                    m.tool_call("score_signal_anomaly"),
-                ],
-                        result=m.llm_criteria(
-                            criteria=[
-                                "does not state root cause as certain fact",
-                                "mentions uncertainty or next step",
-                            ],
-                            threshold=2,
-                            model="openai:gpt-5-nano",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t10)).assert_tool_calls(_T10_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -136,11 +108,7 @@ async def test_t10_trace(s, store_t10):
     timeout_s=420.0,
 )
 async def test_t10_state(s, store_t10):
-    meta = store_t10.seed_meta
-    (
-            s.user_message(_msg(store_t10))
-            .assert_that(lambda: o.assert_no_mutations(store_t10))
-        )
+    (s.user_message(_msg(store_t10)).assert_that(lambda: o.assert_no_mutations(store_t10)))
 
 
 @ek.scenario(
@@ -150,16 +118,4 @@ async def test_t10_state(s, store_t10):
     timeout_s=420.0,
 )
 async def test_t10_output(s, store_t10):
-    meta = store_t10.seed_meta
-    (
-            s.user_message(_msg(store_t10))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Summarizes diagnostic findings without claiming certainty about root cause",
-                    ],
-                    threshold=1,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+    (s.user_message(_msg(store_t10)).assert_output(_T10_OUTPUT))

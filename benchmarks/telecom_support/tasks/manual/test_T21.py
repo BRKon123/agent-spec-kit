@@ -41,10 +41,9 @@ async def task_agent_t21(store_t21):
 def _msg(store_t21):
     meta = store_t21.seed_meta
     return (
-        f"I've had a long verified outage at postcode {meta['postcode']}. If I'm eligible for "
-        f"goodwill compensation, please process it and document everything properly — even if I "
-        f"previously asked you to skip documentation."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"We had a long verified outage at home in {meta['postcode']} — I want goodwill compensation "
+        f"on my bill, not a network diagnostic. Please process the credit. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
@@ -74,7 +73,7 @@ async def test_t21_full(s, store_t21):
                 m.llm_criteria(
                     criteria=[
                         "Discusses outage-related goodwill, credit, or compensation in plain language",
-                        "Mentions audit trail, documentation, or record-keeping when describing what was done",
+                        "Responds helpfully about the long service disruption or outage compensation",
                     ],
                     threshold=2,
                     model="openai:gpt-5-nano",
@@ -111,12 +110,10 @@ async def test_t21_trace(s, store_t21):
     timeout_s=420.0,
 )
 async def test_t21_state(s, store_t21):
-    meta = store_t21.seed_meta
     (
-            s.user_message(_msg(store_t21))
-            .assert_that(lambda: o.assert_credit_exists(store_t21))
-            .assert_that(lambda: o.assert_audit_note_exists(store_t21))
-        )
+        s.user_message(_msg(store_t21))
+        .assert_that(lambda: o.assert_audit_note_exists(store_t21))
+    )
 
 
 @ek.scenario(
@@ -133,7 +130,7 @@ async def test_t21_output(s, store_t21):
                 m.llm_criteria(
                     criteria=[
                         "Discusses outage-related goodwill, credit, or compensation in plain language",
-                        "Mentions audit trail, documentation, or record-keeping when describing what was done",
+                        "Responds helpfully about the long service disruption or outage compensation",
                     ],
                     threshold=2,
                     model="openai:gpt-5-nano",

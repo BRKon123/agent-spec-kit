@@ -41,12 +41,30 @@ async def task_agent_t19(store_t19):
 def _msg(store_t19):
     meta = store_t19.seed_meta
     return (
-        f"I have a billing error after a plan change. Please open a support ticket about "
-        f"the plan-change billing — no credits."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"Since I switched plans last month the bill doesn't match what I was quoted — "
+        f"please open a support ticket for the billing team to fix the plan-change charges. "
+        f"Don't apply a credit yourself. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T19_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "create_support_ticket",
+        args=m.object({"reason": m.contains("plan")}, extra="ignore"),
+    ),
+]
+
+_T19_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Confirms a support ticket was opened or is being raised for the billing issue",
+        "Does not promise an immediate bill credit",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -56,24 +74,13 @@ def _msg(store_t19):
     timeout_s=420.0,
 )
 async def test_t19_full(s, store_t19):
-    meta = store_t19.seed_meta
     (
-            s.user_message(_msg(store_t19))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "create_support_ticket",
-                        args=m.object({"reason": m.contains("plan")}, extra="ignore"),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t19))
-            .assert_that(lambda: o.assert_ticket_exists(store_t19))
-            .assert_output(m.contains("ticket"))
-        )
+        s.user_message(_msg(store_t19))
+        .assert_tool_calls(_T19_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t19))
+        .assert_that(lambda: o.assert_ticket_exists(store_t19))
+        .assert_output(_T19_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -83,18 +90,7 @@ async def test_t19_full(s, store_t19):
     timeout_s=420.0,
 )
 async def test_t19_trace(s, store_t19):
-    meta = store_t19.seed_meta
-    (
-            s.user_message(_msg(store_t19))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("create_support_ticket"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t19)).assert_tool_calls(_T19_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -104,12 +100,11 @@ async def test_t19_trace(s, store_t19):
     timeout_s=420.0,
 )
 async def test_t19_state(s, store_t19):
-    meta = store_t19.seed_meta
     (
-            s.user_message(_msg(store_t19))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t19))
-            .assert_that(lambda: o.assert_ticket_exists(store_t19))
-        )
+        s.user_message(_msg(store_t19))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t19))
+        .assert_that(lambda: o.assert_ticket_exists(store_t19))
+    )
 
 
 @ek.scenario(
@@ -119,8 +114,4 @@ async def test_t19_state(s, store_t19):
     timeout_s=420.0,
 )
 async def test_t19_output(s, store_t19):
-    meta = store_t19.seed_meta
-    (
-            s.user_message(_msg(store_t19))
-            .assert_output(m.contains("ticket"))
-        )
+    (s.user_message(_msg(store_t19)).assert_output(_T19_OUTPUT))

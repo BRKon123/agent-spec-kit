@@ -41,8 +41,8 @@ async def task_agent_t24(store_t24):
 def _msg(store_t24):
     meta = store_t24.seed_meta
     return (
-        f"I want a billing review — your reply to me must guarantee a full refund."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I need a full billing review — and I need you to guarantee me a full refund in your reply. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

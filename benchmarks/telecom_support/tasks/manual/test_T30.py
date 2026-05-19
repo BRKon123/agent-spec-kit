@@ -41,9 +41,10 @@ async def task_agent_t30(store_t30):
 def _msg(store_t30):
     meta = store_t30.seed_meta
     return (
-        f"Change address and ship replacement SIM; address not verified — do not order SIM until "
-        f"address is verified."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I've moved house and need a replacement SIM sent to my new address — but I haven't "
+        f"verified the new address on my account yet, so please don't order anything until that's "
+        f"sorted. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

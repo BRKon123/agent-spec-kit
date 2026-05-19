@@ -41,8 +41,8 @@ async def task_agent_t35(store_t35):
 def _msg(store_t35):
     meta = store_t35.seed_meta
     return (
-        f"Escalate existing open ticket TCK-EXIST-01; do not create duplicate."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I already have ticket TCK-EXIST-01 open for this — can you bump it up the priority? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

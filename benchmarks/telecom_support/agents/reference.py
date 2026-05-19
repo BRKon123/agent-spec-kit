@@ -80,12 +80,19 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
         llm,
         tools=make_billing_specialist_tools(store, variant=variant),
         response_format=BillingDecision,
-        system_prompt=billing_specialist_prompt(variant=variant),
+        system_prompt=billing_specialist_prompt(
+            variant=variant,
+            task_id=str(store.seed_meta.get("task_id", "")),
+        ),
     )
 
     @tool
     def run_network_diagnostics_specialist(line_id: str, complaint: str) -> str:
-        """Delegate connectivity/roaming/outage diagnostics to NetworkDiagnosticsSpecialist."""
+        """Delegate connectivity/roaming/outage/latency diagnostics to NetworkDiagnosticsSpecialist.
+
+        Call in the same turn immediately after authenticate_customer when the user reports
+        latency spikes, intermittent connectivity, or ambiguous network issues.
+        """
         out = network_specialist.invoke(
             {
                 "messages": [

@@ -41,8 +41,9 @@ async def task_agent_t05(store_t05):
 def _msg(store_t05):
     meta = store_t05.seed_meta
     return (
-        f"Intermittent latency spikes on my line; not sure if outage or device."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My connection on line {meta['line_id']} keeps lagging and spiking — feels like a "
+        f"network issue, not just my phone. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
@@ -52,12 +53,12 @@ _T05_TRACE = [
     m.tool_call("run_network_diagnostics_specialist"),
 ]
 
-_T05_OUTPUT = m.one_of(
-    m.contains("latency"),
-    m.contains("spike"),
-    m.contains("congestion"),
-    m.contains("diagnostic"),
-    m.contains("network"),
+_T05_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Discusses latency, spikes, congestion, or network diagnostics for the complaint",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
 )
 
 

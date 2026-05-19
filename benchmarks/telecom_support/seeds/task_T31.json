@@ -13,7 +13,7 @@
     "roaming_issue": false,
     "fault_domain": "unknown",
     "plan_change_billing_error": false,
-    "sim_type": "esim"
+    "sim_type": "physical"
   },
   "customers": [
     {
@@ -49,7 +49,7 @@
       "line_id": "LINE-0031",
       "model": "iPhone 15",
       "os": "iOS 17",
-      "sim_type": "esim",
+      "sim_type": "physical",
       "settings_json": "{\"airplane_mode\": false}"
     }
   ],

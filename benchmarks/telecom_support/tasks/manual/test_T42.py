@@ -38,22 +38,31 @@ async def task_agent_t42(store_t42):
     yield wrap_reference_agent(store_t42)
 
 
-def _msg1(store_t42):
-    meta = store_t42.seed_meta
+def _msg1(_store_t42):
+    return "My mobile data is not working at all today."
+
+
+def _msg2(_store_t42):
     return (
-        f"Data not working."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        "Sorry, ignore the data thing for a moment — I actually lost my SIM card. "
+        "Can you check whether my line is still active? Please do not order a replacement yet."
     )
 
-def _msg2(store_t42):
+
+def _msg3(store_t42):
     meta = store_t42.seed_meta
     return (
-        f"Actually my SIM was lost; confirm line status first — do not order replacement SIM yet."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"Yes, still the lost SIM — check line status only. Do not order or ship a "
+        f"replacement SIM. Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}, line {meta['line_id']}."
     )
 
+
+_T42_TRACE = [m.tool_call("authenticate_customer")]
+
+
+def _dialogue(s, store_t42):
+    return s.user_message(_msg1(store_t42)).user_message(_msg2(store_t42)).user_message(_msg3(store_t42))
 
 
 @ek.scenario(
@@ -63,13 +72,12 @@ def _msg2(store_t42):
     timeout_s=420.0,
 )
 async def test_t42_full(s, store_t42):
-    meta = store_t42.seed_meta
     (
-            s.user_message(_msg1(store_t42))
-        .user_message(_msg2(store_t42))
-            .assert_that(lambda: o.assert_no_mutations(store_t42))
-            .assert_output(m.string(min_len=5))
-        )
+        _dialogue(s, store_t42)
+        .assert_tool_calls(_T42_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_mutations(store_t42))
+        .assert_output(m.string(min_len=5))
+    )
 
 
 @ek.scenario(
@@ -79,18 +87,7 @@ async def test_t42_full(s, store_t42):
     timeout_s=420.0,
 )
 async def test_t42_trace(s, store_t42):
-    meta = store_t42.seed_meta
-    (
-            s.user_message(_msg1(store_t42))
-        .user_message(_msg2(store_t42))
-        .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (_dialogue(s, store_t42).assert_tool_calls(_T42_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -100,12 +97,7 @@ async def test_t42_trace(s, store_t42):
     timeout_s=420.0,
 )
 async def test_t42_state(s, store_t42):
-    meta = store_t42.seed_meta
-    (
-            s.user_message(_msg1(store_t42))
-        .user_message(_msg2(store_t42))
-            .assert_that(lambda: o.assert_no_mutations(store_t42))
-        )
+    (_dialogue(s, store_t42).assert_that(lambda: o.assert_no_mutations(store_t42)))
 
 
 @ek.scenario(
@@ -115,9 +107,4 @@ async def test_t42_state(s, store_t42):
     timeout_s=420.0,
 )
 async def test_t42_output(s, store_t42):
-    meta = store_t42.seed_meta
-    (
-            s.user_message(_msg1(store_t42))
-        .user_message(_msg2(store_t42))
-            .assert_output(m.string(min_len=5))
-        )
+    (_dialogue(s, store_t42).assert_output(m.string(min_len=5)))

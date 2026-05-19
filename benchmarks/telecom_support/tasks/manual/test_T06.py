@@ -41,11 +41,25 @@ async def task_agent_t06(store_t06):
 def _msg(store_t06):
     meta = store_t06.seed_meta
     return (
-        f"Quick status check; confirm line and system heartbeat."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"Hi — quick one, is my line {meta['line_id']} OK and can you ping your systems "
+        f"to see if everything's healthy? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
     )
 
+
+_T06_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("get_line_status"),
+    m.tool_call("heartbeat_ping"),
+]
+
+_T06_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Reports line status or system health in plain language",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -55,20 +69,12 @@ def _msg(store_t06):
     timeout_s=420.0,
 )
 async def test_t06_full(s, store_t06):
-    meta = store_t06.seed_meta
     (
-            s.user_message(_msg(store_t06))
-            .assert_tool_calls(
-                [
-                    m.tool_call("get_line_status"),
-                    m.tool_call("heartbeat_ping"),
-                ],
-                ordered=False,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_mutations(store_t06))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t06))
+        .assert_tool_calls(_T06_TRACE, ordered=False, allow_extras=True)
+        .assert_that(lambda: o.assert_no_mutations(store_t06))
+        .assert_output(_T06_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -78,18 +84,7 @@ async def test_t06_full(s, store_t06):
     timeout_s=420.0,
 )
 async def test_t06_trace(s, store_t06):
-    meta = store_t06.seed_meta
-    (
-            s.user_message(_msg(store_t06))
-            .assert_tool_calls(
-                [
-                    m.tool_call("get_line_status"),
-                    m.tool_call("heartbeat_ping"),
-                ],
-                ordered=False,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t06)).assert_tool_calls(_T06_TRACE, ordered=False, allow_extras=True))
 
 
 @ek.scenario(
@@ -99,11 +94,7 @@ async def test_t06_trace(s, store_t06):
     timeout_s=420.0,
 )
 async def test_t06_state(s, store_t06):
-    meta = store_t06.seed_meta
-    (
-            s.user_message(_msg(store_t06))
-            .assert_that(lambda: o.assert_no_mutations(store_t06))
-        )
+    (s.user_message(_msg(store_t06)).assert_that(lambda: o.assert_no_mutations(store_t06)))
 
 
 @ek.scenario(
@@ -113,8 +104,4 @@ async def test_t06_state(s, store_t06):
     timeout_s=420.0,
 )
 async def test_t06_output(s, store_t06):
-    meta = store_t06.seed_meta
-    (
-            s.user_message(_msg(store_t06))
-            .assert_output(m.string(min_len=5))
-        )
+    (s.user_message(_msg(store_t06)).assert_output(_T06_OUTPUT))

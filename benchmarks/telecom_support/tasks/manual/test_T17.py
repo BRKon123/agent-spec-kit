@@ -38,15 +38,37 @@ async def task_agent_t17(store_t17):
     yield wrap_reference_agent(store_t17)
 
 
-def _msg(store_t17):
+def _msg1(store_t17):
     meta = store_t17.seed_meta
     return (
-        f"I am requesting compensation for a short outage. I expect I may be ineligible — "
-        f"please assess your billing policy and explain clearly."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"We had a brief outage yesterday and I want something knocked off my bill for the hassle. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+def _msg2(store_t17):
+    meta = store_t17.seed_meta
+    return (
+        f"It was only a few hours but my neighbour got credited last month — "
+        f"account {meta['customer_id']}, verification token {meta['verification_token']}. "
+        f"Just tell me straight whether I'm eligible or not."
+    )
+
+
+_T17_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("run_billing_policy_specialist"),
+]
+
+_T17_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Clearly states the customer is not eligible for outage compensation or a bill credit",
+        "Explains why in plain language rather than only refusing",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -56,20 +78,13 @@ def _msg(store_t17):
     timeout_s=420.0,
 )
 async def test_t17_full(s, store_t17):
-    meta = store_t17.seed_meta
     (
-            s.user_message(_msg(store_t17))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_billing_policy_specialist"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t17))
-            .assert_output(m.one_of(m.contains("ineligible"), m.contains("not eligible")))
-        )
+        s.user_message(_msg1(store_t17))
+        .user_message(_msg2(store_t17))
+        .assert_tool_calls(_T17_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t17))
+        .assert_output(_T17_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -79,18 +94,11 @@ async def test_t17_full(s, store_t17):
     timeout_s=420.0,
 )
 async def test_t17_trace(s, store_t17):
-    meta = store_t17.seed_meta
     (
-            s.user_message(_msg(store_t17))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_billing_policy_specialist"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg1(store_t17))
+        .user_message(_msg2(store_t17))
+        .assert_tool_calls(_T17_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -100,11 +108,11 @@ async def test_t17_trace(s, store_t17):
     timeout_s=420.0,
 )
 async def test_t17_state(s, store_t17):
-    meta = store_t17.seed_meta
     (
-            s.user_message(_msg(store_t17))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t17))
-        )
+        s.user_message(_msg1(store_t17))
+        .user_message(_msg2(store_t17))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t17))
+    )
 
 
 @ek.scenario(
@@ -114,8 +122,8 @@ async def test_t17_state(s, store_t17):
     timeout_s=420.0,
 )
 async def test_t17_output(s, store_t17):
-    meta = store_t17.seed_meta
     (
-            s.user_message(_msg(store_t17))
-            .assert_output(m.one_of(m.contains("ineligible"), m.contains("not eligible")))
-        )
+        s.user_message(_msg1(store_t17))
+        .user_message(_msg2(store_t17))
+        .assert_output(_T17_OUTPUT)
+    )

@@ -41,9 +41,9 @@ async def task_agent_t33(store_t33):
 def _msg(store_t33):
     meta = store_t33.seed_meta
     return (
-        f"I think my SIM is faulty — run network diagnostics and cite concrete evidence in your findings."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"My mobile data keeps cutting out — can you run a proper network check on line {meta['line_id']} "
+        f"and tell me what you find? Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}."
     )
 
 

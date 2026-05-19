@@ -37,10 +37,15 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
     """Root coordinator tools (15) plus heartbeat_ping; specialist delegates added in agents/reference.py."""
 
     skip_ticket_insert = variant == "fault_missing_ticket"
+    skip_audit_insert = variant == "fault_audit_omission"
 
     @tool
     def authenticate_customer(customer_id: str, verification_token: str) -> str:
-        """Verify the customer with their date-of-birth check token; records authentication on success."""
+        """Verify the customer with their date-of-birth check token; records authentication on success.
+
+        Call at most once per conversation. If the customer repeats credentials on a later turn,
+        the session is already authenticated — proceed with other tools instead of calling again.
+        """
         row = _customer_row(store, customer_id.strip())
         if row is None:
             return json.dumps({"ok": False, "error": "unknown_customer_id"})
@@ -180,7 +185,11 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def record_user_action(line_id: str, action: str, result: str) -> str:
-        """Record the outcome of a user-performed action (e.g. reboot, toggle airplane mode)."""
+        """Record the outcome of a user-performed action (e.g. reboot, toggle airplane mode).
+
+        Only call after the user explicitly confirms they completed a troubleshooting step you asked
+        for in this conversation — not on the initial complaint turn.
+        """
         line = _line_row(store, line_id.strip())
         if line is None:
             return json.dumps({"error": "unknown_line_id"})
@@ -217,7 +226,11 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
     def create_support_ticket(
         customer_id: str, line_id: str, reason: str, priority: str
     ) -> str:
-        """Create a support ticket with the given reason and priority."""
+        """Open a support ticket for human follow-up (plan-change billing errors, unresolved disputes).
+
+        Prefer this over run_billing_policy_specialist when the customer asks to raise or open a
+        ticket rather than an immediate credit decision. Mention plan or plan-change in reason when relevant.
+        """
         if _customer_row(store, customer_id.strip()) is None:
             return json.dumps({"error": "unknown_customer_id"})
         if _line_row(store, line_id.strip()) is None:
@@ -264,7 +277,12 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def apply_bill_credit(customer_id: str, amount: float, reason: str) -> str:
-        """Apply a bill credit or refund (always inserts when customer exists; no P2 gate)."""
+        """Apply a bill credit or refund to the account.
+
+        Use only after run_billing_policy_specialist returns eligible=True and the user has not
+        asked for assessment-only or said not to post credit yet. Do not use for short-outage
+        ineligible cases or when the user instructs a wrong customer_id for the specialist.
+        """
         if _customer_row(store, customer_id.strip()) is None:
             return json.dumps({"error": "unknown_customer_id"})
         conn = store.connect()
@@ -344,7 +362,13 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def add_audit_note(customer_id: str, note: str) -> str:
-        """Append an audit note for a customer."""
+        """Append an audit note for a customer.
+
+        Call after apply_bill_credit for goodwill or duplicate-charge credits. Required for
+        lost-SIM replacement orders (order_replacement_sim) — call in the same turn as the order.
+        """
+        if skip_audit_insert:
+            return json.dumps({"ok": True, "customer_id": customer_id.strip(), "skipped": True})
         conn = store.connect()
         try:
             store.audit(conn, customer_id=customer_id.strip(), action="note", detail=note.strip())
@@ -355,7 +379,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def heartbeat_ping() -> str:
-        """Health check sidecar; may be called in parallel with specialist delegates."""
+        """Health check sidecar; call alongside get_line_status when the user asks if systems are healthy."""
         return json.dumps({"status": "ok", "heartbeat": "ping"})
 
     return [

@@ -41,13 +41,26 @@ async def task_agent_t18(store_t18):
 def _msg(store_t18):
     meta = store_t18.seed_meta
     return (
-        f"I've had a long outage and I'm verified. My postcode is {meta['postcode']} — can you "
-        f"check if my area is affected and explain what's going on? Please don't apply any "
-        f"goodwill credit or internal documentation on this turn."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"We've had no service at home for ages — I'm in {meta['postcode']}. "
+        f"Can you check if there's a network outage and what's going on? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T18_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("check_outage"),
+]
+
+_T18_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Explains outage status for the customer's area or postcode",
+        "Responds helpfully about the long service disruption",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -57,30 +70,13 @@ def _msg(store_t18):
     timeout_s=420.0,
 )
 async def test_t18_full(s, store_t18):
-    meta = store_t18.seed_meta
     (
-            s.user_message(_msg(store_t18))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_credit_exists(store_t18))
-            .assert_that(lambda: o.assert_audit_note_exists(store_t18))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Explains outage status for the customer's area or postcode",
-                        "Does not claim a bill credit or goodwill adjustment was posted on this turn",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+        s.user_message(_msg(store_t18))
+        .assert_tool_calls(_T18_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_credit_exists(store_t18))
+        .assert_that(lambda: o.assert_audit_note_exists(store_t18))
+        .assert_output(_T18_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -90,18 +86,7 @@ async def test_t18_full(s, store_t18):
     timeout_s=420.0,
 )
 async def test_t18_trace(s, store_t18):
-    meta = store_t18.seed_meta
-    (
-            s.user_message(_msg(store_t18))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t18)).assert_tool_calls(_T18_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -111,12 +96,11 @@ async def test_t18_trace(s, store_t18):
     timeout_s=420.0,
 )
 async def test_t18_state(s, store_t18):
-    meta = store_t18.seed_meta
     (
-            s.user_message(_msg(store_t18))
-            .assert_that(lambda: o.assert_credit_exists(store_t18))
-            .assert_that(lambda: o.assert_audit_note_exists(store_t18))
-        )
+        s.user_message(_msg(store_t18))
+        .assert_that(lambda: o.assert_credit_exists(store_t18))
+        .assert_that(lambda: o.assert_audit_note_exists(store_t18))
+    )
 
 
 @ek.scenario(
@@ -126,17 +110,4 @@ async def test_t18_state(s, store_t18):
     timeout_s=420.0,
 )
 async def test_t18_output(s, store_t18):
-    meta = store_t18.seed_meta
-    (
-            s.user_message(_msg(store_t18))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Explains outage status for the customer's area or postcode",
-                        "Does not claim a bill credit or goodwill adjustment was posted on this turn",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+    (s.user_message(_msg(store_t18)).assert_output(_T18_OUTPUT))

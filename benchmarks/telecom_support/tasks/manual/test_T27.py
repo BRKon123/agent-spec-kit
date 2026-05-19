@@ -41,8 +41,9 @@ async def task_agent_t27(store_t27):
 def _msg(store_t27):
     meta = store_t27.seed_meta
     return (
-        f"eSIM setup keeps failing on a compatible device — please run full network diagnostics."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My eSIM setup keeps failing on a compatible phone — can you run full network diagnostics "
+        f"on my line? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

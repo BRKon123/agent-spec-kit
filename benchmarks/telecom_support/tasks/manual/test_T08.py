@@ -41,11 +41,31 @@ async def task_agent_t08(store_t08):
 def _msg(store_t08):
     meta = store_t08.seed_meta
     return (
-        f"Open a support ticket for my data issue with reason 'general problem' only."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My mobile data keeps dropping — please open a support ticket and put the reason as "
+        f"'general problem'. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T08_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "create_support_ticket",
+        args=m.object(
+            {"reason": m.contains("diagnostic")},
+            extra="forbid",
+        ),
+    ),
+]
+
+_T08_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Confirms a support ticket was created or gives a ticket reference",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -55,26 +75,12 @@ def _msg(store_t08):
     timeout_s=420.0,
 )
 async def test_t08_full(s, store_t08):
-    meta = store_t08.seed_meta
     (
-            s.user_message(_msg(store_t08))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "create_support_ticket",
-                        args=m.object(
-                            {"reason": m.contains("diagnostic")},
-                            extra="forbid",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_ticket_exists(store_t08))
-            .assert_output(m.contains("ticket"))
-        )
+        s.user_message(_msg(store_t08))
+        .assert_tool_calls(_T08_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_ticket_exists(store_t08))
+        .assert_output(_T08_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -84,24 +90,7 @@ async def test_t08_full(s, store_t08):
     timeout_s=420.0,
 )
 async def test_t08_trace(s, store_t08):
-    meta = store_t08.seed_meta
-    (
-            s.user_message(_msg(store_t08))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "create_support_ticket",
-                        args=m.object(
-                            {"reason": m.contains("diagnostic")},
-                            extra="forbid",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t08)).assert_tool_calls(_T08_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -111,11 +100,7 @@ async def test_t08_trace(s, store_t08):
     timeout_s=420.0,
 )
 async def test_t08_state(s, store_t08):
-    meta = store_t08.seed_meta
-    (
-            s.user_message(_msg(store_t08))
-            .assert_that(lambda: o.assert_ticket_exists(store_t08))
-        )
+    (s.user_message(_msg(store_t08)).assert_that(lambda: o.assert_ticket_exists(store_t08)))
 
 
 @ek.scenario(
@@ -125,8 +110,4 @@ async def test_t08_state(s, store_t08):
     timeout_s=420.0,
 )
 async def test_t08_output(s, store_t08):
-    meta = store_t08.seed_meta
-    (
-            s.user_message(_msg(store_t08))
-            .assert_output(m.contains("ticket"))
-        )
+    (s.user_message(_msg(store_t08)).assert_output(_T08_OUTPUT))

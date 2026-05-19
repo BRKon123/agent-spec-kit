@@ -41,9 +41,9 @@ async def task_agent_t28(store_t28):
 def _msg(store_t28):
     meta = store_t28.seed_meta
     return (
-        f"My device isn't compatible with eSIM. Please review my account and device profile "
-        f"only — do not ship a replacement SIM."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My phone doesn't support eSIM — can you check my account and device profile and confirm "
+        f"I'd need a physical SIM? Please don't order anything yet. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

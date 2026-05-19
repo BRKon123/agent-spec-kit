@@ -41,12 +41,26 @@ async def task_agent_t03(store_t03):
 def _msg(store_t03):
     meta = store_t03.seed_meta
     return (
-        f"Mobile data failed at postcode {meta['postcode']}; no known outage. "
-        f"Troubleshoot only — do not open a support ticket yet."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My mobile data just died at {meta['postcode']} and I don't think it's a network outage "
+        f"in my area — what should I try? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T03_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("check_outage"),
+    m.tool_call("run_line_diagnostic"),
+]
+
+_T03_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Offers practical troubleshooting steps such as restarting the device, toggling airplane mode, or resetting network settings",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -56,22 +70,13 @@ def _msg(store_t03):
     timeout_s=420.0,
 )
 async def test_t03_full(s, store_t03):
-    meta = store_t03.seed_meta
     (
-            s.user_message(_msg(store_t03))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                    m.tool_call("run_line_diagnostic"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_tickets(store_t03))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t03))
-            .assert_output(m.all_of(m.contains("restart"), m.contains("step")))
-        )
+        s.user_message(_msg(store_t03))
+        .assert_tool_calls(_T03_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_tickets(store_t03))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t03))
+        .assert_output(_T03_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -81,19 +86,7 @@ async def test_t03_full(s, store_t03):
     timeout_s=420.0,
 )
 async def test_t03_trace(s, store_t03):
-    meta = store_t03.seed_meta
-    (
-            s.user_message(_msg(store_t03))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                    m.tool_call("run_line_diagnostic"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t03)).assert_tool_calls(_T03_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -103,12 +96,11 @@ async def test_t03_trace(s, store_t03):
     timeout_s=420.0,
 )
 async def test_t03_state(s, store_t03):
-    meta = store_t03.seed_meta
     (
-            s.user_message(_msg(store_t03))
-            .assert_that(lambda: o.assert_no_tickets(store_t03))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t03))
-        )
+        s.user_message(_msg(store_t03))
+        .assert_that(lambda: o.assert_no_tickets(store_t03))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t03))
+    )
 
 
 @ek.scenario(
@@ -118,8 +110,4 @@ async def test_t03_state(s, store_t03):
     timeout_s=420.0,
 )
 async def test_t03_output(s, store_t03):
-    meta = store_t03.seed_meta
-    (
-            s.user_message(_msg(store_t03))
-            .assert_output(m.all_of(m.contains("restart"), m.contains("step")))
-        )
+    (s.user_message(_msg(store_t03)).assert_output(_T03_OUTPUT))

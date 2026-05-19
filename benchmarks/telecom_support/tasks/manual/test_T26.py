@@ -41,10 +41,9 @@ async def task_agent_t26(store_t26):
 def _msg(store_t26):
     meta = store_t26.seed_meta
     return (
-        f"I lost my physical SIM card. Please ship a physical replacement to my default "
-        f"address for line {meta['line_id']}."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"I've lost my physical SIM — can you send a replacement to my default address? "
+        f"It's for line {meta['line_id']}. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
     )
 
 

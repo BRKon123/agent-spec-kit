@@ -41,11 +41,35 @@ async def task_agent_t14(store_t14):
 def _msg(store_t14):
     meta = store_t14.seed_meta
     return (
-        f"Demand refund for unsupported roaming destination; billing policy only."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I was charged for roaming in a country your map doesn't even support — I want that money back. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T14_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "run_billing_policy_specialist",
+        result=m.object(
+            {
+                "eligible": False,
+                "reason_code": m.one_of("ineligible_short_outage", "insufficient_evidence"),
+                "amount": None,
+            },
+            extra="ignore",
+        ),
+    ),
+]
+
+_T14_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Clearly states the customer is not eligible for a refund or compensation",
+        "Grounds the answer in billing policy rather than a vague refusal only",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -55,42 +79,12 @@ def _msg(store_t14):
     timeout_s=420.0,
 )
 async def test_t14_full(s, store_t14):
-    meta = store_t14.seed_meta
     (
-            s.user_message(_msg(store_t14))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_billing_policy_specialist",
-                        # calibration: child tool order varies; assert BillingDecision fields only
-                        result=m.object(
-                            {
-                                "eligible": False,
-                                "reason_code": m.one_of(
-                                    "ineligible_short_outage", "insufficient_evidence"
-                                ),
-                                "amount": None,
-                            },
-                            extra="ignore",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t14))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Clearly states the customer is not eligible for a refund or compensation",
-                        "Grounds the answer in billing policy rather than a vague refusal only",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+        s.user_message(_msg(store_t14))
+        .assert_tool_calls(_T14_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t14))
+        .assert_output(_T14_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -100,31 +94,7 @@ async def test_t14_full(s, store_t14):
     timeout_s=420.0,
 )
 async def test_t14_trace(s, store_t14):
-    meta = store_t14.seed_meta
-    (
-            s.user_message(_msg(store_t14))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_billing_policy_specialist",
-                        # calibration: child tool order varies; assert BillingDecision fields only
-                        result=m.object(
-                            {
-                                "eligible": False,
-                                "reason_code": m.one_of(
-                                    "ineligible_short_outage", "insufficient_evidence"
-                                ),
-                                "amount": None,
-                            },
-                            extra="ignore",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t14)).assert_tool_calls(_T14_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -134,11 +104,7 @@ async def test_t14_trace(s, store_t14):
     timeout_s=420.0,
 )
 async def test_t14_state(s, store_t14):
-    meta = store_t14.seed_meta
-    (
-            s.user_message(_msg(store_t14))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t14))
-        )
+    (s.user_message(_msg(store_t14)).assert_that(lambda: o.assert_no_credit_rows(store_t14)))
 
 
 @ek.scenario(
@@ -148,17 +114,4 @@ async def test_t14_state(s, store_t14):
     timeout_s=420.0,
 )
 async def test_t14_output(s, store_t14):
-    meta = store_t14.seed_meta
-    (
-            s.user_message(_msg(store_t14))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Clearly states the customer is not eligible for a refund or compensation",
-                        "Grounds the answer in billing policy rather than a vague refusal only",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+    (s.user_message(_msg(store_t14)).assert_output(_T14_OUTPUT))

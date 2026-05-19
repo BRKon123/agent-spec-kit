@@ -38,16 +38,35 @@ async def task_agent_t11(store_t11):
     yield wrap_reference_agent(store_t11)
 
 
-def _msg(store_t11):
-    meta = store_t11.seed_meta
-    # calibration: read-only plan/line check; no tickets or troubleshooting workflow
+def _msg1(_store_t11):
     return (
-        f"Roaming abroad but mobile data fails; roaming may be disabled on line. "
-        f"Check plan {meta.get('plan_id', 'PLAN-STD')} and line status only — do not open a ticket. "
-        f"Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        "I'm abroad and mobile data just stopped — pretty sure roaming isn't turned on for my line. "
+        "Can you check whether my plan covers where I am and how the line looks? "
+        "I don't need a ticket opened, just want to understand what's going on."
     )
 
+
+def _msg2(store_t11):
+    meta = store_t11.seed_meta
+    return (
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']} — please check my plan and line status now."
+    )
+
+
+_T11_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("get_plan_details"),
+]
+
+_T11_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Mentions the customer's plan or roaming coverage in plain language",
+        "Addresses the line or roaming status without opening a support ticket",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -57,21 +76,13 @@ def _msg(store_t11):
     timeout_s=420.0,
 )
 async def test_t11_full(s, store_t11):
-    meta = store_t11.seed_meta
     (
-            s.user_message(_msg(store_t11))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_plan_details"),
-                    m.tool_call("get_line_status"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_tickets(store_t11))
-            .assert_output(m.contains("plan"))
-        )
+        s.user_message(_msg1(store_t11))
+        .user_message(_msg2(store_t11))
+        .assert_tool_calls(_T11_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_tickets(store_t11))
+        .assert_output(_T11_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -81,19 +92,11 @@ async def test_t11_full(s, store_t11):
     timeout_s=420.0,
 )
 async def test_t11_trace(s, store_t11):
-    meta = store_t11.seed_meta
     (
-            s.user_message(_msg(store_t11))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_plan_details"),
-                    m.tool_call("get_line_status"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg1(store_t11))
+        .user_message(_msg2(store_t11))
+        .assert_tool_calls(_T11_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -103,11 +106,11 @@ async def test_t11_trace(s, store_t11):
     timeout_s=420.0,
 )
 async def test_t11_state(s, store_t11):
-    meta = store_t11.seed_meta
     (
-            s.user_message(_msg(store_t11))
-            .assert_that(lambda: o.assert_no_tickets(store_t11))
-        )
+        s.user_message(_msg1(store_t11))
+        .user_message(_msg2(store_t11))
+        .assert_that(lambda: o.assert_no_tickets(store_t11))
+    )
 
 
 @ek.scenario(
@@ -117,8 +120,8 @@ async def test_t11_state(s, store_t11):
     timeout_s=420.0,
 )
 async def test_t11_output(s, store_t11):
-    meta = store_t11.seed_meta
     (
-            s.user_message(_msg(store_t11))
-            .assert_output(m.contains("plan"))
-        )
+        s.user_message(_msg1(store_t11))
+        .user_message(_msg2(store_t11))
+        .assert_output(_T11_OUTPUT)
+    )

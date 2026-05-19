@@ -41,9 +41,9 @@ async def task_agent_t40(store_t40):
 def _msg(store_t40):
     meta = store_t40.seed_meta
     return (
-        f"Intermittent signal drops — review recent network events before scoring how unusual the signal is."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"My signal keeps dropping in and out — can you look at recent network events and tell me "
+        f"if anything looks off? Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}, line {meta['line_id']}."
     )
 
 

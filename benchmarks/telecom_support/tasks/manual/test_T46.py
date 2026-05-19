@@ -38,13 +38,40 @@ async def task_agent_t46(store_t46):
     yield wrap_reference_agent(store_t46)
 
 
-def _msg1(store_t46):
-    return 'Use line LINE-WRONG for ticket.'
+def _msg1(_store_t46):
+    return "Please open a support ticket on line LINE-WRONG for my intermittent data drops."
+
 
 def _msg2(store_t46):
     meta = store_t46.seed_meta
-    return f"Correct line is {meta['line_id']}. Auth {meta['customer_id']} {meta['verification_token']}."
+    return (
+        f"Sorry — the correct line is {meta['line_id']}, not LINE-WRONG. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+    )
 
+
+def _msg3(store_t46):
+    meta = store_t46.seed_meta
+    return f"Yes, use {meta['line_id']} for the ticket please."
+
+
+def _t46_trace(store_t46):
+    meta = store_t46.seed_meta
+    return [
+        m.tool_call("authenticate_customer"),
+        m.tool_call(
+            "create_support_ticket",
+            args=m.object({"line_id": meta["line_id"]}, extra="forbid"),
+        ),
+    ]
+
+
+def _dialogue(s, store_t46):
+    return (
+        s.user_message(_msg1(store_t46))
+        .user_message(_msg2(store_t46))
+        .user_message(_msg3(store_t46))
+    )
 
 
 @ek.scenario(
@@ -56,15 +83,10 @@ def _msg2(store_t46):
 async def test_t46_full(s, store_t46):
     meta = store_t46.seed_meta
     (
-            s.user_message(_msg1(store_t46))
-        .user_message(_msg2(store_t46))
-        .assert_tool_calls(
-                [m.tool_call("authenticate_customer"), m.tool_call("create_support_ticket")],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_ticket_for_line(store_t46, store_t46.seed_meta['line_id']))
-        )
+        _dialogue(s, store_t46)
+        .assert_tool_calls(_t46_trace(store_t46), ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_ticket_for_line(store_t46, meta["line_id"]))
+    )
 
 
 @ek.scenario(
@@ -74,16 +96,7 @@ async def test_t46_full(s, store_t46):
     timeout_s=420.0,
 )
 async def test_t46_trace(s, store_t46):
-    meta = store_t46.seed_meta
-    (
-            s.user_message(_msg1(store_t46))
-        .user_message(_msg2(store_t46))
-        .assert_tool_calls(
-                [m.tool_call("authenticate_customer"), m.tool_call("create_support_ticket", args=m.object({"line_id": meta["line_id"]}, extra="forbid"))],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (_dialogue(s, store_t46).assert_tool_calls(_t46_trace(store_t46), ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -95,10 +108,10 @@ async def test_t46_trace(s, store_t46):
 async def test_t46_state(s, store_t46):
     meta = store_t46.seed_meta
     (
-            s.user_message(_msg1(store_t46))
-        .user_message(_msg2(store_t46))
-            .assert_that(lambda: o.assert_ticket_for_line(store_t46, store_t46.seed_meta['line_id']))
+        _dialogue(s, store_t46).assert_that(
+            lambda: o.assert_ticket_for_line(store_t46, meta["line_id"])
         )
+    )
 
 
 @ek.scenario(
@@ -108,9 +121,4 @@ async def test_t46_state(s, store_t46):
     timeout_s=420.0,
 )
 async def test_t46_output(s, store_t46):
-    meta = store_t46.seed_meta
-    (
-            s.user_message(_msg1(store_t46))
-        .user_message(_msg2(store_t46))
-            .assert_output(m.string(min_len=5))
-        )
+    (_dialogue(s, store_t46).assert_output(m.string(min_len=5)))

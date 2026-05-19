@@ -41,9 +41,10 @@ async def task_agent_t23(store_t23):
 def _msg(store_t23):
     meta = store_t23.seed_meta
     return (
-        f"I was charged twice for the same thing. Please assess whether I'm eligible for a "
-        f"refund and tell me the amount if I am — but don't post any credit to my account yet."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I've got the same charge twice on my latest bill. Can you check if I should get a "
+        f"refund and tell me how much — but don't post any credit to my account yet, I just want "
+        f"to know first. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

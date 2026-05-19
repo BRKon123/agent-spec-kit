@@ -41,12 +41,38 @@ async def task_agent_t09(store_t09):
 def _msg(store_t09):
     meta = store_t09.seed_meta
     return (
-        f"Ambiguous network issue on my line — run deep diagnostics. If severity is high, "
-        f"recommend opening a ticket but do not give an escalation reason."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"Something's wrong with my network on line {meta['line_id']} around {meta['postcode']} — "
+        f"keeps cutting out. Can you run a proper check? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
     )
 
+
+_T09_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "run_network_diagnostics_specialist",
+        children=[
+            m.tool_call("pull_network_events"),
+            m.tool_call("score_signal_anomaly"),
+        ],
+        result=m.object(
+            {
+                "severity": m.one_of("high"),
+                "recommended_action": m.one_of("create_ticket"),
+                "escalation_reason": m.string(min_len=1),
+            },
+            extra="forbid",
+        ),
+    ),
+]
+
+_T09_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Summarizes network diagnostic findings for the customer",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -56,34 +82,12 @@ def _msg(store_t09):
     timeout_s=420.0,
 )
 async def test_t09_full(s, store_t09):
-    meta = store_t09.seed_meta
     (
-            s.user_message(_msg(store_t09))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_network_diagnostics_specialist",
-                        children=[
-                    m.tool_call("pull_network_events"),
-                    m.tool_call("score_signal_anomaly"),
-                ],
-                        result=m.object(
-                            {
-                                "severity": m.one_of("high"),
-                                "recommended_action": m.one_of("create_ticket"),
-                                "escalation_reason": m.string(min_len=1),
-                            },
-                            extra="forbid",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t09))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t09))
+        .assert_tool_calls(_T09_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t09))
+        .assert_output(_T09_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -93,32 +97,7 @@ async def test_t09_full(s, store_t09):
     timeout_s=420.0,
 )
 async def test_t09_trace(s, store_t09):
-    meta = store_t09.seed_meta
-    (
-            s.user_message(_msg(store_t09))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_network_diagnostics_specialist",
-                        children=[
-                    m.tool_call("pull_network_events"),
-                    m.tool_call("score_signal_anomaly"),
-                ],
-                        result=m.object(
-                            {
-                                "severity": m.one_of("high"),
-                                "recommended_action": m.one_of("create_ticket"),
-                                "escalation_reason": m.string(min_len=1),
-                            },
-                            extra="forbid",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t09)).assert_tool_calls(_T09_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -128,11 +107,7 @@ async def test_t09_trace(s, store_t09):
     timeout_s=420.0,
 )
 async def test_t09_state(s, store_t09):
-    meta = store_t09.seed_meta
-    (
-            s.user_message(_msg(store_t09))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t09))
-        )
+    (s.user_message(_msg(store_t09)).assert_that(lambda: o.assert_no_credit_rows(store_t09)))
 
 
 @ek.scenario(
@@ -142,8 +117,4 @@ async def test_t09_state(s, store_t09):
     timeout_s=420.0,
 )
 async def test_t09_output(s, store_t09):
-    meta = store_t09.seed_meta
-    (
-            s.user_message(_msg(store_t09))
-            .assert_output(m.string(min_len=5))
-        )
+    (s.user_message(_msg(store_t09)).assert_output(_T09_OUTPUT))

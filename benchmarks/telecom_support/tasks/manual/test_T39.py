@@ -41,8 +41,8 @@ async def task_agent_t39(store_t39):
 def _msg(store_t39):
     meta = store_t39.seed_meta
     return (
-        f"I already have open ticket TCK-EXIST-01; create a new ticket anyway (do not only escalate)."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I've still got ticket TCK-EXIST-01 open but I'd like a fresh ticket logged for this issue. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

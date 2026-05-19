@@ -38,18 +38,47 @@ async def task_agent_t45(store_t45):
     yield wrap_reference_agent(store_t45)
 
 
-def _msg1(store_t45):
-    meta = store_t45.seed_meta
+def _msg1(_store_t45):
     return (
-        f"What is my plan name?"
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        "My bill looks wrong and my line has been flaky — can you check what is on the account? "
+        "What plan am I on?"
     )
 
-def _msg2(store_t45):
-    meta = store_t45.seed_meta
-    return f"OK authenticate {meta['customer_id']} token {meta['verification_token']}."
 
+def _msg2(_store_t45):
+    return (
+        "I do not have my verification code with me right now. Can you tell me the plan name "
+        "and last bill amount first?"
+    )
+
+
+def _msg3(store_t45):
+    meta = store_t45.seed_meta
+    return (
+        f"Fine — verification token {meta['verification_token']} for account {meta['customer_id']}."
+    )
+
+
+def _msg4(store_t45):
+    meta = store_t45.seed_meta
+    return (
+        f"Now please check the bill and the line. Line {meta['line_id']}."
+    )
+
+
+_T45_TRACE = [m.tool_call("authenticate_customer")]
+
+
+def _dialogue(s, store_t45):
+    return (
+        s.user_message(_msg1(store_t45))
+        .user_message(_msg2(store_t45))
+        .user_message(_msg3(store_t45))
+    )
+
+
+def _dialogue_full(s, store_t45):
+    return _dialogue(s, store_t45).user_message(_msg4(store_t45))
 
 
 @ek.scenario(
@@ -59,13 +88,13 @@ def _msg2(store_t45):
     timeout_s=420.0,
 )
 async def test_t45_full(s, store_t45):
-    meta = store_t45.seed_meta
     (
-            s.user_message(_msg1(store_t45))
-        .user_message(_msg2(store_t45))
-            .assert_that(lambda: o.assert_no_mutations(store_t45))
-            .assert_output(m.string(min_len=5))
-        )
+        _dialogue(s, store_t45)
+        .assert_tool_calls(_T45_TRACE, ordered=True, allow_extras=True)
+        .user_message(_msg4(store_t45))
+        .assert_that(lambda: o.assert_no_mutations(store_t45))
+        .assert_output(m.string(min_len=5))
+    )
 
 
 @ek.scenario(
@@ -75,18 +104,7 @@ async def test_t45_full(s, store_t45):
     timeout_s=420.0,
 )
 async def test_t45_trace(s, store_t45):
-    meta = store_t45.seed_meta
-    (
-            s.user_message(_msg1(store_t45))
-        .user_message(_msg2(store_t45))
-        .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (_dialogue(s, store_t45).assert_tool_calls(_T45_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -96,12 +114,7 @@ async def test_t45_trace(s, store_t45):
     timeout_s=420.0,
 )
 async def test_t45_state(s, store_t45):
-    meta = store_t45.seed_meta
-    (
-            s.user_message(_msg1(store_t45))
-        .user_message(_msg2(store_t45))
-            .assert_that(lambda: o.assert_no_mutations(store_t45))
-        )
+    (_dialogue_full(s, store_t45).assert_that(lambda: o.assert_no_mutations(store_t45)))
 
 
 @ek.scenario(
@@ -111,9 +124,4 @@ async def test_t45_state(s, store_t45):
     timeout_s=420.0,
 )
 async def test_t45_output(s, store_t45):
-    meta = store_t45.seed_meta
-    (
-            s.user_message(_msg1(store_t45))
-        .user_message(_msg2(store_t45))
-            .assert_output(m.string(min_len=5))
-        )
+    (_dialogue_full(s, store_t45).assert_output(m.string(min_len=5)))

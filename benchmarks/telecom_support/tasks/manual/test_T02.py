@@ -41,11 +41,29 @@ async def task_agent_t02(store_t02):
 def _msg(store_t02):
     meta = store_t02.seed_meta
     return (
-        f"I have no mobile data at home; there may be a local outage at postcode {meta['postcode']}."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"No mobile data at home since this morning — neighbours said there might be an outage "
+        f"around {meta['postcode']}. Is that what's going on? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T02_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("check_outage"),
+]
+
+
+def _t02_output(store_t02):
+    meta = store_t02.seed_meta
+    return m.llm_criteria(
+        criteria=[
+            "Explains whether a network outage affects the customer's service",
+            f"Mentions postcode {meta['postcode']} or the customer's stated area",
+        ],
+        threshold=2,
+        model="openai:gpt-5-nano",
+    )
 
 
 @ek.scenario(
@@ -55,31 +73,14 @@ def _msg(store_t02):
     timeout_s=420.0,
 )
 async def test_t02_full(s, store_t02):
-    meta = store_t02.seed_meta
     (
-            s.user_message(_msg(store_t02))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_sim_orders(store_t02))
-            .assert_that(lambda: o.assert_no_tickets(store_t02))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t02))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Explains whether a network outage affects the customer's service",
-                        f"Mentions postcode {meta['postcode']} or the customer's stated area",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+        s.user_message(_msg(store_t02))
+        .assert_tool_calls(_T02_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_sim_orders(store_t02))
+        .assert_that(lambda: o.assert_no_tickets(store_t02))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t02))
+        .assert_output(_t02_output(store_t02))
+    )
 
 
 @ek.scenario(
@@ -89,18 +90,7 @@ async def test_t02_full(s, store_t02):
     timeout_s=420.0,
 )
 async def test_t02_trace(s, store_t02):
-    meta = store_t02.seed_meta
-    (
-            s.user_message(_msg(store_t02))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t02)).assert_tool_calls(_T02_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -110,13 +100,12 @@ async def test_t02_trace(s, store_t02):
     timeout_s=420.0,
 )
 async def test_t02_state(s, store_t02):
-    meta = store_t02.seed_meta
     (
-            s.user_message(_msg(store_t02))
-            .assert_that(lambda: o.assert_no_sim_orders(store_t02))
-            .assert_that(lambda: o.assert_no_tickets(store_t02))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t02))
-        )
+        s.user_message(_msg(store_t02))
+        .assert_that(lambda: o.assert_no_sim_orders(store_t02))
+        .assert_that(lambda: o.assert_no_tickets(store_t02))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t02))
+    )
 
 
 @ek.scenario(
@@ -126,17 +115,4 @@ async def test_t02_state(s, store_t02):
     timeout_s=420.0,
 )
 async def test_t02_output(s, store_t02):
-    meta = store_t02.seed_meta
-    (
-            s.user_message(_msg(store_t02))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Explains whether a network outage affects the customer's service",
-                        f"Mentions postcode {meta['postcode']} or the customer's stated area",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+    (s.user_message(_msg(store_t02)).assert_output(_t02_output(store_t02)))
