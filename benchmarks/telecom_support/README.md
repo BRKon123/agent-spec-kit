@@ -71,6 +71,10 @@ Task metadata: [`tasks/catalog.py`](tasks/catalog.py). Scenarios for T01–T50 a
 | `task_pilot_outage` | P4 | Trace: outage check before diagnostic |
 | `task_pilot_credit` | P2 | State: no credit when seed ineligible |
 
+## Expressiveness comparison
+
+Per-check-type authoring effort (agent_spec_kit vs pytest vs LangSmith / Pydantic Evals / Promptfoo / Braintrust) lives in [`../expressiveness/`](../expressiveness/). Telecom tasks **exemplify** those checks; LOC and table numbers come from the expressiveness harness, not from T01–T50 directly.
+
 ## Deferred
 
 - Full T01–T50 scenario implementations, user simulation (~20 tasks), fuzz (~15 tasks), shrink/extract

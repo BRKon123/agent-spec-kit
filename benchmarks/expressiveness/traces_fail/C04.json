@@ -1,0 +1,18 @@
+{
+  "output": "Eligible for a $15.00 roaming refund preview; no credit posted.",
+  "tools": [
+    {
+      "name": "authenticate_customer",
+      "args": {},
+      "result": "ok"
+    },
+    {
+      "name": "run_billing_policy_specialist",
+      "args": {},
+      "result": {
+        "eligible": true,
+        "amount": 9999.0
+      }
+    }
+  ]
+}

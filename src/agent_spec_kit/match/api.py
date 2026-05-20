@@ -13,6 +13,10 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from agent_spec_kit.match.llm_criteria import LLMCriteriaMatcher, llm_criteria_matcher
+from agent_spec_kit.match.forbidden import (
+    ForbiddenToolCallsMatcher,
+    forbidden_tool_calls_matcher,
+)
 from agent_spec_kit.match.lists import (
     ListMatcher,
     ListOfMatcher,
@@ -303,6 +307,7 @@ __all__ = [
     "any_value",
     "field",
     "forbid",
+    "forbidden_tool_calls_matcher",
     "list",
     "list_of",
     "check",

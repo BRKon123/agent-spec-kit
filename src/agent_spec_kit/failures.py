@@ -235,6 +235,10 @@ def _format_scenario_location(
             "assert_tool_calls",
             "(tool call list for that turn)",
         ),
+        "forbid_tool_calls": (
+            "forbid_tool_calls",
+            "(forbidden tool call patterns)",
+        ),
         "assert_that": ("assert_that", "(environment / fixture check)"),
         "scenario_body": ("scenario body", "(Python assert in test function)"),
         "agent_error": ("agent error", "(runtime error during agent execution)"),

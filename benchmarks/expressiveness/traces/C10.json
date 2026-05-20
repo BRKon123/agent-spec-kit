@@ -1,0 +1,8 @@
+{
+  "output": "Line status looks OK and heartbeat succeeded.",
+  "tools": [
+    {"name": "authenticate_customer", "args": {}, "result": "ok"},
+    {"name": "heartbeat_ping", "args": {}, "result": "ok"},
+    {"name": "get_line_status", "args": {"line_id": "LINE-001"}, "result": {"ok": true}}
+  ]
+}

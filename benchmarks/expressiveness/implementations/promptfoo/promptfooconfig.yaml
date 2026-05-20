@@ -1,0 +1,60 @@
+# Expressiveness benchmark — per-specimen assertions with inlined check logic.
+# Run: npx promptfoo@latest eval -c benchmarks/expressiveness/implementations/promptfoo
+
+description: Expressiveness specimens (inlined oracle LOC)
+
+providers:
+  - id: file://./provider.py
+
+prompts:
+  - "{{check_id}}"
+
+tests:
+  - vars: {check_id: C01}
+    assert:
+      - type: python
+        value: file://./assert_c01.py
+  - vars: {check_id: C02}
+    assert:
+      - type: python
+        value: file://./assert_c02.py
+  - vars: {check_id: C03}
+    assert:
+      - type: python
+        value: file://./assert_c03.py
+  - vars: {check_id: C04}
+    assert:
+      - type: python
+        value: file://./assert_c04.py
+  - vars: {check_id: C05}
+    assert:
+      - type: python
+        value: file://./assert_c05.py
+  - vars: {check_id: C06}
+    assert:
+      - type: python
+        value: file://./assert_c06.py
+  - vars: {check_id: C07}
+    assert:
+      - type: python
+        value: file://./assert_c07.py
+  - vars: {check_id: C08}
+    assert:
+      - type: python
+        value: file://./assert_c08.py
+  - vars: {check_id: C09}
+    assert:
+      - type: python
+        value: file://./assert_c09.py
+  - vars: {check_id: C10}
+    assert:
+      - type: python
+        value: file://./assert_c10.py
+  - vars: {check_id: C11}
+    assert:
+      - type: python
+        value: file://./assert_c11.py
+  - vars: {check_id: C12}
+    assert:
+      - type: python
+        value: file://./assert_c12.py

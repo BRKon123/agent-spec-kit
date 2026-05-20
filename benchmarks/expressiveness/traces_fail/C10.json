@@ -1,0 +1,10 @@
+{
+  "output": "Line status looks OK and heartbeat succeeded.",
+  "tools": [
+    {
+      "name": "heartbeat_ping",
+      "args": {},
+      "result": "ok"
+    }
+  ]
+}

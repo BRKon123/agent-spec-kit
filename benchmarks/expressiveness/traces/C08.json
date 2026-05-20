@@ -1,0 +1,19 @@
+{
+  "output": "Network diagnostics suggest intermittent drops; next step is a ticket if it persists.",
+  "tools": [
+    {"name": "authenticate_customer", "args": {}, "result": "ok"},
+    {
+      "name": "run_network_diagnostics_specialist",
+      "args": {"query": "signal drops"},
+      "result": {
+        "severity": "medium",
+        "recommended_action": "monitor",
+        "summary": "anomaly score 0.62 with recommended monitor step"
+      },
+      "children": [
+        {"name": "pull_network_events", "args": {}, "result": []},
+        {"name": "score_signal_anomaly", "args": {}, "result": {"score": 0.62}}
+      ]
+    }
+  ]
+}

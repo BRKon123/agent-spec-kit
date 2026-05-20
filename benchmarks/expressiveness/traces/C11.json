@@ -1,0 +1,8 @@
+{
+  "output": "I opened support ticket INC-9001 for your line.",
+  "tools": [
+    {"name": "authenticate_customer", "args": {}, "result": "ok"},
+    {"name": "record_user_action", "args": {"action": "restart"}, "result": "ok"},
+    {"name": "create_support_ticket", "args": {"line_id": "LINE-001"}, "result": {"ticket_id": "INC-9001"}}
+  ]
+}

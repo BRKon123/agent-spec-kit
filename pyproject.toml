@@ -30,6 +30,11 @@ ui = [
 ]
 
 [dependency-groups]
+expressiveness = [
+    "langsmith>=0.7",
+    "pydantic-evals>=1.84",
+    "braintrust>=0.0.200",
+]
 dev = [
     "fastapi>=0.110",
     "httpx>=0.27",

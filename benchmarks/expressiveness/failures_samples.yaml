@@ -1,0 +1,134 @@
+_meta:
+  description: Captured fail-trace messages per framework (see scripts/collect_failure_samples.py)
+  grade_rubric: A=path+expected/actual B=rule/tool slice C=step index D=generic E=opaque
+grade_exemplars:
+  A: path=$[1] code=missing_element expected=... actual=... (tool/field witness)
+  B: 'get_line_status.args.line_id expected ''LINE-001'', got ''LINE-002''  OR  {''key'': ''tool_args'', ''score'': 0}'
+  C: (no pure C-grade capture in this harness)
+  D: AssertionError  OR  assertion returned False
+  E: (no E-grade capture in this harness)
+classification_source: MANUAL_FAILURE_CLASSIFICATION.md (not auto-classified)
+C01:
+  agent_spec_kit: path=$ code=one_of expected='one of (PredicateMatcher, PredicateMatcher)' actual="'Your service is active;
+    no billing changes this cycle.'" (value does not match any option) | path=$ code=one_of expected='one of (PredicateMatcher,
+    PredicateMatcher)' actual="'Your service is active; no billing changes this cycle.'" (value does not match any option)
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''output_rubric'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c01'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C02:
+  agent_spec_kit: 'path=$[0] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
+    ''authenticate_customer'', ''args'': {''customer_id'': ''CUST-001''}, ''result'': ''ok''}, {''name'': ''run_network_diagnostics_specialist'',
+    ''args'': {''query'': ''connectivity''}, ''result'': {''severity'': ''lo..." (could not match expected element at index
+    0 while preserving order searched actual positions 0...'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''object_shape'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c02'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C03:
+  agent_spec_kit: 'path=$[0] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
+    ''authenticate_customer'', ''args'': {}, ''result'': ''ok''}, {''name'': ''run_billing_policy_specialist'', ''args'':
+    {}, ''result'': {''eligible'': True, ''currency'': ''USD''}}]" (could not match expected element at index 0 while preserving
+    order searched actual positions 0 through 1 closest underlying mis...'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''conditional_object'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c03'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C04:
+  agent_spec_kit: 'path=$[0] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
+    ''authenticate_customer'', ''args'': {}, ''result'': ''ok''}, {''name'': ''run_billing_policy_specialist'', ''args'':
+    {}, ''result'': {''eligible'': True, ''amount'': 9999.0}}]" (could not match expected element at index 0 while preserving
+    order searched actual positions 0 through 1 closest underlying mism...'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''numeric_regex'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c04'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C05:
+  agent_spec_kit: 'path=$[1] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
+    ''get_outage_status'', ''args'': {''line_id'': ''LINE-001''}, ''result'': {''active'': True}}, {''name'': ''authenticate_customer'',
+    ''args'': {}, ''result'': ''ok''}]" (could not match expected element at index 1 while preserving order no actual items
+    were left to search)'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''ordered_sequence'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c05'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C06:
+  agent_spec_kit: 'path=$[1] code=forbidden_tool_call expected="no ''apply_bill_credit''" actual="{''name'': ''apply_bill_credit'',
+    ''args'': {''amount'': 10}, ''result'': ''ok''}" (forbidden tool call ''apply_bill_credit'' found at index 1 (actual tool
+    ''apply_bill_credit''))'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''forbidden_tools'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c06'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C07:
+  agent_spec_kit: 'path=$[1] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
+    ''authenticate_customer'', ''args'': {}, ''result'': ''ok''}, {''name'': ''get_line_status'', ''args'': {''line_id'':
+    ''LINE-002''}, ''result'': {''data_enabled'': True}}]" (could not match expected element at index 1 while preserving order
+    searched actual positions 1 through 1 closest underlying mismatch wa...'
+  pytest_plain: get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
+  langsmith: '{''key'': ''tool_args'', ''score'': 0}'
+  pydantic_evals: get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c07'', ''score'': 0}'
+  _grades: A/B/B/B/D/B
+C08:
+  agent_spec_kit: 'path=$[0] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
+    ''authenticate_customer'', ''args'': {}, ''result'': ''ok''}, {''name'': ''run_network_diagnostics_specialist'', ''args'':
+    {''query'': ''signal drops''}, ''result'': {''severity'': ''medium'', ''recommended_actio..." (could not match expected
+    element at index 0 while preserving order searched actual positions 0...'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''tool_result'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c08'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C09:
+  agent_spec_kit: 'path=$[0] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
+    ''authenticate_customer'', ''args'': {}, ''result'': ''ok''}, {''name'': ''run_network_diagnostics_specialist'', ''args'':
+    {''query'': ''latency''}, ''result'': {''severity'': ''medium'', ''recommended_action'': ''..." (could not match expected
+    element at index 0 while preserving order searched actual positions 0...'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''nested_tools'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c09'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C10:
+  agent_spec_kit: 'path=$ code=list_too_short expected=''>= 2'' actual=''1'' (list is too short: need at least 2 item(s) to
+    match all expected values (order does not matter))'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''unordered_siblings'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c10'', ''score'': 0}'
+  _grades: A/D/B/D/D/B
+C11:
+  agent_spec_kit: expected at least one ticket
+  pytest_plain: expected at least one ticket
+  langsmith: expected at least one ticket
+  pydantic_evals: expected at least one ticket
+  promptfoo: expected at least one ticket
+  braintrust: '{''key'': ''c11'', ''score'': 0, ''note'': ''expected at least one ticket''}'
+  _grades: B/B/B/B/B/B
+C12:
+  agent_spec_kit: 'path=$[1] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
+    ''authenticate_customer'', ''args'': {}, ''result'': ''ok''}]" (could not match expected element at index 1 while preserving
+    order no actual items were left to search)'
+  pytest_plain: AssertionError
+  langsmith: '{''key'': ''multi_turn_memory'', ''score'': 0}'
+  pydantic_evals: AssertionError
+  promptfoo: assertion returned False
+  braintrust: '{''key'': ''c12'', ''score'': 0}'
+  _grades: A/D/B/D/D/B

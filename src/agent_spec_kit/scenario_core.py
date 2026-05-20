@@ -16,6 +16,7 @@ from agent_spec_kit.failures import (
 )
 from agent_spec_kit.match.api import async_check as match_async_check
 from agent_spec_kit.match.api import check as match_check
+from agent_spec_kit.match.forbidden import forbidden_tool_calls_matcher
 from agent_spec_kit.match.lists import list_matcher
 from agent_spec_kit.match.types import MatchResult
 from agent_spec_kit.fuzz_config import FuzzConfig
@@ -54,6 +55,14 @@ class _ToolCallsAssertStep:
 
 
 @dataclass
+class _ForbidToolCallsStep:
+    spec: Any
+    ordered: bool
+    turn: Literal["last"]
+    actor: str | None
+
+
+@dataclass
 class _SimulateStep:
     max_turns: int
     stop_condition: Any | None
@@ -74,6 +83,7 @@ _Step = (
     | _EnvAssertStep
     | _OutputAssertStep
     | _ToolCallsAssertStep
+    | _ForbidToolCallsStep
     | _SimulateStep
     | _FuzzConversationStep
 )
@@ -326,6 +336,21 @@ class Scenario:
                 turn=turn,
                 actor=actor,
             )
+        )
+        return self
+
+    def forbid_tool_calls(
+        self,
+        spec: Any,
+        *,
+        ordered: bool = True,
+        allow_extras: bool = True,  # noqa: ARG002 — reserved for API symmetry
+        turn: Literal["last"] = "last",
+        actor: str | None = None,
+    ) -> Scenario:
+        del allow_extras
+        self._steps.append(
+            _ForbidToolCallsStep(spec=spec, ordered=ordered, turn=turn, actor=actor)
         )
         return self
 
@@ -631,6 +656,25 @@ class Scenario:
                 actual=actual,
             )
             return
+        if isinstance(step, _ForbidToolCallsStep):
+            if not self._turn_results:
+                msg = "forbid_tool_calls require a preceding user_message step in the queue"
+                raise AssertionError(msg)
+            if step.turn != "last":
+                raise ValueError("only turn='last' is supported")
+            conversation_turn = self._conversation_for_assert(step.actor)
+            actual = _tool_dicts_from_conversation_turn(conversation_turn)
+            forbid_spec = forbidden_tool_calls_matcher(step.spec, ordered=step.ordered)
+            r = await match_async_check(forbid_spec, actual)
+            _raise_match_step(
+                self,
+                step_kind="forbid_tool_calls",
+                label="forbid_tool_calls",
+                result=r,
+                matcher_spec=step.spec,
+                actual=actual,
+            )
+            return
         raise TypeError(f"unknown step type: {type(step)!r}")
 
     async def _run_env_assert(self, fn: Callable[..., Any]) -> None:
@@ -740,6 +784,7 @@ def _assertion_index_after_turn(scenario: Scenario, *, step_kind: str) -> int | 
     step_types = {
         "assert_output": _OutputAssertStep,
         "assert_tool_calls": _ToolCallsAssertStep,
+        "forbid_tool_calls": _ForbidToolCallsStep,
         "assert_that": _EnvAssertStep,
     }
     step_type = step_types.get(step_kind)

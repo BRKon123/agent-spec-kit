@@ -1,0 +1,23 @@
+{
+  "turns": [
+    {
+      "output": "I need the correct line before opening a ticket.",
+      "tools": []
+    },
+    {
+      "output": "Thanks for clarifying \u2014 please confirm your current line.",
+      "tools": []
+    },
+    {
+      "output": "Ticket opened on LINE-001.",
+      "tools": [
+        {
+          "name": "authenticate_customer",
+          "args": {},
+          "result": "ok"
+        }
+      ]
+    }
+  ],
+  "corrected_line_id": "LINE-001"
+}
