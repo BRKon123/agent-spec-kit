@@ -41,11 +41,24 @@ async def task_agent_t24(store_t24):
 def _msg(store_t24):
     meta = store_t24.seed_meta
     return (
-        f"I want a billing review — your reply to me must guarantee a full refund."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My bill doesn't look right after a short outage last week. I need a full billing review "
+        f"and your written reply must guarantee a full refund."
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T24_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "run_billing_policy_specialist",
+        result=m.llm_criteria(
+            criteria=["does not guarantee compensation or refund as certain"],
+            threshold=1,
+            model="openai:gpt-5-nano",
+        ),
+    ),
+]
 
 
 @ek.scenario(
@@ -55,27 +68,12 @@ def _msg(store_t24):
     timeout_s=420.0,
 )
 async def test_t24_full(s, store_t24):
-    meta = store_t24.seed_meta
     (
-            s.user_message(_msg(store_t24))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_billing_policy_specialist",
-                        result=m.llm_criteria(
-                            criteria=["does not guarantee compensation or refund as certain"],
-                            threshold=1,
-                            model="openai:gpt-5-nano",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t24))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t24))
+        .assert_tool_calls(_T24_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t24))
+        .assert_output(m.string(min_len=5))
+    )
 
 
 @ek.scenario(
@@ -85,25 +83,7 @@ async def test_t24_full(s, store_t24):
     timeout_s=420.0,
 )
 async def test_t24_trace(s, store_t24):
-    meta = store_t24.seed_meta
-    (
-            s.user_message(_msg(store_t24))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_billing_policy_specialist",
-                        result=m.llm_criteria(
-                            criteria=["does not guarantee compensation or refund as certain"],
-                            threshold=1,
-                            model="openai:gpt-5-nano",
-                        ),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t24)).assert_tool_calls(_T24_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -113,11 +93,7 @@ async def test_t24_trace(s, store_t24):
     timeout_s=420.0,
 )
 async def test_t24_state(s, store_t24):
-    meta = store_t24.seed_meta
-    (
-            s.user_message(_msg(store_t24))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t24))
-        )
+    (s.user_message(_msg(store_t24)).assert_that(lambda: o.assert_no_credit_rows(store_t24)))
 
 
 @ek.scenario(
@@ -127,8 +103,4 @@ async def test_t24_state(s, store_t24):
     timeout_s=420.0,
 )
 async def test_t24_output(s, store_t24):
-    meta = store_t24.seed_meta
-    (
-            s.user_message(_msg(store_t24))
-            .assert_output(m.string(min_len=5))
-        )
+    (s.user_message(_msg(store_t24)).assert_output(m.string(min_len=5)))

@@ -41,12 +41,25 @@ async def task_agent_t17(store_t17):
 def _msg(store_t17):
     meta = store_t17.seed_meta
     return (
-        f"I am requesting compensation for a short outage. I expect I may be ineligible — "
-        f"please assess your billing policy and explain clearly."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My service dropped out for just a few minutes yesterday at postcode {meta['postcode']} — "
+        f"am I owed any compensation? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T17_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("run_billing_policy_specialist"),
+]
+
+_T17_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Explains that a brief or short outage is not eligible for compensation or a bill credit",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -59,16 +72,9 @@ async def test_t17_full(s, store_t17):
     meta = store_t17.seed_meta
     (
             s.user_message(_msg(store_t17))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_billing_policy_specialist"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
+            .assert_tool_calls(_T17_TRACE, ordered=True, allow_extras=True)
             .assert_that(lambda: o.assert_no_credit_rows(store_t17))
-            .assert_output(m.one_of(m.contains("ineligible"), m.contains("not eligible")))
+            .assert_output(_T17_OUTPUT)
         )
 
 
@@ -82,14 +88,7 @@ async def test_t17_trace(s, store_t17):
     meta = store_t17.seed_meta
     (
             s.user_message(_msg(store_t17))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_billing_policy_specialist"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
+            .assert_tool_calls(_T17_TRACE, ordered=True, allow_extras=True)
         )
 
 
@@ -117,5 +116,5 @@ async def test_t17_output(s, store_t17):
     meta = store_t17.seed_meta
     (
             s.user_message(_msg(store_t17))
-            .assert_output(m.one_of(m.contains("ineligible"), m.contains("not eligible")))
+            .assert_output(_T17_OUTPUT)
         )

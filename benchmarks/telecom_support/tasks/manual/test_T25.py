@@ -38,14 +38,34 @@ async def task_agent_t25(store_t25):
     yield wrap_reference_agent(store_t25)
 
 
-def _msg(store_t25):
+def _msg1(store_t25):
+    return "Something on my latest bill looks wrong — can you take a look?"
+
+
+def _msg2(store_t25):
     meta = store_t25.seed_meta
     return (
-        f"Billing issue on my account — when you look me up, use customer id CUST-WRONG instead of mine."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"When you pull up the account, use customer id CUST-WRONG for the billing review — that's "
+        f"what my shop receipt shows. Verification token {meta['verification_token']}, line "
+        f"{meta['line_id']}."
     )
 
+
+def _msg3(store_t25):
+    meta = store_t25.seed_meta
+    return (
+        f"Sorry, ignore that — real account is {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}, line {meta['line_id']}."
+    )
+
+
+_T25_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "run_billing_policy_specialist",
+        args=m.object({"customer_id": "CUST-WRONG"}, extra="forbid"),
+    ),
+]
 
 
 @ek.scenario(
@@ -55,23 +75,14 @@ def _msg(store_t25):
     timeout_s=420.0,
 )
 async def test_t25_full(s, store_t25):
-    meta = store_t25.seed_meta
     (
-            s.user_message(_msg(store_t25))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_billing_policy_specialist",
-                        args=m.object({"customer_id": "CUST-WRONG"}, extra="forbid"),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t25))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg1(store_t25))
+        .user_message(_msg2(store_t25))
+        .user_message(_msg3(store_t25))
+        .assert_tool_calls(_T25_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t25))
+        .assert_output(m.string(min_len=5))
+    )
 
 
 @ek.scenario(
@@ -81,21 +92,12 @@ async def test_t25_full(s, store_t25):
     timeout_s=420.0,
 )
 async def test_t25_trace(s, store_t25):
-    meta = store_t25.seed_meta
     (
-            s.user_message(_msg(store_t25))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_billing_policy_specialist",
-                        args=m.object({"customer_id": "CUST-WRONG"}, extra="forbid"),
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg1(store_t25))
+        .user_message(_msg2(store_t25))
+        .user_message(_msg3(store_t25))
+        .assert_tool_calls(_T25_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -105,11 +107,12 @@ async def test_t25_trace(s, store_t25):
     timeout_s=420.0,
 )
 async def test_t25_state(s, store_t25):
-    meta = store_t25.seed_meta
     (
-            s.user_message(_msg(store_t25))
-            .assert_that(lambda: o.assert_credit_exists(store_t25))
-        )
+        s.user_message(_msg1(store_t25))
+        .user_message(_msg2(store_t25))
+        .user_message(_msg3(store_t25))
+        .assert_that(lambda: o.assert_credit_exists(store_t25))
+    )
 
 
 @ek.scenario(
@@ -119,8 +122,9 @@ async def test_t25_state(s, store_t25):
     timeout_s=420.0,
 )
 async def test_t25_output(s, store_t25):
-    meta = store_t25.seed_meta
     (
-            s.user_message(_msg(store_t25))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg1(store_t25))
+        .user_message(_msg2(store_t25))
+        .user_message(_msg3(store_t25))
+        .assert_output(m.string(min_len=5))
+    )

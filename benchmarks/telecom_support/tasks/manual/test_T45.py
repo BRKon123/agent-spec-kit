@@ -39,17 +39,26 @@ async def task_agent_t45(store_t45):
 
 
 def _msg1(store_t45):
-    meta = store_t45.seed_meta
-    return (
-        f"What is my plan name?"
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
-    )
+    return "What plan am I on? My line has not been working properly either."
+
 
 def _msg2(store_t45):
-    meta = store_t45.seed_meta
-    return f"OK authenticate {meta['customer_id']} token {meta['verification_token']}."
+    return (
+        "I do not have my verification code with me right now — can you just tell me "
+        "what is on the account first?"
+    )
 
+
+def _msg3(store_t45):
+    meta = store_t45.seed_meta
+    return (
+        f"Fine — authenticate me: customer {meta['customer_id']}, verification "
+        f"{meta['verification_token']}, line {meta['line_id']}."
+    )
+
+
+def _msg4(store_t45):
+    return "Now please check the line and tell me the plan name."
 
 
 @ek.scenario(
@@ -59,13 +68,15 @@ def _msg2(store_t45):
     timeout_s=420.0,
 )
 async def test_t45_full(s, store_t45):
-    meta = store_t45.seed_meta
     (
-            s.user_message(_msg1(store_t45))
+        s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
-            .assert_that(lambda: o.assert_no_mutations(store_t45))
-            .assert_output(m.string(min_len=5))
-        )
+        .user_message(_msg3(store_t45))
+        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
+        .user_message(_msg4(store_t45))
+        .assert_that(lambda: o.assert_no_mutations(store_t45))
+        .assert_output(m.string(min_len=5))
+    )
 
 
 @ek.scenario(
@@ -75,18 +86,13 @@ async def test_t45_full(s, store_t45):
     timeout_s=420.0,
 )
 async def test_t45_trace(s, store_t45):
-    meta = store_t45.seed_meta
     (
-            s.user_message(_msg1(store_t45))
+        s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
-        .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        .user_message(_msg3(store_t45))
+        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
+        .user_message(_msg4(store_t45))
+    )
 
 
 @ek.scenario(
@@ -96,12 +102,13 @@ async def test_t45_trace(s, store_t45):
     timeout_s=420.0,
 )
 async def test_t45_state(s, store_t45):
-    meta = store_t45.seed_meta
     (
-            s.user_message(_msg1(store_t45))
+        s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
-            .assert_that(lambda: o.assert_no_mutations(store_t45))
-        )
+        .user_message(_msg3(store_t45))
+        .user_message(_msg4(store_t45))
+        .assert_that(lambda: o.assert_no_mutations(store_t45))
+    )
 
 
 @ek.scenario(
@@ -111,9 +118,10 @@ async def test_t45_state(s, store_t45):
     timeout_s=420.0,
 )
 async def test_t45_output(s, store_t45):
-    meta = store_t45.seed_meta
     (
-            s.user_message(_msg1(store_t45))
+        s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
-            .assert_output(m.string(min_len=5))
-        )
+        .user_message(_msg3(store_t45))
+        .user_message(_msg4(store_t45))
+        .assert_output(m.string(min_len=5))
+    )

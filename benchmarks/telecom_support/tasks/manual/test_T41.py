@@ -38,16 +38,56 @@ async def task_agent_t41(store_t41):
     yield wrap_reference_agent(store_t41)
 
 
-def _msg(store_t41):
+def _msg1(store_t41):
     meta = store_t41.seed_meta
     return (
-        f"My mobile data is down and I see a duplicate charge on my bill. Please check "
-        f"connectivity, diagnose my line, and review the billing all in one go — do not "
-        f"apply any credit yet."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"My mobile data died this morning and I think I was charged twice on my bill. "
+        f"Can you look at both? I am at postcode {meta['postcode']}. Account {meta['customer_id']}, "
+        f"verification {meta['verification_token']}, line {meta['line_id']} — please do not "
+        f"refund anything yet."
     )
 
+
+def _msg2(store_t41):
+    meta = store_t41.seed_meta
+    return (
+        "I already restarted my phone and toggled airplane mode like people always say — "
+        f"still no data. {meta['customer_id']}, {meta['verification_token']}, line {meta['line_id']}."
+    )
+
+
+def _msg3(store_t41):
+    meta = store_t41.seed_meta
+    return (
+        "What did you find on the connectivity side? And is there actually a duplicate charge? "
+        f"Please check outage, run a line diagnostic, and review billing in this reply — "
+        f"still no refund. {meta['customer_id']}, {meta['verification_token']}, line {meta['line_id']}."
+    )
+
+
+def _msg4(store_t41):
+    meta = store_t41.seed_meta
+    return (
+        "Thanks — what did you find on the connectivity side and on the billing review? "
+        f"{meta['customer_id']}, {meta['verification_token']}, line {meta['line_id']}."
+    )
+
+
+_T41_AUTH = [m.tool_call("authenticate_customer")]
+_T41_WORK = [
+    m.tool_call("check_outage"),
+    m.tool_call("run_line_diagnostic"),
+    m.tool_call("run_billing_policy_specialist"),
+]
+
+_T41_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Addresses both mobile data or connectivity and the duplicate billing concern",
+        "Does not claim a bill credit was applied on this turn",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -57,32 +97,17 @@ def _msg(store_t41):
     timeout_s=420.0,
 )
 async def test_t41_full(s, store_t41):
-    meta = store_t41.seed_meta
     (
-            s.user_message(_msg(store_t41))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                    m.tool_call("run_line_diagnostic"),
-                    m.tool_call("run_billing_policy_specialist"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t41))
-            .assert_that(lambda: o.assert_no_tickets(store_t41))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Addresses both mobile data or connectivity and the duplicate billing concern",
-                        "Does not claim a bill credit was applied on this turn",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+        s.user_message(_msg1(store_t41))
+        .assert_tool_calls(_T41_AUTH, ordered=True, allow_extras=True)
+        .user_message(_msg2(store_t41))
+        .user_message(_msg3(store_t41))
+        .assert_tool_calls(_T41_WORK, ordered=False, allow_extras=True)
+        .assert_output(_T41_OUTPUT)
+        .user_message(_msg4(store_t41))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t41))
+        .assert_that(lambda: o.assert_no_tickets(store_t41))
+    )
 
 
 @ek.scenario(
@@ -92,20 +117,14 @@ async def test_t41_full(s, store_t41):
     timeout_s=420.0,
 )
 async def test_t41_trace(s, store_t41):
-    meta = store_t41.seed_meta
     (
-            s.user_message(_msg(store_t41))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                    m.tool_call("run_line_diagnostic"),
-                    m.tool_call("run_billing_policy_specialist"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg1(store_t41))
+        .assert_tool_calls(_T41_AUTH, ordered=True, allow_extras=True)
+        .user_message(_msg2(store_t41))
+        .user_message(_msg3(store_t41))
+        .assert_tool_calls(_T41_WORK, ordered=False, allow_extras=True)
+        .user_message(_msg4(store_t41))
+    )
 
 
 @ek.scenario(
@@ -115,12 +134,14 @@ async def test_t41_trace(s, store_t41):
     timeout_s=420.0,
 )
 async def test_t41_state(s, store_t41):
-    meta = store_t41.seed_meta
     (
-            s.user_message(_msg(store_t41))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t41))
-            .assert_that(lambda: o.assert_no_tickets(store_t41))
-        )
+        s.user_message(_msg1(store_t41))
+        .user_message(_msg2(store_t41))
+        .user_message(_msg3(store_t41))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t41))
+        .assert_that(lambda: o.assert_no_tickets(store_t41))
+        .user_message(_msg4(store_t41))
+    )
 
 
 @ek.scenario(
@@ -130,17 +151,10 @@ async def test_t41_state(s, store_t41):
     timeout_s=420.0,
 )
 async def test_t41_output(s, store_t41):
-    meta = store_t41.seed_meta
     (
-            s.user_message(_msg(store_t41))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "Addresses both mobile data or connectivity and the duplicate billing concern",
-                        "Does not claim a bill credit was applied on this turn",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+        s.user_message(_msg1(store_t41))
+        .user_message(_msg2(store_t41))
+        .user_message(_msg3(store_t41))
+        .assert_output(_T41_OUTPUT)
+        .user_message(_msg4(store_t41))
+    )

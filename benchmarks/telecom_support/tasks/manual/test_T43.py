@@ -39,12 +39,19 @@ async def task_agent_t43(store_t43):
 
 
 def _msg1(store_t43):
-    return 'SIM problem on LINE-WRONG.'
+    return "My SIM will not connect — it is the family line, I think the number ends in 4421?"
+
 
 def _msg2(store_t43):
-    meta = store_t43.seed_meta
-    return f"Correct line {meta['line_id']}. Customer {meta['customer_id']} {meta['verification_token']}."
+    return "Sorry, wrong line — I meant our other phone, the one ending 7788."
 
+
+def _msg3(store_t43):
+    meta = store_t43.seed_meta
+    return (
+        f"Yes please use {meta['line_id']} for anything you do. "
+        f"Account {meta['customer_id']}, verification {meta['verification_token']}."
+    )
 
 
 @ek.scenario(
@@ -54,13 +61,13 @@ def _msg2(store_t43):
     timeout_s=420.0,
 )
 async def test_t43_full(s, store_t43):
-    meta = store_t43.seed_meta
     (
-            s.user_message(_msg1(store_t43))
+        s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
-            .assert_that(lambda: o.assert_no_mutations(store_t43))
-            .assert_output(m.string(min_len=5))
-        )
+        .user_message(_msg3(store_t43))
+        .assert_that(lambda: o.assert_no_mutations(store_t43))
+        .assert_output(m.string(min_len=5))
+    )
 
 
 @ek.scenario(
@@ -70,14 +77,12 @@ async def test_t43_full(s, store_t43):
     timeout_s=420.0,
 )
 async def test_t43_trace(s, store_t43):
-    meta = store_t43.seed_meta
     (
-            s.user_message(_msg1(store_t43))
+        s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
-            .assert_tool_calls([
-                    m.tool_call('authenticate_customer'),
-                ], ordered=True, allow_extras=True)
-        )
+        .user_message(_msg3(store_t43))
+        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -87,12 +92,12 @@ async def test_t43_trace(s, store_t43):
     timeout_s=420.0,
 )
 async def test_t43_state(s, store_t43):
-    meta = store_t43.seed_meta
     (
-            s.user_message(_msg1(store_t43))
+        s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
-            .assert_that(lambda: o.assert_no_mutations(store_t43))
-        )
+        .user_message(_msg3(store_t43))
+        .assert_that(lambda: o.assert_no_mutations(store_t43))
+    )
 
 
 @ek.scenario(
@@ -102,9 +107,9 @@ async def test_t43_state(s, store_t43):
     timeout_s=420.0,
 )
 async def test_t43_output(s, store_t43):
-    meta = store_t43.seed_meta
     (
-            s.user_message(_msg1(store_t43))
+        s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
-            .assert_output(m.string(min_len=5))
-        )
+        .user_message(_msg3(store_t43))
+        .assert_output(m.string(min_len=5))
+    )

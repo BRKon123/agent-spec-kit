@@ -41,9 +41,9 @@ async def task_agent_t06(store_t06):
 def _msg(store_t06):
     meta = store_t06.seed_meta
     return (
-        f"Quick status check; confirm line and system heartbeat."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"Hey — can you check my line and that your systems still see it OK? Account "
+        f"{meta['customer_id']}, verification token {meta['verification_token']}, line "
+        f"{meta['line_id']}."
     )
 
 

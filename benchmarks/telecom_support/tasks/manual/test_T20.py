@@ -39,7 +39,9 @@ async def task_agent_t20(store_t20):
 
 
 def _msg(store_t20):
-    return 'Show my billing details and plan charges before I authenticate.'
+    return (
+        "Hi — before I log in, can you show me my billing breakdown and what I'm paying on my plan?"
+    )
 
 
 

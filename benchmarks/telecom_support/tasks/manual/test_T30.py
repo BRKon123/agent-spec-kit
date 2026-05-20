@@ -41,12 +41,16 @@ async def task_agent_t30(store_t30):
 def _msg(store_t30):
     meta = store_t30.seed_meta
     return (
-        f"Change address and ship replacement SIM; address not verified — do not order SIM until "
-        f"address is verified."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I've moved house and need my address updated, then a replacement SIM sent out — but my "
+        f"new address isn't verified yet so please don't order the SIM until that's sorted."
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T30_TRACE = [m.tool_call("authenticate_customer")]
+
+_T30_OUTPUT = m.one_of(m.contains("address"), m.contains("verify"))
 
 
 @ek.scenario(
@@ -56,19 +60,12 @@ def _msg(store_t30):
     timeout_s=420.0,
 )
 async def test_t30_full(s, store_t30):
-    meta = store_t30.seed_meta
     (
-            s.user_message(_msg(store_t30))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_sim_orders(store_t30))
-            .assert_output(m.one_of(m.contains("address"), m.contains("verify")))
-        )
+        s.user_message(_msg(store_t30))
+        .assert_tool_calls(_T30_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_sim_orders(store_t30))
+        .assert_output(_T30_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -78,17 +75,7 @@ async def test_t30_full(s, store_t30):
     timeout_s=420.0,
 )
 async def test_t30_trace(s, store_t30):
-    meta = store_t30.seed_meta
-    (
-            s.user_message(_msg(store_t30))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t30)).assert_tool_calls(_T30_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -98,11 +85,7 @@ async def test_t30_trace(s, store_t30):
     timeout_s=420.0,
 )
 async def test_t30_state(s, store_t30):
-    meta = store_t30.seed_meta
-    (
-            s.user_message(_msg(store_t30))
-            .assert_that(lambda: o.assert_no_sim_orders(store_t30))
-        )
+    (s.user_message(_msg(store_t30)).assert_that(lambda: o.assert_no_sim_orders(store_t30)))
 
 
 @ek.scenario(
@@ -112,8 +95,4 @@ async def test_t30_state(s, store_t30):
     timeout_s=420.0,
 )
 async def test_t30_output(s, store_t30):
-    meta = store_t30.seed_meta
-    (
-            s.user_message(_msg(store_t30))
-            .assert_output(m.one_of(m.contains("address"), m.contains("verify")))
-        )
+    (s.user_message(_msg(store_t30)).assert_output(_T30_OUTPUT))

@@ -41,9 +41,9 @@ async def task_agent_t08(store_t08):
 def _msg(store_t08):
     meta = store_t08.seed_meta
     return (
-        f"Open a support ticket for my data issue with reason 'general problem' only."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"My data's been broken for days — please open a ticket and just call it a general "
+        f"problem. Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}, line {meta['line_id']}."
     )
 
 

@@ -41,12 +41,21 @@ async def task_agent_t26(store_t26):
 def _msg(store_t26):
     meta = store_t26.seed_meta
     return (
-        f"I lost my physical SIM card. Please ship a physical replacement to my default "
-        f"address for line {meta['line_id']}."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"I lost my physical SIM card — can you send a replacement to my usual home address for "
+        f"line {meta['line_id']}?"
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}."
     )
 
+
+_T26_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "order_replacement_sim",
+        args=m.object({"sim_type": m.one_of("physical")}, extra="ignore"),
+    ),
+]
+
+_T26_OUTPUT = m.one_of(m.contains("replacement"), m.contains("SIM"))
 
 
 @ek.scenario(
@@ -56,21 +65,13 @@ def _msg(store_t26):
     timeout_s=420.0,
 )
 async def test_t26_full(s, store_t26):
-    meta = store_t26.seed_meta
     (
-            s.user_message(_msg(store_t26))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("order_replacement_sim", args=m.object({"sim_type": m.one_of("physical")}, extra="ignore")),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_sim_order_exists(store_t26))
-            .assert_that(lambda: o.assert_audit_note_exists(store_t26))
-            .assert_output(m.one_of(m.contains("replacement"), m.contains("SIM")))
-        )
+        s.user_message(_msg(store_t26))
+        .assert_tool_calls(_T26_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_sim_order_exists(store_t26))
+        .assert_that(lambda: o.assert_audit_note_exists(store_t26))
+        .assert_output(_T26_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -80,18 +81,7 @@ async def test_t26_full(s, store_t26):
     timeout_s=420.0,
 )
 async def test_t26_trace(s, store_t26):
-    meta = store_t26.seed_meta
-    (
-            s.user_message(_msg(store_t26))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("order_replacement_sim"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t26)).assert_tool_calls(_T26_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -101,12 +91,11 @@ async def test_t26_trace(s, store_t26):
     timeout_s=420.0,
 )
 async def test_t26_state(s, store_t26):
-    meta = store_t26.seed_meta
     (
-            s.user_message(_msg(store_t26))
-            .assert_that(lambda: o.assert_sim_order_exists(store_t26))
-            .assert_that(lambda: o.assert_audit_note_exists(store_t26))
-        )
+        s.user_message(_msg(store_t26))
+        .assert_that(lambda: o.assert_sim_order_exists(store_t26))
+        .assert_that(lambda: o.assert_audit_note_exists(store_t26))
+    )
 
 
 @ek.scenario(
@@ -116,8 +105,4 @@ async def test_t26_state(s, store_t26):
     timeout_s=420.0,
 )
 async def test_t26_output(s, store_t26):
-    meta = store_t26.seed_meta
-    (
-            s.user_message(_msg(store_t26))
-            .assert_output(m.one_of(m.contains("replacement"), m.contains("SIM")))
-        )
+    (s.user_message(_msg(store_t26)).assert_output(_T26_OUTPUT))

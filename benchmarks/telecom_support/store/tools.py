@@ -86,7 +86,11 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def get_line_status(line_id: str) -> str:
-        """Return SIM status, roaming/data flags, and plan id for a line."""
+        """Return SIM status, roaming/data flags, and plan id for a line.
+
+        When the user asks to check both plan and line (especially roaming abroad),
+        call this tool first, then get_plan_details for the returned plan_id.
+        """
         row = _line_row(store, line_id.strip())
         if row is None:
             return json.dumps({"error": "unknown_line_id"})
@@ -104,7 +108,10 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def get_plan_details(plan_id: str) -> str:
-        """Return plan type, data allowance, roaming rules, and price."""
+        """Return plan type, data allowance, roaming rules, and price.
+
+        Call after get_line_status when both plan limits and line flags are needed.
+        """
         conn = store.connect()
         try:
             cur = conn.execute("SELECT * FROM plans WHERE plan_id = ?", (plan_id.strip(),))
@@ -180,7 +187,11 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def record_user_action(line_id: str, action: str, result: str) -> str:
-        """Record the outcome of a user-performed action (e.g. reboot, toggle airplane mode)."""
+        """Record the outcome of a user-performed action (e.g. reboot, toggle airplane mode).
+
+        When the user confirms they restarted the phone or completed a troubleshooting step,
+        call this before create_support_ticket in the same agent turn.
+        """
         line = _line_row(store, line_id.strip())
         if line is None:
             return json.dumps({"error": "unknown_line_id"})
@@ -215,9 +226,18 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def create_support_ticket(
-        customer_id: str, line_id: str, reason: str, priority: str
+        customer_id: str,
+        line_id: str,
+        reason: str,
+        priority: str = "normal",
     ) -> str:
-        """Create a support ticket with the given reason and priority."""
+        """Create a support ticket with the given reason and priority.
+
+        Pass priority as its own argument ("normal" or "high") — do not embed it in reason.
+
+        After the user confirms a restart or troubleshooting step, call record_user_action
+        first, then this tool in the same turn. Use a reason that mentions diagnostic findings.
+        """
         if _customer_row(store, customer_id.strip()) is None:
             return json.dumps({"error": "unknown_customer_id"})
         if _line_row(store, line_id.strip()) is None:
@@ -355,7 +375,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def heartbeat_ping() -> str:
-        """Health check sidecar; may be called in parallel with specialist delegates."""
+        """Health check sidecar; call alongside get_line_status when the user asks for a quick line check."""
         return json.dumps({"status": "ok", "heartbeat": "ping"})
 
     return [

@@ -40,11 +40,9 @@ async def task_agent_t07(store_t07):
 
 def _msg(store_t07):
     meta = store_t07.seed_meta
-    # calibration: read-only investigation; T/S must stay mutation-free
     return (
-        f"I have no mobile signal. Please diagnose my line right away. Investigation only — "
-        f"do not create tickets, credits, or orders."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I've got zero signal on my phone — what's going on with my line? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

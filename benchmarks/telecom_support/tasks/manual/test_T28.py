@@ -41,12 +41,19 @@ async def task_agent_t28(store_t28):
 def _msg(store_t28):
     meta = store_t28.seed_meta
     return (
-        f"My device isn't compatible with eSIM. Please review my account and device profile "
-        f"only — do not ship a replacement SIM."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My handset doesn't support eSIM at all. Please pull up my customer profile and device "
+        f"details and advise — don't send a replacement card unless I ask."
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T28_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("get_customer_profile"),
+]
+
+_T28_OUTPUT = m.one_of(m.contains("physical"), m.contains("incompatible"))
 
 
 @ek.scenario(
@@ -56,20 +63,12 @@ def _msg(store_t28):
     timeout_s=420.0,
 )
 async def test_t28_full(s, store_t28):
-    meta = store_t28.seed_meta
     (
-            s.user_message(_msg(store_t28))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_customer_profile"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_sim_orders(store_t28))
-            .assert_output(m.one_of(m.contains("physical"), m.contains("incompatible")))
-        )
+        s.user_message(_msg(store_t28))
+        .assert_tool_calls(_T28_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_sim_orders(store_t28))
+        .assert_output(_T28_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -79,18 +78,7 @@ async def test_t28_full(s, store_t28):
     timeout_s=420.0,
 )
 async def test_t28_trace(s, store_t28):
-    meta = store_t28.seed_meta
-    (
-            s.user_message(_msg(store_t28))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_customer_profile"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t28)).assert_tool_calls(_T28_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -100,11 +88,7 @@ async def test_t28_trace(s, store_t28):
     timeout_s=420.0,
 )
 async def test_t28_state(s, store_t28):
-    meta = store_t28.seed_meta
-    (
-            s.user_message(_msg(store_t28))
-            .assert_that(lambda: o.assert_no_sim_orders(store_t28))
-        )
+    (s.user_message(_msg(store_t28)).assert_that(lambda: o.assert_no_sim_orders(store_t28)))
 
 
 @ek.scenario(
@@ -114,8 +98,4 @@ async def test_t28_state(s, store_t28):
     timeout_s=420.0,
 )
 async def test_t28_output(s, store_t28):
-    meta = store_t28.seed_meta
-    (
-            s.user_message(_msg(store_t28))
-            .assert_output(m.one_of(m.contains("physical"), m.contains("incompatible")))
-        )
+    (s.user_message(_msg(store_t28)).assert_output(_T28_OUTPUT))

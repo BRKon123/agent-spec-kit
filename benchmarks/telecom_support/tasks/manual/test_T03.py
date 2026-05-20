@@ -41,9 +41,9 @@ async def task_agent_t03(store_t03):
 def _msg(store_t03):
     meta = store_t03.seed_meta
     return (
-        f"Mobile data failed at postcode {meta['postcode']}; no known outage. "
-        f"Troubleshoot only — do not open a support ticket yet."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My mobile data died near {meta['postcode']} and I don't think it's a network outage — "
+        f"I haven't restarted yet and don't want a ticket, just what to try first. Account "
+        f"{meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
@@ -70,7 +70,12 @@ async def test_t03_full(s, store_t03):
             )
             .assert_that(lambda: o.assert_no_tickets(store_t03))
             .assert_that(lambda: o.assert_no_credit_rows(store_t03))
-            .assert_output(m.all_of(m.contains("restart"), m.contains("step")))
+            .assert_output(
+                m.all_of(
+                    m.one_of(m.contains("restart"), m.contains("reboot")),
+                    m.contains("step"),
+                )
+            )
         )
 
 
@@ -121,5 +126,10 @@ async def test_t03_output(s, store_t03):
     meta = store_t03.seed_meta
     (
             s.user_message(_msg(store_t03))
-            .assert_output(m.all_of(m.contains("restart"), m.contains("step")))
+            .assert_output(
+                m.all_of(
+                    m.one_of(m.contains("restart"), m.contains("reboot")),
+                    m.contains("step"),
+                )
+            )
         )

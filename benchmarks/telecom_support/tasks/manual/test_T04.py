@@ -40,18 +40,18 @@ async def task_agent_t04(store_t04):
 
 def _msg1(store_t04):
     meta = store_t04.seed_meta
-    # calibration: turn 1 diagnostic + troubleshooting; turn 2 records action and opens ticket
     return (
-        f"Mobile data is not working; line diagnostic may fail after restart."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My mobile data isn't working — worried it'll still fail even after a restart. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
 def _msg2(store_t04):
     meta = store_t04.seed_meta
     return (
-        f"I am still authenticated as {meta['customer_id']}. "
-        f"I completed the device restart on line {meta['line_id']}."
+        f"I restarted the phone on line {meta['line_id']} and still have no data — can you "
+        f"open a support ticket? Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}."
     )
 
 
@@ -90,7 +90,7 @@ async def test_t04_trace(s, store_t04):
     meta = store_t04.seed_meta
     (
             s.user_message(_msg1(store_t04))
-        .user_message(_msg2(store_t04))
+            .user_message(_msg2(store_t04))
             .assert_tool_calls(
                 [
                     m.tool_call("record_user_action"),
@@ -112,7 +112,7 @@ async def test_t04_state(s, store_t04):
     meta = store_t04.seed_meta
     (
             s.user_message(_msg1(store_t04))
-        .user_message(_msg2(store_t04))
+            .user_message(_msg2(store_t04))
             .assert_that(lambda: o.assert_ticket_exists(store_t04))
         )
 
@@ -127,6 +127,6 @@ async def test_t04_output(s, store_t04):
     meta = store_t04.seed_meta
     (
             s.user_message(_msg1(store_t04))
-        .user_message(_msg2(store_t04))
+            .user_message(_msg2(store_t04))
             .assert_output(m.contains("ticket"))
         )

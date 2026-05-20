@@ -41,10 +41,9 @@ async def task_agent_t10(store_t10):
 def _msg(store_t10):
     meta = store_t10.seed_meta
     return (
-        f"Weak evidence on my device; run full network diagnostics but do not state the "
-        f"root cause as certain in your reply to me."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"My phone's been flaky on signal but I'm not convinced it's definitely the network. "
+        f"Can you run a proper check? Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}, line {meta['line_id']}."
     )
 
 

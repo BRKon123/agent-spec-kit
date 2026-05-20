@@ -41,11 +41,19 @@ async def task_agent_t35(store_t35):
 def _msg(store_t35):
     meta = store_t35.seed_meta
     return (
-        f"Escalate existing open ticket TCK-EXIST-01; do not create duplicate."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I already have open ticket TCK-EXIST-01 for this — please escalate that one, "
+        f"don't open a duplicate."
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T35_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("escalate_ticket"),
+]
+
+_T35_OUTPUT = m.one_of(m.contains("escalat"), m.contains("policy"))
 
 
 @ek.scenario(
@@ -55,20 +63,12 @@ def _msg(store_t35):
     timeout_s=420.0,
 )
 async def test_t35_full(s, store_t35):
-    meta = store_t35.seed_meta
     (
-            s.user_message(_msg(store_t35))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("escalate_ticket"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_ticket_count(store_t35, 1))
-            .assert_output(m.one_of(m.contains("escalat"), m.contains("policy")))
-        )
+        s.user_message(_msg(store_t35))
+        .assert_tool_calls(_T35_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_ticket_count(store_t35, 1))
+        .assert_output(_T35_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -78,18 +78,10 @@ async def test_t35_full(s, store_t35):
     timeout_s=420.0,
 )
 async def test_t35_trace(s, store_t35):
-    meta = store_t35.seed_meta
     (
-            s.user_message(_msg(store_t35))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("escalate_ticket"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg(store_t35))
+        .assert_tool_calls(_T35_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -99,11 +91,10 @@ async def test_t35_trace(s, store_t35):
     timeout_s=420.0,
 )
 async def test_t35_state(s, store_t35):
-    meta = store_t35.seed_meta
     (
-            s.user_message(_msg(store_t35))
-            .assert_that(lambda: o.assert_ticket_count(store_t35, 1))
-        )
+        s.user_message(_msg(store_t35))
+        .assert_that(lambda: o.assert_ticket_count(store_t35, 1))
+    )
 
 
 @ek.scenario(
@@ -113,8 +104,7 @@ async def test_t35_state(s, store_t35):
     timeout_s=420.0,
 )
 async def test_t35_output(s, store_t35):
-    meta = store_t35.seed_meta
     (
-            s.user_message(_msg(store_t35))
-            .assert_output(m.one_of(m.contains("escalat"), m.contains("policy")))
-        )
+        s.user_message(_msg(store_t35))
+        .assert_output(_T35_OUTPUT)
+    )

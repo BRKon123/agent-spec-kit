@@ -40,14 +40,19 @@ async def task_agent_t11(store_t11):
 
 def _msg(store_t11):
     meta = store_t11.seed_meta
-    # calibration: read-only plan/line check; no tickets or troubleshooting workflow
     return (
-        f"Roaming abroad but mobile data fails; roaming may be disabled on line. "
-        f"Check plan {meta.get('plan_id', 'PLAN-STD')} and line status only — do not open a ticket. "
-        f"Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I'm abroad and mobile data just stopped working — could roaming be turned off on my line? "
+        f"Can you check my plan and line status? I don't need a ticket yet, just want to know what's up. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T11_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("get_line_status"),
+    m.tool_call("get_plan_details"),
+]
 
 
 @ek.scenario(
@@ -60,15 +65,7 @@ async def test_t11_full(s, store_t11):
     meta = store_t11.seed_meta
     (
             s.user_message(_msg(store_t11))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_plan_details"),
-                    m.tool_call("get_line_status"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
+            .assert_tool_calls(_T11_TRACE, ordered=True, allow_extras=True)
             .assert_that(lambda: o.assert_no_tickets(store_t11))
             .assert_output(m.contains("plan"))
         )
@@ -84,15 +81,7 @@ async def test_t11_trace(s, store_t11):
     meta = store_t11.seed_meta
     (
             s.user_message(_msg(store_t11))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_plan_details"),
-                    m.tool_call("get_line_status"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
+            .assert_tool_calls(_T11_TRACE, ordered=True, allow_extras=True)
         )
 
 

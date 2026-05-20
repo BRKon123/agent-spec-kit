@@ -41,8 +41,9 @@ async def task_agent_t13(store_t13):
 def _msg(store_t13):
     meta = store_t13.seed_meta
     return (
-        f"Roaming problem abroad — I think the partner network may be at fault. Run full diagnostics."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"Roaming's been awful since I landed — pretty sure it's the local partner network, not my phone. "
+        f"Can you dig into what's going on? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

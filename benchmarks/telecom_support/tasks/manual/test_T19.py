@@ -41,9 +41,9 @@ async def task_agent_t19(store_t19):
 def _msg(store_t19):
     meta = store_t19.seed_meta
     return (
-        f"I have a billing error after a plan change. Please open a support ticket about "
-        f"the plan-change billing — no credits."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"Something's wrong with my bill after I changed plans last month — can you raise it with "
+        f"billing and get a ticket opened? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

@@ -41,12 +41,20 @@ async def task_agent_t34(store_t34):
 def _msg(store_t34):
     meta = store_t34.seed_meta
     return (
-        f"I need to book a store appointment. Please diagnose my line and schedule a store "
-        f"visit in the same response."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I'd like to book a store appointment at store STR-001 — please run a line diagnostic "
+        f"and schedule the visit in the same reply."
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T34_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("run_line_diagnostic"),
+    m.tool_call("schedule_store_appointment"),
+]
+
+_T34_OUTPUT = m.contains("appointment")
 
 
 @ek.scenario(
@@ -56,21 +64,12 @@ def _msg(store_t34):
     timeout_s=420.0,
 )
 async def test_t34_full(s, store_t34):
-    meta = store_t34.seed_meta
     (
-            s.user_message(_msg(store_t34))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_line_diagnostic"),
-                    m.tool_call("schedule_store_appointment"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_appointment_exists(store_t34))
-            .assert_output(m.contains("appointment"))
-        )
+        s.user_message(_msg(store_t34))
+        .assert_tool_calls(_T34_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_appointment_exists(store_t34))
+        .assert_output(_T34_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -80,19 +79,10 @@ async def test_t34_full(s, store_t34):
     timeout_s=420.0,
 )
 async def test_t34_trace(s, store_t34):
-    meta = store_t34.seed_meta
     (
-            s.user_message(_msg(store_t34))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_line_diagnostic"),
-                    m.tool_call("schedule_store_appointment"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg(store_t34))
+        .assert_tool_calls(_T34_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -102,11 +92,10 @@ async def test_t34_trace(s, store_t34):
     timeout_s=420.0,
 )
 async def test_t34_state(s, store_t34):
-    meta = store_t34.seed_meta
     (
-            s.user_message(_msg(store_t34))
-            .assert_that(lambda: o.assert_appointment_exists(store_t34))
-        )
+        s.user_message(_msg(store_t34))
+        .assert_that(lambda: o.assert_appointment_exists(store_t34))
+    )
 
 
 @ek.scenario(
@@ -116,8 +105,7 @@ async def test_t34_state(s, store_t34):
     timeout_s=420.0,
 )
 async def test_t34_output(s, store_t34):
-    meta = store_t34.seed_meta
     (
-            s.user_message(_msg(store_t34))
-            .assert_output(m.contains("appointment"))
-        )
+        s.user_message(_msg(store_t34))
+        .assert_output(_T34_OUTPUT)
+    )

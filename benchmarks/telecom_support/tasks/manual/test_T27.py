@@ -41,11 +41,19 @@ async def task_agent_t27(store_t27):
 def _msg(store_t27):
     meta = store_t27.seed_meta
     return (
-        f"eSIM setup keeps failing on a compatible device — please run full network diagnostics."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My eSIM activation keeps failing on a phone that should support it. Can you run a proper "
+        f"network check and tell me what's going on?"
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T27_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("run_network_diagnostics_specialist"),
+]
+
+_T27_OUTPUT = m.one_of(m.contains("eSIM"), m.contains("setup"))
 
 
 @ek.scenario(
@@ -55,20 +63,12 @@ def _msg(store_t27):
     timeout_s=420.0,
 )
 async def test_t27_full(s, store_t27):
-    meta = store_t27.seed_meta
     (
-            s.user_message(_msg(store_t27))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_network_diagnostics_specialist"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_sim_orders(store_t27))
-            .assert_output(m.one_of(m.contains("eSIM"), m.contains("setup")))
-        )
+        s.user_message(_msg(store_t27))
+        .assert_tool_calls(_T27_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_sim_orders(store_t27))
+        .assert_output(_T27_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -78,18 +78,7 @@ async def test_t27_full(s, store_t27):
     timeout_s=420.0,
 )
 async def test_t27_trace(s, store_t27):
-    meta = store_t27.seed_meta
-    (
-            s.user_message(_msg(store_t27))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_network_diagnostics_specialist"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t27)).assert_tool_calls(_T27_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -99,11 +88,7 @@ async def test_t27_trace(s, store_t27):
     timeout_s=420.0,
 )
 async def test_t27_state(s, store_t27):
-    meta = store_t27.seed_meta
-    (
-            s.user_message(_msg(store_t27))
-            .assert_that(lambda: o.assert_no_sim_orders(store_t27))
-        )
+    (s.user_message(_msg(store_t27)).assert_that(lambda: o.assert_no_sim_orders(store_t27)))
 
 
 @ek.scenario(
@@ -113,8 +98,4 @@ async def test_t27_state(s, store_t27):
     timeout_s=420.0,
 )
 async def test_t27_output(s, store_t27):
-    meta = store_t27.seed_meta
-    (
-            s.user_message(_msg(store_t27))
-            .assert_output(m.one_of(m.contains("eSIM"), m.contains("setup")))
-        )
+    (s.user_message(_msg(store_t27)).assert_output(_T27_OUTPUT))

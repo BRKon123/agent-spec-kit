@@ -41,10 +41,9 @@ async def task_agent_t18(store_t18):
 def _msg(store_t18):
     meta = store_t18.seed_meta
     return (
-        f"I've had a long outage and I'm verified. My postcode is {meta['postcode']} — can you "
-        f"check if my area is affected and explain what's going on? Please don't apply any "
-        f"goodwill credit or internal documentation on this turn."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"We've had a long outage at home — postcode {meta['postcode']}. Is there still an outage "
+        f"in our area and what's going on? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

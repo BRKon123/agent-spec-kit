@@ -41,10 +41,9 @@ async def task_agent_t12(store_t12):
 def _msg(store_t12):
     meta = store_t12.seed_meta
     return (
-        f"I am traveling to the US and my plan {meta.get('plan_id', 'PLAN-STD')} may not "
-        f"include the destination. After you verify my account, please explain plan limits "
-        f"and roaming."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"Flying to the US next week — not sure if my plan covers it or what roaming costs look like. "
+        f"Can you check plan {meta.get('plan_id', 'PLAN-STD')} and walk me through the limits? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

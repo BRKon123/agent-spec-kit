@@ -41,10 +41,9 @@ async def task_agent_t09(store_t09):
 def _msg(store_t09):
     meta = store_t09.seed_meta
     return (
-        f"Ambiguous network issue on my line — run deep diagnostics. If severity is high, "
-        f"recommend opening a ticket but do not give an escalation reason."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"Something's off with my connection — keeps dropping and I'm not sure why. "
+        f"Can you dig into it? Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}, line {meta['line_id']}."
     )
 
 

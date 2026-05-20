@@ -41,8 +41,9 @@ async def task_agent_t05(store_t05):
 def _msg(store_t05):
     meta = store_t05.seed_meta
     return (
-        f"Intermittent latency spikes on my line; not sure if outage or device."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My line {meta['line_id']} keeps lagging with latency spikes — can you check if it's "
+        f"the network side? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

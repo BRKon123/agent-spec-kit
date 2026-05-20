@@ -41,10 +41,9 @@ async def task_agent_t01(store_t01):
 def _msg(store_t01):
     meta = store_t01.seed_meta
     return (
-        f"My mobile data is not working. Investigation only — please do not open tickets or "
-        f"apply credits. Check the status of line {meta['line_id']} and explain whether mobile "
-        f"data is enabled."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"My mobile data isn't working — I'm not trying to open a case yet, just need to "
+        f"know if data is turned on for line {meta['line_id']}. Account "
+        f"{meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

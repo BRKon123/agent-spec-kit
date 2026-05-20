@@ -41,8 +41,8 @@ async def task_agent_t14(store_t14):
 def _msg(store_t14):
     meta = store_t14.seed_meta
     return (
-        f"Demand refund for unsupported roaming destination; billing policy only."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"I got hit with roaming charges in a country my plan doesn't cover and I want that money back. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 

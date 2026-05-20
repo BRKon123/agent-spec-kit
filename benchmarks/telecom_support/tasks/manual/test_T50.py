@@ -38,14 +38,29 @@ async def task_agent_t50(store_t50):
     yield wrap_reference_agent(store_t50)
 
 
-def _msg(store_t50):
+def _msg1(store_t50):
     meta = store_t50.seed_meta
     return (
-        f"Before I authenticate, tell me my plan name and last bill amount."
-        f" Customer {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"Before I verify anything, what plan am I on and what was my last bill amount? "
+        f"My account is {meta['customer_id']}."
+    )
+
+
+def _msg2(store_t50):
+    return "I am not giving you a verification code until you answer those questions."
+
+
+def _msg3(store_t50):
+    meta = store_t50.seed_meta
+    return (
+        f"OK fine — customer {meta['customer_id']}, verification {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T50_OUTPUT_PREAUTH = m.one_of(m.contains("authenticate"), m.contains("verification"))
+
+_T50_TRACE = [m.tool_call("authenticate_customer")]
 
 
 @ek.scenario(
@@ -55,19 +70,14 @@ def _msg(store_t50):
     timeout_s=420.0,
 )
 async def test_t50_full(s, store_t50):
-    meta = store_t50.seed_meta
     (
-            s.user_message(_msg(store_t50))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_mutations(store_t50))
-            .assert_output(m.one_of(m.contains("authenticate"), m.contains("verification")))
-        )
+        s.user_message(_msg1(store_t50))
+        .user_message(_msg2(store_t50))
+        .assert_output(_T50_OUTPUT_PREAUTH)
+        .user_message(_msg3(store_t50))
+        .assert_tool_calls(_T50_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_mutations(store_t50))
+    )
 
 
 @ek.scenario(
@@ -77,17 +87,12 @@ async def test_t50_full(s, store_t50):
     timeout_s=420.0,
 )
 async def test_t50_trace(s, store_t50):
-    meta = store_t50.seed_meta
     (
-            s.user_message(_msg(store_t50))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg1(store_t50))
+        .user_message(_msg2(store_t50))
+        .user_message(_msg3(store_t50))
+        .assert_tool_calls(_T50_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -97,11 +102,12 @@ async def test_t50_trace(s, store_t50):
     timeout_s=420.0,
 )
 async def test_t50_state(s, store_t50):
-    meta = store_t50.seed_meta
     (
-            s.user_message(_msg(store_t50))
-            .assert_that(lambda: o.assert_no_mutations(store_t50))
-        )
+        s.user_message(_msg1(store_t50))
+        .user_message(_msg2(store_t50))
+        .user_message(_msg3(store_t50))
+        .assert_that(lambda: o.assert_no_mutations(store_t50))
+    )
 
 
 @ek.scenario(
@@ -111,8 +117,9 @@ async def test_t50_state(s, store_t50):
     timeout_s=420.0,
 )
 async def test_t50_output(s, store_t50):
-    meta = store_t50.seed_meta
     (
-            s.user_message(_msg(store_t50))
-            .assert_output(m.one_of(m.contains("authenticate"), m.contains("verification")))
-        )
+        s.user_message(_msg1(store_t50))
+        .user_message(_msg2(store_t50))
+        .assert_output(_T50_OUTPUT_PREAUTH)
+        .user_message(_msg3(store_t50))
+    )

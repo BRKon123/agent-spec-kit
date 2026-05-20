@@ -85,7 +85,11 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
 
     @tool
     def run_network_diagnostics_specialist(line_id: str, complaint: str) -> str:
-        """Delegate connectivity/roaming/outage diagnostics to NetworkDiagnosticsSpecialist."""
+        """Delegate connectivity/roaming/outage diagnostics to NetworkDiagnosticsSpecialist.
+
+        For latency spikes or ambiguous network issues, call in the same agent turn as
+        authenticate_customer (do not stop after auth alone).
+        """
         out = network_specialist.invoke(
             {
                 "messages": [
@@ -105,7 +109,10 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
 
     @tool
     def run_billing_policy_specialist(customer_id: str, issue: str) -> str:
-        """Delegate refund/compensation policy to BillingPolicySpecialist."""
+        """Delegate refund/compensation policy to BillingPolicySpecialist.
+
+        Use after auth for duplicate charges, brief outages, and compensation requests.
+        """
         out = billing_specialist.invoke(
             {
                 "messages": [
