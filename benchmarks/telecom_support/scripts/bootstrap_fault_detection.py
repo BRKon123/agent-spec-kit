@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""Generate tasks/fault_detection/generated/test_Fxx_Tyy.py from manual scenarios + fault_matrix.yaml."""
+
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+from textwrap import dedent
+
+BENCH = Path(__file__).resolve().parents[1]
+MANUAL = BENCH / "tasks" / "manual"
+GENERATED = BENCH / "tasks" / "fault_detection" / "generated"
+
+HEADER = dedent(
+    '''\
+    """Generated fault-detection scenarios — do not edit by hand.
+
+    Regenerate: uv run python benchmarks/telecom_support/scripts/bootstrap_fault_detection.py
+    """
+
+    from __future__ import annotations
+
+    import sys
+    from pathlib import Path
+
+    _ROOT = Path(__file__).resolve().parents[3]
+    if str(_ROOT) not in sys.path:
+        sys.path.insert(0, str(_ROOT))
+
+    import agent_spec_kit as ek
+    import agent_spec_kit.match as m
+    from tasks.specs import oracles as o
+
+    from agent_wrap import wrap_reference_agent
+    {manual_imports}
+
+    '''
+)
+
+FIXTURE_BLOCK = dedent(
+    '''
+    @ek.fixture
+    async def fault_agent_{task_lower}(store_{task_lower}):
+        yield wrap_reference_agent(store_{task_lower}, variant={variant!r})
+    '''
+)
+
+def _task_num(task_id: str) -> int:
+    return int(task_id[1:])
+
+
+def _extract_message_helpers(manual_path: Path) -> str:
+    """Copy _msg* function definitions only (stop before next top-level def/async/@)."""
+    source = manual_path.read_text(encoding="utf-8")
+    chunks: list[str] = []
+    for m in re.finditer(
+        r"(?ms)^(def _msg\w*\([^)]*\):.*?)(?=\n(?:@ek\.|async def |def ))",
+        source,
+    ):
+        chunks.append(m.group(1).rstrip() + "\n\n")
+    return "".join(chunks)
+
+
+def _store_fixture_block(task_id: str) -> str:
+    lower = task_id.lower()
+    return dedent(
+        f'''
+        import shutil
+        import tempfile
+
+        from store.seeds import apply_seed
+        from store.store import TelcoStore
+
+        @ek.fixture
+        async def store_{lower}():
+            base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
+            try:
+                telco = TelcoStore(base / "telco.sqlite")
+                apply_seed(telco, "task_{task_id}")
+                yield telco
+            finally:
+                shutil.rmtree(base, ignore_errors=True)
+        '''
+    )
+
+
+def _extract_kind_blocks(manual_path: Path, task_num: int) -> dict[str, str]:
+    source = manual_path.read_text(encoding="utf-8")
+    prefix = f"test_t{task_num:02d}_"
+    blocks: dict[str, str] = {}
+    for kind in ("full", "trace", "state", "output"):
+        m = re.search(
+            rf"(?ms)^async def {re.escape(prefix)}{kind}\(s, store_t\d{{2}}\):\n"
+            rf"(.*?)(?=^@ek\.scenario\(|^async def |^def |\Z)",
+            source,
+        )
+        if m:
+            blocks[kind] = m.group(1)
+    return blocks
+
+
+def generate_file(family: str, task: str, variant: str) -> str:
+    tnum = _task_num(task)
+    manual_path = MANUAL / f"test_T{tnum:02d}.py"
+    if not manual_path.is_file():
+        raise FileNotFoundError(manual_path)
+    bodies = _extract_kind_blocks(manual_path, tnum)
+    if len(bodies) != 4:
+        raise RuntimeError(f"{manual_path}: expected 4 scenarios, got {list(bodies)}")
+
+    task_lower = task.lower()
+    fnum = family[1:]
+
+    msg_helpers = _extract_message_helpers(manual_path)
+    parts = [
+        HEADER.format(manual_imports=""),
+        _store_fixture_block(task),
+        msg_helpers,
+        FIXTURE_BLOCK.format(task_lower=task_lower, variant=variant),
+    ]
+
+    for kind, oracle_tag in [
+        ("full", "F"),
+        ("trace", "T"),
+        ("state", "S"),
+        ("output", "O"),
+    ]:
+        body = bodies[kind]
+        parts.append("@ek.scenario(\n")
+        parts.append(f'    agent_fixture="fault_agent_{task_lower}",\n')
+        parts.append("    repeats=1,\n")
+        parts.append("    tags=(\n")
+        parts.append('        "telecom",\n')
+        parts.append('        "fault-detection",\n')
+        parts.append(f'        "fault:{family}",\n')
+        parts.append(f'        "task:{task}",\n')
+        parts.append(f'        "oracle:{oracle_tag}",\n')
+        parts.append(f'        "mutant:{variant}",\n')
+        parts.append("    ),\n")
+        parts.append("    timeout_s=420.0,\n")
+        parts.append(")\n")
+        parts.append(f"async def test_f{fnum}_{task_lower}_{kind}(s, store_{task_lower}):\n")
+        parts.append(body)
+        if not body.endswith("\n"):
+            parts.append("\n")
+        parts.append("\n")
+
+    return "\n".join(parts)
+
+
+def main() -> int:
+    if str(BENCH) not in sys.path:
+        sys.path.insert(0, str(BENCH))
+
+    from scripts.fault_detection_lib import load_fault_matrix, primary_pairs, variant_for_pair
+
+    matrix = load_fault_matrix()
+    GENERATED.mkdir(parents=True, exist_ok=True)
+    init_py = GENERATED / "__init__.py"
+    if not init_py.exists():
+        init_py.write_text('"""Generated fault-detection scenario modules."""\n', encoding="utf-8")
+
+    n = 0
+    for family, task, _ in primary_pairs(matrix):
+        variant = variant_for_pair(matrix, family, task)
+        content = generate_file(family, task, variant)
+        out = GENERATED / f"test_{family}_{task}.py"
+        out.write_text(content, encoding="utf-8")
+        print(f"Wrote {out.relative_to(BENCH)}")
+        n += 1
+
+    print(f"Generated {n} modules under {GENERATED.relative_to(BENCH)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

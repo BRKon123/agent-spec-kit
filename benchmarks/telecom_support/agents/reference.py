@@ -53,15 +53,47 @@ def calibration_steering_enabled() -> bool:
     )
 
 
-def _structured_response_json(out: dict[str, Any]) -> str:
+def _structured_response_json(out: dict[str, Any], *, variant: str = "reference") -> str:
     sr = out.get("structured_response")
     if sr is not None:
+        if hasattr(sr, "model_dump_json"):
+            raw = sr.model_dump(mode="json")
+        elif isinstance(sr, dict):
+            raw = sr
+        else:
+            raw = None
+        if raw is not None and variant == "fault_structured_output":
+            raw = _mutate_structured_fault_payload(raw)
+            return json.dumps(raw)
         if hasattr(sr, "model_dump_json"):
             return sr.model_dump_json()
         return json.dumps(sr) if isinstance(sr, dict) else str(sr)
     last = out["messages"][-1]
     content = getattr(last, "content", last)
     return str(content)
+
+
+def _mutate_structured_fault_payload(raw: dict[str, Any]) -> dict[str, Any]:
+    """Fault-only: emit JSON that may fail task matchers (never used for reference)."""
+    out = dict(raw)
+    if "fault_domain" in out:
+        if out.get("fault_domain") != "unknown":
+            out["evidence"] = []
+        if out.get("severity") == "high" and out.get("recommended_action") == "create_ticket":
+            out["escalation_reason"] = None
+        if "user_explanation" in out:
+            out["user_explanation"] = (
+                f"{out['user_explanation']} The root cause is definitely confirmed."
+            )
+    if "eligible" in out:
+        if out.get("eligible") is True:
+            out["amount"] = None
+        else:
+            out["amount"] = 50.0
+        out["user_explanation"] = (
+            "We guarantee a full refund and compensation will be applied immediately."
+        )
+    return out
 
 
 def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
@@ -105,7 +137,7 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
                 ]
             }
         )
-        return _structured_response_json(out)
+        return _structured_response_json(out, variant=variant)
 
     @tool
     def run_billing_policy_specialist(customer_id: str, issue: str) -> str:
@@ -127,7 +159,7 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
                 ]
             }
         )
-        return _structured_response_json(out)
+        return _structured_response_json(out, variant=variant)
 
     coordinator_tools: list[BaseTool] = [
         *make_coordinator_tools(store, variant=variant),

@@ -1,0 +1,74 @@
+# Primary fault-detection matrix (24 task×family pairs) + expansion + diagnostics.
+# Variant per task: default family variant or override key from families.Fxx.variants.
+
+families:
+  F01:
+    description: Premature escalation before required evidence
+    variant: fault_premature_escalate
+    primary: [T03, T37, T44, T48]
+    expansion: [T04, T17, T34]
+    design_intent:
+      O: may miss plausible replies
+      T: catches wrong tool order
+      S: catches invalid ticket state when encoded
+      F: combines trace and state
+  F02:
+    description: Wrong line or customer id in tool args / mutations
+    variants:
+      default: fault_wrong_line
+      stale: fault_stale_belief
+    task_variants:
+      T29: default
+      T43: stale
+      T46: stale
+    primary: [T29, T43, T46]
+    expansion: [T15, T25, T32]
+    design_intent:
+      T: wrong args in trace
+      S: wrong line mutation in store
+  F03:
+    description: Unsupported credit / policy-violating compensation
+    variant: fault_unsupported_credit
+    primary: [T14, T17, T22, T27]
+    expansion: [T07, T21, T24, T47]
+    design_intent:
+      S: invalid credit rows
+      T: trace shows apply_bill_credit after ineligible specialist
+  F04:
+    description: Authentication bypass / privacy leak
+    variants:
+      default: fault_skip_auth
+      privacy: fault_privacy_leak
+    task_variants:
+      T20: default
+      T45: default
+      T49: default
+      T50: privacy
+    primary: [T20, T45, T49, T50]
+    expansion: [T09, T25, T30]
+    design_intent:
+      T: sensitive read before auth
+      O: output reveals details
+  F05:
+    description: Nested specialist child tool order / structure
+    variant: fault_wrong_nested_tool
+    primary: [T05, T38, T40]
+    expansion: [T09, T13, T33]
+    design_intent:
+      T: nested trace order and children
+  F06:
+    description: Conditional structured specialist output violations
+    variant: fault_structured_output
+    primary: [T09, T10, T23, T33]
+    expansion: [T05, T16, T18, T24]
+    design_intent:
+      T: m.object matchers on specialist result
+      O: LLM rubric on explanation
+
+diagnostics:
+  F01: [T44, T48]
+  F02: [T43, T46]
+  F03: [T22, T27]
+  F04: [T45, T50]
+  F05: [T40, T38]
+  F06: [T09, T23, T10]

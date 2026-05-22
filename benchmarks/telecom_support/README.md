@@ -10,7 +10,26 @@ From repo root (requires `OPENAI_API_KEY` and dev dependency group):
 OPENAI_API_KEY=... uv run agent-spec-kit run benchmarks/telecom_support/ --tags pilot,reference
 ```
 
-Fault-detection pilot (P2 oracle should fail when fault agent applies credit):
+Fault-detection matrix (F01–F06 mutation-style faults; **does not re-run or change the reference agent**):
+
+```bash
+# Eligibility from frozen baseline_T01_T50.log (one-time; committed as eligibility.json)
+uv run python benchmarks/telecom_support/scripts/build_fault_eligibility.py
+
+# Regenerate scenarios after editing manual tests
+uv run python benchmarks/telecom_support/scripts/bootstrap_fault_detection.py
+
+# Run primary matrix (live LLM) and parse log
+TELCO_DISABLE_CALIBRATION_STEERING=1 OPENAI_API_KEY=... \
+  uv run python benchmarks/telecom_support/scripts/run_fault_detection.py --run --workers 4
+
+# Tables from real run JSON only
+uv run python benchmarks/telecom_support/scripts/generate_fault_detection_table.py
+```
+
+Artifacts: [`tasks/fault_detection/`](tasks/fault_detection/) (`fault_matrix.yaml`, `eligibility.json`, `fault_detection_results.json`, generated `FAULT_DETECTION_TABLE.md`).
+
+Legacy pilot (unsupported credit on `task_pilot_credit`):
 
 ```bash
 OPENAI_API_KEY=... uv run agent-spec-kit run benchmarks/telecom_support/ --tags fault-detection

@@ -1,0 +1,8 @@
+{
+  "generated_utc": "2026-05-22T14:56:38.381224+00:00",
+  "log_path": "tasks/fault_detection/fault_detection_primary.log",
+  "exit_code": 1,
+  "matrix_hash": "a79f32ef2adfae58",
+  "scenario_count": 88,
+  "parsed_from_log": 88
+}
