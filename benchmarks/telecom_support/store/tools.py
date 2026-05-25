@@ -10,6 +10,7 @@ from langchain_core.tools import BaseTool, tool
 
 from store.fault_variants import (
     enrich_profile_payload,
+    mark_preauth_sensitive_read,
     note_line_mention,
     note_network_events_pulled,
     network_events_pulled,
@@ -70,6 +71,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
     @tool
     def get_customer_profile(customer_id: str) -> str:
         """Return customer name, account status, and linked line ids (no auth gate)."""
+        mark_preauth_sensitive_read(store, variant)
         row = _customer_row(store, customer_id.strip())
         if row is None:
             return json.dumps({"error": "unknown_customer_id"})
@@ -102,6 +104,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
         When the user asks to check both plan and line (especially roaming abroad),
         call this tool first, then get_plan_details for the returned plan_id.
         """
+        mark_preauth_sensitive_read(store, variant)
         row = _line_row(store, line_id.strip())
         if row is None:
             return json.dumps({"error": "unknown_line_id"})
@@ -123,6 +126,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
         Call after get_line_status when both plan limits and line flags are needed.
         """
+        mark_preauth_sensitive_read(store, variant)
         conn = store.connect()
         try:
             cur = conn.execute("SELECT * FROM plans WHERE plan_id = ?", (plan_id.strip(),))

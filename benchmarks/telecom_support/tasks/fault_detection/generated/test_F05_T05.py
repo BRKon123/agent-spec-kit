@@ -36,6 +36,7 @@ async def store_t05():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg(store_t05):
     meta = store_t05.seed_meta
     return (

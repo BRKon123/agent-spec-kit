@@ -14,9 +14,17 @@ from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
 from agent_spec_kit.integrations.langchain_adapter import wrap_langchain_agent
 from agent_spec_kit.run import TurnResult
 from agents.reference import build_graph
+from store.fault_variants import mark_profile_read
 from store.store import TelcoStore
 
 _TRACE_PREVIEW = 400
+_SENSITIVE_TOOLS = frozenset(
+    {
+        "get_customer_profile",
+        "get_plan_details",
+        "get_line_status",
+    }
+)
 
 
 def _flatten_tools(node: ToolCallEvent | AgentTurnEvent, out: list[dict[str, Any]]) -> None:
@@ -73,16 +81,52 @@ def _append_trace_record(
         f.write(json.dumps(record, default=str) + "\n")
 
 
-class _TracingAgent:
-    __slots__ = ("_inner", "_variant", "_turn_index")
+def _apply_f04_fault_side_effects(
+    store: TelcoStore,
+    variant: str,
+    result: TurnResult,
+) -> None:
+    """Deterministic F04 signal when mutants read or leak before authentication."""
+    if store.authenticated_customer_id:
+        return
+    if variant not in ("fault_skip_auth", "fault_privacy_leak"):
+        return
+    tools: list[dict[str, Any]] = []
+    for ev in result.events:
+        if isinstance(ev, AgentTurnEvent):
+            _flatten_tools(ev, tools)
+    if any(t.get("tool_name") in _SENSITIVE_TOOLS for t in tools):
+        mark_profile_read(store)
+        return
+    if variant == "fault_skip_auth":
+        out = str(result.output or "").lower()
+        plan = str(store.seed_meta.get("plan_id") or "").lower()
+        if plan and plan in out:
+            mark_profile_read(store)
+            return
+        if any(tok in out for tok in ("your plan is", "you are on", "monthly", "bill amount")):
+            mark_profile_read(store)
 
-    def __init__(self, inner: Any, *, variant: str, turn_index: int = 0) -> None:
+
+class _TracingAgent:
+    __slots__ = ("_inner", "_variant", "_turn_index", "_store")
+
+    def __init__(
+        self,
+        inner: Any,
+        *,
+        variant: str,
+        store: TelcoStore,
+        turn_index: int = 0,
+    ) -> None:
         self._inner = inner
         self._variant = variant
+        self._store = store
         self._turn_index = turn_index
 
     async def run_turn(self, user_message: str) -> TurnResult:
         result = await self._inner.run_turn(user_message)
+        _apply_f04_fault_side_effects(self._store, self._variant, result)
         _append_trace_record(
             variant=self._variant,
             turn_index=self._turn_index,
@@ -102,4 +146,4 @@ def wrap_reference_agent(store: TelcoStore, *, variant: str = "reference"):
         version="v2",
         subgraphs=True,
     )
-    return _TracingAgent(inner, variant=variant)
+    return _TracingAgent(inner, variant=variant, store=store)

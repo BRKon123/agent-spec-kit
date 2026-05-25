@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/Users/ruthvikkonduru/Documents/Uni/meng_project/agent_spec_kit/.venv/bin/agent-spec-kit", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/Users/ruthvikkonduru/Documents/Uni/meng_project/agent_spec_kit/src/agent_spec_kit/cli.py", line 873, in main
+    runs = scenario_case_runs(sd)
+  File "/Users/ruthvikkonduru/Documents/Uni/meng_project/agent_spec_kit/src/agent_spec_kit/fixture_graph.py", line 123, in scenario_case_runs
+    needed = _collect_needed_fixture_names(scenario)
+  File "/Users/ruthvikkonduru/Documents/Uni/meng_project/agent_spec_kit/src/agent_spec_kit/fixture_graph.py", line 43, in _collect_needed_fixture_names
+    raise KeyError(
+    ...<2 lines>...
+    )
+KeyError: "unknown fixture 'adapted_agent' required by scenario 'test_pilot_auth_policy_trace' (from /Users/ruthvikkonduru/Documents/Uni/meng_project/agent_spec_kit/benchmarks/telecom_support/tasks/manual/test_pilot_tasks.py)"

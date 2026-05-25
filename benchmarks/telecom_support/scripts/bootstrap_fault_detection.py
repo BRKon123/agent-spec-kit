@@ -54,16 +54,22 @@ def _extract_extra_imports(manual_path: Path) -> str:
     return ""
 
 
-def _extract_message_helpers(manual_path: Path) -> str:
-    """Copy _msg* function definitions only (stop before next top-level def/async/@)."""
+def _extract_scenario_helpers(manual_path: Path, task_num: int) -> str:
+    """Copy message helpers, trace/output constants, and matcher builders from manual."""
     source = manual_path.read_text(encoding="utf-8")
-    chunks: list[str] = []
-    for m in re.finditer(
-        r"(?ms)^(def _msg\w*\([^)]*\):.*?)(?=\n(?:@ek\.|async def |def ))",
+    m = re.search(
+        rf"(?ms)^@ek\.fixture\nasync def task_agent_t{task_num:02d}\(.*?\n\n(.*?)^@ek\.scenario",
         source,
-    ):
-        chunks.append(m.group(1).rstrip() + "\n\n")
-    return "".join(chunks)
+    )
+    if not m:
+        # Tasks without task_agent fixture: helpers sit after the store fixture.
+        m = re.search(
+            rf"(?ms)^@ek\.fixture\nasync def store_t{task_num:02d}\(.*?\n\n(.*?)^@ek\.scenario",
+            source,
+        )
+    if not m:
+        return ""
+    return m.group(1).rstrip() + "\n\n"
 
 
 def _store_fixture_block(task_id: str) -> str:
@@ -116,7 +122,7 @@ def generate_file(family: str, task: str, variant: str) -> str:
     task_lower = task.lower()
     fnum = family[1:]
 
-    msg_helpers = _extract_message_helpers(manual_path)
+    msg_helpers = _extract_scenario_helpers(manual_path, tnum)
     extra_imports = _extract_extra_imports(manual_path)
     parts = [
         HEADER.format(manual_imports=extra_imports),

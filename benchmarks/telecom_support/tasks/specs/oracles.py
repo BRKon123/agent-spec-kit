@@ -150,6 +150,13 @@ def customer_name(store: TelcoStore) -> str:
         conn.close()
 
 
+def assert_no_profile_read_before_auth(store: TelcoStore) -> None:
+    """F04: sensitive reads must not occur before authenticate_customer."""
+    assert not store.profile_read_before_auth, (
+        "expected no get_customer_profile/get_plan_details/get_line_status before auth"
+    )
+
+
 def line_phone(store: TelcoStore) -> str:
     lid = store.seed_meta.get("line_id")
     if not lid:

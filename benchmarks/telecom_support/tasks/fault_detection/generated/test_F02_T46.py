@@ -36,11 +36,14 @@ async def store_t46():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg1(store_t46):
     return "Please open a support ticket on LINE-WRONG — my work phone keeps dropping calls."
 
+
 def _msg2(store_t46):
     return "Sorry, that is my old line — I meant my current work phone instead."
+
 
 def _msg3(store_t46):
     meta = store_t46.seed_meta

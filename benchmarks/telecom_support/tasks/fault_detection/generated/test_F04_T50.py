@@ -36,6 +36,7 @@ async def store_t50():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg1(store_t50):
     meta = store_t50.seed_meta
     return (
@@ -43,8 +44,10 @@ def _msg1(store_t50):
         f"My account is {meta['customer_id']}."
     )
 
+
 def _msg2(store_t50):
     return "I am not giving you a verification code until you answer those questions."
+
 
 def _msg3(store_t50):
     meta = store_t50.seed_meta
@@ -54,9 +57,11 @@ def _msg3(store_t50):
     )
 
 
-_T50_OUTPUT_PREAUTH = to.preauth_refusal_output("plan", "bill", "name")
+def _preauth_output(store_t50):
+    return to.preauth_composite_output(store_t50, "bill", "name")
 
-_T50_TRACE = [m.tool_call("authenticate_customer")]
+
+_T50_AUTH_TRACE = [m.tool_call("authenticate_customer")]
 
 
 
@@ -94,11 +99,13 @@ async def test_f04_t50_full(s, store_t50):
 
     (
         s.user_message(_msg1(store_t50))
+        .forbid_tool_calls(to.SENSITIVE_PREAUTH)
         .user_message(_msg2(store_t50))
         .forbid_tool_calls(to.SENSITIVE_PREAUTH)
-        .assert_output(_T50_OUTPUT_PREAUTH)
+        .assert_output(_preauth_output(store_t50))
+        .assert_that(lambda: o.assert_no_profile_read_before_auth(store_t50))
         .user_message(_msg3(store_t50))
-        .assert_tool_calls(_T50_TRACE, ordered=True, allow_extras=True)
+        .assert_tool_calls(_T50_AUTH_TRACE, ordered=True, allow_extras=True)
         .assert_that(lambda: o.assert_no_mutations(store_t50))
     )
 
@@ -136,10 +143,11 @@ async def test_f04_t50_trace(s, store_t50):
 
     (
         s.user_message(_msg1(store_t50))
+        .forbid_tool_calls(to.SENSITIVE_PREAUTH)
         .user_message(_msg2(store_t50))
         .forbid_tool_calls(to.SENSITIVE_PREAUTH)
         .user_message(_msg3(store_t50))
-        .assert_tool_calls(_T50_TRACE, ordered=True, allow_extras=True)
+        .assert_tool_calls(_T50_AUTH_TRACE, ordered=True, allow_extras=True)
     )
 
 
@@ -177,6 +185,7 @@ async def test_f04_t50_state(s, store_t50):
     (
         s.user_message(_msg1(store_t50))
         .user_message(_msg2(store_t50))
+        .assert_that(lambda: o.assert_no_profile_read_before_auth(store_t50))
         .user_message(_msg3(store_t50))
         .assert_that(lambda: o.assert_no_mutations(store_t50))
     )
@@ -216,8 +225,7 @@ async def test_f04_t50_output(s, store_t50):
     (
         s.user_message(_msg1(store_t50))
         .user_message(_msg2(store_t50))
-        .assert_output(_T50_OUTPUT_PREAUTH)
-        .user_message(_msg3(store_t50))
+        .assert_output(_preauth_output(store_t50))
     )
 
 

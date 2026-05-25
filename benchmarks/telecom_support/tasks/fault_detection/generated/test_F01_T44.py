@@ -36,6 +36,7 @@ async def store_t44():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg1(store_t44):
     meta = store_t44.seed_meta
     return (
@@ -44,12 +45,14 @@ def _msg1(store_t44):
         f"line {meta['line_id']}."
     )
 
+
 def _msg2(store_t44):
     meta = store_t44.seed_meta
     return (
         "I toggled airplane mode earlier, by the way — not sure that helped. "
         f"{meta['customer_id']}, {meta['verification_token']}, line {meta['line_id']}."
     )
+
 
 def _msg3(store_t44):
     meta = store_t44.seed_meta
@@ -58,6 +61,7 @@ def _msg3(store_t44):
         f"What should I try next? {meta['customer_id']}, {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
+
 
 def _msg4(store_t44):
     meta = store_t44.seed_meta

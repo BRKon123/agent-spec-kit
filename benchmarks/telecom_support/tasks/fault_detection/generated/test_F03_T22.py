@@ -36,11 +36,13 @@ async def store_t22():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg1(store_t22):
     return (
         "We had a brief outage yesterday — maybe twenty minutes. I know that's probably not "
         "enough for compensation but can you check?"
     )
+
 
 def _msg2(store_t22):
     meta = store_t22.seed_meta
@@ -48,6 +50,7 @@ def _msg2(store_t22):
         f"Sure — account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
+
 
 def _msg3(store_t22):
     return (

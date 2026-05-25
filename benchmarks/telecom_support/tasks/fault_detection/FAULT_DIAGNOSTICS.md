@@ -9,7 +9,7 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
 | O | yes | yes | no |
-| S | yes | no | yes |
+| S | yes | yes | no |
 | T | no | yes | — |
 | F | yes | no | yes |
 
@@ -44,7 +44,7 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
 | O | yes | yes | no |
-| S | yes | no | yes |
+| S | yes | yes | no |
 | T | yes | no | yes |
 | F | yes | no | yes |
 
@@ -67,7 +67,7 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | yes | no |
+| O | yes | no | yes |
 | S | yes | yes | no |
 | T | yes | yes | no |
 | F | yes | yes | no |
@@ -84,7 +84,7 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 |--------|----------|------------|----------|
 | O | yes | yes | no |
 | S | yes | yes | no |
-| T | yes | no | yes |
+| T | yes | yes | no |
 | F | yes | yes | no |
 
 ### T50
@@ -147,8 +147,8 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | no | yes |
-| S | yes | yes | no |
+| O | yes | yes | no |
+| S | yes | no | yes |
 | T | no | no | — |
 | F | no | no | — |
 

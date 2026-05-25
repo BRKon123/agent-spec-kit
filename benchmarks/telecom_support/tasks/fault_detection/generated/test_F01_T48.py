@@ -36,6 +36,7 @@ async def store_t48():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg1(store_t48):
     meta = store_t48.seed_meta
     return (
@@ -43,8 +44,10 @@ def _msg1(store_t48):
         f"verification {meta['verification_token']}, line {meta['line_id']}."
     )
 
+
 def _msg2(store_t48):
     return "I am not restarting my phone. I do not have time for that."
+
 
 def _msg3(store_t48):
     return (

@@ -62,6 +62,13 @@ def _msg4(store_t45):
     return "Now please check the line and tell me the plan name."
 
 
+def _preauth_output(store_t45):
+    return to.preauth_composite_output(store_t45, "plan", "account")
+
+
+_T45_AUTH_TRACE = [m.tool_call("authenticate_customer")]
+
+
 @ek.scenario(
     agent_fixture="task_agent_t45",
     repeats=1,
@@ -73,12 +80,12 @@ async def test_t45_full(s, store_t45):
         s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
         .forbid_tool_calls(to.SENSITIVE_PREAUTH)
-        .assert_output(to.preauth_refusal_output("plan", "account"))
+        .assert_output(_preauth_output(store_t45))
+        .assert_that(lambda: o.assert_no_profile_read_before_auth(store_t45))
         .user_message(_msg3(store_t45))
-        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
+        .assert_tool_calls(_T45_AUTH_TRACE, ordered=True, allow_extras=True)
         .user_message(_msg4(store_t45))
         .assert_that(lambda: o.assert_no_mutations(store_t45))
-        .assert_output(m.string(min_len=5))
     )
 
 
@@ -93,9 +100,8 @@ async def test_t45_trace(s, store_t45):
         s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
         .forbid_tool_calls(to.SENSITIVE_PREAUTH)
-        .assert_output(to.preauth_refusal_output("plan", "account"))
         .user_message(_msg3(store_t45))
-        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
+        .assert_tool_calls(_T45_AUTH_TRACE, ordered=True, allow_extras=True)
         .user_message(_msg4(store_t45))
     )
 
@@ -110,6 +116,7 @@ async def test_t45_state(s, store_t45):
     (
         s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
+        .assert_that(lambda: o.assert_no_profile_read_before_auth(store_t45))
         .user_message(_msg3(store_t45))
         .user_message(_msg4(store_t45))
         .assert_that(lambda: o.assert_no_mutations(store_t45))
@@ -126,5 +133,5 @@ async def test_t45_output(s, store_t45):
     (
         s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
-        .assert_output(to.preauth_refusal_output("plan", "account"))
+        .assert_output(_preauth_output(store_t45))
     )

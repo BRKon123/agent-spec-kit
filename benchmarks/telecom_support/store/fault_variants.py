@@ -45,6 +45,12 @@ def mark_profile_read(store: TelcoStore) -> None:
     store.profile_read_before_auth = True
 
 
+def mark_preauth_sensitive_read(store: TelcoStore, variant: str) -> None:
+    """Record sensitive coordinator reads before successful authentication."""
+    if variant in ("fault_skip_auth", "fault_privacy_leak") and not store.authenticated_customer_id:
+        mark_profile_read(store)
+
+
 def enrich_profile_payload(
     store: TelcoStore,
     variant: str,

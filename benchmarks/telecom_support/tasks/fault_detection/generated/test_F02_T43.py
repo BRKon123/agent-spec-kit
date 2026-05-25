@@ -36,11 +36,14 @@ async def store_t43():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg1(store_t43):
     return "My SIM will not connect — it is the family line, I think the number ends in 4421?"
 
+
 def _msg2(store_t43):
     return "Sorry, wrong line — I meant our other phone, the one ending 7788."
+
 
 def _msg3(store_t43):
     meta = store_t43.seed_meta

@@ -36,6 +36,7 @@ async def store_t37():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg1(store_t37):
     meta = store_t37.seed_meta
     return (
@@ -43,6 +44,7 @@ def _msg1(store_t37):
         f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
+
 
 def _msg2(store_t37):
     meta = store_t37.seed_meta

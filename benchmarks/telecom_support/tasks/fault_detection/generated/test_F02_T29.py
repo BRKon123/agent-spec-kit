@@ -36,8 +36,10 @@ async def store_t29():
     finally:
         shutil.rmtree(base, ignore_errors=True)
 
+
 def _msg1(store_t29):
     return "Hi — I need a replacement SIM. Pretty sure it's for line LINE-WRONG on my account."
+
 
 def _msg2(store_t29):
     meta = store_t29.seed_meta
@@ -47,11 +49,22 @@ def _msg2(store_t29):
         f"default address now."
     )
 
+
 def _msg3(store_t29):
     return "Thanks — go ahead with that order."
 
 
 _T29_AUTH_TRACE = [m.tool_call("authenticate_customer")]
+
+def _seed_line(store_t29) -> str:
+    return str(store_t29.seed_meta["line_id"])
+
+
+def _t29_order_trace(store_t29):
+    return [
+        m.tool_call("authenticate_customer"),
+        to.order_sim_on_line(_seed_line(store_t29)),
+    ]
 
 
 
