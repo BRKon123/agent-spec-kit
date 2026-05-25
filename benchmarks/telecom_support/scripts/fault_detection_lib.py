@@ -18,12 +18,20 @@ RESULTS_PATH = FAULT_DIR / "fault_detection_results.json"
 META_PATH = FAULT_DIR / "fault_detection_run_meta.json"
 DEFAULT_BASELINE_LOG = BENCH / "tasks" / "calibration_logs" / "baseline_T01_T50.log"
 DEFAULT_FAULT_LOG = FAULT_DIR / "fault_detection_primary.log"
+DEFAULT_PAIRED_LOG = FAULT_DIR / "calibration_paired.log"
+DEFAULT_PAIRED_JSON = FAULT_DIR / "calibration_paired.json"
+DEFAULT_TRACE_DIR = FAULT_DIR / "calibration_trace"
 
 ORACLE_FROM_KIND = {"full": "F", "trace": "T", "state": "S", "output": "O"}
 ORACLE_TO_KIND = {v: k for k, v in ORACLE_FROM_KIND.items()}
 
 _FAULT_SCENARIO_RE = re.compile(
     r"^(PASS|FAIL)\s+test_f(\d+)_t(\d+)_(full|trace|state|output)\s+\[(\d+)/(\d+)\]",
+    re.IGNORECASE,
+)
+
+_REFERENCE_SCENARIO_RE = re.compile(
+    r"^(PASS|FAIL)\s+test_t(\d+)_(full|trace|state|output)\s+\[(\d+)/(\d+)\]",
     re.IGNORECASE,
 )
 
@@ -136,3 +144,136 @@ def enrich_detection(
             "detected": eligible and not passed,
         }
     return enriched
+
+
+def load_eligibility(path: Path | None = None) -> dict[str, dict[str, bool]]:
+    p = path or ELIGIBILITY_PATH
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def parse_reference_log(log_text: str) -> dict[str, dict[str, Any]]:
+    """Parse reference manual scenario PASS/FAIL lines keyed by task|oracle."""
+    records: dict[str, dict[str, Any]] = {}
+    for line in log_text.splitlines():
+        m = _REFERENCE_SCENARIO_RE.match(line.strip())
+        if not m:
+            continue
+        status, tnum, kind, rep, total = m.groups()
+        if int(total) != 1 or int(rep) != 1:
+            continue
+        task = f"T{int(tnum):02d}"
+        oracle = ORACLE_FROM_KIND[kind.lower()]
+        key = f"{task}|{oracle}"
+        records[key] = {
+            "task": task,
+            "oracle": oracle,
+            "scenario": f"test_t{tnum}_{kind.lower()}",
+            "passed": status.upper() == "PASS",
+            "run_status": status.lower(),
+        }
+    return records
+
+
+def filter_primary_pairs(
+    matrix: dict[str, Any] | None = None,
+    *,
+    families: set[str] | None = None,
+    tasks: set[str] | None = None,
+) -> list[tuple[str, str, str]]:
+    pairs = primary_pairs(matrix)
+    if families:
+        pairs = [p for p in pairs if p[0] in families]
+    if tasks:
+        pairs = [p for p in pairs if p[1] in tasks]
+    return pairs
+
+
+def build_paired_results(
+    reference: dict[str, dict[str, Any]],
+    fault: dict[str, dict[str, Any]],
+    eligibility: dict[str, dict[str, bool]],
+    matrix: dict[str, Any] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Merge reference + fault runs into Fxx|Tyy|O slot records."""
+    matrix = matrix or load_fault_matrix()
+    out: dict[str, dict[str, Any]] = {}
+    for family, task, variant in primary_pairs(matrix):
+        for oracle in ("O", "S", "T", "F"):
+            ref_key = f"{task}|{oracle}"
+            fault_key = f"{family}|{task}|{oracle}"
+            ref_rec = reference.get(ref_key, {})
+            fault_rec = fault.get(fault_key, {})
+            eligible = eligibility.get(task, {}).get(oracle, False)
+            baseline_pass = ref_rec.get("passed")
+            fault_pass = fault_rec.get("passed")
+            detected = (
+                eligible
+                and baseline_pass is True
+                and fault_pass is False
+            )
+            out[fault_key] = {
+                "fault": family,
+                "task": task,
+                "oracle": oracle,
+                "variant": variant,
+                "baseline_scenario": ref_rec.get("scenario"),
+                "fault_scenario": fault_rec.get("scenario"),
+                "baseline_pass": baseline_pass,
+                "fault_pass": fault_pass,
+                "eligible": eligible,
+                "detected": detected,
+            }
+    return out
+
+
+def patch_eligibility_for_tasks(
+    eligibility: dict[str, dict[str, bool]],
+    reference: dict[str, dict[str, Any]],
+    tasks: set[str],
+) -> dict[str, dict[str, bool]]:
+    """Update eligibility for tasks present in a reference log slice."""
+    updated = {tid: dict(slots) for tid, slots in eligibility.items()}
+    for key, rec in reference.items():
+        task = rec.get("task") or key.split("|")[0]
+        if task not in tasks:
+            continue
+        oracle = rec.get("oracle") or key.split("|")[-1]
+        updated.setdefault(task, {})[oracle] = bool(rec.get("passed"))
+    return updated
+
+
+def paired_slots_to_fault_results(paired: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Convert calibration_paired slots to fault_detection_results shape."""
+    out: dict[str, dict[str, Any]] = {}
+    for key, rec in paired.items():
+        out[key] = {
+            "fault": rec["fault"],
+            "task": rec["task"],
+            "oracle": rec["oracle"],
+            "variant": rec.get("variant"),
+            "scenario": rec.get("fault_scenario"),
+            "passed": rec.get("fault_pass"),
+            "run_status": "pass" if rec.get("fault_pass") else "fail",
+            "eligible": rec.get("eligible"),
+            "detected": rec.get("detected"),
+        }
+    return out
+
+
+def detection_summary_by_family(
+    paired: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, tuple[int, int]]]:
+    """Count detected/eligible per family per oracle column."""
+    counts: dict[str, dict[str, list[bool]]] = {}
+    for rec in paired.values():
+        fam = rec["fault"]
+        oracle = rec["oracle"]
+        counts.setdefault(fam, {}).setdefault(oracle, [])
+        if rec.get("eligible"):
+            counts[fam][oracle].append(bool(rec.get("detected")))
+    summary: dict[str, dict[str, tuple[int, int]]] = {}
+    for fam, cols in counts.items():
+        summary[fam] = {}
+        for oracle, flags in cols.items():
+            summary[fam][oracle] = (sum(flags), len(flags))
+    return summary

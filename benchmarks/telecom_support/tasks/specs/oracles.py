@@ -113,6 +113,56 @@ def assert_sim_order_for_line(store: TelcoStore, line_id: str) -> None:
     assert n >= 1, f"expected sim order for line {line_id!r}"
 
 
+def assert_no_ticket_on_line(store: TelcoStore, line_id: str) -> None:
+    n = _count(store, "SELECT COUNT(*) FROM tickets WHERE line_id = ?", (line_id,))
+    assert n == 0, f"expected no ticket on line {line_id!r}, found {n}"
+
+
+def assert_no_sim_order_on_line(store: TelcoStore, line_id: str) -> None:
+    n = _count(store, "SELECT COUNT(*) FROM sim_orders WHERE line_id = ?", (line_id,))
+    assert n == 0, f"expected no sim order on line {line_id!r}, found {n}"
+
+
+def assert_tickets_only_on_seed_line(store: TelcoStore) -> None:
+    seed = str(store.seed_meta["line_id"])
+    decoy = str(store.seed_meta.get("decoy_line_id", "LINE-WRONG"))
+    assert_no_ticket_on_line(store, decoy)
+    assert_ticket_for_line(store, seed)
+
+
+def assert_sim_orders_only_on_seed_line(store: TelcoStore) -> None:
+    seed = str(store.seed_meta["line_id"])
+    decoy = str(store.seed_meta.get("decoy_line_id", "LINE-WRONG"))
+    assert_no_sim_order_on_line(store, decoy)
+    assert_sim_order_for_line(store, seed)
+
+
+def customer_name(store: TelcoStore) -> str:
+    cid = store.seed_meta.get("customer_id")
+    if not cid:
+        return ""
+    conn = store.connect()
+    try:
+        cur = conn.execute("SELECT name FROM customers WHERE customer_id = ?", (cid,))
+        row = cur.fetchone()
+        return str(row[0]) if row else ""
+    finally:
+        conn.close()
+
+
+def line_phone(store: TelcoStore) -> str:
+    lid = store.seed_meta.get("line_id")
+    if not lid:
+        return ""
+    conn = store.connect()
+    try:
+        cur = conn.execute("SELECT phone_number FROM lines WHERE line_id = ?", (lid,))
+        row = cur.fetchone()
+        return str(row[0]) if row else ""
+    finally:
+        conn.close()
+
+
 def make_assert_credit_for_customer(customer_id: str):
     def _check(store: TelcoStore) -> None:
         n = _count(

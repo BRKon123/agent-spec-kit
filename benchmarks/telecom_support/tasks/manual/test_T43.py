@@ -65,7 +65,7 @@ async def test_t43_full(s, store_t43):
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
         .user_message(_msg3(store_t43))
-        .assert_that(lambda: o.assert_no_mutations(store_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, "LINE-WRONG"))
         .assert_output(m.string(min_len=5))
     )
 
@@ -96,7 +96,7 @@ async def test_t43_state(s, store_t43):
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
         .user_message(_msg3(store_t43))
-        .assert_that(lambda: o.assert_no_mutations(store_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, "LINE-WRONG"))
     )
 
 

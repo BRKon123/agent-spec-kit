@@ -11,9 +11,11 @@ if str(BENCH) not in sys.path:
     sys.path.insert(0, str(BENCH))
 
 from scripts.fault_detection_lib import (  # noqa: E402
+    build_paired_results,
     enrich_detection,
     parse_baseline_eligibility,
     parse_fault_detection_log,
+    parse_reference_log,
 )
 
 
@@ -52,6 +54,22 @@ def test_enrich_detection():
     assert enriched["F01|T03|T"]["detected"] is True
     assert enriched["F01|T03|F"]["eligible"] is True
     assert enriched["F01|T03|F"]["detected"] is False
+
+
+def test_parse_reference_log():
+    raw = parse_reference_log(SAMPLE_BASELINE)
+    assert raw["T03|T"]["passed"] is True
+    assert raw["T03|F"]["passed"] is False
+
+
+def test_build_paired_results():
+    ref = parse_reference_log(SAMPLE_BASELINE)
+    fault = parse_fault_detection_log(SAMPLE_FAULT)
+    eligibility = {"T03": {"T": True, "F": True}, "T44": {"T": True}}
+    paired = build_paired_results(ref, fault, eligibility)
+    assert paired["F01|T03|T"]["baseline_pass"] is True
+    assert paired["F01|T03|T"]["fault_pass"] is False
+    assert paired["F01|T03|T"]["detected"] is True
 
 
 def test_committed_eligibility_json_valid():

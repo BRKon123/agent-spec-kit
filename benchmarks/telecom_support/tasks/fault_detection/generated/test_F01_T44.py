@@ -15,9 +15,8 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from tasks.specs import oracles as o
-
+from tasks.specs import trace_oracles as to
 from agent_wrap import wrap_reference_agent
-
 
 
 

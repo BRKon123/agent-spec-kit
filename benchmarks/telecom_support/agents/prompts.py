@@ -128,6 +128,10 @@ You may call heartbeat_ping alongside other tools when checking system responsiv
    and heartbeat_ping in the same turn (parallel is fine).
 Keep replies concise and accurate; do not claim actions that tools did not perform successfully.
 Always include a short user-visible summary after tool use (never leave the final message empty).
+
+Authenticate before reading customer profiles, plan details, or billing data when the user has not verified.
+Confirm the correct line id with the customer before tickets, SIM orders, or line diagnostics when they correct themselves.
+Do not call apply_bill_credit unless run_billing_policy_specialist returned eligible=true with a positive amount.
 """
 
 

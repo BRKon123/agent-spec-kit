@@ -37,8 +37,8 @@
     "eligible": false,
     "fault": "F01",
     "oracle": "T",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f01_t03_trace",
     "task": "T03",
     "variant": "fault_premature_escalate"
@@ -110,12 +110,12 @@
     "variant": "fault_premature_escalate"
   },
   "F01|T44|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F01",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f01_t44_state",
     "task": "T44",
     "variant": "fault_premature_escalate"
@@ -125,8 +125,8 @@
     "eligible": false,
     "fault": "F01",
     "oracle": "T",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f01_t44_trace",
     "task": "T44",
     "variant": "fault_premature_escalate"
@@ -176,12 +176,12 @@
     "variant": "fault_premature_escalate"
   },
   "F02|T29|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t29_full",
     "task": "T29",
     "variant": "fault_wrong_line"
@@ -198,12 +198,12 @@
     "variant": "fault_wrong_line"
   },
   "F02|T29|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t29_state",
     "task": "T29",
     "variant": "fault_wrong_line"
@@ -264,12 +264,12 @@
     "variant": "fault_stale_belief"
   },
   "F02|T46|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t46_full",
     "task": "T46",
     "variant": "fault_stale_belief"
@@ -286,23 +286,23 @@
     "variant": "fault_stale_belief"
   },
   "F02|T46|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t46_state",
     "task": "T46",
     "variant": "fault_stale_belief"
   },
   "F02|T46|T": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "T",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t46_trace",
     "task": "T46",
     "variant": "fault_stale_belief"
@@ -312,8 +312,8 @@
     "eligible": false,
     "fault": "F03",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f03_t14_full",
     "task": "T14",
     "variant": "fault_unsupported_credit"
@@ -330,12 +330,12 @@
     "variant": "fault_unsupported_credit"
   },
   "F03|T14|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F03",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f03_t14_state",
     "task": "T14",
     "variant": "fault_unsupported_credit"
@@ -352,12 +352,12 @@
     "variant": "fault_unsupported_credit"
   },
   "F03|T17|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F03",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f03_t17_full",
     "task": "T17",
     "variant": "fault_unsupported_credit"
@@ -374,12 +374,12 @@
     "variant": "fault_unsupported_credit"
   },
   "F03|T17|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F03",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f03_t17_state",
     "task": "T17",
     "variant": "fault_unsupported_credit"
@@ -422,8 +422,8 @@
     "eligible": false,
     "fault": "F03",
     "oracle": "S",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f03_t22_state",
     "task": "T22",
     "variant": "fault_unsupported_credit"
@@ -484,23 +484,23 @@
     "variant": "fault_unsupported_credit"
   },
   "F04|T20|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t20_full",
     "task": "T20",
     "variant": "fault_skip_auth"
   },
   "F04|T20|O": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "O",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t20_output",
     "task": "T20",
     "variant": "fault_skip_auth"
@@ -561,12 +561,12 @@
     "variant": "fault_skip_auth"
   },
   "F04|T45|T": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "T",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t45_trace",
     "task": "T45",
     "variant": "fault_skip_auth"
@@ -664,8 +664,8 @@
     "eligible": false,
     "fault": "F05",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f05_t05_full",
     "task": "T05",
     "variant": "fault_wrong_nested_tool"
@@ -693,23 +693,23 @@
     "variant": "fault_wrong_nested_tool"
   },
   "F05|T05|T": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F05",
     "oracle": "T",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f05_t05_trace",
     "task": "T05",
     "variant": "fault_wrong_nested_tool"
   },
   "F05|T38|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F05",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f05_t38_full",
     "task": "T38",
     "variant": "fault_wrong_nested_tool"
@@ -737,12 +737,12 @@
     "variant": "fault_wrong_nested_tool"
   },
   "F05|T38|T": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F05",
     "oracle": "T",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f05_t38_trace",
     "task": "T38",
     "variant": "fault_wrong_nested_tool"
@@ -858,12 +858,12 @@
     "variant": "fault_structured_output"
   },
   "F06|T10|S": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F06",
     "oracle": "S",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f06_t10_state",
     "task": "T10",
     "variant": "fault_structured_output"
@@ -935,23 +935,23 @@
     "variant": "fault_structured_output"
   },
   "F06|T33|O": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F06",
     "oracle": "O",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f06_t33_output",
     "task": "T33",
     "variant": "fault_structured_output"
   },
   "F06|T33|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F06",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f06_t33_state",
     "task": "T33",
     "variant": "fault_structured_output"

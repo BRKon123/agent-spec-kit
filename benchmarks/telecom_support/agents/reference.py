@@ -23,6 +23,7 @@ from agents.prompts import (
 )
 from agents.schemas import BillingDecision, NetworkAssessment
 from store.store import TelcoStore
+from store.fault_variants import maybe_auto_credit_after_billing
 from store.tools import (
     make_billing_specialist_tools,
     make_coordinator_tools,
@@ -159,7 +160,9 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
                 ]
             }
         )
-        return _structured_response_json(out, variant=variant)
+        raw = _structured_response_json(out, variant=variant)
+        maybe_auto_credit_after_billing(store, variant, raw)
+        return raw
 
     coordinator_tools: list[BaseTool] = [
         *make_coordinator_tools(store, variant=variant),

@@ -66,7 +66,7 @@ async def test_t27_full(s, store_t27):
     (
         s.user_message(_msg(store_t27))
         .assert_tool_calls(_T27_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_sim_orders(store_t27))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t27))
         .assert_output(_T27_OUTPUT)
     )
 
@@ -88,7 +88,7 @@ async def test_t27_trace(s, store_t27):
     timeout_s=420.0,
 )
 async def test_t27_state(s, store_t27):
-    (s.user_message(_msg(store_t27)).assert_that(lambda: o.assert_no_sim_orders(store_t27)))
+    (s.user_message(_msg(store_t27)).assert_that(lambda: o.assert_no_credit_rows(store_t27)))
 
 
 @ek.scenario(

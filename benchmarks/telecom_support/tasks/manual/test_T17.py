@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -73,6 +74,7 @@ async def test_t17_full(s, store_t17):
     (
             s.user_message(_msg(store_t17))
             .assert_tool_calls(_T17_TRACE, ordered=True, allow_extras=True)
+            .forbid_tool_calls(to.CREDIT_FORBIDDEN)
             .assert_that(lambda: o.assert_no_credit_rows(store_t17))
             .assert_output(_T17_OUTPUT)
         )
@@ -89,6 +91,7 @@ async def test_t17_trace(s, store_t17):
     (
             s.user_message(_msg(store_t17))
             .assert_tool_calls(_T17_TRACE, ordered=True, allow_extras=True)
+            .forbid_tool_calls(to.CREDIT_FORBIDDEN)
         )
 
 

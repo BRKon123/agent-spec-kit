@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -50,7 +51,7 @@ def _msg(store_t05):
 
 _T05_TRACE = [
     m.tool_call("authenticate_customer"),
-    m.tool_call("run_network_diagnostics_specialist"),
+    to.network_specialist_children(),
 ]
 
 _T05_OUTPUT = m.one_of(

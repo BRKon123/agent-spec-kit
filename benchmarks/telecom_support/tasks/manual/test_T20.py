@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -56,7 +57,7 @@ async def test_t20_full(s, store_t20):
     (
             s.user_message(_msg(store_t20))
             .assert_that(lambda: o.assert_no_mutations(store_t20))
-            .assert_output(m.one_of(m.contains("authenticate"), m.contains("verification")))
+            .assert_output(to.preauth_refusal_output("billing", "plan", "bill"))
         )
 
 
@@ -99,5 +100,5 @@ async def test_t20_output(s, store_t20):
     meta = store_t20.seed_meta
     (
             s.user_message(_msg(store_t20))
-            .assert_output(m.one_of(m.contains("authenticate"), m.contains("verification")))
+            .assert_output(to.preauth_refusal_output("billing", "plan", "bill"))
         )

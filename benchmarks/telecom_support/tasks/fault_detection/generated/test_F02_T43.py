@@ -15,9 +15,8 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from tasks.specs import oracles as o
-
+from tasks.specs import trace_oracles as to
 from agent_wrap import wrap_reference_agent
-
 
 
 
@@ -88,7 +87,7 @@ async def test_f02_t43_full(s, store_t43):
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
         .user_message(_msg3(store_t43))
-        .assert_that(lambda: o.assert_no_mutations(store_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, "LINE-WRONG"))
         .assert_output(m.string(min_len=5))
     )
 
@@ -167,7 +166,7 @@ async def test_f02_t43_state(s, store_t43):
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
         .user_message(_msg3(store_t43))
-        .assert_that(lambda: o.assert_no_mutations(store_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, "LINE-WRONG"))
     )
 
 

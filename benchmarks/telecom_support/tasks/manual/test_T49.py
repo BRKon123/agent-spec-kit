@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -67,7 +68,7 @@ async def test_t49_full(s, store_t49):
     (
         s.user_message(_msg1(store_t49))
         .user_message(_msg2(store_t49))
-        .assert_tool_calls([], ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.SENSITIVE_PREAUTH)
         .assert_output(_T49_OUTPUT)
         .user_message(_msg3(store_t49))
         .assert_that(lambda: o.assert_no_mutations(store_t49))

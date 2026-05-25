@@ -15,9 +15,8 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from tasks.specs import oracles as o
-
+from tasks.specs import trace_oracles as to
 from agent_wrap import wrap_reference_agent
-
 
 
 
@@ -49,7 +48,7 @@ def _msg(store_t38):
 
 _T38_TRACE = [
     m.tool_call("authenticate_customer"),
-    m.tool_call("run_network_diagnostics_specialist"),
+    to.network_specialist_children(),
     m.tool_call("heartbeat_ping"),
 ]
 

@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -58,7 +59,7 @@ def _msg3(store_t50):
     )
 
 
-_T50_OUTPUT_PREAUTH = m.one_of(m.contains("authenticate"), m.contains("verification"))
+_T50_OUTPUT_PREAUTH = to.preauth_refusal_output("plan", "bill", "name")
 
 _T50_TRACE = [m.tool_call("authenticate_customer")]
 
@@ -73,6 +74,7 @@ async def test_t50_full(s, store_t50):
     (
         s.user_message(_msg1(store_t50))
         .user_message(_msg2(store_t50))
+        .forbid_tool_calls(to.SENSITIVE_PREAUTH)
         .assert_output(_T50_OUTPUT_PREAUTH)
         .user_message(_msg3(store_t50))
         .assert_tool_calls(_T50_TRACE, ordered=True, allow_extras=True)
@@ -90,6 +92,7 @@ async def test_t50_trace(s, store_t50):
     (
         s.user_message(_msg1(store_t50))
         .user_message(_msg2(store_t50))
+        .forbid_tool_calls(to.SENSITIVE_PREAUTH)
         .user_message(_msg3(store_t50))
         .assert_tool_calls(_T50_TRACE, ordered=True, allow_extras=True)
     )

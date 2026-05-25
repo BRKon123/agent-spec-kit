@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -79,6 +80,7 @@ async def test_t14_full(s, store_t14):
                 ordered=True,
                 allow_extras=True,
             )
+            .forbid_tool_calls(to.CREDIT_FORBIDDEN)
             .assert_that(lambda: o.assert_no_credit_rows(store_t14))
             .assert_output(
                 m.llm_criteria(
@@ -124,6 +126,7 @@ async def test_t14_trace(s, store_t14):
                 ordered=True,
                 allow_extras=True,
             )
+            .forbid_tool_calls(to.CREDIT_FORBIDDEN)
         )
 
 

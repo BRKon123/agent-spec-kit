@@ -15,9 +15,8 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from tasks.specs import oracles as o
-
+from tasks.specs import trace_oracles as to
 from agent_wrap import wrap_reference_agent
-
 
 
 
@@ -53,11 +52,6 @@ def _msg3(store_t29):
 
 
 _T29_AUTH_TRACE = [m.tool_call("authenticate_customer")]
-
-_T29_ORDER_TRACE = [
-    m.tool_call("authenticate_customer"),
-    m.tool_call("order_replacement_sim"),
-]
 
 
 
@@ -96,11 +90,9 @@ async def test_f02_t29_full(s, store_t29):
     (
         s.user_message(_msg1(store_t29))
         .user_message(_msg2(store_t29))
-        .assert_tool_calls(_T29_ORDER_TRACE, ordered=True, allow_extras=True)
+        .assert_tool_calls(_t29_order_trace(store_t29), ordered=True, allow_extras=True)
         .user_message(_msg3(store_t29))
-        .assert_that(
-            lambda: o.assert_sim_order_for_line(store_t29, store_t29.seed_meta["line_id"])
-        )
+        .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_t29))
     )
 
 
@@ -178,9 +170,7 @@ async def test_f02_t29_state(s, store_t29):
         s.user_message(_msg1(store_t29))
         .user_message(_msg2(store_t29))
         .user_message(_msg3(store_t29))
-        .assert_that(
-            lambda: o.assert_sim_order_for_line(store_t29, store_t29.seed_meta["line_id"])
-        )
+        .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_t29))
     )
 
 

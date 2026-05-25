@@ -15,9 +15,8 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from tasks.specs import oracles as o
-
+from tasks.specs import trace_oracles as to
 from agent_wrap import wrap_reference_agent
-
 
 
 
@@ -90,10 +89,14 @@ async def test_f02_t46_full(s, store_t46):
         .user_message(_msg2(store_t46))
         .user_message(_msg3(store_t46))
         .assert_tool_calls(
-            [m.tool_call("authenticate_customer"), m.tool_call("create_support_ticket")],
+            [
+                m.tool_call("authenticate_customer"),
+                to.ticket_on_line(meta["line_id"]),
+            ],
             ordered=True,
             allow_extras=True,
         )
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t46, "LINE-WRONG"))
         .assert_that(lambda: o.assert_ticket_for_line(store_t46, meta["line_id"]))
     )
 
@@ -137,7 +140,7 @@ async def test_f02_t46_trace(s, store_t46):
         .assert_tool_calls(
             [
                 m.tool_call("authenticate_customer"),
-                m.tool_call("create_support_ticket"),
+                to.ticket_on_line(meta["line_id"]),
             ],
             ordered=True,
             allow_extras=True,

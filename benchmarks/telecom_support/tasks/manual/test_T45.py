@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -71,6 +72,8 @@ async def test_t45_full(s, store_t45):
     (
         s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
+        .forbid_tool_calls(to.SENSITIVE_PREAUTH)
+        .assert_output(to.preauth_refusal_output("plan", "account"))
         .user_message(_msg3(store_t45))
         .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
         .user_message(_msg4(store_t45))
@@ -89,6 +92,8 @@ async def test_t45_trace(s, store_t45):
     (
         s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
+        .forbid_tool_calls(to.SENSITIVE_PREAUTH)
+        .assert_output(to.preauth_refusal_output("plan", "account"))
         .user_message(_msg3(store_t45))
         .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
         .user_message(_msg4(store_t45))
@@ -121,7 +126,5 @@ async def test_t45_output(s, store_t45):
     (
         s.user_message(_msg1(store_t45))
         .user_message(_msg2(store_t45))
-        .user_message(_msg3(store_t45))
-        .user_message(_msg4(store_t45))
-        .assert_output(m.string(min_len=5))
+        .assert_output(to.preauth_refusal_output("plan", "account"))
     )

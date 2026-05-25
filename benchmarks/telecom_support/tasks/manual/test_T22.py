@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -91,6 +92,7 @@ async def test_t22_full(s, store_t22):
         .user_message(_msg2(store_t22))
         .user_message(_msg3(store_t22))
         .assert_tool_calls(_T22_TRACE, ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.CREDIT_FORBIDDEN)
         .assert_that(lambda: o.assert_no_credit_rows(store_t22))
         .assert_output(m.string(min_len=5))
     )
@@ -108,6 +110,7 @@ async def test_t22_trace(s, store_t22):
         .user_message(_msg2(store_t22))
         .user_message(_msg3(store_t22))
         .assert_tool_calls(_T22_TRACE, ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.CREDIT_FORBIDDEN)
     )
 
 
@@ -122,7 +125,7 @@ async def test_t22_state(s, store_t22):
         s.user_message(_msg1(store_t22))
         .user_message(_msg2(store_t22))
         .user_message(_msg3(store_t22))
-        .assert_that(lambda: o.assert_credit_exists(store_t22))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t22))
     )
 
 
