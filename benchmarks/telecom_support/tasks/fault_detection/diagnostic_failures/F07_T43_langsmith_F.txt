@@ -1,0 +1,1 @@
+{'key': 'forbidden_tools', 'score': 0}

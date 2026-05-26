@@ -1,0 +1,1 @@
+{'key': 'f10_output_rubric', 'score': 0}

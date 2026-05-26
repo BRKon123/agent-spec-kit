@@ -12,6 +12,22 @@ Mutation-style fault families run against the **same task oracles** as reference
 | `fault_detection_results.json` | Parsed from live fault run log |
 | `FAULT_DETECTION_TABLE.md` | Generated summary + detail grid |
 | `FAULT_DIAGNOSTICS.md` | Generated exemplar diagnostics |
+| `diagnostic_records.json` | Diagnostic quality (parsed panels + LLM scores) |
+| `DIAGNOSTIC_QUALITY_TABLE.md` | Six-framework diagnostic comparison table |
+
+## Diagnostic quality (six frameworks)
+
+Does not change fault detection code or results. Reads `fault_detection_primary.log` Rich panels.
+
+```bash
+cd benchmarks/telecom_support
+
+uv run python scripts/collect_diagnostic_failures.py
+
+OPENAI_API_KEY=... uv run python scripts/extract_diagnostic_quality.py
+
+uv run python scripts/generate_diagnostic_quality_table.py
+```
 
 ## Commands
 

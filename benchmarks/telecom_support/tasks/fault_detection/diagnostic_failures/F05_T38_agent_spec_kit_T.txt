@@ -1,0 +1,305 @@
+╭─────────────────────── FAIL test_f05_t38_trace [1/1] ────────────────────────╮
+│ Check: assert_tool_calls                                                     │
+│ Where: 1st assert_tool_calls after turn #2 (agentturn) (tool call list for   │
+│ that turn)                                                                   │
+│ Path: $[1].children                                                          │
+│ Agent errors:                                                                │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-038',        │
+│ 'verification_token': '1990-38-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-038"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_1L6GaS66o7zWMW3unuNeY76b'}}                                            │
+│ {'name': 'run_network_diagnostics_specialist', 'args': {'line_id':           │
+│ 'LINE-0038', 'complaint': 'latency and intermittent connectivity'},          │
+│ 'result':                                                                    │
+│ '{"line_id":"LINE-0038","fault_domain":"unknown","severity":"medium","confid │
+│ ence":0.65,"evidence":["no network events detected in the last 60            │
+│ minutes","no outages detected for postcode E1 6AN","line diagnostic: SIM     │
+│ status active, data enabled, roaming enabled, signal                         │
+│ OK","latency/intermittent issues reported; external factors or congestion    │
+│ outside the line may be                                                      │
+│ possible"],"recommended_action":"ask_user_step","escalation_reason":null,"us │
+│ er_explanation":"Latency and intermittent connectivity are reported. Current │
+│ checks show no recent events, no outages, and the line diagnostic indicates  │
+│ normal operation. A definitive root cause cannot be established from the     │
+│ available data. Please perform or confirm: test with a wired connection vs.  │
+│ Wi-Fi, run speed tests at different times, document affected services and    │
+│ times, and report any patterns (e.g., during specific hours or locations).   │
+│ If issues persist, we can collect more data or schedule further              │
+│ investigation."}', 'error': None, 'children': [{'name':                      │
+│ 'score_signal_anomaly', 'args': {'source': 'events', 'anomaly_score': 0.65,  │
+│ 'window_minutes': 30, 'override_reason': None}, 'result': '{"anomaly_score": │
+│ 0.65, "risk_band": "elevated", "source": "events", "window_minutes": 30,     │
+│ "nested_order_fault": true}', 'error': None, 'children': [], 'metadata':     │
+│ {'tool_call_id': 'call_XTACqEGkRcT3dbzGH1w9RkaA'}}, {'name':                 │
+│ 'pull_network_events', 'args': {'line_id': 'LINE-0038', 'window_minutes':    │
+│ 60}, 'result': '{"line_id": "LINE-0038", "window_minutes": 60, "events": [], │
+│ "count": 0}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_A243bpxrEce6NJicEnNUzYSv'}}, {'name': 'check_outage', 'args':          │
+│ {'postcode': 'E1 6AN', 'service_type': 'broadband'}, 'result': '{"postcode": │
+│ "E1 6AN", "service_type": "broadband", "outages": []}', 'error': None,       │
+│ 'children': [], 'metadata': {'tool_call_id':                                 │
+│ 'call_BRJAQuTVZk9iBiVh1CCOtv4U'}}, {'name': 'run_line_diagnostic', 'args':   │
+│ {'line_id': 'LINE-0038'}, 'result': '{"ok": true, "diagnostic": {"line_id":  │
+│ "LINE-0038", "sim_status": "active", "data_enabled": true,                   │
+│ "roaming_enabled": true, "signal": "ok"}}', 'error': None, 'children': [],   │
+│ 'metadata': {'tool_call_id': 'call_Um5m5tcO0L17qM1m2aDUALjH'}}, {'name':     │
+│ 'classify_fault_domain', 'args': {'line_id': 'LINE-0038'}, 'result':         │
+│ '{"line_id": "LINE-0038", "fault_domain": "unknown"}', 'error': None,        │
+│ 'children': [], 'metadata': {'tool_call_id':                                 │
+│ 'call_yj8nveyC9UtSrXg7bTWYT1f7'}}], 'metadata': {'tool_call_id':             │
+│ 'call_s1zAvAUK8RTT0nmBwv1KjhrN'}}                                            │
+│ {'name': 'heartbeat_ping', 'args': {}, 'result': '{"status": "ok",           │
+│ "heartbeat": "ping"}', 'error': None, 'children': [], 'metadata':            │
+│ {'tool_call_id': 'call_3aJsbrQolEqiDBS29TqNp7k8'}}                           │
+│ Expected: list_length_mismatch: expected 2 tool call(s) in order:            │
+│ pull_network_events, score_signal_anomaly                                    │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-038",                                             │
+│       "verification_token": "1990-38-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-038"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_1L6GaS66o7zWMW3unuNeY76b"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "run_network_diagnostics_specialist",                            │
+│     "args": {                                                                │
+│       "line_id": "LINE-0038",                                                │
+│       "complaint": "latency and intermittent connectivity"                   │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "line_id": "LINE-0038",                                                │
+│       "fault_domain": "unknown",                                             │
+│       "severity": "medium",                                                  │
+│       "confidence": 0.65,                                                    │
+│       "evidence": [                                                          │
+│         "no network events detected in the last 60 minutes",                 │
+│         "no outages detected for postcode E1 6AN",                           │
+│         "line diagnostic: SIM status active, data enabled, roaming enabled,  │
+│ signal OK",                                                                  │
+│         "latency/intermittent issues reported; external factors or           │
+│ congestion outside the line may be possible"                                 │
+│       ],                                                                     │
+│       "recommended_action": "ask_user_step",                                 │
+│       "escalation_reason": null,                                             │
+│       "user_explanation": "Latency and intermittent connectivity are         │
+│ reported. Current checks show no recent events, no outages, and the line     │
+│ diagnostic indicates normal operation. A definitive root cause cannot be     │
+│ established from the available data. Please perform or confirm: test with a  │
+│ wired connection vs. Wi-Fi, run speed tests at different times, document     │
+│ affected services and times, and report any patterns (e.g., during specific  │
+│ hours or locations). If issues persist, we can collect more data or schedule │
+│ further investigation."                                                      │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [                                                            │
+│       {                                                                      │
+│         "name": "score_signal_anomaly",                                      │
+│         "args": {                                                            │
+│           "source": "events",                                                │
+│           "anomaly_score": 0.65,                                             │
+│           "window_minutes": 30,                                              │
+│           "override_reason": null                                            │
+│         },                                                                   │
+│         "result": {                                                          │
+│           "anomaly_score": 0.65,                                             │
+│           "risk_band": "elevated",                                           │
+│           "source": "events",                                                │
+│           "window_minutes": 30,                                              │
+│           "nested_order_fault": true                                         │
+│         },                                                                   │
+│         "error": null,                                                       │
+│         "children": [],                                                      │
+│         "metadata": {                                                        │
+│           "tool_call_id": "call_XTACqEGkRcT3dbzGH1w9RkaA"                    │
+│         }                                                                    │
+│       },                                                                     │
+│       {                                                                      │
+│         "name": "pull_network_events",                                       │
+│         "args": {                                                            │
+│           "line_id": "LINE-0038",                                            │
+│           "window_minutes": 60                                               │
+│         },                                                                   │
+│         "result": {                                                          │
+│           "line_id": "LINE-0038",                                            │
+│           "window_minutes": 60,                                              │
+│           "events": [],                                                      │
+│           "count": 0                                                         │
+│         },                                                                   │
+│         "error": null,                                                       │
+│         "children": [],                                                      │
+│         "metadata": {                                                        │
+│           "tool_call_id": "call_A243bpxrEce6NJicEnNUzYSv"                    │
+│         }                                                                    │
+│       },                                                                     │
+│       {                                                                      │
+│         "name": "check_outage",                                              │
+│         "args": {                                                            │
+│           "postcode": "E1 6AN",                                              │
+│           "service_type": "broadband"                                        │
+│         },                                                                   │
+│         "result": {                                                          │
+│           "postcode": "E1 6AN",                                              │
+│           "service_type": "broadband",                                       │
+│           "outages": []                                                      │
+│         },                                                                   │
+│         "error": null,                                                       │
+│         "children": [],                                                      │
+│         "metadata": {                                                        │
+│           "tool_call_id": "call_BRJAQuTVZk9iBiVh1CCOtv4U"                    │
+│         }                                                                    │
+│       },                                                                     │
+│       {                                                                      │
+│         "name": "run_line_diagnostic",                                       │
+│         "args": {                                                            │
+│           "line_id": "LINE-0038"                                             │
+│         },                                                                   │
+│         "result": {                                                          │
+│           "ok": true,                                                        │
+│           "diagnostic": {                                                    │
+│             "line_id": "LINE-0038",                                          │
+│             "sim_status": "active",                                          │
+│             "data_enabled": true,                                            │
+│             "roaming_enabled": true,                                         │
+│             "signal": "ok"                                                   │
+│           }                                                                  │
+│         },                                                                   │
+│         "error": null,                                                       │
+│         "children": [],                                                      │
+│         "metadata": {                                                        │
+│           "tool_call_id": "call_Um5m5tcO0L17qM1m2aDUALjH"                    │
+│         }                                                                    │
+│       },                                                                     │
+│       {                                                                      │
+│         "name": "classify_fault_domain",                                     │
+│         "args": {                                                            │
+│           "line_id": "LINE-0038"                                             │
+│         },                                                                   │
+│         "result": {                                                          │
+│           "line_id": "LINE-0038",                                            │
+│           "fault_domain": "unknown"                                          │
+│         },                                                                   │
+│         "error": null,                                                       │
+│         "children": [],                                                      │
+│         "metadata": {                                                        │
+│           "tool_call_id": "call_yj8nveyC9UtSrXg7bTWYT1f7"                    │
+│         }                                                                    │
+│       }                                                                      │
+│     ],                                                                       │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_s1zAvAUK8RTT0nmBwv1KjhrN"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "heartbeat_ping",                                                │
+│     "args": {},                                                              │
+│     "result": {                                                              │
+│       "status": "ok",                                                        │
+│       "heartbeat": "ping"                                                    │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_3aJsbrQolEqiDBS29TqNp7k8"                        │
+│     }                                                                        │
+│   }                                                                          │
+│ ]                                                                            │
+│ agent recorded 5 tool call(s): score_signal_anomaly, pull_network_events,    │
+│ check_outage, run_line_diagnostic, classify_fault_domain                     │
+│ could not match expected element at index 1 while preserving order           │
+│ searched actual positions 1 through 2                                        │
+│ closest underlying mismatch was (at $[1].children): wrong list length:       │
+│ expected exactly 2 value(s) in this order, found 5                           │
+│ wrong list length: expected exactly 2 value(s) in this order, found 5        │
+│ (+1 more matcher error(s))                                                   │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My connection keeps lagging on and off — can you run           │
+│ │   thorough network...                                                      │
+│ └── AgentTurn: Thanks for the details. I’ve authenticated your account and   │
+│     ran a Net...                                                             │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-038"                                      │
+│     │       }                                                                │
+│     ├── run_network_diagnostics_specialist                                   │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "line_id": "LINE-0038",                                        │
+│     │         "fault_domain": "unknown",                                     │
+│     │         "severity": "medium",                                          │
+│     │         "confidence": 0.65,                                            │
+│     │         "evidence": [                                                  │
+│     │           "no network events detected in the last 60 minutes",         │
+│     │           "no outages detected for postcode E1 6AN",                   │
+│     │           "line diagnostic: SIM status active, data enabled, roaming   │
+│     │   enabled, signal OK",                                                 │
+│     │           "latency/intermittent issues reported; external factors or   │
+│     │   congestion outside the line may be possible"                         │
+│     │         ],                                                             │
+│     │         "recommended_action": "ask_user_step",                         │
+│     │         "escalation_reason": null,                                     │
+│     │         "user...                                                       │
+│     │   ├── score_signal_anomaly                                             │
+│     │   │     result:                                                        │
+│     │   │       {                                                            │
+│     │   │         "anomaly_score": 0.65,                                     │
+│     │   │         "risk_band": "elevated",                                   │
+│     │   │         "source": "events",                                        │
+│     │   │         "window_minutes": 30,                                      │
+│     │   │         "nested_order_fault": true                                 │
+│     │   │       }                                                            │
+│     │   ├── pull_network_events                                              │
+│     │   │     result:                                                        │
+│     │   │       {                                                            │
+│     │   │         "line_id": "LINE-0038",                                    │
+│     │   │         "window_minutes": 60,                                      │
+│     │   │         "events": [],                                              │
+│     │   │         "count": 0                                                 │
+│     │   │       }                                                            │
+│     │   ├── check_outage                                                     │
+│     │   │     result:                                                        │
+│     │   │       {                                                            │
+│     │   │         "postcode": "E1 6AN",                                      │
+│     │   │         "service_type": "broadband",                               │
+│     │   │         "outages": []                                              │
+│     │   │       }                                                            │
+│     │   ├── run_line_diagnostic                                              │
+│     │   │     result:                                                        │
+│     │   │       {                                                            │
+│     │   │         "ok": true,                                                │
+│     │   │         "diagnostic": {                                            │
+│     │   │           "line_id": "LINE-0038",                                  │
+│     │   │           "sim_status": "active",                                  │
+│     │   │           "data_enabled": true,                                    │
+│     │   │           "roaming_enabled": true,                                 │
+│     │   │           "signal": "ok"                                           │
+│     │   │         }                                                          │
+│     │   │       }                                                            │
+│     │   └── classify_fault_domain                                            │
+│     │         result:                                                        │
+│     │           {                                                            │
+│     │             "line_id": "LINE-0038",                                    │
+│     │             "fault_domain": "unknown"                                  │
+│     │           }                                                            │
+│     └── heartbeat_ping                                                       │
+│           result:                                                            │
+│             {                                                                │
+│               "status": "ok",                                                │
+│               "heartbeat": "ping"                                            │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

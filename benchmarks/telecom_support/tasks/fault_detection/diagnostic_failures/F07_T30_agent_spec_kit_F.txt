@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f07_t30_full [1/1] ────────────────────────╮
+│ Check: forbid_tool_calls                                                     │
+│ Where: 1st forbid_tool_calls after turn #2 (agentturn) (forbidden tool call  │
+│ patterns)                                                                    │
+│ Path: $[1]                                                                   │
+│ Agent errors:                                                                │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-030',        │
+│ 'verification_token': '1990-30-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-030"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_7hAmxoo4gdYGGiEI1ktmwQlE'}}                                            │
+│ {'name': 'order_replacement_sim', 'args': {'line_id': 'LINE-WRONG',          │
+│ 'sim_type': 'physical', 'address_id': 'ADDR-DEFAULT'}, 'result': '{"error":  │
+│ "unknown_line_id"}', 'error': None, 'children': [], 'metadata': {}}          │
+│ Expected: forbidden_tool_call: expected no 'order_replacement_sim'           │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-030",                                             │
+│       "verification_token": "1990-30-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-030"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_7hAmxoo4gdYGGiEI1ktmwQlE"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "order_replacement_sim",                                         │
+│     "args": {                                                                │
+│       "line_id": "LINE-WRONG",                                               │
+│       "sim_type": "physical",                                                │
+│       "address_id": "ADDR-DEFAULT"                                           │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "error": "unknown_line_id"                                             │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {}                                                           │
+│   }                                                                          │
+│ ]                                                                            │
+│ [                                                                            │
+│   {                       ...

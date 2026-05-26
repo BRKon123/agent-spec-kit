@@ -1,0 +1,80 @@
+╭─────────────────────── FAIL test_f09_t04_output [1/1] ───────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #4 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected at least one ticket                   │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My mobile data isn't working — worried it'll still fail even   │
+│ │   after a ...                                                              │
+│ ├── AgentTurn: Thanks for the details and account verification. I’ve         │
+│ │   completed a qui...                                                       │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-004"                                      │
+│ │   │       }                                                                │
+│ │   ├── get_line_status                                                      │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "line_id": "LINE-0004",                                        │
+│ │   │         "customer_id": "CUST-004",                                     │
+│ │   │         "phone_number": "+447700900004",                               │
+│ │   │         "plan_id": "PLAN-STD",                                         │
+│ │   │         "sim_status": "active",                                        │
+│ │   │         "roaming_enabled": true,                                       │
+│ │   │         "data_enabled": true                                           │
+│ │   │       }                                                                │
+│ │   ├── heartbeat_ping                                                       │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "status": "ok",                                                │
+│ │   │         "heartbeat": "ping"                                            │
+│ │   │       }                                                                │
+│ │   └── run_line_diagnostic                                                  │
+│ │         result:                                                            │
+│ │           {                                                                │
+│ │             "ok": true,                                                    │
+│ │             "diagnostic": {                                                │
+│ │               "line_id": "LINE-0004",                                      │
+│ │               "sim_status": "active",                                      │
+│ │               "data_enabled": true,                                        │
+│ │               "roaming_enabled": true,                                     │
+│ │               "signal": "ok"                                               │
+│ │             }                                                              │
+│ │           }                                                                │
+│ ├── UserTurn: I restarted the phone on line LINE-0004 and still have no      │
+│ │   data — can ...                                                           │
+│ └── AgentTurn: Ticket opened successfully for LINE-0004 (CUST-004).          │
+│     Ticket ID: TCK-...                                                       │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-004"                                      │
+│     │       }                                                                │
+│     ├── record_user_action                                                   │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "line_id": "LINE-0004",                                        │
+│     │         "action": "phone_restart",                                     │
+│     │         "result": "completed"                                          │
+│     │       }                                                                │
+│     └── create_support_ticket                                                │
+│           result:                                                            │
+│             {                                                                │
+│               "ok": true,                                                    │
+│               "ticket_id": "TCK-00001",                                      │
+│               "status": "open"                                               │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

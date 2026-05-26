@@ -8,19 +8,19 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | no | — | — |
-| F | yes | — | no |
+| O | yes | yes | no |
+| S | yes | yes | no |
+| T | no | no | — |
+| F | yes | no | yes |
 
 ### T48
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | no | — | — |
-| T | no | — | — |
-| F | no | — | — |
+| O | yes | yes | no |
+| S | no | no | — |
+| T | no | no | — |
+| F | no | no | — |
 
 *Design intent (not measured):*
 - O: may miss plausible replies
@@ -34,19 +34,19 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | yes | — | no |
-| F | yes | — | no |
+| O | yes | yes | no |
+| S | yes | no | yes |
+| T | yes | yes | no |
+| F | yes | no | yes |
 
 ### T46
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | yes | — | no |
-| F | yes | — | no |
+| O | yes | yes | no |
+| S | yes | no | yes |
+| T | yes | no | yes |
+| F | yes | no | yes |
 
 *Design intent (not measured):*
 - T: wrong args in trace
@@ -58,19 +58,19 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | no | — | — |
-| T | no | — | — |
-| F | no | — | — |
+| O | yes | yes | no |
+| S | no | no | — |
+| T | no | no | — |
+| F | no | no | — |
 
 ### T27
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | yes | — | no |
-| F | yes | — | no |
+| O | yes | yes | no |
+| S | yes | no | yes |
+| T | yes | yes | no |
+| F | yes | no | yes |
 
 *Design intent (not measured):*
 - S: invalid credit rows
@@ -82,19 +82,19 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | yes | — | no |
-| F | yes | — | no |
+| O | yes | yes | no |
+| S | yes | no | yes |
+| T | yes | yes | no |
+| F | yes | no | yes |
 
 ### T50
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | yes | — | no |
-| F | yes | — | no |
+| O | yes | no | yes |
+| S | yes | no | yes |
+| T | yes | yes | no |
+| F | yes | no | yes |
 
 *Design intent (not measured):*
 - T: sensitive read before auth
@@ -106,19 +106,19 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | no | — | — |
-| F | no | — | — |
+| O | yes | yes | no |
+| S | yes | yes | no |
+| T | no | no | — |
+| F | no | no | — |
 
 ### T38
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | yes | — | no |
-| F | yes | — | no |
+| O | yes | yes | no |
+| S | yes | yes | no |
+| T | yes | no | yes |
+| F | yes | no | yes |
 
 *Design intent (not measured):*
 - T: nested trace order and children
@@ -129,28 +129,28 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | no | — | — |
-| F | no | — | — |
+| O | yes | yes | no |
+| S | yes | yes | no |
+| T | no | no | — |
+| F | no | no | — |
 
 ### T23
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | no | — | — |
-| F | no | — | — |
+| O | yes | no | yes |
+| S | yes | no | yes |
+| T | no | no | — |
+| F | no | no | — |
 
 ### T10
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | — | no |
-| S | yes | — | no |
-| T | no | — | — |
-| F | no | — | — |
+| O | yes | no | yes |
+| S | yes | yes | no |
+| T | no | no | — |
+| F | no | no | — |
 
 *Design intent (not measured):*
 - T: m.object matchers on specialist result
@@ -239,8 +239,8 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | yes | no |
-| S | yes | no | yes |
+| O | yes | no | yes |
+| S | yes | yes | no |
 | T | yes | yes | no |
 | F | yes | no | yes |
 
@@ -249,7 +249,7 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
 | O | yes | yes | no |
-| S | yes | no | yes |
+| S | yes | yes | no |
 | T | no | no | — |
 | F | yes | no | yes |
 

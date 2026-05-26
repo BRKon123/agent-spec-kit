@@ -6,27 +6,27 @@ Generated from real fault-detection run data. Regenerate:
 uv run python benchmarks/telecom_support/scripts/generate_fault_detection_table.py
 ```
 
-- Generated: 2026-05-26T15:27:25.338274+00:00
+- Generated: 2026-05-26T15:48:25.168112+00:00
 - Fault log: `tasks/fault_detection/fault_detection_primary.log`
-- Matrix hash: `5fdf0e3ecb79e0d1`
+- Matrix hash: `b6c509c52ff5ad54`
 - Run exit code: `1`
-- Parsed scenarios: `64` / `152`
+- Parsed scenarios: `152` / `152`
 - Baseline (frozen): `tasks/calibration_logs/baseline_report.md`
 
 ## Summary (detection rate = detected / eligible)
 
 | Fault | O | S | T | F |
 |-------|---|---|---|---|
-| F01 | 0/4 (0%) | 0/2 (0%) | — | 0/2 (0%) |
-| F02 | 0/3 (0%) | 0/3 (0%) | 0/3 (0%) | 0/3 (0%) |
-| F03 | 0/4 (0%) | 0/3 (0%) | 0/3 (0%) | 0/2 (0%) |
-| F04 | 0/4 (0%) | 0/4 (0%) | 0/4 (0%) | 0/4 (0%) |
-| F05 | 0/3 (0%) | 0/3 (0%) | 0/2 (0%) | 0/1 (0%) |
-| F06 | 0/4 (0%) | 0/4 (0%) | — | — |
+| F01 | 0/4 (0%) | 0/2 (0%) | — | 1/2 (50%) |
+| F02 | 0/3 (0%) | 3/3 (100%) | 2/3 (67%) | 3/3 (100%) |
+| F03 | 0/4 (0%) | 3/3 (100%) | 0/3 (0%) | 2/2 (100%) |
+| F04 | 1/4 (25%) | 3/4 (75%) | 0/4 (0%) | 3/4 (75%) |
+| F05 | 0/3 (0%) | 0/3 (0%) | 2/2 (100%) | 1/1 (100%) |
+| F06 | 3/4 (75%) | 2/4 (50%) | — | — |
 | F07 | 2/4 (50%) | 2/4 (50%) | 4/4 (100%) | 4/4 (100%) |
 | F08 | 0/4 (0%) | 0/1 (0%) | 3/4 (75%) | 1/2 (50%) |
 | F09 | 2/4 (50%) | 2/4 (50%) | 2/4 (50%) | 2/4 (50%) |
-| F10 | 0/4 (0%) | 2/4 (50%) | 1/3 (33%) | 3/4 (75%) |
+| F10 | 1/4 (25%) | 0/4 (0%) | 1/3 (33%) | 4/4 (100%) |
 
 ## Detail grid (primary matrix)
 
@@ -34,28 +34,28 @@ Legend: **detected** = eligible and fault scenario failed; **missed** = eligible
 
 | Fault | Task | O | S | T | F |
 |-------|------|---|---|---|---|
-| F01 | T03 | incomplete | incomplete | N/A | incomplete |
-| F01 | T37 | incomplete | N/A | N/A | N/A |
-| F01 | T44 | incomplete | incomplete | N/A | incomplete |
-| F01 | T48 | incomplete | N/A | N/A | N/A |
-| F02 | T29 | incomplete | incomplete | incomplete | incomplete |
-| F02 | T43 | incomplete | incomplete | incomplete | incomplete |
-| F02 | T46 | incomplete | incomplete | incomplete | incomplete |
-| F03 | T14 | incomplete | incomplete | incomplete | N/A |
-| F03 | T17 | incomplete | incomplete | incomplete | incomplete |
-| F03 | T22 | incomplete | N/A | N/A | N/A |
-| F03 | T27 | incomplete | incomplete | incomplete | incomplete |
-| F04 | T20 | incomplete | incomplete | incomplete | incomplete |
-| F04 | T45 | incomplete | incomplete | incomplete | incomplete |
-| F04 | T49 | incomplete | incomplete | incomplete | incomplete |
-| F04 | T50 | incomplete | incomplete | incomplete | incomplete |
-| F05 | T05 | incomplete | incomplete | incomplete | N/A |
-| F05 | T38 | incomplete | incomplete | incomplete | incomplete |
-| F05 | T40 | incomplete | incomplete | N/A | N/A |
-| F06 | T09 | incomplete | incomplete | N/A | N/A |
-| F06 | T10 | incomplete | incomplete | N/A | N/A |
-| F06 | T23 | incomplete | incomplete | N/A | N/A |
-| F06 | T33 | incomplete | incomplete | N/A | N/A |
+| F01 | T03 | missed | missed | N/A | missed |
+| F01 | T37 | missed | N/A | N/A | N/A |
+| F01 | T44 | missed | missed | N/A | detected |
+| F01 | T48 | missed | N/A | N/A | N/A |
+| F02 | T29 | missed | detected | detected | detected |
+| F02 | T43 | missed | detected | missed | detected |
+| F02 | T46 | missed | detected | detected | detected |
+| F03 | T14 | missed | detected | missed | N/A |
+| F03 | T17 | missed | detected | missed | detected |
+| F03 | T22 | missed | N/A | N/A | N/A |
+| F03 | T27 | missed | detected | missed | detected |
+| F04 | T20 | missed | missed | missed | missed |
+| F04 | T45 | missed | detected | missed | detected |
+| F04 | T49 | missed | detected | missed | detected |
+| F04 | T50 | detected | detected | missed | detected |
+| F05 | T05 | missed | missed | detected | N/A |
+| F05 | T38 | missed | missed | detected | detected |
+| F05 | T40 | missed | missed | N/A | N/A |
+| F06 | T09 | missed | missed | N/A | N/A |
+| F06 | T10 | detected | missed | N/A | N/A |
+| F06 | T23 | detected | detected | N/A | N/A |
+| F06 | T33 | detected | detected | N/A | N/A |
 | F07 | T29 | missed | missed | detected | detected |
 | F07 | T30 | detected | missed | detected | detected |
 | F07 | T42 | detected | detected | detected | detected |
@@ -69,9 +69,9 @@ Legend: **detected** = eligible and fault scenario failed; **missed** = eligible
 | F09 | T35 | missed | missed | missed | missed |
 | F09 | T34 | missed | missed | missed | missed |
 | F10 | T29 | missed | missed | detected | detected |
-| F10 | T42 | missed | missed | missed | missed |
-| F10 | T43 | missed | detected | missed | detected |
-| F10 | T44 | missed | detected | N/A | detected |
+| F10 | T42 | missed | missed | missed | detected |
+| F10 | T43 | detected | missed | missed | detected |
+| F10 | T44 | missed | missed | N/A | detected |
 
 ## Notes
 

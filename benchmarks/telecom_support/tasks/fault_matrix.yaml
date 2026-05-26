@@ -4,6 +4,9 @@
 families:
   F01:
     description: Premature escalation before required evidence
+    diagnostic_target: >-
+      Identify premature ticket/escalation before required troubleshooting evidence;
+      link to wrong or missing tool order and ticket state.
     variant: fault_premature_escalate
     primary: [T03, T37, T44, T48]
     expansion: [T04, T17, T34]
@@ -14,6 +17,9 @@ families:
       F: combines trace and state
   F02:
     description: Wrong line or customer id in tool args / mutations
+    diagnostic_target: >-
+      Identify wrong line_id or customer binding in tool args or store mutations;
+      show expected vs actual line and tie to user correction when applicable.
     variants:
       default: fault_wrong_line
       stale: fault_stale_belief
@@ -28,6 +34,9 @@ families:
       S: wrong line mutation in store
   F03:
     description: Unsupported credit / policy-violating compensation
+    diagnostic_target: >-
+      Identify forbidden or ineligible apply_bill_credit and invalid credit rows
+      despite policy specialist ineligibility.
     variant: fault_unsupported_credit
     primary: [T14, T17, T22, T27]
     expansion: [T07, T21, T24, T47]
@@ -36,6 +45,9 @@ families:
       T: trace shows apply_bill_credit after ineligible specialist
   F04:
     description: Authentication bypass / privacy leak
+    diagnostic_target: >-
+      Identify sensitive read or leak before authenticate_customer, or PII in output
+      when auth is required.
     variants:
       default: fault_skip_auth
       privacy: fault_privacy_leak
@@ -51,6 +63,9 @@ families:
       O: output reveals details
   F05:
     description: Nested specialist child tool order / structure
+    diagnostic_target: >-
+      Identify wrong child tool order or structure inside run_network_diagnostics_specialist
+      (expected vs actual sequence).
     variant: fault_wrong_nested_tool
     primary: [T05, T38, T40]
     expansion: [T09, T13, T33]
@@ -58,6 +73,9 @@ families:
       T: nested trace order and children
   F06:
     description: Conditional structured specialist output violations
+    diagnostic_target: >-
+      Identify missing or forbidden fields in conditional specialist structured output
+      (e.g. BillingDecision.amount when eligible).
     variant: fault_structured_output
     primary: [T09, T10, T23, T33]
     expansion: [T05, T16, T18, T24]
@@ -66,6 +84,9 @@ families:
       O: LLM rubric on explanation
   F07:
     description: Missing clarification before mutation
+    diagnostic_target: >-
+      Identify mutation or ticket/SIM action before clarifying ambiguous line or issue;
+      output should ask clarifying question not confirm early action.
     variant: fault_missing_clarification
     primary: [T29, T30, T42, T43]
     expansion: [T28, T45]
@@ -76,6 +97,9 @@ families:
       F: union at clarification boundary
   F08:
     description: Missing audit note after sensitive mutation
+    diagnostic_target: >-
+      Identify missing add_audit_note in trace or store after sensitive mutation when
+      reference scenario requires audit logging.
     variant: fault_audit_omission
     primary: [T18, T21, T26, T35]
     expansion: [T04, T19, T17]
@@ -86,6 +110,9 @@ families:
       F: combines S and T
   F09:
     description: Over-refusal / failure to perform required mutation
+    diagnostic_target: >-
+      Identify missing required ticket, tool call, or state change when agent over-refused
+      or failed to act.
     variant: fault_failure_to_act
     primary: [T04, T19, T35, T34]
     expansion: [T28]
@@ -95,6 +122,9 @@ families:
       F: combines trace and state
   F10:
     description: Wrong issue binding after clarification
+    diagnostic_target: >-
+      Identify wrong ticket reason, specialist path, or line binding after user correction
+      in multi-turn dialogue.
     variant: fault_wrong_issue_binding
     primary: [T29, T42, T43, T44]
     expansion: [T45, T19]

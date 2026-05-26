@@ -1,0 +1,81 @@
+╭─────────────────────── FAIL test_f07_t42_state [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #4 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected zero sim orders, found 1              │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My mobile data is not working at all. Account CUST-042,        │
+│ │   verification ...                                                         │
+│ ├── AgentTurn: You're verified. I have your details for account CUST-042     │
+│ │   and line LI...                                                           │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-042"                                      │
+│ │   │       }                                                                │
+│ │   ├── get_line_status                                                      │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "line_id": "LINE-0042",                                        │
+│ │   │         "customer_id": "CUST-042",                                     │
+│ │   │         "phone_number": "+447700900042",                               │
+│ │   │         "plan_id": "PLAN-STD",                                         │
+│ │   │         "sim_status": "active",                                        │
+│ │   │         "roaming_enabled": true,                                       │
+│ │   │         "data_enabled": true                                           │
+│ │   │       }                                                                │
+│ │   ├── heartbeat_ping                                                       │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "status": "ok",                                                │
+│ │   │         "heartbeat": "ping"                                            │
+│ │   │       }                                                                │
+│ │   └── order_replacement_sim                                                │
+│ │         result:                                                            │
+│ │           {                                                                │
+│ │             "ok": true,                                                    │
+│ │             "order_id": "SIM-00001",                                       │
+│ │             "line_id": "LINE-0042",                                        │
+│ │             "sim_type": "physical",                                        │
+│ │             "address_id": "ADDR-DEFAULT"                                   │
+│ │           }                                                                │
+│ ├── UserTurn: Wait — I just found my SIM in the laundry. I thought it was    │
+│ │   lost. Can...                                                             │
+│ └── AgentTurn: Here’s the latest on LINE-0042:                               │
+│                                                                              │
+│     - Status: Active                                                         │
+│     - SIM status: Activ...                                                   │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-042"                                      │
+│     │       }                                                                │
+│     ├── get_line_status                                                      │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "line_id": "LINE-0042",                                        │
+│     │         "customer_id": "CUST-042",                                     │
+│     │         "phone_number": "+447700900042",                               │
+│     │         "plan_id": "PLAN-STD",                                         │
+│     │         "sim_status": "active",                                        │
+│     │         "roaming_enabled": true,                                       │
+│     │         "data_enabled": true                                           │
+│     │       }                                                                │
+│     └── heartbeat_ping                                                       │
+│           result:                                                            │
+│             {                                                                │
+│               "status": "ok",                                                │
+│               "heartbeat": "ping"                                            │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

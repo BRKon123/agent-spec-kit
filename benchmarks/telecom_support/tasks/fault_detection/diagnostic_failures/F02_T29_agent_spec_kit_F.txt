@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f02_t29_full [1/1] ────────────────────────╮
+│ Check: assert_tool_calls                                                     │
+│ Where: 1st assert_tool_calls after turn #4 (agentturn) (tool call list for   │
+│ that turn)                                                                   │
+│ Path: $[1].args.sim_type                                                     │
+│ Agent errors:                                                                │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-029',        │
+│ 'verification_token': '1990-29-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-029"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_l8qL9X7WrJEMj21uhFIHXAyN'}}                                            │
+│ {'name': 'order_replacement_sim', 'args': {'line_id': 'LINE-0029',           │
+│ 'sim_type': 'physical', 'address_id': 'ADDR-DEFAULT'}, 'result': '{"ok":     │
+│ true, "order_id": "SIM-00001", "line_id": "LINE-WRONG", "sim_type":          │
+│ "physical", "address_id": "ADDR-DEFAULT"}', 'error': None, 'children': [],   │
+│ 'metadata': {'tool_call_id': 'call_hfseFJwAjy5VlyCpH85iPQbH'}}               │
+│ Expected: extra_key: expected no extra keys                                  │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-029",                                             │
+│       "verification_token": "1990-29-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-029"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_l8qL9X7WrJEMj21uhFIHXAyN"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "order_replacement_sim",                                         │
+│     "args": {                                                                │
+│       "line_id": "LINE-0029",                                                │
+│       "sim_type": "physical",                                                │
+│       "address_id": "ADDR-DEFAULT"                                           │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "order_id": "SIM-00001",                                               │
+│       "line_id": "LINE-WRONG",                                               │
+│       "sim_type": "physical",                                                │
+│       "address_id": "ADDR-DEFAULT"                                           │
+│     },                                                                       │
+│     "error": null,        ...

@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f07_t43_full [1/1] ────────────────────────╮
+│ Check: forbid_tool_calls                                                     │
+│ Where: 1st forbid_tool_calls after turn #2 (agentturn) (forbidden tool call  │
+│ patterns)                                                                    │
+│ Path: $[0]                                                                   │
+│ Agent errors:                                                                │
+│ {'name': 'create_support_ticket', 'args': {'customer_id': 'CUST-043',        │
+│ 'line_id': 'LINE-0043B', 'reason': 'SIM connectivity — premature ticket'},   │
+│ 'result': '{"ok": true, "ticket_id": "TCK-00001", "status": "open"}',        │
+│ 'error': None, 'children': [], 'metadata': {}}                               │
+│ Expected: forbidden_tool_call: expected no 'create_support_ticket'           │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "create_support_ticket",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-043",                                             │
+│       "line_id": "LINE-0043B",                                               │
+│       "reason": "SIM connectivity \u2014 premature ticket"                   │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "ticket_id": "TCK-00001",                                              │
+│       "status": "open"                                                       │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {}                                                           │
+│   }                                                                          │
+│ ]                                                                            │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "create_support_ticket",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-043",                                             │
+│       "line_id": "LINE-0043B",                                               │
+│       "reason": "SIM connectivity \u2014 premature ticket"                   │
+│     },                                                                       │
+│     "result": "{\"ok\": true, \"ticket_id\": \"TCK-00001\", \"status\":      │
+│ \"open\"}",                                                                  │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {}                                                           │
+│   }                                                                          │
+│ ]                                                                            │
+│ forbidden tool call 'create_support_ticket' found at index 0 (actual tool    │
+│ 'create_support_ticket')                                                     │
+│                                                                              │
+│ ──────────────────────────...

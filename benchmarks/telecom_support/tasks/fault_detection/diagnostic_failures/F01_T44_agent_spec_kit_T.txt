@@ -1,0 +1,176 @@
+╭─────────────────────── FAIL test_f01_t44_trace [1/1] ────────────────────────╮
+│ Check: assert_tool_calls                                                     │
+│ Where: 1st assert_tool_calls after turn #6 (agentturn) (tool call list for   │
+│ that turn)                                                                   │
+│ Path: $[0].name                                                              │
+│ Agent errors:                                                                │
+│ {'name': 'get_line_status', 'args': {'line_id': 'LINE-0044'}, 'result':      │
+│ '{"line_id": "LINE-0044", "customer_id": "CUST-044", "phone_number":         │
+│ "+447700900044", "plan_id": "PLAN-STD", "sim_status": "active",              │
+│ "roaming_enabled": true, "data_enabled": true}', 'error': None, 'children':  │
+│ [], 'metadata': {'tool_call_id': 'call_lFkqSMPR10QSWg5vXfKuBP6c'}}           │
+│ {'name': 'heartbeat_ping', 'args': {}, 'result': '{"status": "ok",           │
+│ "heartbeat": "ping"}', 'error': None, 'children': [], 'metadata':            │
+│ {'tool_call_id': 'call_D7cPNzg12or0RVvb3S9eZJlw'}}                           │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-044',        │
+│ 'verification_token': '1990-44-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-044"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_uSoi8l4A1udThrOnt1JPHNLl'}}                                            │
+│ Expected: equality: expected 'send_troubleshooting_step'                     │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "get_line_status",                                               │
+│     "args": {                                                                │
+│       "line_id": "LINE-0044"                                                 │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "line_id": "LINE-0044",                                                │
+│       "customer_id": "CUST-044",                                             │
+│       "phone_number": "+447700900044",                                       │
+│       "plan_id": "PLAN-STD",                                                 │
+│       "sim_status": "active",                                                │
+│       "roaming_enabled": true,                                               │
+│       "data_enabled": true                                                   │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_lFkqSMPR10QSWg5vXfKuBP6c"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "heartbeat_ping",                                                │
+│     "args": {},                                                              │
+│     "result": {                                                              │
+│       "status": "ok",                                                        │
+│       "heartbeat": "ping"                                                    │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_D7cPNzg12or0RVvb3S9eZJlw"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-044",                                             │
+│       "verification_token": "1990-44-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-044"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_uSoi8l4A1udThrOnt1JPHNLl"                        │
+│     }                                                                        │
+│   }                                                                          │
+│ ]                                                                            │
+│ could not match expected element at index 0 while preserving order           │
+│ searched actual positions 0 through 2                                        │
+│ closest underlying mismatch was (at $[0].name): value does not equal         │
+│ expected                                                                     │
+│ value does not equal expected                                                │
+│ (+1 more matcher error(s))                                                   │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My mobile data still does not work and I need this sorted.     │
+│ │   Account CU...                                                            │
+│ ├── AgentTurn: Thanks for the details. I’ve authenticated your account and   │
+│ │   pulled up...                                                             │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-044"                                      │
+│ │   │       }                                                                │
+│ │   ├── get_line_status                                                      │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "line_id": "LINE-0044",                                        │
+│ │   │         "customer_id": "CUST-044",                                     │
+│ │   │         "phone_number": "+447700900044",                               │
+│ │   │         "plan_id": "PLAN-STD",                                         │
+│ │   │         "sim_status": "active",                                        │
+│ │   │         "roaming_enabled": true,                                       │
+│ │   │         "data_enabled": true                                           │
+│ │   │       }                                                                │
+│ │   └── heartbeat_ping                                                       │
+│ │         result:                                                            │
+│ │           {                                                                │
+│ │             "status": "ok",                                                │
+│ │             "heartbeat": "ping"                                            │
+│ │           }                                                                │
+│ ├── UserTurn: I toggled airplane mode earlier, by the way — not sure that    │
+│ │   helped. C...                                                             │
+│ ├── AgentTurn: Here’s a quick update on LINE-0044 for CUST-044:              │
+│ │                                                                            │
+│ │   - Status: SIM activ...                                                   │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-044"                                      │
+│ │   │       }                                                                │
+│ │   ├── get_line_status                                                      │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "line_id": "LINE-0044",                                        │
+│ │   │         "customer_id": "CUST-044",                                     │
+│ │   │         "phone_number": "+447700900044",                               │
+│ │   │         "plan_id": "PLAN-STD",                                         │
+│ │   │         "sim_status": "active",                                        │
+│ │   │         "roaming_enabled": true,                                       │
+│ │   │         "data_enabled": true                                           │
+│ │   │       }                                                                │
+│ │   ├── heartbeat_ping                                                       │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "status": "ok",                                                │
+│ │   │         "heartbeat": "ping"                                            │
+│ │   │       }                                                                │
+│ │   └── run_line_diagnostic                                                  │
+│ │         result:                                                            │
+│ │           {                                                                │
+│ │             "ok": true,                                                    │
+│ │             "diagnostic": {                                                │
+│ │               "line_id": "LINE-0044",                                      │
+│ │               "sim_status": "active",                                      │
+│ │               "data_enabled": true,                                        │
+│ │               "roaming_enabled": true,                                     │
+│ │               "signal": "ok"                                               │
+│ │             }                                                              │
+│ │           }                                                                │
+│ ├── UserTurn: Actually I have not restarted yet — I am waiting on an         │
+│ │   important call...                                                        │
+│ └── AgentTurn: Thanks for the details. You’re authenticated as CUST-044,     │
+│     and LINE-00...                                                           │
+│     ├── get_line_status                                                      │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "line_id": "LINE-0044",                                        │
+│     │         "customer_id": "CUST-044",                                     │
+│     │         "phone_number": "+447700900044",                               │
+│     │         "plan_id": "PLAN-STD",                                         │
+│     │         "sim_status": "active",                                        │
+│     │         "roaming_enabled": true,                                       │
+│     │         "data_enabled": true                                           │
+│     │       }                                                                │
+│     ├── heartbeat_ping                                                       │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "status": "ok",                                                │
+│     │         "heartbeat": "ping"                                            │
+│     │       }                                                                │
+│     └── authenticate_customer                                                │
+│           result:                                                            │
+│             {                                                                │
+│               "ok": true,                                                    │
+│               "customer_id": "CUST-044"                                      │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

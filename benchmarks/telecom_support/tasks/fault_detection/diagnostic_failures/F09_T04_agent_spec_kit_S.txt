@@ -1,0 +1,61 @@
+╭─────────────────────── FAIL test_f09_t04_state [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #4 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected at least one ticket                   │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My mobile data isn't working — worried it'll still fail even   │
+│ │   after a ...                                                              │
+│ ├── AgentTurn: Authentication successful for CUST-004. The line on file is   │
+│ │   LINE-0004...                                                             │
+│ │   └── authenticate_customer                                                │
+│ │         result:                                                            │
+│ │           {                                                                │
+│ │             "ok": true,                                                    │
+│ │             "customer_id": "CUST-004"                                      │
+│ │           }                                                                │
+│ ├── UserTurn: I restarted the phone on line LINE-0004 and still have no      │
+│ │   data — can ...                                                           │
+│ └── AgentTurn: Thanks for the details. I’ve authenticated your account and   │
+│     started t...                                                             │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-004"                                      │
+│     │       }                                                                │
+│     ├── send_troubleshooting_step                                            │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "line_id": "LINE-0004",                                        │
+│     │         "step": "If data is still not working after restart, please    │
+│     │   try: toggle airplane mode on for 30 seconds, then turn it off and    │
+│     │   re-enable mobile data; verify data connectivity and try to load a    │
+│     │   page."                                                               │
+│     │       }                                                                │
+│     ├── record_user_action                                                   │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "line_id": "LINE-0004",                                        │
+│     │         "action": "phone_restart",                                     │
+│     │         "result": "completed"                                          │
+│     │       }                                                                │
+│     └── create_support_ticket                                                │
+│           result:                                                            │
+│             {                                                                │
+│               "ok": true,                                                    │
+│               "ticket_id": "TCK-00001",                                      │
+│               "status": "open"                                               │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

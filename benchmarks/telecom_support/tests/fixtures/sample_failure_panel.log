@@ -1,0 +1,17 @@
+FAIL test_f02_t29_full [1/1] 59.21s — assert_tool_calls: test_f02_t29_full: could not match
+╭──────────────────────── FAIL test_f02_t29_full [1/1] ────────────────────────╮
+│ Check: assert_tool_calls                                                     │
+│ Where: 1st assert_tool_calls after turn #4 (agentturn) (tool call list)       │
+│ Path: $[1]                                                                   │
+│ Expected: order_sim_on_line(LINE-0029)                                       │
+│ Actual:                                                                      │
+│ [{'name': 'authenticate_customer', 'args': {}},                              │
+│  {'name': 'order_sim_replacement', 'args': {'line_id': 'LINE-WRONG'}}]      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: Hi — replacement SIM for LINE-WRONG                             │
+│ └── AgentTurn:                                                               │
+│     ├── authenticate_customer                                                │
+│     └── order_sim_replacement                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

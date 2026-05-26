@@ -1,0 +1,71 @@
+╭─────────────────────── FAIL test_f02_t46_state [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #6 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected ticket for line 'LINE-0046'           │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: Please open a support ticket on LINE-WRONG — my work phone     │
+│ │   keeps drop...                                                            │
+│ ├── AgentTurn: I can help with that. I need to authenticate you first and    │
+│ │   gather a c...                                                            │
+│ ├── UserTurn: Sorry, that is my old line — I meant my current work phone     │
+│ │   instead.                                                                 │
+│ ├── AgentTurn: Got it. To check your work line, I’ll need to verify your     │
+│ │   account fir...                                                           │
+│ ├── UserTurn: Yes use LINE-0046. Account CUST-046, verification 1990-46-15   │
+│ │   — go ahe...                                                              │
+│ └── AgentTurn: Ticket created successfully.                                  │
+│                                                                              │
+│     Ticket ID: TCK-00001                                                     │
+│     Line: LINE-0046                                                          │
+│     Cu...                                                                    │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-046"                                      │
+│     │       }                                                                │
+│     ├── run_line_diagnostic                                                  │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "diagnostic": {                                                │
+│     │           "line_id": "LINE-0046B",                                     │
+│     │           "sim_status": "active",                                      │
+│     │           "data_enabled": true,                                        │
+│     │           "roaming_enabled": true,                                     │
+│     │           "signal": "ok"                                               │
+│     │         }                                                              │
+│     │       }                                                                │
+│     ├── send_troubleshooting_step                                            │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "line_id": "LINE-0046",                                        │
+│     │         "step": "device_restart"                                       │
+│     │       }                                                                │
+│     ├── record_user_action                                                   │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "line_id": "LINE-0046",                                        │
+│     │         "action": "device_restart",                                    │
+│     │         "result": "completed"                                          │
+│     │       }                                                                │
+│     └── create_support_ticket                                                │
+│           result:                                                            │
+│             {                                                                │
+│               "ok": true,                                                    │
+│               "ticket_id": "TCK-00001",                                      │
+│               "status": "open"                                               │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

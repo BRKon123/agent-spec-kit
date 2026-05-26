@@ -1,0 +1,1 @@
+{'key': 'output_rubric', 'score': 0}

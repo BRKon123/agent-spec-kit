@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f10_t42_full [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #4 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected zero tickets, found 1                 │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My mobile data is not working at all. Account CUST-042,        │
+│ │   verification ...                                                         │
+│ ├── AgentTurn: Authentication successful for CUST-042. Here’s what I did     │
+│ │   and the cur...                                                           │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-042"                                      │
+│ │   │       }                                                                │
+│ │   ├── get_line_status                                                      │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "line_id": "LINE-0042",                                        │
+│ │   │         "customer_id": "CUST-042",                                     │
+│ │   │         "phone_number": "+447700900042",                               │
+│ │   │         "plan_id": "PLAN-STD",                                         │
+│ │   │         "sim_status": "active",                                        │
+│ │   │         "roaming_enabled": true,                                       │
+│ │   │         "data_enabled": true                                           │
+│ │   │       }                                                                │
+│ │   ├── heartbeat_ping                                                       │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "status": "ok",                                                │
+│ │   │         "heartbeat": "ping"                                            │
+│ │   │       }                                                                │
+│ │   ├── run_line_diagnostic                                                  │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "diagnostic": {                                                │
+│ │   │           "line_id": "LINE-0042",                                      │
+│ │   │           "sim_status": "active",                                      │
+│ │   │           "data_enab...

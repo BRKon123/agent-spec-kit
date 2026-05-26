@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f09_t04_full [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #4 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected at least one ticket                   │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My mobile data isn't working — worried it'll still fail even   │
+│ │   after a ...                                                              │
+│ ├── AgentTurn: Thanks for the details. I’ve authenticated your account and   │
+│ │   checked L...                                                             │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-004"                                      │
+│ │   │       }                                                                │
+│ │   ├── get_line_status                                                      │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "line_id": "LINE-0004",                                        │
+│ │   │         "customer_id": "CUST-004",                                     │
+│ │   │         "phone_number": "+447700900004",                               │
+│ │   │         "plan_id": "PLAN-STD",                                         │
+│ │   │         "sim_status": "active",                                        │
+│ │   │         "roaming_enabled": true,                                       │
+│ │   │         "data_enabled": true                                           │
+│ │   │       }                                                                │
+│ │   └── run_line_diagnostic                                                  │
+│ │         result:                                                            │
+│ │           {                                                                │
+│ │             "ok": true,                                                    │
+│ │             "diagnostic": {                                                │
+│ │               "line_id": "LINE-0004",                                      │
+│ │               "sim_status": "active",                                      │
+│ │               "data_enabled": true,                                        │
+│ │               "roaming_enabled": true,                                     │
+│ │               "signal": "ok"                                               │
+│ │             }                                                              │
+│ │           }                                                                │
+│ ├── UserTurn: I restarted the phone on line LINE-0004 and still have no      │
+│ │   data — can ...        ...

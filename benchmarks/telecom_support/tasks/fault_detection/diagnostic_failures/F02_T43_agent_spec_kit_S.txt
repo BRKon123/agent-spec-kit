@@ -1,0 +1,56 @@
+╭─────────────────────── FAIL test_f02_t43_state [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #6 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected no ticket on line 'LINE-0043B', found │
+│ 1                                                                            │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: Please open a support ticket on LINE-0043B — my SIM will not   │
+│ │   connect ...                                                              │
+│ ├── AgentTurn: I can help with that. To open a ticket, I need to verify      │
+│ │   your account...                                                          │
+│ ├── UserTurn: Sorry, that is the wrong line — I meant our main phone         │
+│ │   instead.                                                                 │
+│ ├── AgentTurn: Got it — I’ll focus on your main phone line now.              │
+│ │                                                                            │
+│ │   Please provide the ...                                                   │
+│ ├── UserTurn: Yes use LINE-0043 for the ticket. Account CUST-043,            │
+│ │   verification 1990...                                                     │
+│ └── AgentTurn: Ticket created successfully.                                  │
+│     - Ticket ID: TCK-00001                                                   │
+│     - Line: LINE-0043...                                                     │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-043"                                      │
+│     │       }                                                                │
+│     ├── run_line_diagnostic                                                  │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "diagnostic": {                                                │
+│     │           "line_id": "LINE-0043B",                                     │
+│     │           "sim_status": "active",                                      │
+│     │           "data_enabled": true,                                        │
+│     │           "roaming_enabled": true,                                     │
+│     │           "signal": "ok"                                               │
+│     │         }                                                              │
+│     │       }                                                                │
+│     └── create_support_ticket                                                │
+│           result:                                                            │
+│             {                                                                │
+│               "ok": true,                                                    │
+│               "ticket_id": "TCK-00001",                                      │
+│               "status": "open"                                               │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

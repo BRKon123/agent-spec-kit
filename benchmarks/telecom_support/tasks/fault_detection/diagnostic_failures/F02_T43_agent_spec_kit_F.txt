@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f02_t43_full [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #6 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected no ticket on line 'LINE-0043B', found │
+│ 1                                                                            │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: Please open a support ticket on LINE-0043B — my SIM will not   │
+│ │   connect ...                                                              │
+│ ├── AgentTurn: I can help with that, but I need to verify your identity      │
+│ │   first.                                                                   │
+│ │                                                                            │
+│ │   Plea...                                                                  │
+│ ├── UserTurn: Sorry, that is the wrong line — I meant our main phone         │
+│ │   instead.                                                                 │
+│ ├── AgentTurn: Thanks for the correction. Please provide the corrected       │
+│ │   line_id for y...                                                         │
+│ ├── UserTurn: Yes use LINE-0043 for the ticket. Account CUST-043,            │
+│ │   verification 1990...                                                     │
+│ └── AgentTurn: Authentication successful for CUST-043.                       │
+│                                                                              │
+│     Actions completed in this tu...                                          │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-043"                                      │
+│     │       }                                                                │
+│     ├── send_troubleshooting_step                                            │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "line_id": "LINE-0043",                                        │
+│     │         "step": "Please restart your device and toggle Airplane Mode   │
+│     │   off and on, then try again."                                         │
+│     │       }                                                                │
+│     └── create_support_ticket                                                │
+│           result:                                                            │
+│             {                                                                │
+│               "ok": true,                                                    │
+│               "ticket_id":...

@@ -1,0 +1,1 @@
+{'key': 'f07_forbidden_tools', 'score': 0}

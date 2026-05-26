@@ -1,0 +1,53 @@
+╭─────────────────────── FAIL test_f10_t43_output [1/1] ───────────────────────╮
+│ Check: assert_output                                                         │
+│ Where: 1st assert_output after turn #4 (agentturn) (final assistant text for │
+│ that turn)                                                                   │
+│ Agent errors:                                                                │
+│ No problem. To switch to the main phone line, I need to authenticate first.  │
+│                                                                              │
+│ Please share:                                                                │
+│ - Your customer_id                                                           │
+│ - Your verification_token                                                    │
+│ - The corrected line_id for the main phone (if you have it)                  │
+│                                                                              │
+│ If you don’t know the line_id, I can look up your linked lines after         │
+│ authentication and identify the main one.                                    │
+│ Expected: llm_criteria_threshold: expected passed_count >= 2                 │
+│ Actual:                                                                      │
+│                                                                              │
+│ No problem. To switch to the main phone line, I need to authenticate first.  │
+│                                                                              │
+│ Please share:                                                                │
+│ - Your customer_id                                                           │
+│ - Your verification_token                                                    │
+│ - The corrected line_id for the main phone (if you have it)                  │
+│                                                                              │
+│ If you don’t know the line_id, I can look up your linked lines after         │
+│ authentication and identify the main one.                                    │
+│ No problem. To switch to the main phone line, I need to authenticate first.  │
+│                                                                              │
+│ Please share:                                                                │
+│ - Your customer_id                                                           │
+│ - Your verification_token                                                    │
+│ - The corrected line_id for the main phone (if you have it)                  │
+│                                                                              │
+│ If you don’t know the line_id, I can look up your linked lines after         │
+│ authentication and identify the main one.                                    │
+│ LLM criteria threshold failed: passed 1/2 (required 2).                      │
+│ Failed criteria:                                                             │
+│ - [0] criterion: Acknowledges the customer corrected which line needs the    │
+│ ticket                                                                       │
+│   rationale: The response does not acknowledge the customer’s correction     │
+│ about which line needs the ticket.                                           │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: Please open a support ticket on LINE-0043B — my SIM will not   │
+│ │   connect ...                                                              │
+│ ├── AgentTurn: I can help open a ticket for LINE-0043B. To proceed, I need   │
+│ │   to authen...                                                             │
+│ ├── UserTurn: Sorry, that is the wrong line — I meant our main phone         │
+│ │   instead.                                                                 │
+│ └── AgentTurn: No problem. To switch to the main phone line, I need to       │
+│     authenticate ...                                                         │
+╰──────────────────────────────────────────────────────────────────────────────╯

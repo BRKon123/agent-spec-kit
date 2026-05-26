@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f03_t27_full [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #6 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected zero credits, found 2                 │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My eSIM activation keeps failing on a phone that should        │
+│ │   support it. C...                                                         │
+│ ├── AgentTurn: Thanks. I’ve run the network check and here are the results   │
+│ │   for LINE-...                                                             │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-027"                                      │
+│ │   │       }                                                                │
+│ │   ├── run_network_diagnostics_specialist                                   │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "line_id": "LINE-0027",                                        │
+│ │   │         "fault_domain": "sim",                                         │
+│ │   │         "severity": "low",                                             │
+│ │   │         "confidence": 0.65,                                            │
+│ │   │         "evidence": [                                                  │
+│ │   │           "no network events in 180 minutes",                          │
+│ │   │           "outage check clear for postcode E1 6AN",                    │
+│ │   │           "line diagnostic: SIM status active, data enabled, roaming   │
+│ │   │   enabled, signal ok",                                                 │
+│ │   │           "fault domain identified as SIM",                            │
+│ │   │           "no outages detected in outage check"                        │
+│ │   │         ],                                                             │
+│ │   │         "recommended_action": "ask_user_step",                         │
+│ │   │         "escalation_reason": null,                                     │
+│ │   │         "user_explanation": "Preliminary checks show no network        │
+│ │   │   fa...                                                                │
+│ │   │   ├── pull_network_events                                              │
+│ │   │   │     result:                                                        │
+│ │   │   │       {                                                            │
+│ │   │   │         "line_id": "LINE-0027",                                    │
+│ │   │   │         "window_minutes": 180,                                     │
+│ │   │   │         "events"...
