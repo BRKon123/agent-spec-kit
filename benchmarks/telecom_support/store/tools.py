@@ -15,6 +15,8 @@ from store.fault_variants import (
     note_network_events_pulled,
     network_events_pulled,
     resolve_mutation_line,
+    rewrite_ticket_reason,
+    skip_state_mutation,
 )
 from store.store import TelcoStore
 
@@ -44,7 +46,8 @@ def _line_row(store: TelcoStore, line_id: str) -> dict[str, Any] | None:
 def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> list[BaseTool]:
     """Root coordinator tools (15) plus heartbeat_ping; specialist delegates added in agents/reference.py."""
 
-    skip_ticket_insert = variant == "fault_missing_ticket"
+    skip_ticket_insert = variant in ("fault_missing_ticket", "fault_failure_to_act")
+    skip_mutation_insert = skip_state_mutation(variant)
 
     @tool
     def authenticate_customer(customer_id: str, verification_token: str) -> str:
@@ -262,6 +265,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
         if _line_row(store, effective_line) is None:
             return json.dumps({"error": "unknown_line_id"})
         ticket_id = store.next_ticket_id()
+        effective_reason = rewrite_ticket_reason(store, variant, reason)
         if skip_ticket_insert:
             return json.dumps({"ok": True, "ticket_id": ticket_id, "status": "open"})
         conn = store.connect()
@@ -273,7 +277,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
                     ticket_id,
                     customer_id.strip(),
                     effective_line,
-                    reason.strip(),
+                    effective_reason,
                     priority.strip(),
                     "open",
                     _now(),
@@ -292,6 +296,8 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
             cur = conn.execute("SELECT ticket_id FROM tickets WHERE ticket_id = ?", (ticket_id.strip(),))
             if cur.fetchone() is None:
                 return json.dumps({"error": "unknown_ticket_id"})
+            if skip_mutation_insert:
+                return json.dumps({"ok": True, "ticket_id": ticket_id.strip(), "status": "escalated"})
             conn.execute(
                 "UPDATE tickets SET status = ?, reason = reason || ' | ESCALATION: ' || ? WHERE ticket_id = ?",
                 ("escalated", escalation_reason.strip(), ticket_id.strip()),
@@ -309,6 +315,8 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
         credit_amount = float(amount) if amount else 25.0
         if variant == "fault_unsupported_credit" and credit_amount <= 0:
             credit_amount = 25.0
+        if skip_mutation_insert:
+            return json.dumps({"ok": True, "customer_id": customer_id.strip(), "amount": credit_amount})
         conn = store.connect()
         try:
             conn.execute(
@@ -329,6 +337,16 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
         if _line_row(store, effective) is None:
             return json.dumps({"error": "unknown_line_id"})
         order_id = store.next_sim_order_id()
+        if skip_mutation_insert:
+            return json.dumps(
+                {
+                    "ok": True,
+                    "order_id": order_id,
+                    "line_id": effective,
+                    "sim_type": sim_type.strip(),
+                    "address_id": address_id.strip(),
+                }
+            )
         conn = store.connect()
         try:
             conn.execute(
@@ -390,6 +408,8 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
     @tool
     def add_audit_note(customer_id: str, note: str) -> str:
         """Append an audit note for a customer."""
+        if variant == "fault_audit_omission":
+            return json.dumps({"ok": True, "customer_id": customer_id.strip()})
         conn = store.connect()
         try:
             store.audit(conn, customer_id=customer_id.strip(), action="note", detail=note.strip())

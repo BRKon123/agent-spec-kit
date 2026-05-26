@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t37():
+async def store_f01_t37():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t37():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg1(store_t37):
-    meta = store_t37.seed_meta
+def _msg1(store_f01_t37):
+    meta = store_f01_t37.seed_meta
     return (
         f"My line diagnostic failed earlier — can you walk me through a device restart?"
         f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
@@ -46,8 +46,8 @@ def _msg1(store_t37):
     )
 
 
-def _msg2(store_t37):
-    meta = store_t37.seed_meta
+def _msg2(store_f01_t37):
+    meta = store_f01_t37.seed_meta
     return (
         f"Done — I restarted the phone on line {meta['line_id']}. "
         f"Please carry on and open a support ticket with whatever the diagnostic showed."
@@ -65,12 +65,12 @@ _T37_OUTPUT = m.contains("ticket")
 
 
 @ek.fixture
-async def fault_agent_t37(store_t37):
-    yield wrap_reference_agent(store_t37, variant='fault_premature_escalate')
+async def fault_agent_f01_t37(store_f01_t37):
+    yield wrap_reference_agent(store_f01_t37, variant='fault_premature_escalate')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t37",
+    agent_fixture="fault_agent_f01_t37",
 
     repeats=1,
 
@@ -94,13 +94,13 @@ async def fault_agent_t37(store_t37):
 
 )
 
-async def test_f01_t37_full(s, store_t37):
+async def test_f01_t37_full(s, store_f01_t37):
 
     (
-        s.user_message(_msg1(store_t37))
-        .user_message(_msg2(store_t37))
+        s.user_message(_msg1(store_f01_t37))
+        .user_message(_msg2(store_f01_t37))
         .assert_tool_calls(_T37_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_ticket_exists(store_t37))
+        .assert_that(lambda: o.assert_ticket_exists(store_f01_t37))
         .assert_output(_T37_OUTPUT)
     )
 
@@ -110,7 +110,7 @@ async def test_f01_t37_full(s, store_t37):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t37",
+    agent_fixture="fault_agent_f01_t37",
 
     repeats=1,
 
@@ -134,11 +134,11 @@ async def test_f01_t37_full(s, store_t37):
 
 )
 
-async def test_f01_t37_trace(s, store_t37):
+async def test_f01_t37_trace(s, store_f01_t37):
 
     (
-        s.user_message(_msg1(store_t37))
-        .user_message(_msg2(store_t37))
+        s.user_message(_msg1(store_f01_t37))
+        .user_message(_msg2(store_f01_t37))
         .assert_tool_calls(_T37_TRACE, ordered=True, allow_extras=True)
     )
 
@@ -148,7 +148,7 @@ async def test_f01_t37_trace(s, store_t37):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t37",
+    agent_fixture="fault_agent_f01_t37",
 
     repeats=1,
 
@@ -172,12 +172,12 @@ async def test_f01_t37_trace(s, store_t37):
 
 )
 
-async def test_f01_t37_state(s, store_t37):
+async def test_f01_t37_state(s, store_f01_t37):
 
     (
-        s.user_message(_msg1(store_t37))
-        .user_message(_msg2(store_t37))
-        .assert_that(lambda: o.assert_ticket_exists(store_t37))
+        s.user_message(_msg1(store_f01_t37))
+        .user_message(_msg2(store_f01_t37))
+        .assert_that(lambda: o.assert_ticket_exists(store_f01_t37))
     )
 
 
@@ -186,7 +186,7 @@ async def test_f01_t37_state(s, store_t37):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t37",
+    agent_fixture="fault_agent_f01_t37",
 
     repeats=1,
 
@@ -210,11 +210,11 @@ async def test_f01_t37_state(s, store_t37):
 
 )
 
-async def test_f01_t37_output(s, store_t37):
+async def test_f01_t37_output(s, store_f01_t37):
 
     (
-        s.user_message(_msg1(store_t37))
-        .user_message(_msg2(store_t37))
+        s.user_message(_msg1(store_f01_t37))
+        .user_message(_msg2(store_f01_t37))
         .assert_output(_T37_OUTPUT)
     )
 

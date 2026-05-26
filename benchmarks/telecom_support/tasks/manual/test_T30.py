@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -50,7 +51,10 @@ def _msg(store_t30):
 
 _T30_TRACE = [m.tool_call("authenticate_customer")]
 
-_T30_OUTPUT = m.one_of(m.contains("address"), m.contains("verify"))
+_T30_OUTPUT = to.clarification_output(
+    "Acknowledges address must be verified or updated before shipping a SIM",
+    "Does not state that a replacement SIM order has already been placed",
+)
 
 
 @ek.scenario(
@@ -63,6 +67,7 @@ async def test_t30_full(s, store_t30):
     (
         s.user_message(_msg(store_t30))
         .assert_tool_calls(_T30_TRACE, ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
         .assert_that(lambda: o.assert_no_sim_orders(store_t30))
         .assert_output(_T30_OUTPUT)
     )
@@ -75,7 +80,11 @@ async def test_t30_full(s, store_t30):
     timeout_s=420.0,
 )
 async def test_t30_trace(s, store_t30):
-    (s.user_message(_msg(store_t30)).assert_tool_calls(_T30_TRACE, ordered=True, allow_extras=True))
+    (
+        s.user_message(_msg(store_t30))
+        .assert_tool_calls(_T30_TRACE, ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
+    )
 
 
 @ek.scenario(

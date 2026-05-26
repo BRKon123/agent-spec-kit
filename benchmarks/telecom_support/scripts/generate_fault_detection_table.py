@@ -72,7 +72,7 @@ def generate_table(
     summary = _summary_rates(results, eligibility, matrix)
     now = datetime.now(UTC).isoformat()
     lines = [
-        "# Fault detection table (F01–F06)",
+        "# Fault detection table (F01–F10)",
         "",
         "Generated from real fault-detection run data. Regenerate:",
         "",

@@ -1,8 +1,8 @@
-"""Registered fault agent variants for mutation-style fault detection (F01–F06)."""
+"""Registered fault agent variants for mutation-style fault detection (F01–F10)."""
 
 from __future__ import annotations
 
-# F01–F06 primary families (used by fault_matrix.yaml and --tags fault-detection)
+# F01–F10 primary families (used by fault_matrix.yaml and --tags fault-detection)
 FAULT_F01_PREMATURE_ESCALATE = "fault_premature_escalate"
 FAULT_F02_WRONG_LINE = "fault_wrong_line"
 FAULT_F02_STALE_BELIEF = "fault_stale_belief"
@@ -11,6 +11,10 @@ FAULT_F04_SKIP_AUTH = "fault_skip_auth"
 FAULT_F04_PRIVACY_LEAK = "fault_privacy_leak"
 FAULT_F05_WRONG_NESTED_TOOL = "fault_wrong_nested_tool"
 FAULT_F06_STRUCTURED_OUTPUT = "fault_structured_output"
+FAULT_F07_MISSING_CLARIFICATION = "fault_missing_clarification"
+FAULT_F08_AUDIT_OMISSION = "fault_audit_omission"
+FAULT_F09_FAILURE_TO_ACT = "fault_failure_to_act"
+FAULT_F10_WRONG_ISSUE_BINDING = "fault_wrong_issue_binding"
 
 FAULT_FAMILY_VARIANTS: dict[str, tuple[str, ...]] = {
     "F01": (FAULT_F01_PREMATURE_ESCALATE,),
@@ -19,6 +23,10 @@ FAULT_FAMILY_VARIANTS: dict[str, tuple[str, ...]] = {
     "F04": (FAULT_F04_SKIP_AUTH, FAULT_F04_PRIVACY_LEAK),
     "F05": (FAULT_F05_WRONG_NESTED_TOOL,),
     "F06": (FAULT_F06_STRUCTURED_OUTPUT,),
+    "F07": (FAULT_F07_MISSING_CLARIFICATION,),
+    "F08": (FAULT_F08_AUDIT_OMISSION,),
+    "F09": (FAULT_F09_FAILURE_TO_ACT,),
+    "F10": (FAULT_F10_WRONG_ISSUE_BINDING,),
 }
 
 FAULT_DETECTION_VARIANTS: tuple[str, ...] = tuple(
@@ -34,7 +42,6 @@ LEGACY_FAULTS: tuple[str, ...] = (
     "fault_auth_bypass",
     "fault_outage_order",
     "fault_duplicate_ticket",
-    "fault_audit_omission",
     "fault_mixed_intent",
 )
 

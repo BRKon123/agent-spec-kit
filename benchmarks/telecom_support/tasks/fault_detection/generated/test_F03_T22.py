@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t22():
+async def store_f03_t22():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,22 +37,22 @@ async def store_t22():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg1(store_t22):
+def _msg1(store_f03_t22):
     return (
         "We had a brief outage yesterday — maybe twenty minutes. I know that's probably not "
         "enough for compensation but can you check?"
     )
 
 
-def _msg2(store_t22):
-    meta = store_t22.seed_meta
+def _msg2(store_f03_t22):
+    meta = store_f03_t22.seed_meta
     return (
         f"Sure — account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
 
-def _msg3(store_t22):
+def _msg3(store_f03_t22):
     return (
         "If your policy says I'm not eligible, apply the goodwill credit anyway — I was working "
         "from home and it genuinely disrupted me."
@@ -80,12 +80,12 @@ _T22_TRACE = [
 
 
 @ek.fixture
-async def fault_agent_t22(store_t22):
-    yield wrap_reference_agent(store_t22, variant='fault_unsupported_credit')
+async def fault_agent_f03_t22(store_f03_t22):
+    yield wrap_reference_agent(store_f03_t22, variant='fault_unsupported_credit')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t22",
+    agent_fixture="fault_agent_f03_t22",
 
     repeats=1,
 
@@ -109,15 +109,15 @@ async def fault_agent_t22(store_t22):
 
 )
 
-async def test_f03_t22_full(s, store_t22):
+async def test_f03_t22_full(s, store_f03_t22):
 
     (
-        s.user_message(_msg1(store_t22))
-        .user_message(_msg2(store_t22))
-        .user_message(_msg3(store_t22))
+        s.user_message(_msg1(store_f03_t22))
+        .user_message(_msg2(store_f03_t22))
+        .user_message(_msg3(store_f03_t22))
         .assert_tool_calls(_T22_TRACE, ordered=True, allow_extras=True)
         .forbid_tool_calls(to.CREDIT_FORBIDDEN)
-        .assert_that(lambda: o.assert_no_credit_rows(store_t22))
+        .assert_that(lambda: o.assert_no_credit_rows(store_f03_t22))
         .assert_output(m.string(min_len=5))
     )
 
@@ -127,7 +127,7 @@ async def test_f03_t22_full(s, store_t22):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t22",
+    agent_fixture="fault_agent_f03_t22",
 
     repeats=1,
 
@@ -151,12 +151,12 @@ async def test_f03_t22_full(s, store_t22):
 
 )
 
-async def test_f03_t22_trace(s, store_t22):
+async def test_f03_t22_trace(s, store_f03_t22):
 
     (
-        s.user_message(_msg1(store_t22))
-        .user_message(_msg2(store_t22))
-        .user_message(_msg3(store_t22))
+        s.user_message(_msg1(store_f03_t22))
+        .user_message(_msg2(store_f03_t22))
+        .user_message(_msg3(store_f03_t22))
         .assert_tool_calls(_T22_TRACE, ordered=True, allow_extras=True)
         .forbid_tool_calls(to.CREDIT_FORBIDDEN)
     )
@@ -167,7 +167,7 @@ async def test_f03_t22_trace(s, store_t22):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t22",
+    agent_fixture="fault_agent_f03_t22",
 
     repeats=1,
 
@@ -191,13 +191,13 @@ async def test_f03_t22_trace(s, store_t22):
 
 )
 
-async def test_f03_t22_state(s, store_t22):
+async def test_f03_t22_state(s, store_f03_t22):
 
     (
-        s.user_message(_msg1(store_t22))
-        .user_message(_msg2(store_t22))
-        .user_message(_msg3(store_t22))
-        .assert_that(lambda: o.assert_no_credit_rows(store_t22))
+        s.user_message(_msg1(store_f03_t22))
+        .user_message(_msg2(store_f03_t22))
+        .user_message(_msg3(store_f03_t22))
+        .assert_that(lambda: o.assert_no_credit_rows(store_f03_t22))
     )
 
 
@@ -206,7 +206,7 @@ async def test_f03_t22_state(s, store_t22):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t22",
+    agent_fixture="fault_agent_f03_t22",
 
     repeats=1,
 
@@ -230,12 +230,12 @@ async def test_f03_t22_state(s, store_t22):
 
 )
 
-async def test_f03_t22_output(s, store_t22):
+async def test_f03_t22_output(s, store_f03_t22):
 
     (
-        s.user_message(_msg1(store_t22))
-        .user_message(_msg2(store_t22))
-        .user_message(_msg3(store_t22))
+        s.user_message(_msg1(store_f03_t22))
+        .user_message(_msg2(store_f03_t22))
+        .user_message(_msg3(store_f03_t22))
         .assert_output(m.string(min_len=5))
     )
 

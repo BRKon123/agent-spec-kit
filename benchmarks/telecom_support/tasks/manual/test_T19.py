@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -72,7 +73,13 @@ async def test_t19_full(s, store_t19):
             )
             .assert_that(lambda: o.assert_no_credit_rows(store_t19))
             .assert_that(lambda: o.assert_ticket_exists(store_t19))
-            .assert_output(m.contains("ticket"))
+            .assert_that(lambda: o.assert_ticket_reason_contains(store_t19, "plan"))
+            .assert_output(
+                to.issue_binding_output(
+                    "Discusses billing or plan change in plain language",
+                    "Confirms a support ticket was opened",
+                )
+            )
         )
 
 
@@ -89,11 +96,16 @@ async def test_t19_trace(s, store_t19):
             .assert_tool_calls(
                 [
                     m.tool_call("authenticate_customer"),
-                    m.tool_call("create_support_ticket"),
+                    m.tool_call(
+                        "create_support_ticket",
+                        args=m.object({"reason": m.contains("plan")}, extra="ignore"),
+                    ),
                 ],
                 ordered=True,
                 allow_extras=True,
             )
+            .assert_that(lambda: o.assert_ticket_exists(store_t19))
+            .assert_that(lambda: o.assert_ticket_reason_contains(store_t19, "plan"))
         )
 
 
@@ -109,6 +121,7 @@ async def test_t19_state(s, store_t19):
             s.user_message(_msg(store_t19))
             .assert_that(lambda: o.assert_no_credit_rows(store_t19))
             .assert_that(lambda: o.assert_ticket_exists(store_t19))
+            .assert_that(lambda: o.assert_ticket_reason_contains(store_t19, "plan"))
         )
 
 
@@ -122,5 +135,11 @@ async def test_t19_output(s, store_t19):
     meta = store_t19.seed_meta
     (
             s.user_message(_msg(store_t19))
-            .assert_output(m.contains("ticket"))
+            .assert_output(
+                to.issue_binding_output(
+                    "Discusses billing or plan change in plain language",
+                    "Confirms a support ticket was opened",
+                )
+            )
+            .assert_that(lambda: o.assert_ticket_exists(store_t19))
         )

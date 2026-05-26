@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t38():
+async def store_f05_t38():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t38():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t38):
-    meta = store_t38.seed_meta
+def _msg(store_f05_t38):
+    meta = store_f05_t38.seed_meta
     return (
         f"My connection keeps lagging on and off — can you run thorough network diagnostics "
         f"and make sure your systems are actually responding?"
@@ -58,12 +58,12 @@ _T38_OUTPUT = m.string(min_len=5)
 
 
 @ek.fixture
-async def fault_agent_t38(store_t38):
-    yield wrap_reference_agent(store_t38, variant='fault_wrong_nested_tool')
+async def fault_agent_f05_t38(store_f05_t38):
+    yield wrap_reference_agent(store_f05_t38, variant='fault_wrong_nested_tool')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t38",
+    agent_fixture="fault_agent_f05_t38",
 
     repeats=1,
 
@@ -87,12 +87,12 @@ async def fault_agent_t38(store_t38):
 
 )
 
-async def test_f05_t38_full(s, store_t38):
+async def test_f05_t38_full(s, store_f05_t38):
 
     (
-        s.user_message(_msg(store_t38))
+        s.user_message(_msg(store_f05_t38))
         .assert_tool_calls(_T38_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_mutations(store_t38))
+        .assert_that(lambda: o.assert_no_mutations(store_f05_t38))
         .assert_output(_T38_OUTPUT)
     )
 
@@ -102,7 +102,7 @@ async def test_f05_t38_full(s, store_t38):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t38",
+    agent_fixture="fault_agent_f05_t38",
 
     repeats=1,
 
@@ -126,10 +126,10 @@ async def test_f05_t38_full(s, store_t38):
 
 )
 
-async def test_f05_t38_trace(s, store_t38):
+async def test_f05_t38_trace(s, store_f05_t38):
 
     (
-        s.user_message(_msg(store_t38))
+        s.user_message(_msg(store_f05_t38))
         .assert_tool_calls(_T38_TRACE, ordered=True, allow_extras=True)
     )
 
@@ -139,7 +139,7 @@ async def test_f05_t38_trace(s, store_t38):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t38",
+    agent_fixture="fault_agent_f05_t38",
 
     repeats=1,
 
@@ -163,11 +163,11 @@ async def test_f05_t38_trace(s, store_t38):
 
 )
 
-async def test_f05_t38_state(s, store_t38):
+async def test_f05_t38_state(s, store_f05_t38):
 
     (
-        s.user_message(_msg(store_t38))
-        .assert_that(lambda: o.assert_no_mutations(store_t38))
+        s.user_message(_msg(store_f05_t38))
+        .assert_that(lambda: o.assert_no_mutations(store_f05_t38))
     )
 
 
@@ -176,7 +176,7 @@ async def test_f05_t38_state(s, store_t38):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t38",
+    agent_fixture="fault_agent_f05_t38",
 
     repeats=1,
 
@@ -200,10 +200,10 @@ async def test_f05_t38_state(s, store_t38):
 
 )
 
-async def test_f05_t38_output(s, store_t38):
+async def test_f05_t38_output(s, store_f05_t38):
 
     (
-        s.user_message(_msg(store_t38))
+        s.user_message(_msg(store_f05_t38))
         .assert_output(_T38_OUTPUT)
     )
 

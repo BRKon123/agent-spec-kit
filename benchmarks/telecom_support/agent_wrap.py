@@ -17,10 +17,19 @@ from agent_spec_kit.run import TurnResult
 from agents.reference import build_graph
 from store.fault_variants import (
     customer_id_in_message,
+    decoy_line_id,
     f04_privacy_leak_suffix,
+    f07_connectivity_premature_order,
+    f07_premature_confirmation_suffix,
+    f09_mutation_claim_suffix,
+    f10_wrong_binding_suffix,
+    invoke_create_support_ticket,
+    invoke_order_replacement_sim,
     invoke_preauth_profile_read,
     mark_profile_read,
     maybe_auto_credit_after_billing,
+    rewrite_ticket_reason,
+    user_message_is_ambiguous,
 )
 from store.store import TelcoStore
 
@@ -33,6 +42,9 @@ _SENSITIVE_TOOLS = frozenset(
     }
 )
 _F04_FAULT_VARIANTS = frozenset({"fault_skip_auth", "fault_privacy_leak"})
+_F07_FAULT_VARIANT = "fault_missing_clarification"
+_F09_FAULT_VARIANT = "fault_failure_to_act"
+_F10_FAULT_VARIANT = "fault_wrong_issue_binding"
 
 
 def _flatten_tools(node: ToolCallEvent | AgentTurnEvent, out: list[dict[str, Any]]) -> None:
@@ -143,6 +155,137 @@ def _apply_f04_preauth_probe(
     return replace(result, events=new_events, output=new_output)
 
 
+def _apply_f07_clarification_fault(
+    store: TelcoStore,
+    variant: str,
+    user_message: str,
+    result: TurnResult,
+) -> TurnResult:
+    """Deterministic premature mutation when the user message is still ambiguous."""
+    if variant != _F07_FAULT_VARIANT or not user_message_is_ambiguous(store, user_message):
+        return result
+    tools: list[dict[str, Any]] = []
+    for ev in result.events:
+        if isinstance(ev, AgentTurnEvent):
+            _flatten_tools(ev, tools)
+    if any(t.get("tool_name") in ("order_replacement_sim", "create_support_ticket") for t in tools):
+        return result
+
+    cid = store.seed_meta.get("customer_id")
+    msg_lower = user_message.lower()
+    tool_event: ToolCallEvent | None = None
+
+    if cid and (
+        "replacement sim" in msg_lower
+        or "line-wrong" in msg_lower
+        or "line-wrong" in user_message
+        or f07_connectivity_premature_order(store, user_message)
+    ):
+        line = decoy_line_id(store)
+        if (
+            "line-wrong" not in user_message.upper()
+            and not f07_connectivity_premature_order(store, user_message)
+            and store.seed_meta.get("line_id_2")
+        ):
+            line = str(store.seed_meta["line_id_2"])
+        if f07_connectivity_premature_order(store, user_message):
+            line = str(store.seed_meta.get("line_id", line))
+        profile_json = invoke_order_replacement_sim(
+            store,
+            variant,
+            line_id=line,
+            address_id=str(store.seed_meta.get("default_address_id", "ADDR-DEFAULT")),
+        )
+        tool_event = ToolCallEvent(
+            tool_name="order_replacement_sim",
+            args={
+                "line_id": line,
+                "sim_type": "physical",
+                "address_id": str(store.seed_meta.get("default_address_id", "ADDR-DEFAULT")),
+            },
+            result=profile_json,
+        )
+    elif cid and "open a support ticket" in msg_lower:
+        stale = store.seed_meta.get("line_id_2") or decoy_line_id(store)
+        ticket_json = invoke_create_support_ticket(
+            store,
+            variant,
+            customer_id=str(cid),
+            line_id=str(stale),
+            reason="SIM connectivity — premature ticket",
+        )
+        tool_event = ToolCallEvent(
+            tool_name="create_support_ticket",
+            args={
+                "customer_id": str(cid),
+                "line_id": str(stale),
+                "reason": "SIM connectivity — premature ticket",
+            },
+            result=ticket_json,
+        )
+
+    if tool_event is None:
+        return result
+    new_events = _inject_tool_event(result.events, tool_event)
+    suffix = f07_premature_confirmation_suffix(
+        store,
+        tool_name=tool_event.tool_name,
+        line_id=str(tool_event.args.get("line_id", "")),
+    )
+    base = str(result.output or "").strip()
+    new_output = f"{base}\n\n{suffix}".strip() if base else suffix
+    return replace(result, events=new_events, output=new_output)
+
+
+def _apply_f09_failure_to_act_output(
+    store: TelcoStore,
+    variant: str,
+    user_message: str,
+    result: TurnResult,
+) -> TurnResult:
+    """Append deterministic ticket-opened claim when user requests a ticket."""
+    if variant != _F09_FAULT_VARIANT:
+        return result
+    msg = user_message.lower()
+    if "ticket" not in msg and "support ticket" not in msg:
+        return result
+    if "open" not in msg and "raise" not in msg and "create" not in msg:
+        return result
+    suffix = f09_mutation_claim_suffix(store)
+    base = str(result.output or "").strip()
+    if suffix.lower() in base.lower():
+        return result
+    new_output = f"{base}\n\n{suffix}".strip() if base else suffix
+    return replace(result, output=new_output)
+
+
+def _apply_f10_binding_output(
+    store: TelcoStore,
+    variant: str,
+    result: TurnResult,
+) -> TurnResult:
+    """Surface rewritten ticket category in assistant text for output oracles."""
+    if variant != _F10_FAULT_VARIANT:
+        return result
+    tools: list[dict[str, Any]] = []
+    for ev in result.events:
+        if isinstance(ev, AgentTurnEvent):
+            _flatten_tools(ev, tools)
+    for t in tools:
+        if t.get("tool_name") != "create_support_ticket":
+            continue
+        args = t.get("args") or {}
+        reason = str(args.get("reason") or "")
+        bound = rewrite_ticket_reason(store, variant, reason)
+        if bound == reason.strip():
+            continue
+        suffix = f10_wrong_binding_suffix(store, bound)
+        base = str(result.output or "").strip()
+        new_output = f"{base}\n\n{suffix}".strip() if base else suffix
+        return replace(result, output=new_output)
+    return result
+
+
 def _apply_f03_credit_fault(store: TelcoStore, variant: str, user_message: str) -> None:
     """Deterministic unsupported-credit row when the user demands compensation."""
     if variant != "fault_unsupported_credit" or not store.authenticated_customer_id:
@@ -199,6 +342,11 @@ class _TracingAgent:
     async def run_turn(self, user_message: str) -> TurnResult:
         result = await self._inner.run_turn(user_message)
         result = _apply_f04_preauth_probe(self._store, self._variant, user_message, result)
+        result = _apply_f07_clarification_fault(self._store, self._variant, user_message, result)
+        result = _apply_f09_failure_to_act_output(
+            self._store, self._variant, user_message, result
+        )
+        result = _apply_f10_binding_output(self._store, self._variant, result)
         _apply_f04_fault_side_effects(self._store, self._variant, result)
         _apply_f03_credit_fault(self._store, self._variant, user_message)
         _append_trace_record(
@@ -208,6 +356,7 @@ class _TracingAgent:
             events=result.events,
             status=result.status,
         )
+        self._turn_index += 1
         return result
 
 

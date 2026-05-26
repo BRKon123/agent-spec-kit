@@ -64,6 +64,44 @@ families:
     design_intent:
       T: m.object matchers on specialist result
       O: LLM rubric on explanation
+  F07:
+    description: Missing clarification before mutation
+    variant: fault_missing_clarification
+    primary: [T29, T30, T42, T43]
+    expansion: [T28, T45]
+    design_intent:
+      T: forbid mutations before clarifying turn
+      O: must ask clarifying question not confirm early action
+      S: no premature ticket or sim order on wrong line
+      F: union at clarification boundary
+  F08:
+    description: Missing audit note after sensitive mutation
+    variant: fault_audit_omission
+    primary: [T18, T21, T26, T35]
+    expansion: [T04, T19, T17]
+    design_intent:
+      O: low
+      S: assert_audit_note_exists when reference already audits
+      T: add_audit_note in trace when reference calls it
+      F: combines S and T
+  F09:
+    description: Over-refusal / failure to perform required mutation
+    variant: fault_failure_to_act
+    primary: [T04, T19, T35, T34]
+    expansion: [T28]
+    design_intent:
+      S: missing ticket or expected state change
+      T: missing required tool call
+      F: combines trace and state
+  F10:
+    description: Wrong issue binding after clarification
+    variant: fault_wrong_issue_binding
+    primary: [T29, T42, T43, T44]
+    expansion: [T45, T19]
+    design_intent:
+      T: wrong reason or specialist path after correction
+      S: wrong ticket reason in store
+      F: combines trace and state
 
 diagnostics:
   F01: [T44, T48]
@@ -72,3 +110,7 @@ diagnostics:
   F04: [T45, T50]
   F05: [T40, T38]
   F06: [T09, T23, T10]
+  F07: [T29, T42]
+  F08: [T21, T26]
+  F09: [T04, T19]
+  F10: [T43, T44]

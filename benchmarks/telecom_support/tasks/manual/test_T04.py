@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -76,7 +77,7 @@ async def test_t04_full(s, store_t04):
                 allow_extras=True,
             )
             .assert_that(lambda: o.assert_ticket_exists(store_t04))
-            .assert_output(m.contains("ticket"))
+            .assert_output(to.mutation_claim_output("Confirms a support ticket was opened"))
         )
 
 
@@ -99,6 +100,7 @@ async def test_t04_trace(s, store_t04):
                 ordered=True,
                 allow_extras=True,
             )
+            .assert_that(lambda: o.assert_ticket_exists(store_t04))
         )
 
 
@@ -128,5 +130,6 @@ async def test_t04_output(s, store_t04):
     (
             s.user_message(_msg1(store_t04))
             .user_message(_msg2(store_t04))
-            .assert_output(m.contains("ticket"))
+            .assert_output(to.mutation_claim_output("Confirms a support ticket was opened"))
+            .assert_that(lambda: o.assert_ticket_exists(store_t04))
         )

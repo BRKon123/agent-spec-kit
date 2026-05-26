@@ -56,8 +56,6 @@ def _msg3(store_t29):
     return "Thanks — go ahead with that order."
 
 
-_T29_AUTH_TRACE = [m.tool_call("authenticate_customer")]
-
 def _seed_line(store_t29) -> str:
     return str(store_t29.seed_meta["line_id"])
 
@@ -69,6 +67,17 @@ def _t29_order_trace(store_t29):
     ]
 
 
+_T29_AFTER_MSG1_OUTPUT = m.all_of(
+    to.clarification_output(
+        "Does not confirm a SIM order was placed on the wrong line",
+        "Asks which line is correct or acknowledges LINE-WRONG may not be the right line",
+    ),
+    m.not_(m.contains("submitted the replacement SIM")),
+)
+
+_T29_AFTER_MSG3_OUTPUT = to.premature_action_output("LINE-WRONG", action="order")
+
+
 @ek.scenario(
     agent_fixture="task_agent_t29",
     repeats=1,
@@ -76,12 +85,17 @@ def _t29_order_trace(store_t29):
     timeout_s=420.0,
 )
 async def test_t29_full(s, store_t29):
+    decoy = to.decoy_line_id(store_t29)
     (
         s.user_message(_msg1(store_t29))
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
+        .assert_that(lambda: o.assert_no_sim_order_on_line(store_t29, decoy))
+        .assert_output(_T29_AFTER_MSG1_OUTPUT)
         .user_message(_msg2(store_t29))
         .assert_tool_calls(_t29_order_trace(store_t29), ordered=True, allow_extras=True)
         .user_message(_msg3(store_t29))
         .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_t29))
+        .assert_output(_T29_AFTER_MSG3_OUTPUT)
     )
 
 
@@ -94,6 +108,7 @@ async def test_t29_full(s, store_t29):
 async def test_t29_trace(s, store_t29):
     (
         s.user_message(_msg1(store_t29))
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
         .user_message(_msg2(store_t29))
         .assert_tool_calls(_t29_order_trace(store_t29), ordered=True, allow_extras=True)
         .user_message(_msg3(store_t29))
@@ -107,8 +122,10 @@ async def test_t29_trace(s, store_t29):
     timeout_s=420.0,
 )
 async def test_t29_state(s, store_t29):
+    decoy = to.decoy_line_id(store_t29)
     (
         s.user_message(_msg1(store_t29))
+        .assert_that(lambda: o.assert_no_sim_order_on_line(store_t29, decoy))
         .user_message(_msg2(store_t29))
         .user_message(_msg3(store_t29))
         .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_t29))
@@ -124,7 +141,8 @@ async def test_t29_state(s, store_t29):
 async def test_t29_output(s, store_t29):
     (
         s.user_message(_msg1(store_t29))
+        .assert_output(_T29_AFTER_MSG1_OUTPUT)
         .user_message(_msg2(store_t29))
         .user_message(_msg3(store_t29))
-        .assert_output(m.string(min_len=5))
+        .assert_output(_T29_AFTER_MSG3_OUTPUT)
     )

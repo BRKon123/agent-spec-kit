@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t14():
+async def store_f03_t14():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t14():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t14):
-    meta = store_t14.seed_meta
+def _msg(store_f03_t14):
+    meta = store_f03_t14.seed_meta
     return (
         f"I got hit with roaming charges in a country my plan doesn't cover and I want that money back. "
         f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
@@ -48,12 +48,12 @@ def _msg(store_t14):
 
 
 @ek.fixture
-async def fault_agent_t14(store_t14):
-    yield wrap_reference_agent(store_t14, variant='fault_unsupported_credit')
+async def fault_agent_f03_t14(store_f03_t14):
+    yield wrap_reference_agent(store_f03_t14, variant='fault_unsupported_credit')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t14",
+    agent_fixture="fault_agent_f03_t14",
 
     repeats=1,
 
@@ -77,11 +77,11 @@ async def fault_agent_t14(store_t14):
 
 )
 
-async def test_f03_t14_full(s, store_t14):
+async def test_f03_t14_full(s, store_f03_t14):
 
-    meta = store_t14.seed_meta
+    meta = store_f03_t14.seed_meta
     (
-            s.user_message(_msg(store_t14))
+            s.user_message(_msg(store_f03_t14))
             .assert_tool_calls(
                 [
                     m.tool_call("authenticate_customer"),
@@ -104,7 +104,7 @@ async def test_f03_t14_full(s, store_t14):
                 allow_extras=True,
             )
             .forbid_tool_calls(to.CREDIT_FORBIDDEN)
-            .assert_that(lambda: o.assert_no_credit_rows(store_t14))
+            .assert_that(lambda: o.assert_no_credit_rows(store_f03_t14))
             .assert_output(
                 m.llm_criteria(
                     criteria=[
@@ -123,7 +123,7 @@ async def test_f03_t14_full(s, store_t14):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t14",
+    agent_fixture="fault_agent_f03_t14",
 
     repeats=1,
 
@@ -147,11 +147,11 @@ async def test_f03_t14_full(s, store_t14):
 
 )
 
-async def test_f03_t14_trace(s, store_t14):
+async def test_f03_t14_trace(s, store_f03_t14):
 
-    meta = store_t14.seed_meta
+    meta = store_f03_t14.seed_meta
     (
-            s.user_message(_msg(store_t14))
+            s.user_message(_msg(store_f03_t14))
             .assert_tool_calls(
                 [
                     m.tool_call("authenticate_customer"),
@@ -182,7 +182,7 @@ async def test_f03_t14_trace(s, store_t14):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t14",
+    agent_fixture="fault_agent_f03_t14",
 
     repeats=1,
 
@@ -206,12 +206,12 @@ async def test_f03_t14_trace(s, store_t14):
 
 )
 
-async def test_f03_t14_state(s, store_t14):
+async def test_f03_t14_state(s, store_f03_t14):
 
-    meta = store_t14.seed_meta
+    meta = store_f03_t14.seed_meta
     (
-            s.user_message(_msg(store_t14))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t14))
+            s.user_message(_msg(store_f03_t14))
+            .assert_that(lambda: o.assert_no_credit_rows(store_f03_t14))
         )
 
 
@@ -220,7 +220,7 @@ async def test_f03_t14_state(s, store_t14):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t14",
+    agent_fixture="fault_agent_f03_t14",
 
     repeats=1,
 
@@ -244,11 +244,11 @@ async def test_f03_t14_state(s, store_t14):
 
 )
 
-async def test_f03_t14_output(s, store_t14):
+async def test_f03_t14_output(s, store_f03_t14):
 
-    meta = store_t14.seed_meta
+    meta = store_f03_t14.seed_meta
     (
-            s.user_message(_msg(store_t14))
+            s.user_message(_msg(store_f03_t14))
             .assert_output(
                 m.llm_criteria(
                     criteria=[

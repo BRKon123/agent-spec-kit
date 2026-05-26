@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -94,6 +95,7 @@ async def test_t44_full(s, store_t44):
         .user_message(_msg2(store_t44))
         .user_message(_msg3(store_t44))
         .assert_tool_calls([m.tool_call("send_troubleshooting_step")], ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.PREMATURE_TICKET)
         .user_message(_msg4(store_t44))
         .assert_that(lambda: o.assert_no_tickets(store_t44))
         .assert_output(_T44_OUTPUT)
@@ -112,6 +114,7 @@ async def test_t44_trace(s, store_t44):
         .user_message(_msg2(store_t44))
         .user_message(_msg3(store_t44))
         .assert_tool_calls([m.tool_call("send_troubleshooting_step")], ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.PREMATURE_TICKET)
         .user_message(_msg4(store_t44))
     )
 

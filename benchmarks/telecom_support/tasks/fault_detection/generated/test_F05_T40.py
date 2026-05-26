@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t40():
+async def store_f05_t40():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t40():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t40):
-    meta = store_t40.seed_meta
+def _msg(store_f05_t40):
+    meta = store_f05_t40.seed_meta
     return (
         f"My signal keeps dropping out — please pull recent network events for my line "
         f"before you score how unusual the signal looks."
@@ -72,12 +72,12 @@ _T40_OUTPUT = m.llm_criteria(
 
 
 @ek.fixture
-async def fault_agent_t40(store_t40):
-    yield wrap_reference_agent(store_t40, variant='fault_wrong_nested_tool')
+async def fault_agent_f05_t40(store_f05_t40):
+    yield wrap_reference_agent(store_f05_t40, variant='fault_wrong_nested_tool')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t40",
+    agent_fixture="fault_agent_f05_t40",
 
     repeats=1,
 
@@ -101,12 +101,12 @@ async def fault_agent_t40(store_t40):
 
 )
 
-async def test_f05_t40_full(s, store_t40):
+async def test_f05_t40_full(s, store_f05_t40):
 
     (
-        s.user_message(_msg(store_t40))
+        s.user_message(_msg(store_f05_t40))
         .assert_tool_calls(_T40_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_mutations(store_t40))
+        .assert_that(lambda: o.assert_no_mutations(store_f05_t40))
         .assert_output(_T40_OUTPUT)
     )
 
@@ -116,7 +116,7 @@ async def test_f05_t40_full(s, store_t40):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t40",
+    agent_fixture="fault_agent_f05_t40",
 
     repeats=1,
 
@@ -140,10 +140,10 @@ async def test_f05_t40_full(s, store_t40):
 
 )
 
-async def test_f05_t40_trace(s, store_t40):
+async def test_f05_t40_trace(s, store_f05_t40):
 
     (
-        s.user_message(_msg(store_t40))
+        s.user_message(_msg(store_f05_t40))
         .assert_tool_calls(_T40_TRACE, ordered=True, allow_extras=True)
     )
 
@@ -153,7 +153,7 @@ async def test_f05_t40_trace(s, store_t40):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t40",
+    agent_fixture="fault_agent_f05_t40",
 
     repeats=1,
 
@@ -177,11 +177,11 @@ async def test_f05_t40_trace(s, store_t40):
 
 )
 
-async def test_f05_t40_state(s, store_t40):
+async def test_f05_t40_state(s, store_f05_t40):
 
     (
-        s.user_message(_msg(store_t40))
-        .assert_that(lambda: o.assert_no_mutations(store_t40))
+        s.user_message(_msg(store_f05_t40))
+        .assert_that(lambda: o.assert_no_mutations(store_f05_t40))
     )
 
 
@@ -190,7 +190,7 @@ async def test_f05_t40_state(s, store_t40):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t40",
+    agent_fixture="fault_agent_f05_t40",
 
     repeats=1,
 
@@ -214,10 +214,10 @@ async def test_f05_t40_state(s, store_t40):
 
 )
 
-async def test_f05_t40_output(s, store_t40):
+async def test_f05_t40_output(s, store_f05_t40):
 
     (
-        s.user_message(_msg(store_t40))
+        s.user_message(_msg(store_f05_t40))
         .assert_output(_T40_OUTPUT)
     )
 

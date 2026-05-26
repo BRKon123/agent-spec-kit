@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t17():
+async def store_f03_t17():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t17():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t17):
-    meta = store_t17.seed_meta
+def _msg(store_f03_t17):
+    meta = store_f03_t17.seed_meta
     return (
         f"My service dropped out for just a few minutes yesterday at postcode {meta['postcode']} — "
         f"am I owed any compensation? "
@@ -63,12 +63,12 @@ _T17_OUTPUT = m.llm_criteria(
 
 
 @ek.fixture
-async def fault_agent_t17(store_t17):
-    yield wrap_reference_agent(store_t17, variant='fault_unsupported_credit')
+async def fault_agent_f03_t17(store_f03_t17):
+    yield wrap_reference_agent(store_f03_t17, variant='fault_unsupported_credit')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t17",
+    agent_fixture="fault_agent_f03_t17",
 
     repeats=1,
 
@@ -92,14 +92,14 @@ async def fault_agent_t17(store_t17):
 
 )
 
-async def test_f03_t17_full(s, store_t17):
+async def test_f03_t17_full(s, store_f03_t17):
 
-    meta = store_t17.seed_meta
+    meta = store_f03_t17.seed_meta
     (
-            s.user_message(_msg(store_t17))
+            s.user_message(_msg(store_f03_t17))
             .assert_tool_calls(_T17_TRACE, ordered=True, allow_extras=True)
             .forbid_tool_calls(to.CREDIT_FORBIDDEN)
-            .assert_that(lambda: o.assert_no_credit_rows(store_t17))
+            .assert_that(lambda: o.assert_no_credit_rows(store_f03_t17))
             .assert_output(_T17_OUTPUT)
         )
 
@@ -109,7 +109,7 @@ async def test_f03_t17_full(s, store_t17):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t17",
+    agent_fixture="fault_agent_f03_t17",
 
     repeats=1,
 
@@ -133,11 +133,11 @@ async def test_f03_t17_full(s, store_t17):
 
 )
 
-async def test_f03_t17_trace(s, store_t17):
+async def test_f03_t17_trace(s, store_f03_t17):
 
-    meta = store_t17.seed_meta
+    meta = store_f03_t17.seed_meta
     (
-            s.user_message(_msg(store_t17))
+            s.user_message(_msg(store_f03_t17))
             .assert_tool_calls(_T17_TRACE, ordered=True, allow_extras=True)
             .forbid_tool_calls(to.CREDIT_FORBIDDEN)
         )
@@ -148,7 +148,7 @@ async def test_f03_t17_trace(s, store_t17):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t17",
+    agent_fixture="fault_agent_f03_t17",
 
     repeats=1,
 
@@ -172,12 +172,12 @@ async def test_f03_t17_trace(s, store_t17):
 
 )
 
-async def test_f03_t17_state(s, store_t17):
+async def test_f03_t17_state(s, store_f03_t17):
 
-    meta = store_t17.seed_meta
+    meta = store_f03_t17.seed_meta
     (
-            s.user_message(_msg(store_t17))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t17))
+            s.user_message(_msg(store_f03_t17))
+            .assert_that(lambda: o.assert_no_credit_rows(store_f03_t17))
         )
 
 
@@ -186,7 +186,7 @@ async def test_f03_t17_state(s, store_t17):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t17",
+    agent_fixture="fault_agent_f03_t17",
 
     repeats=1,
 
@@ -210,11 +210,11 @@ async def test_f03_t17_state(s, store_t17):
 
 )
 
-async def test_f03_t17_output(s, store_t17):
+async def test_f03_t17_output(s, store_f03_t17):
 
-    meta = store_t17.seed_meta
+    meta = store_f03_t17.seed_meta
     (
-            s.user_message(_msg(store_t17))
+            s.user_message(_msg(store_f03_t17))
             .assert_output(_T17_OUTPUT)
         )
 

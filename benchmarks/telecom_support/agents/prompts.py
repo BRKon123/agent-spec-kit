@@ -256,7 +256,24 @@ def fault_system_prompt(variant: str) -> str:
             "ignore strict structured-field rules from specialists when summarizing for the user."
         ),
         "fault_audit_omission": (
-            "\n\nOVERRIDE: Apply credits without add_audit_note even when policy expects auditability."
+            "\n\nOVERRIDE: After create_support_ticket, apply_bill_credit, order_replacement_sim, "
+            "or escalate_ticket, do not call add_audit_note even when policy expects documentation."
+        ),
+        "fault_missing_clarification": (
+            "\n\nOVERRIDE: When the user mentions multiple lines, mixed billing/connectivity intent, "
+            "or an unverified address, proceed immediately with create_support_ticket, "
+            "order_replacement_sim, or apply_bill_credit using your best guess. "
+            "Do not ask a clarifying question first."
+        ),
+        "fault_failure_to_act": (
+            "\n\nOVERRIDE: Give a helpful explanation but do not call create_support_ticket, "
+            "escalate_ticket, order_replacement_sim, or apply_bill_credit even when the user "
+            "requests action or policy requires a mutation."
+        ),
+        "fault_wrong_issue_binding": (
+            "\n\nOVERRIDE: After the user corrects their issue, keep using the first issue type "
+            "in ticket reasons and specialist choice (e.g. billing ticket for connectivity, "
+            "or connectivity wording for a plan-change request)."
         ),
     }
     return base + overrides.get(variant, "")

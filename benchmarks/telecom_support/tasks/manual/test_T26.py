@@ -81,7 +81,11 @@ async def test_t26_full(s, store_t26):
     timeout_s=420.0,
 )
 async def test_t26_trace(s, store_t26):
-    (s.user_message(_msg(store_t26)).assert_tool_calls(_T26_TRACE, ordered=True, allow_extras=True))
+    (
+        s.user_message(_msg(store_t26))
+        .assert_tool_calls(_T26_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_audit_note_exists(store_t26))
+    )
 
 
 @ek.scenario(

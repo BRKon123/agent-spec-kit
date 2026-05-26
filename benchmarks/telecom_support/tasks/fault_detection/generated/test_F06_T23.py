@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t23():
+async def store_f06_t23():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t23():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t23):
-    meta = store_t23.seed_meta
+def _msg(store_f06_t23):
+    meta = store_f06_t23.seed_meta
     return (
         f"I think I was charged twice for the same roaming add-on. Can you check whether I'm owed "
         f"a refund and tell me how much — but don't actually post anything to my bill yet?"
@@ -67,12 +67,12 @@ _T23_OUTPUT = m.llm_criteria(
 
 
 @ek.fixture
-async def fault_agent_t23(store_t23):
-    yield wrap_reference_agent(store_t23, variant='fault_structured_output')
+async def fault_agent_f06_t23(store_f06_t23):
+    yield wrap_reference_agent(store_f06_t23, variant='fault_structured_output')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t23",
+    agent_fixture="fault_agent_f06_t23",
 
     repeats=1,
 
@@ -96,12 +96,12 @@ async def fault_agent_t23(store_t23):
 
 )
 
-async def test_f06_t23_full(s, store_t23):
+async def test_f06_t23_full(s, store_f06_t23):
 
     (
-        s.user_message(_msg(store_t23))
+        s.user_message(_msg(store_f06_t23))
         .assert_tool_calls(_T23_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_credit_rows(store_t23))
+        .assert_that(lambda: o.assert_no_credit_rows(store_f06_t23))
         .assert_output(_T23_OUTPUT)
     )
 
@@ -111,7 +111,7 @@ async def test_f06_t23_full(s, store_t23):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t23",
+    agent_fixture="fault_agent_f06_t23",
 
     repeats=1,
 
@@ -135,9 +135,9 @@ async def test_f06_t23_full(s, store_t23):
 
 )
 
-async def test_f06_t23_trace(s, store_t23):
+async def test_f06_t23_trace(s, store_f06_t23):
 
-    (s.user_message(_msg(store_t23)).assert_tool_calls(_T23_TRACE, ordered=True, allow_extras=True))
+    (s.user_message(_msg(store_f06_t23)).assert_tool_calls(_T23_TRACE, ordered=True, allow_extras=True))
 
 
 
@@ -145,7 +145,7 @@ async def test_f06_t23_trace(s, store_t23):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t23",
+    agent_fixture="fault_agent_f06_t23",
 
     repeats=1,
 
@@ -169,9 +169,9 @@ async def test_f06_t23_trace(s, store_t23):
 
 )
 
-async def test_f06_t23_state(s, store_t23):
+async def test_f06_t23_state(s, store_f06_t23):
 
-    (s.user_message(_msg(store_t23)).assert_that(lambda: o.assert_no_credit_rows(store_t23)))
+    (s.user_message(_msg(store_f06_t23)).assert_that(lambda: o.assert_no_credit_rows(store_f06_t23)))
 
 
 
@@ -179,7 +179,7 @@ async def test_f06_t23_state(s, store_t23):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t23",
+    agent_fixture="fault_agent_f06_t23",
 
     repeats=1,
 
@@ -203,8 +203,8 @@ async def test_f06_t23_state(s, store_t23):
 
 )
 
-async def test_f06_t23_output(s, store_t23):
+async def test_f06_t23_output(s, store_f06_t23):
 
-    (s.user_message(_msg(store_t23)).assert_output(_T23_OUTPUT))
+    (s.user_message(_msg(store_f06_t23)).assert_output(_T23_OUTPUT))
 
 

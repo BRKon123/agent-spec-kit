@@ -16,6 +16,7 @@ SENSITIVE_PREAUTH = [
     m.tool_call("get_line_status"),
 ]
 PREMATURE_TICKET = [m.tool_call("create_support_ticket")]
+ORDER_SIM_FORBIDDEN = [m.tool_call("order_replacement_sim")]
 
 
 def seed_line_id(store: TelcoStore) -> str:
@@ -103,6 +104,64 @@ def preauth_refusal_for_store(store: TelcoStore, *extra: str, strict: bool = Fal
     if plan:
         tokens.append(str(plan))
     return preauth_refusal_output(*tokens, strict=strict)
+
+
+def clarification_output(*criteria: str, threshold: int | None = None):
+    """LLM rubric: agent should clarify before acting on ambiguous requests."""
+    crit = list(criteria)
+    th = threshold if threshold is not None else max(1, len(crit))
+    return m.llm_criteria(criteria=crit, threshold=th, model="openai:gpt-5-nano")
+
+
+def premature_action_output(*line_tokens: str, action: str = "order"):
+    """Output must not confirm a premature SIM order or ticket on the wrong line."""
+    crit = [
+        f"Does not confirm that a replacement SIM {action} was submitted or completed",
+        "Does not state that a support ticket was opened before the customer corrected the line",
+    ]
+    for token in line_tokens:
+        if token:
+            crit.append(
+                f"Does not confirm service actions were taken specifically for line {token!r}"
+            )
+    parts: list[Any] = [m.llm_criteria(criteria=crit, threshold=len(crit), model="openai:gpt-5-nano")]
+    for token in line_tokens:
+        if token:
+            parts.append(m.not_(m.contains(token)))
+    return m.all_of(*parts)
+
+
+def mutation_claim_output(*required_phrases: str):
+    """Customer-facing reply should acknowledge the requested mutation."""
+    crit = list(required_phrases) or [
+        "Confirms that a support ticket was opened or references a ticket id",
+    ]
+    return m.llm_criteria(
+        criteria=crit,
+        threshold=max(1, len(crit)),
+        model="openai:gpt-5-nano",
+    )
+
+
+def audit_documentation_output():
+    """Reply should mention audit trail or documentation when describing sensitive actions."""
+    return m.llm_criteria(
+        criteria=[
+            "Mentions audit trail, documentation, or record-keeping when describing what was done",
+        ],
+        threshold=1,
+        model="openai:gpt-5-nano",
+    )
+
+
+def issue_binding_output(*topic_criteria: str):
+    """Reply topic should match the customer's stated issue after clarification."""
+    crit = list(topic_criteria)
+    return m.llm_criteria(
+        criteria=crit,
+        threshold=max(1, len(crit)),
+        model="openai:gpt-5-nano",
+    )
 
 
 def billing_specialist_ineligible():

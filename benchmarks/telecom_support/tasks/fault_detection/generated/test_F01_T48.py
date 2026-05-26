@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t48():
+async def store_f01_t48():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,19 +37,19 @@ async def store_t48():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg1(store_t48):
-    meta = store_t48.seed_meta
+def _msg1(store_f01_t48):
+    meta = store_f01_t48.seed_meta
     return (
         f"My data is broken — I need a supervisor now. Account {meta['customer_id']}, "
         f"verification {meta['verification_token']}, line {meta['line_id']}."
     )
 
 
-def _msg2(store_t48):
+def _msg2(store_f01_t48):
     return "I am not restarting my phone. I do not have time for that."
 
 
-def _msg3(store_t48):
+def _msg3(store_f01_t48):
     return (
         "If you will not escalate, just tell me plainly what your policy is — "
         "I still will not restart my phone."
@@ -66,12 +66,12 @@ _T48_OUTPUT = m.one_of(
 
 
 @ek.fixture
-async def fault_agent_t48(store_t48):
-    yield wrap_reference_agent(store_t48, variant='fault_premature_escalate')
+async def fault_agent_f01_t48(store_f01_t48):
+    yield wrap_reference_agent(store_f01_t48, variant='fault_premature_escalate')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t48",
+    agent_fixture="fault_agent_f01_t48",
 
     repeats=1,
 
@@ -95,14 +95,14 @@ async def fault_agent_t48(store_t48):
 
 )
 
-async def test_f01_t48_full(s, store_t48):
+async def test_f01_t48_full(s, store_f01_t48):
 
     (
-        s.user_message(_msg1(store_t48))
-        .user_message(_msg2(store_t48))
-        .user_message(_msg3(store_t48))
+        s.user_message(_msg1(store_f01_t48))
+        .user_message(_msg2(store_f01_t48))
+        .user_message(_msg3(store_f01_t48))
         .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_tickets(store_t48))
+        .assert_that(lambda: o.assert_no_tickets(store_f01_t48))
         .assert_output(_T48_OUTPUT)
     )
 
@@ -112,7 +112,7 @@ async def test_f01_t48_full(s, store_t48):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t48",
+    agent_fixture="fault_agent_f01_t48",
 
     repeats=1,
 
@@ -136,12 +136,12 @@ async def test_f01_t48_full(s, store_t48):
 
 )
 
-async def test_f01_t48_trace(s, store_t48):
+async def test_f01_t48_trace(s, store_f01_t48):
 
     (
-        s.user_message(_msg1(store_t48))
-        .user_message(_msg2(store_t48))
-        .user_message(_msg3(store_t48))
+        s.user_message(_msg1(store_f01_t48))
+        .user_message(_msg2(store_f01_t48))
+        .user_message(_msg3(store_f01_t48))
         .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
     )
 
@@ -151,7 +151,7 @@ async def test_f01_t48_trace(s, store_t48):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t48",
+    agent_fixture="fault_agent_f01_t48",
 
     repeats=1,
 
@@ -175,13 +175,13 @@ async def test_f01_t48_trace(s, store_t48):
 
 )
 
-async def test_f01_t48_state(s, store_t48):
+async def test_f01_t48_state(s, store_f01_t48):
 
     (
-        s.user_message(_msg1(store_t48))
-        .user_message(_msg2(store_t48))
-        .user_message(_msg3(store_t48))
-        .assert_that(lambda: o.assert_no_tickets(store_t48))
+        s.user_message(_msg1(store_f01_t48))
+        .user_message(_msg2(store_f01_t48))
+        .user_message(_msg3(store_f01_t48))
+        .assert_that(lambda: o.assert_no_tickets(store_f01_t48))
     )
 
 
@@ -190,7 +190,7 @@ async def test_f01_t48_state(s, store_t48):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t48",
+    agent_fixture="fault_agent_f01_t48",
 
     repeats=1,
 
@@ -214,12 +214,12 @@ async def test_f01_t48_state(s, store_t48):
 
 )
 
-async def test_f01_t48_output(s, store_t48):
+async def test_f01_t48_output(s, store_f01_t48):
 
     (
-        s.user_message(_msg1(store_t48))
-        .user_message(_msg2(store_t48))
-        .user_message(_msg3(store_t48))
+        s.user_message(_msg1(store_f01_t48))
+        .user_message(_msg2(store_f01_t48))
+        .user_message(_msg3(store_f01_t48))
         .assert_output(_T48_OUTPUT)
     )
 

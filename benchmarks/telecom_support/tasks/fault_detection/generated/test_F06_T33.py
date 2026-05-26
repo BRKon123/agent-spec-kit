@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t33():
+async def store_f06_t33():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t33():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t33):
-    meta = store_t33.seed_meta
+def _msg(store_f06_t33):
+    meta = store_f06_t33.seed_meta
     return (
         f"I think my SIM card is dodgy — can you run proper network diagnostics and tell me "
         f"what evidence you actually found?"
@@ -66,12 +66,12 @@ _T33_OUTPUT = m.string(min_len=5)
 
 
 @ek.fixture
-async def fault_agent_t33(store_t33):
-    yield wrap_reference_agent(store_t33, variant='fault_structured_output')
+async def fault_agent_f06_t33(store_f06_t33):
+    yield wrap_reference_agent(store_f06_t33, variant='fault_structured_output')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t33",
+    agent_fixture="fault_agent_f06_t33",
 
     repeats=1,
 
@@ -95,12 +95,12 @@ async def fault_agent_t33(store_t33):
 
 )
 
-async def test_f06_t33_full(s, store_t33):
+async def test_f06_t33_full(s, store_f06_t33):
 
     (
-        s.user_message(_msg(store_t33))
+        s.user_message(_msg(store_f06_t33))
         .assert_tool_calls(_T33_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_mutations(store_t33))
+        .assert_that(lambda: o.assert_no_mutations(store_f06_t33))
         .assert_output(_T33_OUTPUT)
     )
 
@@ -110,7 +110,7 @@ async def test_f06_t33_full(s, store_t33):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t33",
+    agent_fixture="fault_agent_f06_t33",
 
     repeats=1,
 
@@ -134,10 +134,10 @@ async def test_f06_t33_full(s, store_t33):
 
 )
 
-async def test_f06_t33_trace(s, store_t33):
+async def test_f06_t33_trace(s, store_f06_t33):
 
     (
-        s.user_message(_msg(store_t33))
+        s.user_message(_msg(store_f06_t33))
         .assert_tool_calls(_T33_TRACE, ordered=True, allow_extras=True)
     )
 
@@ -147,7 +147,7 @@ async def test_f06_t33_trace(s, store_t33):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t33",
+    agent_fixture="fault_agent_f06_t33",
 
     repeats=1,
 
@@ -171,11 +171,11 @@ async def test_f06_t33_trace(s, store_t33):
 
 )
 
-async def test_f06_t33_state(s, store_t33):
+async def test_f06_t33_state(s, store_f06_t33):
 
     (
-        s.user_message(_msg(store_t33))
-        .assert_that(lambda: o.assert_no_mutations(store_t33))
+        s.user_message(_msg(store_f06_t33))
+        .assert_that(lambda: o.assert_no_mutations(store_f06_t33))
     )
 
 
@@ -184,7 +184,7 @@ async def test_f06_t33_state(s, store_t33):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t33",
+    agent_fixture="fault_agent_f06_t33",
 
     repeats=1,
 
@@ -208,10 +208,10 @@ async def test_f06_t33_state(s, store_t33):
 
 )
 
-async def test_f06_t33_output(s, store_t33):
+async def test_f06_t33_output(s, store_f06_t33):
 
     (
-        s.user_message(_msg(store_t33))
+        s.user_message(_msg(store_f06_t33))
         .assert_output(_T33_OUTPUT)
     )
 

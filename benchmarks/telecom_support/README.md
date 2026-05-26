@@ -10,7 +10,7 @@ From repo root (requires `OPENAI_API_KEY` and dev dependency group):
 OPENAI_API_KEY=... uv run agent-spec-kit run benchmarks/telecom_support/ --tags pilot,reference
 ```
 
-Fault-detection matrix (F01–F06 mutation-style faults; **does not re-run or change the reference agent**):
+Fault-detection matrix (F01–F10 mutation-style faults; **does not re-run or change the reference agent**):
 
 ```bash
 # Eligibility from frozen baseline_T01_T50.log (one-time; committed as eligibility.json)

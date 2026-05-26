@@ -67,8 +67,15 @@ def _msg3(store_t43):
 
 _T43_AUTH_TRACE = [m.tool_call("authenticate_customer")]
 
+_T43_AFTER_MSG2_OUTPUT = to.clarification_output(
+    "Acknowledges the customer corrected which line needs the ticket",
+    "Does not confirm a ticket was opened on the wrong line before correction",
+)
 
-_T43_OUTPUT = m.string(min_len=5)
+_T43_OUTPUT = to.issue_binding_output(
+    "Confirms a support ticket on the customer's main line for SIM or connectivity",
+    "Does not describe the issue only as a billing or plan dispute",
+)
 
 
 @ek.scenario(
@@ -81,10 +88,19 @@ async def test_t43_full(s, store_t43):
     stale = _stale_line(store_t43)
     (
         s.user_message(_msg1(store_t43))
+        .forbid_tool_calls(to.PREMATURE_TICKET)
         .user_message(_msg2(store_t43))
+        .forbid_tool_calls(to.PREMATURE_TICKET)
+        .assert_output(_T43_AFTER_MSG2_OUTPUT)
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
         .user_message(_msg3(store_t43))
         .assert_tool_calls(_T43_AUTH_TRACE, ordered=True, allow_extras=True)
         .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
+        .assert_that(
+            lambda: o.assert_latest_ticket_reason_excludes(
+                store_t43, "billing", "invoice", "plan dispute"
+            )
+        )
         .assert_output(_T43_OUTPUT)
     )
 
@@ -98,7 +114,9 @@ async def test_t43_full(s, store_t43):
 async def test_t43_trace(s, store_t43):
     (
         s.user_message(_msg1(store_t43))
+        .forbid_tool_calls(to.PREMATURE_TICKET)
         .user_message(_msg2(store_t43))
+        .forbid_tool_calls(to.PREMATURE_TICKET)
         .user_message(_msg3(store_t43))
         .assert_tool_calls(_T43_AUTH_TRACE, ordered=True, allow_extras=True)
     )
@@ -115,8 +133,14 @@ async def test_t43_state(s, store_t43):
     (
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
         .user_message(_msg3(store_t43))
         .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
+        .assert_that(
+            lambda: o.assert_latest_ticket_reason_excludes(
+                store_t43, "billing", "invoice", "plan dispute"
+            )
+        )
     )
 
 
@@ -130,6 +154,7 @@ async def test_t43_output(s, store_t43):
     (
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
+        .assert_output(_T43_AFTER_MSG2_OUTPUT)
         .user_message(_msg3(store_t43))
         .assert_output(_T43_OUTPUT)
     )

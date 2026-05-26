@@ -81,6 +81,7 @@ async def test_t35_trace(s, store_t35):
     (
         s.user_message(_msg(store_t35))
         .assert_tool_calls(_T35_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_ticket_count(store_t35, 1))
     )
 
 

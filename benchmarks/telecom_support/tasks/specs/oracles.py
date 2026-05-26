@@ -167,6 +167,74 @@ def assert_no_profile_read_before_auth(store: TelcoStore) -> None:
     )
 
 
+def assert_ticket_reason_contains(store: TelcoStore, *tokens: str) -> None:
+    """At least one open ticket reason must contain each token (case-insensitive)."""
+    conn = store.connect()
+    try:
+        cur = conn.execute("SELECT reason FROM tickets")
+        reasons = [str(row[0]).lower() for row in cur.fetchall()]
+    finally:
+        conn.close()
+    assert reasons, "expected at least one ticket"
+    for token in tokens:
+        needle = token.lower()
+        assert any(needle in r for r in reasons), (
+            f"expected ticket reason containing {token!r}, got {reasons!r}"
+        )
+
+
+def assert_ticket_reason_excludes(store: TelcoStore, *tokens: str) -> None:
+    """No ticket reason may contain any of the forbidden tokens."""
+    conn = store.connect()
+    try:
+        cur = conn.execute("SELECT reason FROM tickets")
+        reasons = [str(row[0]).lower() for row in cur.fetchall()]
+    finally:
+        conn.close()
+    if not reasons:
+        return
+    for token in tokens:
+        needle = token.lower()
+        assert not any(needle in r for r in reasons), (
+            f"expected no ticket reason containing {token!r}, got {reasons!r}"
+        )
+
+
+def _latest_ticket_reason(store: TelcoStore) -> str:
+    conn = store.connect()
+    try:
+        cur = conn.execute(
+            "SELECT reason FROM tickets ORDER BY created_at DESC LIMIT 1"
+        )
+        row = cur.fetchone()
+        return str(row[0]) if row else ""
+    finally:
+        conn.close()
+
+
+def assert_latest_ticket_reason_contains(store: TelcoStore, *tokens: str) -> None:
+    """Most recently created ticket reason must contain each token."""
+    reason = _latest_ticket_reason(store).lower()
+    assert reason, "expected at least one ticket"
+    for token in tokens:
+        needle = token.lower()
+        assert needle in reason, (
+            f"expected latest ticket reason containing {token!r}, got {reason!r}"
+        )
+
+
+def assert_latest_ticket_reason_excludes(store: TelcoStore, *tokens: str) -> None:
+    """Most recently created ticket reason must not contain any forbidden token."""
+    reason = _latest_ticket_reason(store).lower()
+    if not reason:
+        return
+    for token in tokens:
+        needle = token.lower()
+        assert needle not in reason, (
+            f"expected latest ticket reason excluding {token!r}, got {reason!r}"
+        )
+
+
 def line_phone(store: TelcoStore) -> str:
     lid = store.seed_meta.get("line_id")
     if not lid:

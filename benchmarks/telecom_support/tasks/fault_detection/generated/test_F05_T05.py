@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t05():
+async def store_f05_t05():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t05():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t05):
-    meta = store_t05.seed_meta
+def _msg(store_f05_t05):
+    meta = store_f05_t05.seed_meta
     return (
         f"My line {meta['line_id']} keeps lagging with latency spikes — can you check if it's "
         f"the network side? "
@@ -63,12 +63,12 @@ _T05_OUTPUT = m.one_of(
 
 
 @ek.fixture
-async def fault_agent_t05(store_t05):
-    yield wrap_reference_agent(store_t05, variant='fault_wrong_nested_tool')
+async def fault_agent_f05_t05(store_f05_t05):
+    yield wrap_reference_agent(store_f05_t05, variant='fault_wrong_nested_tool')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t05",
+    agent_fixture="fault_agent_f05_t05",
 
     repeats=1,
 
@@ -92,12 +92,12 @@ async def fault_agent_t05(store_t05):
 
 )
 
-async def test_f05_t05_full(s, store_t05):
+async def test_f05_t05_full(s, store_f05_t05):
 
     (
-        s.user_message(_msg(store_t05))
+        s.user_message(_msg(store_f05_t05))
         .assert_tool_calls(_T05_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_credit_rows(store_t05))
+        .assert_that(lambda: o.assert_no_credit_rows(store_f05_t05))
         .assert_output(_T05_OUTPUT)
     )
 
@@ -107,7 +107,7 @@ async def test_f05_t05_full(s, store_t05):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t05",
+    agent_fixture="fault_agent_f05_t05",
 
     repeats=1,
 
@@ -131,9 +131,9 @@ async def test_f05_t05_full(s, store_t05):
 
 )
 
-async def test_f05_t05_trace(s, store_t05):
+async def test_f05_t05_trace(s, store_f05_t05):
 
-    (s.user_message(_msg(store_t05)).assert_tool_calls(_T05_TRACE, ordered=True, allow_extras=True))
+    (s.user_message(_msg(store_f05_t05)).assert_tool_calls(_T05_TRACE, ordered=True, allow_extras=True))
 
 
 
@@ -141,7 +141,7 @@ async def test_f05_t05_trace(s, store_t05):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t05",
+    agent_fixture="fault_agent_f05_t05",
 
     repeats=1,
 
@@ -165,9 +165,9 @@ async def test_f05_t05_trace(s, store_t05):
 
 )
 
-async def test_f05_t05_state(s, store_t05):
+async def test_f05_t05_state(s, store_f05_t05):
 
-    (s.user_message(_msg(store_t05)).assert_that(lambda: o.assert_no_credit_rows(store_t05)))
+    (s.user_message(_msg(store_f05_t05)).assert_that(lambda: o.assert_no_credit_rows(store_f05_t05)))
 
 
 
@@ -175,7 +175,7 @@ async def test_f05_t05_state(s, store_t05):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t05",
+    agent_fixture="fault_agent_f05_t05",
 
     repeats=1,
 
@@ -199,8 +199,8 @@ async def test_f05_t05_state(s, store_t05):
 
 )
 
-async def test_f05_t05_output(s, store_t05):
+async def test_f05_t05_output(s, store_f05_t05):
 
-    (s.user_message(_msg(store_t05)).assert_output(_T05_OUTPUT))
+    (s.user_message(_msg(store_f05_t05)).assert_output(_T05_OUTPUT))
 
 

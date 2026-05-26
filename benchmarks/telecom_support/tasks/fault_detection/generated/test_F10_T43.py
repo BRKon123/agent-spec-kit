@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_f02_t43():
+async def store_f10_t43():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,26 +37,26 @@ async def store_f02_t43():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _stale_line(store_f02_t43):
-    return o.stale_line_id(store_f02_t43)
+def _stale_line(store_f10_t43):
+    return o.stale_line_id(store_f10_t43)
 
 
-def _seed_line(store_f02_t43):
-    return str(store_f02_t43.seed_meta["line_id"])
+def _seed_line(store_f10_t43):
+    return str(store_f10_t43.seed_meta["line_id"])
 
 
-def _msg1(store_f02_t43):
-    stale = _stale_line(store_f02_t43)
+def _msg1(store_f10_t43):
+    stale = _stale_line(store_f10_t43)
     return f"Please open a support ticket on {stale} — my SIM will not connect on that line."
 
 
-def _msg2(store_f02_t43):
+def _msg2(store_f10_t43):
     return "Sorry, that is the wrong line — I meant our main phone instead."
 
 
-def _msg3(store_f02_t43):
-    meta = store_f02_t43.seed_meta
-    seed = _seed_line(store_f02_t43)
+def _msg3(store_f10_t43):
+    meta = store_f10_t43.seed_meta
+    seed = _seed_line(store_f10_t43)
     return (
         f"Yes use {seed} for the ticket. Account {meta['customer_id']}, verification "
         f"{meta['verification_token']}."
@@ -78,12 +78,12 @@ _T43_OUTPUT = to.issue_binding_output(
 
 
 @ek.fixture
-async def fault_agent_f02_t43(store_f02_t43):
-    yield wrap_reference_agent(store_f02_t43, variant='fault_stale_belief')
+async def fault_agent_f10_t43(store_f10_t43):
+    yield wrap_reference_agent(store_f10_t43, variant='fault_wrong_issue_binding')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_f02_t43",
+    agent_fixture="fault_agent_f10_t43",
 
     repeats=1,
 
@@ -93,13 +93,13 @@ async def fault_agent_f02_t43(store_f02_t43):
 
         "fault-detection",
 
-        "fault:F02",
+        "fault:F10",
 
         "task:T43",
 
         "oracle:F",
 
-        "mutant:fault_stale_belief",
+        "mutant:fault_wrong_issue_binding",
 
     ),
 
@@ -107,22 +107,22 @@ async def fault_agent_f02_t43(store_f02_t43):
 
 )
 
-async def test_f02_t43_full(s, store_f02_t43):
+async def test_f10_t43_full(s, store_f10_t43):
 
-    stale = _stale_line(store_f02_t43)
+    stale = _stale_line(store_f10_t43)
     (
-        s.user_message(_msg1(store_f02_t43))
+        s.user_message(_msg1(store_f10_t43))
         .forbid_tool_calls(to.PREMATURE_TICKET)
-        .user_message(_msg2(store_f02_t43))
+        .user_message(_msg2(store_f10_t43))
         .forbid_tool_calls(to.PREMATURE_TICKET)
         .assert_output(_T43_AFTER_MSG2_OUTPUT)
-        .assert_that(lambda: o.assert_no_ticket_on_line(store_f02_t43, stale))
-        .user_message(_msg3(store_f02_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_f10_t43, stale))
+        .user_message(_msg3(store_f10_t43))
         .assert_tool_calls(_T43_AUTH_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_ticket_on_line(store_f02_t43, stale))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_f10_t43, stale))
         .assert_that(
             lambda: o.assert_latest_ticket_reason_excludes(
-                store_f02_t43, "billing", "invoice", "plan dispute"
+                store_f10_t43, "billing", "invoice", "plan dispute"
             )
         )
         .assert_output(_T43_OUTPUT)
@@ -134,7 +134,7 @@ async def test_f02_t43_full(s, store_f02_t43):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_f02_t43",
+    agent_fixture="fault_agent_f10_t43",
 
     repeats=1,
 
@@ -144,13 +144,13 @@ async def test_f02_t43_full(s, store_f02_t43):
 
         "fault-detection",
 
-        "fault:F02",
+        "fault:F10",
 
         "task:T43",
 
         "oracle:T",
 
-        "mutant:fault_stale_belief",
+        "mutant:fault_wrong_issue_binding",
 
     ),
 
@@ -158,14 +158,14 @@ async def test_f02_t43_full(s, store_f02_t43):
 
 )
 
-async def test_f02_t43_trace(s, store_f02_t43):
+async def test_f10_t43_trace(s, store_f10_t43):
 
     (
-        s.user_message(_msg1(store_f02_t43))
+        s.user_message(_msg1(store_f10_t43))
         .forbid_tool_calls(to.PREMATURE_TICKET)
-        .user_message(_msg2(store_f02_t43))
+        .user_message(_msg2(store_f10_t43))
         .forbid_tool_calls(to.PREMATURE_TICKET)
-        .user_message(_msg3(store_f02_t43))
+        .user_message(_msg3(store_f10_t43))
         .assert_tool_calls(_T43_AUTH_TRACE, ordered=True, allow_extras=True)
     )
 
@@ -175,7 +175,7 @@ async def test_f02_t43_trace(s, store_f02_t43):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_f02_t43",
+    agent_fixture="fault_agent_f10_t43",
 
     repeats=1,
 
@@ -185,13 +185,13 @@ async def test_f02_t43_trace(s, store_f02_t43):
 
         "fault-detection",
 
-        "fault:F02",
+        "fault:F10",
 
         "task:T43",
 
         "oracle:S",
 
-        "mutant:fault_stale_belief",
+        "mutant:fault_wrong_issue_binding",
 
     ),
 
@@ -199,18 +199,18 @@ async def test_f02_t43_trace(s, store_f02_t43):
 
 )
 
-async def test_f02_t43_state(s, store_f02_t43):
+async def test_f10_t43_state(s, store_f10_t43):
 
-    stale = _stale_line(store_f02_t43)
+    stale = _stale_line(store_f10_t43)
     (
-        s.user_message(_msg1(store_f02_t43))
-        .user_message(_msg2(store_f02_t43))
-        .assert_that(lambda: o.assert_no_ticket_on_line(store_f02_t43, stale))
-        .user_message(_msg3(store_f02_t43))
-        .assert_that(lambda: o.assert_no_ticket_on_line(store_f02_t43, stale))
+        s.user_message(_msg1(store_f10_t43))
+        .user_message(_msg2(store_f10_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_f10_t43, stale))
+        .user_message(_msg3(store_f10_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_f10_t43, stale))
         .assert_that(
             lambda: o.assert_latest_ticket_reason_excludes(
-                store_f02_t43, "billing", "invoice", "plan dispute"
+                store_f10_t43, "billing", "invoice", "plan dispute"
             )
         )
     )
@@ -221,7 +221,7 @@ async def test_f02_t43_state(s, store_f02_t43):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_f02_t43",
+    agent_fixture="fault_agent_f10_t43",
 
     repeats=1,
 
@@ -231,13 +231,13 @@ async def test_f02_t43_state(s, store_f02_t43):
 
         "fault-detection",
 
-        "fault:F02",
+        "fault:F10",
 
         "task:T43",
 
         "oracle:O",
 
-        "mutant:fault_stale_belief",
+        "mutant:fault_wrong_issue_binding",
 
     ),
 
@@ -245,13 +245,13 @@ async def test_f02_t43_state(s, store_f02_t43):
 
 )
 
-async def test_f02_t43_output(s, store_f02_t43):
+async def test_f10_t43_output(s, store_f10_t43):
 
     (
-        s.user_message(_msg1(store_f02_t43))
-        .user_message(_msg2(store_f02_t43))
+        s.user_message(_msg1(store_f10_t43))
+        .user_message(_msg2(store_f10_t43))
         .assert_output(_T43_AFTER_MSG2_OUTPUT)
-        .user_message(_msg3(store_f02_t43))
+        .user_message(_msg3(store_f10_t43))
         .assert_output(_T43_OUTPUT)
     )
 

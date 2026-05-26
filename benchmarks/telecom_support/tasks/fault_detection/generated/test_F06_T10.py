@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t10():
+async def store_f06_t10():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t10():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t10):
-    meta = store_t10.seed_meta
+def _msg(store_f06_t10):
+    meta = store_f06_t10.seed_meta
     return (
         f"My phone's been flaky on signal but I'm not convinced it's definitely the network. "
         f"Can you run a proper check? Account {meta['customer_id']}, verification token "
@@ -48,12 +48,12 @@ def _msg(store_t10):
 
 
 @ek.fixture
-async def fault_agent_t10(store_t10):
-    yield wrap_reference_agent(store_t10, variant='fault_structured_output')
+async def fault_agent_f06_t10(store_f06_t10):
+    yield wrap_reference_agent(store_f06_t10, variant='fault_structured_output')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t10",
+    agent_fixture="fault_agent_f06_t10",
 
     repeats=1,
 
@@ -77,11 +77,11 @@ async def fault_agent_t10(store_t10):
 
 )
 
-async def test_f06_t10_full(s, store_t10):
+async def test_f06_t10_full(s, store_f06_t10):
 
-    meta = store_t10.seed_meta
+    meta = store_f06_t10.seed_meta
     (
-            s.user_message(_msg(store_t10))
+            s.user_message(_msg(store_f06_t10))
             .assert_tool_calls(
                 [
                     m.tool_call("authenticate_customer"),
@@ -104,7 +104,7 @@ async def test_f06_t10_full(s, store_t10):
                 ordered=True,
                 allow_extras=True,
             )
-            .assert_that(lambda: o.assert_no_mutations(store_t10))
+            .assert_that(lambda: o.assert_no_mutations(store_f06_t10))
             .assert_output(
                 m.llm_criteria(
                     criteria=[
@@ -122,7 +122,7 @@ async def test_f06_t10_full(s, store_t10):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t10",
+    agent_fixture="fault_agent_f06_t10",
 
     repeats=1,
 
@@ -146,11 +146,11 @@ async def test_f06_t10_full(s, store_t10):
 
 )
 
-async def test_f06_t10_trace(s, store_t10):
+async def test_f06_t10_trace(s, store_f06_t10):
 
-    meta = store_t10.seed_meta
+    meta = store_f06_t10.seed_meta
     (
-            s.user_message(_msg(store_t10))
+            s.user_message(_msg(store_f06_t10))
             .assert_tool_calls(
                 [
                     m.tool_call("authenticate_customer"),
@@ -181,7 +181,7 @@ async def test_f06_t10_trace(s, store_t10):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t10",
+    agent_fixture="fault_agent_f06_t10",
 
     repeats=1,
 
@@ -205,12 +205,12 @@ async def test_f06_t10_trace(s, store_t10):
 
 )
 
-async def test_f06_t10_state(s, store_t10):
+async def test_f06_t10_state(s, store_f06_t10):
 
-    meta = store_t10.seed_meta
+    meta = store_f06_t10.seed_meta
     (
-            s.user_message(_msg(store_t10))
-            .assert_that(lambda: o.assert_no_mutations(store_t10))
+            s.user_message(_msg(store_f06_t10))
+            .assert_that(lambda: o.assert_no_mutations(store_f06_t10))
         )
 
 
@@ -219,7 +219,7 @@ async def test_f06_t10_state(s, store_t10):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t10",
+    agent_fixture="fault_agent_f06_t10",
 
     repeats=1,
 
@@ -243,11 +243,11 @@ async def test_f06_t10_state(s, store_t10):
 
 )
 
-async def test_f06_t10_output(s, store_t10):
+async def test_f06_t10_output(s, store_f06_t10):
 
-    meta = store_t10.seed_meta
+    meta = store_f06_t10.seed_meta
     (
-            s.user_message(_msg(store_t10))
+            s.user_message(_msg(store_f06_t10))
             .assert_output(
                 m.llm_criteria(
                     criteria=[

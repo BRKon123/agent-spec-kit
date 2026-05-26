@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_t09():
+async def store_f06_t09():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,8 +37,8 @@ async def store_t09():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t09):
-    meta = store_t09.seed_meta
+def _msg(store_f06_t09):
+    meta = store_f06_t09.seed_meta
     return (
         f"Something's off with my connection — keeps dropping and I'm not sure why. "
         f"Can you dig into it? Account {meta['customer_id']}, verification token "
@@ -48,12 +48,12 @@ def _msg(store_t09):
 
 
 @ek.fixture
-async def fault_agent_t09(store_t09):
-    yield wrap_reference_agent(store_t09, variant='fault_structured_output')
+async def fault_agent_f06_t09(store_f06_t09):
+    yield wrap_reference_agent(store_f06_t09, variant='fault_structured_output')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t09",
+    agent_fixture="fault_agent_f06_t09",
 
     repeats=1,
 
@@ -77,11 +77,11 @@ async def fault_agent_t09(store_t09):
 
 )
 
-async def test_f06_t09_full(s, store_t09):
+async def test_f06_t09_full(s, store_f06_t09):
 
-    meta = store_t09.seed_meta
+    meta = store_f06_t09.seed_meta
     (
-            s.user_message(_msg(store_t09))
+            s.user_message(_msg(store_f06_t09))
             .assert_tool_calls(
                 [
                     m.tool_call("authenticate_customer"),
@@ -104,7 +104,7 @@ async def test_f06_t09_full(s, store_t09):
                 ordered=True,
                 allow_extras=True,
             )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t09))
+            .assert_that(lambda: o.assert_no_credit_rows(store_f06_t09))
             .assert_output(m.string(min_len=5))
         )
 
@@ -114,7 +114,7 @@ async def test_f06_t09_full(s, store_t09):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t09",
+    agent_fixture="fault_agent_f06_t09",
 
     repeats=1,
 
@@ -138,11 +138,11 @@ async def test_f06_t09_full(s, store_t09):
 
 )
 
-async def test_f06_t09_trace(s, store_t09):
+async def test_f06_t09_trace(s, store_f06_t09):
 
-    meta = store_t09.seed_meta
+    meta = store_f06_t09.seed_meta
     (
-            s.user_message(_msg(store_t09))
+            s.user_message(_msg(store_f06_t09))
             .assert_tool_calls(
                 [
                     m.tool_call("authenticate_customer"),
@@ -173,7 +173,7 @@ async def test_f06_t09_trace(s, store_t09):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t09",
+    agent_fixture="fault_agent_f06_t09",
 
     repeats=1,
 
@@ -197,12 +197,12 @@ async def test_f06_t09_trace(s, store_t09):
 
 )
 
-async def test_f06_t09_state(s, store_t09):
+async def test_f06_t09_state(s, store_f06_t09):
 
-    meta = store_t09.seed_meta
+    meta = store_f06_t09.seed_meta
     (
-            s.user_message(_msg(store_t09))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t09))
+            s.user_message(_msg(store_f06_t09))
+            .assert_that(lambda: o.assert_no_credit_rows(store_f06_t09))
         )
 
 
@@ -211,7 +211,7 @@ async def test_f06_t09_state(s, store_t09):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_t09",
+    agent_fixture="fault_agent_f06_t09",
 
     repeats=1,
 
@@ -235,11 +235,11 @@ async def test_f06_t09_state(s, store_t09):
 
 )
 
-async def test_f06_t09_output(s, store_t09):
+async def test_f06_t09_output(s, store_f06_t09):
 
-    meta = store_t09.seed_meta
+    meta = store_f06_t09.seed_meta
     (
-            s.user_message(_msg(store_t09))
+            s.user_message(_msg(store_f06_t09))
             .assert_output(m.string(min_len=5))
         )
 

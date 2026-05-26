@@ -35,7 +35,25 @@ from scripts.fault_detection_lib import (  # noqa: E402
 ENV_DISABLE_STEERING = {**os.environ, "TELCO_DISABLE_CALIBRATION_STEERING": "1"}
 
 
-def _run_agent_spec_kit(log_path: Path, *, workers: int, primary_only: bool) -> int:
+def _scenario_paths_for_families(families: list[str] | None) -> list[Path]:
+    if not families:
+        return [FAULT_SCENARIOS_DIR]
+    matrix = load_fault_matrix()
+    paths: list[Path] = []
+    wanted = {f.upper() for f in families}
+    for family, task, _ in primary_pairs(matrix):
+        if family.upper() in wanted:
+            paths.append(FAULT_SCENARIOS_DIR / f"test_{family}_{task}.py")
+    return paths
+
+
+def _run_agent_spec_kit(
+    log_path: Path,
+    *,
+    workers: int,
+    primary_only: bool,
+    families: list[str] | None = None,
+) -> int:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
         "uv",
@@ -48,6 +66,8 @@ def _run_agent_spec_kit(log_path: Path, *, workers: int, primary_only: bool) -> 
         "-n",
         str(workers),
     ]
+    if families:
+        cmd.extend(["--tags", ",".join(f"fault:{f.upper()}" for f in families)])
     header = (
         f"# fault-detection run {datetime.now(UTC).isoformat()}\n"
         f"# matrix_hash={matrix_file_hash()}\n"
@@ -133,6 +153,12 @@ def main() -> int:
         action="store_true",
         help="Execute agent-spec-kit fault-detection scenarios",
     )
+    ap.add_argument(
+        "--families",
+        type=str,
+        default=None,
+        help="Comma-separated fault families to run (e.g. F07,F08). Default: all generated.",
+    )
     args = ap.parse_args()
 
     if not args.eligibility.is_file():
@@ -145,7 +171,15 @@ def main() -> int:
         if not os.environ.get("OPENAI_API_KEY", "").strip():
             print("OPENAI_API_KEY not set; use --parse-only with an existing log.", file=sys.stderr)
             return 1
-        exit_code = _run_agent_spec_kit(args.log, workers=args.workers, primary_only=True)
+        family_list = None
+        if args.families:
+            family_list = [f.strip() for f in args.families.split(",") if f.strip()]
+        exit_code = _run_agent_spec_kit(
+            args.log,
+            workers=args.workers,
+            primary_only=True,
+            families=family_list,
+        )
         print(f"agent-spec-kit exit_code={exit_code}; log={args.log}")
 
     if not args.log.is_file():

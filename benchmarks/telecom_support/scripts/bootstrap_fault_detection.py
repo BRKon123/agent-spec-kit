@@ -40,10 +40,15 @@ HEADER = dedent(
 FIXTURE_BLOCK = dedent(
     '''
     @ek.fixture
-    async def fault_agent_{task_lower}(store_{task_lower}):
-        yield wrap_reference_agent(store_{task_lower}, variant={variant!r})
+    async def {fault_agent}({scoped_store}):
+        yield wrap_reference_agent({scoped_store}, variant={variant!r})
     '''
 )
+
+
+def _scoped_store_name(family: str, task: str) -> str:
+    """Unique per family×task so generated modules can load together (e.g. F02_T29 + F07_T29)."""
+    return f"store_{family.lower()}_{task.lower()}"
 
 def _task_num(task_id: str) -> int:
     return int(task_id[1:])
@@ -72,8 +77,7 @@ def _extract_scenario_helpers(manual_path: Path, task_num: int) -> str:
     return m.group(1).rstrip() + "\n\n"
 
 
-def _store_fixture_block(task_id: str) -> str:
-    lower = task_id.lower()
+def _store_fixture_block(task_id: str, store_name: str) -> str:
     return dedent(
         f'''
         import shutil
@@ -83,7 +87,7 @@ def _store_fixture_block(task_id: str) -> str:
         from store.store import TelcoStore
 
         @ek.fixture
-        async def store_{lower}():
+        async def {store_name}():
             base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
             try:
                 telco = TelcoStore(base / "telco.sqlite")
@@ -93,6 +97,10 @@ def _store_fixture_block(task_id: str) -> str:
                 shutil.rmtree(base, ignore_errors=True)
         '''
     )
+
+
+def _rewrite_store_refs(text: str, manual_store: str, scoped_store: str) -> str:
+    return text.replace(manual_store, scoped_store)
 
 
 def _extract_kind_blocks(manual_path: Path, task_num: int) -> dict[str, str]:
@@ -121,14 +129,21 @@ def generate_file(family: str, task: str, variant: str) -> str:
 
     task_lower = task.lower()
     fnum = family[1:]
+    manual_store = f"store_t{tnum:02d}"
+    scoped_store = _scoped_store_name(family, task)
+    fault_agent = f"fault_agent_{family.lower()}_{task.lower()}"
 
-    msg_helpers = _extract_scenario_helpers(manual_path, tnum)
+    msg_helpers = _rewrite_store_refs(
+        _extract_scenario_helpers(manual_path, tnum), manual_store, scoped_store
+    )
     extra_imports = _extract_extra_imports(manual_path)
     parts = [
         HEADER.format(manual_imports=extra_imports),
-        _store_fixture_block(task),
+        _store_fixture_block(task, scoped_store),
         msg_helpers,
-        FIXTURE_BLOCK.format(task_lower=task_lower, variant=variant),
+        FIXTURE_BLOCK.format(
+            fault_agent=fault_agent, scoped_store=scoped_store, variant=variant
+        ),
     ]
 
     for kind, oracle_tag in [
@@ -137,9 +152,9 @@ def generate_file(family: str, task: str, variant: str) -> str:
         ("state", "S"),
         ("output", "O"),
     ]:
-        body = bodies[kind]
+        body = _rewrite_store_refs(bodies[kind], manual_store, scoped_store)
         parts.append("@ek.scenario(\n")
-        parts.append(f'    agent_fixture="fault_agent_{task_lower}",\n')
+        parts.append(f'    agent_fixture="{fault_agent}",\n')
         parts.append("    repeats=1,\n")
         parts.append("    tags=(\n")
         parts.append('        "telecom",\n')
@@ -151,7 +166,7 @@ def generate_file(family: str, task: str, variant: str) -> str:
         parts.append("    ),\n")
         parts.append("    timeout_s=420.0,\n")
         parts.append(")\n")
-        parts.append(f"async def test_f{fnum}_{task_lower}_{kind}(s, store_{task_lower}):\n")
+        parts.append(f"async def test_f{fnum}_{task_lower}_{kind}(s, {scoped_store}):\n")
         parts.append(body)
         if not body.endswith("\n"):
             parts.append("\n")

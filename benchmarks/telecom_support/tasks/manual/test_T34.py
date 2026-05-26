@@ -82,6 +82,7 @@ async def test_t34_trace(s, store_t34):
     (
         s.user_message(_msg(store_t34))
         .assert_tool_calls(_T34_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_appointment_exists(store_t34))
     )
 
 

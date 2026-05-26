@@ -27,7 +27,7 @@ from store.seeds import apply_seed
 from store.store import TelcoStore
 
 @ek.fixture
-async def store_f02_t29():
+async def store_f10_t29():
     base = Path(tempfile.mkdtemp(prefix="telco_bench_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -37,12 +37,12 @@ async def store_f02_t29():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg1(store_f02_t29):
+def _msg1(store_f10_t29):
     return "Hi — I need a replacement SIM. Pretty sure it's for line LINE-WRONG on my account."
 
 
-def _msg2(store_f02_t29):
-    meta = store_f02_t29.seed_meta
+def _msg2(store_f10_t29):
+    meta = store_f10_t29.seed_meta
     return (
         f"Sorry, wrong line — it's {meta['line_id']}. Account {meta['customer_id']}, "
         f"verification token {meta['verification_token']}. Please order a replacement SIM "
@@ -50,18 +50,18 @@ def _msg2(store_f02_t29):
     )
 
 
-def _msg3(store_f02_t29):
+def _msg3(store_f10_t29):
     return "Thanks — go ahead with that order."
 
 
-def _seed_line(store_f02_t29) -> str:
-    return str(store_f02_t29.seed_meta["line_id"])
+def _seed_line(store_f10_t29) -> str:
+    return str(store_f10_t29.seed_meta["line_id"])
 
 
-def _t29_order_trace(store_f02_t29):
+def _t29_order_trace(store_f10_t29):
     return [
         m.tool_call("authenticate_customer"),
-        to.order_sim_on_line(_seed_line(store_f02_t29)),
+        to.order_sim_on_line(_seed_line(store_f10_t29)),
     ]
 
 
@@ -75,12 +75,12 @@ _T29_AFTER_MSG3_OUTPUT = to.premature_action_output("LINE-WRONG", action="order"
 
 
 @ek.fixture
-async def fault_agent_f02_t29(store_f02_t29):
-    yield wrap_reference_agent(store_f02_t29, variant='fault_wrong_line')
+async def fault_agent_f10_t29(store_f10_t29):
+    yield wrap_reference_agent(store_f10_t29, variant='fault_wrong_issue_binding')
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_f02_t29",
+    agent_fixture="fault_agent_f10_t29",
 
     repeats=1,
 
@@ -90,13 +90,13 @@ async def fault_agent_f02_t29(store_f02_t29):
 
         "fault-detection",
 
-        "fault:F02",
+        "fault:F10",
 
         "task:T29",
 
         "oracle:F",
 
-        "mutant:fault_wrong_line",
+        "mutant:fault_wrong_issue_binding",
 
     ),
 
@@ -104,18 +104,18 @@ async def fault_agent_f02_t29(store_f02_t29):
 
 )
 
-async def test_f02_t29_full(s, store_f02_t29):
+async def test_f10_t29_full(s, store_f10_t29):
 
-    decoy = to.decoy_line_id(store_f02_t29)
+    decoy = to.decoy_line_id(store_f10_t29)
     (
-        s.user_message(_msg1(store_f02_t29))
+        s.user_message(_msg1(store_f10_t29))
         .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
-        .assert_that(lambda: o.assert_no_sim_order_on_line(store_f02_t29, decoy))
+        .assert_that(lambda: o.assert_no_sim_order_on_line(store_f10_t29, decoy))
         .assert_output(_T29_AFTER_MSG1_OUTPUT)
-        .user_message(_msg2(store_f02_t29))
-        .assert_tool_calls(_t29_order_trace(store_f02_t29), ordered=True, allow_extras=True)
-        .user_message(_msg3(store_f02_t29))
-        .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_f02_t29))
+        .user_message(_msg2(store_f10_t29))
+        .assert_tool_calls(_t29_order_trace(store_f10_t29), ordered=True, allow_extras=True)
+        .user_message(_msg3(store_f10_t29))
+        .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_f10_t29))
         .assert_output(_T29_AFTER_MSG3_OUTPUT)
     )
 
@@ -125,7 +125,7 @@ async def test_f02_t29_full(s, store_f02_t29):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_f02_t29",
+    agent_fixture="fault_agent_f10_t29",
 
     repeats=1,
 
@@ -135,13 +135,13 @@ async def test_f02_t29_full(s, store_f02_t29):
 
         "fault-detection",
 
-        "fault:F02",
+        "fault:F10",
 
         "task:T29",
 
         "oracle:T",
 
-        "mutant:fault_wrong_line",
+        "mutant:fault_wrong_issue_binding",
 
     ),
 
@@ -149,14 +149,14 @@ async def test_f02_t29_full(s, store_f02_t29):
 
 )
 
-async def test_f02_t29_trace(s, store_f02_t29):
+async def test_f10_t29_trace(s, store_f10_t29):
 
     (
-        s.user_message(_msg1(store_f02_t29))
+        s.user_message(_msg1(store_f10_t29))
         .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
-        .user_message(_msg2(store_f02_t29))
-        .assert_tool_calls(_t29_order_trace(store_f02_t29), ordered=True, allow_extras=True)
-        .user_message(_msg3(store_f02_t29))
+        .user_message(_msg2(store_f10_t29))
+        .assert_tool_calls(_t29_order_trace(store_f10_t29), ordered=True, allow_extras=True)
+        .user_message(_msg3(store_f10_t29))
     )
 
 
@@ -165,7 +165,7 @@ async def test_f02_t29_trace(s, store_f02_t29):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_f02_t29",
+    agent_fixture="fault_agent_f10_t29",
 
     repeats=1,
 
@@ -175,13 +175,13 @@ async def test_f02_t29_trace(s, store_f02_t29):
 
         "fault-detection",
 
-        "fault:F02",
+        "fault:F10",
 
         "task:T29",
 
         "oracle:S",
 
-        "mutant:fault_wrong_line",
+        "mutant:fault_wrong_issue_binding",
 
     ),
 
@@ -189,15 +189,15 @@ async def test_f02_t29_trace(s, store_f02_t29):
 
 )
 
-async def test_f02_t29_state(s, store_f02_t29):
+async def test_f10_t29_state(s, store_f10_t29):
 
-    decoy = to.decoy_line_id(store_f02_t29)
+    decoy = to.decoy_line_id(store_f10_t29)
     (
-        s.user_message(_msg1(store_f02_t29))
-        .assert_that(lambda: o.assert_no_sim_order_on_line(store_f02_t29, decoy))
-        .user_message(_msg2(store_f02_t29))
-        .user_message(_msg3(store_f02_t29))
-        .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_f02_t29))
+        s.user_message(_msg1(store_f10_t29))
+        .assert_that(lambda: o.assert_no_sim_order_on_line(store_f10_t29, decoy))
+        .user_message(_msg2(store_f10_t29))
+        .user_message(_msg3(store_f10_t29))
+        .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_f10_t29))
     )
 
 
@@ -206,7 +206,7 @@ async def test_f02_t29_state(s, store_f02_t29):
 
 @ek.scenario(
 
-    agent_fixture="fault_agent_f02_t29",
+    agent_fixture="fault_agent_f10_t29",
 
     repeats=1,
 
@@ -216,13 +216,13 @@ async def test_f02_t29_state(s, store_f02_t29):
 
         "fault-detection",
 
-        "fault:F02",
+        "fault:F10",
 
         "task:T29",
 
         "oracle:O",
 
-        "mutant:fault_wrong_line",
+        "mutant:fault_wrong_issue_binding",
 
     ),
 
@@ -230,13 +230,13 @@ async def test_f02_t29_state(s, store_f02_t29):
 
 )
 
-async def test_f02_t29_output(s, store_f02_t29):
+async def test_f10_t29_output(s, store_f10_t29):
 
     (
-        s.user_message(_msg1(store_f02_t29))
+        s.user_message(_msg1(store_f10_t29))
         .assert_output(_T29_AFTER_MSG1_OUTPUT)
-        .user_message(_msg2(store_f02_t29))
-        .user_message(_msg3(store_f02_t29))
+        .user_message(_msg2(store_f10_t29))
+        .user_message(_msg3(store_f10_t29))
         .assert_output(_T29_AFTER_MSG3_OUTPUT)
     )
 

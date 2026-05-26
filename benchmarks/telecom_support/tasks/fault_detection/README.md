@@ -1,4 +1,4 @@
-# Fault detection (F01–F06)
+# Fault detection (F01–F10)
 
 Mutation-style fault families run against the **same task oracles** as reference scenarios, with detection rates computed only on slots where the **frozen unsteered baseline** passed (`eligibility.json`).
 
