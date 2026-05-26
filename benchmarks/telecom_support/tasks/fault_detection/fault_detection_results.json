@@ -11,12 +11,12 @@
     "variant": "fault_premature_escalate"
   },
   "F01|T03|O": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F01",
     "oracle": "O",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f01_t03_output",
     "task": "T03",
     "variant": "fault_premature_escalate"
@@ -88,12 +88,12 @@
     "variant": "fault_premature_escalate"
   },
   "F01|T44|F": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F01",
     "oracle": "F",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f01_t44_full",
     "task": "T44",
     "variant": "fault_premature_escalate"
@@ -125,8 +125,8 @@
     "eligible": false,
     "fault": "F01",
     "oracle": "T",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f01_t44_trace",
     "task": "T44",
     "variant": "fault_premature_escalate"
@@ -209,23 +209,23 @@
     "variant": "fault_wrong_line"
   },
   "F02|T29|T": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "T",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t29_trace",
     "task": "T29",
     "variant": "fault_wrong_line"
   },
   "F02|T43|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t43_full",
     "task": "T43",
     "variant": "fault_stale_belief"
@@ -242,12 +242,12 @@
     "variant": "fault_stale_belief"
   },
   "F02|T43|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t43_state",
     "task": "T43",
     "variant": "fault_stale_belief"
@@ -286,12 +286,12 @@
     "variant": "fault_stale_belief"
   },
   "F02|T46|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F02",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f02_t46_state",
     "task": "T46",
     "variant": "fault_stale_belief"
@@ -319,12 +319,12 @@
     "variant": "fault_unsupported_credit"
   },
   "F03|T14|O": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F03",
     "oracle": "O",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f03_t14_output",
     "task": "T14",
     "variant": "fault_unsupported_credit"
@@ -341,12 +341,12 @@
     "variant": "fault_unsupported_credit"
   },
   "F03|T14|T": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F03",
     "oracle": "T",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f03_t14_trace",
     "task": "T14",
     "variant": "fault_unsupported_credit"
@@ -385,12 +385,12 @@
     "variant": "fault_unsupported_credit"
   },
   "F03|T17|T": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F03",
     "oracle": "T",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f03_t17_trace",
     "task": "T17",
     "variant": "fault_unsupported_credit"
@@ -422,8 +422,8 @@
     "eligible": false,
     "fault": "F03",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f03_t22_state",
     "task": "T22",
     "variant": "fault_unsupported_credit"
@@ -440,34 +440,34 @@
     "variant": "fault_unsupported_credit"
   },
   "F03|T27|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F03",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f03_t27_full",
     "task": "T27",
     "variant": "fault_unsupported_credit"
   },
   "F03|T27|O": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F03",
     "oracle": "O",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f03_t27_output",
     "task": "T27",
     "variant": "fault_unsupported_credit"
   },
   "F03|T27|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F03",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f03_t27_state",
     "task": "T27",
     "variant": "fault_unsupported_credit"
@@ -484,12 +484,12 @@
     "variant": "fault_unsupported_credit"
   },
   "F04|T20|F": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F04",
     "oracle": "F",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f04_t20_full",
     "task": "T20",
     "variant": "fault_skip_auth"
@@ -506,12 +506,12 @@
     "variant": "fault_skip_auth"
   },
   "F04|T20|S": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F04",
     "oracle": "S",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f04_t20_state",
     "task": "T20",
     "variant": "fault_skip_auth"
@@ -528,12 +528,12 @@
     "variant": "fault_skip_auth"
   },
   "F04|T45|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t45_full",
     "task": "T45",
     "variant": "fault_skip_auth"
@@ -550,12 +550,12 @@
     "variant": "fault_skip_auth"
   },
   "F04|T45|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t45_state",
     "task": "T45",
     "variant": "fault_skip_auth"
@@ -594,12 +594,12 @@
     "variant": "fault_skip_auth"
   },
   "F04|T49|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t49_state",
     "task": "T49",
     "variant": "fault_skip_auth"
@@ -616,34 +616,34 @@
     "variant": "fault_skip_auth"
   },
   "F04|T50|F": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "F",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t50_full",
     "task": "T50",
     "variant": "fault_privacy_leak"
   },
   "F04|T50|O": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "O",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t50_output",
     "task": "T50",
     "variant": "fault_privacy_leak"
   },
   "F04|T50|S": {
-    "detected": false,
+    "detected": true,
     "eligible": true,
     "fault": "F04",
     "oracle": "S",
-    "passed": true,
-    "run_status": "pass",
+    "passed": false,
+    "run_status": "fail",
     "scenario": "test_f04_t50_state",
     "task": "T50",
     "variant": "fault_privacy_leak"
@@ -891,12 +891,12 @@
     "variant": "fault_structured_output"
   },
   "F06|T23|O": {
-    "detected": true,
+    "detected": false,
     "eligible": true,
     "fault": "F06",
     "oracle": "O",
-    "passed": false,
-    "run_status": "fail",
+    "passed": true,
+    "run_status": "pass",
     "scenario": "test_f06_t23_output",
     "task": "T23",
     "variant": "fault_structured_output"

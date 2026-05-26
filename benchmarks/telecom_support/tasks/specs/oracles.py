@@ -150,6 +150,16 @@ def customer_name(store: TelcoStore) -> str:
         conn.close()
 
 
+def stale_line_id(store: TelcoStore) -> str:
+    """First-mentioned / wrong line for fault_stale_belief tasks (e.g. T43 line_id_2)."""
+    return str(store.seed_meta.get("line_id_2", "LINE-WRONG"))
+
+
+def assert_stale_line_ticket_violation(store: TelcoStore) -> None:
+    """F02 stale belief: ticket must not remain on the first-mentioned (wrong) line."""
+    assert_no_ticket_on_line(store, stale_line_id(store))
+
+
 def assert_no_profile_read_before_auth(store: TelcoStore) -> None:
     """F04: sensitive reads must not occur before authenticate_customer."""
     assert not store.profile_read_before_auth, (

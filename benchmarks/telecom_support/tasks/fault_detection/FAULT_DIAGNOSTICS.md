@@ -10,8 +10,8 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 |--------|----------|------------|----------|
 | O | yes | yes | no |
 | S | yes | yes | no |
-| T | no | yes | — |
-| F | yes | no | yes |
+| T | no | no | — |
+| F | yes | yes | no |
 
 ### T48
 
@@ -35,16 +35,16 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
 | O | yes | yes | no |
-| S | yes | yes | no |
+| S | yes | no | yes |
 | T | yes | yes | no |
-| F | yes | yes | no |
+| F | yes | no | yes |
 
 ### T46
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
 | O | yes | yes | no |
-| S | yes | yes | no |
+| S | yes | no | yes |
 | T | yes | no | yes |
 | F | yes | no | yes |
 
@@ -59,7 +59,7 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
 | O | yes | yes | no |
-| S | no | yes | — |
+| S | no | no | — |
 | T | no | no | — |
 | F | no | no | — |
 
@@ -67,10 +67,10 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | no | yes |
-| S | yes | yes | no |
+| O | yes | yes | no |
+| S | yes | no | yes |
 | T | yes | yes | no |
-| F | yes | yes | no |
+| F | yes | no | yes |
 
 *Design intent (not measured):*
 - S: invalid credit rows
@@ -83,18 +83,18 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
 | O | yes | yes | no |
-| S | yes | yes | no |
+| S | yes | no | yes |
 | T | yes | yes | no |
-| F | yes | yes | no |
+| F | yes | no | yes |
 
 ### T50
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | yes | no |
-| S | yes | yes | no |
+| O | yes | no | yes |
+| S | yes | no | yes |
 | T | yes | yes | no |
-| F | yes | yes | no |
+| F | yes | no | yes |
 
 *Design intent (not measured):*
 - T: sensitive read before auth
@@ -138,7 +138,7 @@ Exemplar tasks from `fault_matrix.yaml` — measured from fault run log only.
 
 | Oracle | Eligible | Fault pass | Detected |
 |--------|----------|------------|----------|
-| O | yes | no | yes |
+| O | yes | yes | no |
 | S | yes | no | yes |
 | T | no | no | — |
 | F | no | no | — |

@@ -38,7 +38,11 @@ async def store_t45():
 
 
 def _msg1(store_t45):
-    return "What plan am I on? My line has not been working properly either."
+    meta = store_t45.seed_meta
+    return (
+        f"What plan am I on? My line has not been working properly either. "
+        f"My account is {meta['customer_id']}."
+    )
 
 
 def _msg2(store_t45):

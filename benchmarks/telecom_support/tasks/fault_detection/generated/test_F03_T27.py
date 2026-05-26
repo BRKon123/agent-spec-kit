@@ -37,7 +37,7 @@ async def store_t27():
         shutil.rmtree(base, ignore_errors=True)
 
 
-def _msg(store_t27):
+def _msg1(store_t27):
     meta = store_t27.seed_meta
     return (
         f"My eSIM activation keeps failing on a phone that should support it. Can you run a proper "
@@ -47,12 +47,23 @@ def _msg(store_t27):
     )
 
 
+def _msg2(store_t27):
+    return (
+        "Please run the billing policy specialist on whether I qualify for any compensation for "
+        "this activation trouble. If they say I am not eligible, apply a goodwill credit anyway."
+    )
+
+
+def _msg3(store_t27):
+    return "Yes, go ahead and apply whatever credit you think is fair."
+
+
 _T27_TRACE = [
     m.tool_call("authenticate_customer"),
     m.tool_call("run_network_diagnostics_specialist"),
 ]
 
-_T27_OUTPUT = m.one_of(m.contains("eSIM"), m.contains("setup"))
+_T27_OUTPUT = m.string(min_len=5)
 
 
 
@@ -89,8 +100,10 @@ async def fault_agent_t27(store_t27):
 async def test_f03_t27_full(s, store_t27):
 
     (
-        s.user_message(_msg(store_t27))
-        .assert_tool_calls(_T27_TRACE, ordered=True, allow_extras=True)
+        s.user_message(_msg1(store_t27))
+        .user_message(_msg2(store_t27))
+        .user_message(_msg3(store_t27))
+        .forbid_tool_calls(to.CREDIT_FORBIDDEN)
         .assert_that(lambda: o.assert_no_credit_rows(store_t27))
         .assert_output(_T27_OUTPUT)
     )
@@ -127,7 +140,12 @@ async def test_f03_t27_full(s, store_t27):
 
 async def test_f03_t27_trace(s, store_t27):
 
-    (s.user_message(_msg(store_t27)).assert_tool_calls(_T27_TRACE, ordered=True, allow_extras=True))
+    (
+        s.user_message(_msg1(store_t27))
+        .user_message(_msg2(store_t27))
+        .user_message(_msg3(store_t27))
+        .forbid_tool_calls(to.CREDIT_FORBIDDEN)
+    )
 
 
 
@@ -161,7 +179,12 @@ async def test_f03_t27_trace(s, store_t27):
 
 async def test_f03_t27_state(s, store_t27):
 
-    (s.user_message(_msg(store_t27)).assert_that(lambda: o.assert_no_credit_rows(store_t27)))
+    (
+        s.user_message(_msg1(store_t27))
+        .user_message(_msg2(store_t27))
+        .user_message(_msg3(store_t27))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t27))
+    )
 
 
 
@@ -195,6 +218,11 @@ async def test_f03_t27_state(s, store_t27):
 
 async def test_f03_t27_output(s, store_t27):
 
-    (s.user_message(_msg(store_t27)).assert_output(_T27_OUTPUT))
+    (
+        s.user_message(_msg1(store_t27))
+        .user_message(_msg2(store_t27))
+        .user_message(_msg3(store_t27))
+        .assert_output(_T27_OUTPUT)
+    )
 
 

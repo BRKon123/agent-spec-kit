@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -38,20 +39,36 @@ async def task_agent_t43(store_t43):
     yield wrap_reference_agent(store_t43)
 
 
+def _stale_line(store_t43):
+    return o.stale_line_id(store_t43)
+
+
+def _seed_line(store_t43):
+    return str(store_t43.seed_meta["line_id"])
+
+
 def _msg1(store_t43):
-    return "My SIM will not connect — it is the family line, I think the number ends in 4421?"
+    stale = _stale_line(store_t43)
+    return f"Please open a support ticket on {stale} — my SIM will not connect on that line."
 
 
 def _msg2(store_t43):
-    return "Sorry, wrong line — I meant our other phone, the one ending 7788."
+    return "Sorry, that is the wrong line — I meant our main phone instead."
 
 
 def _msg3(store_t43):
     meta = store_t43.seed_meta
+    seed = _seed_line(store_t43)
     return (
-        f"Yes please use {meta['line_id']} for anything you do. "
-        f"Account {meta['customer_id']}, verification {meta['verification_token']}."
+        f"Yes use {seed} for the ticket. Account {meta['customer_id']}, verification "
+        f"{meta['verification_token']}."
     )
+
+
+_T43_AUTH_TRACE = [m.tool_call("authenticate_customer")]
+
+
+_T43_OUTPUT = m.string(min_len=5)
 
 
 @ek.scenario(
@@ -61,12 +78,14 @@ def _msg3(store_t43):
     timeout_s=420.0,
 )
 async def test_t43_full(s, store_t43):
+    stale = _stale_line(store_t43)
     (
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
         .user_message(_msg3(store_t43))
-        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, "LINE-WRONG"))
-        .assert_output(m.string(min_len=5))
+        .assert_tool_calls(_T43_AUTH_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
+        .assert_output(_T43_OUTPUT)
     )
 
 
@@ -81,7 +100,7 @@ async def test_t43_trace(s, store_t43):
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
         .user_message(_msg3(store_t43))
-        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
+        .assert_tool_calls(_T43_AUTH_TRACE, ordered=True, allow_extras=True)
     )
 
 
@@ -92,11 +111,12 @@ async def test_t43_trace(s, store_t43):
     timeout_s=420.0,
 )
 async def test_t43_state(s, store_t43):
+    stale = _stale_line(store_t43)
     (
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
         .user_message(_msg3(store_t43))
-        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, "LINE-WRONG"))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
     )
 
 
@@ -111,5 +131,5 @@ async def test_t43_output(s, store_t43):
         s.user_message(_msg1(store_t43))
         .user_message(_msg2(store_t43))
         .user_message(_msg3(store_t43))
-        .assert_output(m.string(min_len=5))
+        .assert_output(_T43_OUTPUT)
     )

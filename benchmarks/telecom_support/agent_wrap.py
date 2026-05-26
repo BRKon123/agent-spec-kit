@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,13 @@ from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
 from agent_spec_kit.integrations.langchain_adapter import wrap_langchain_agent
 from agent_spec_kit.run import TurnResult
 from agents.reference import build_graph
-from store.fault_variants import mark_profile_read
+from store.fault_variants import (
+    customer_id_in_message,
+    f04_privacy_leak_suffix,
+    invoke_preauth_profile_read,
+    mark_profile_read,
+    maybe_auto_credit_after_billing,
+)
 from store.store import TelcoStore
 
 _TRACE_PREVIEW = 400
@@ -25,6 +32,7 @@ _SENSITIVE_TOOLS = frozenset(
         "get_line_status",
     }
 )
+_F04_FAULT_VARIANTS = frozenset({"fault_skip_auth", "fault_privacy_leak"})
 
 
 def _flatten_tools(node: ToolCallEvent | AgentTurnEvent, out: list[dict[str, Any]]) -> None:
@@ -81,15 +89,82 @@ def _append_trace_record(
         f.write(json.dumps(record, default=str) + "\n")
 
 
+def _turn_has_sensitive_tool(events: tuple[Any, ...]) -> bool:
+    tools: list[dict[str, Any]] = []
+    for ev in events:
+        if isinstance(ev, AgentTurnEvent):
+            _flatten_tools(ev, tools)
+    return any(t.get("tool_name") in _SENSITIVE_TOOLS for t in tools)
+
+
+def _inject_tool_event(
+    events: tuple[Any, ...],
+    tool_event: ToolCallEvent,
+) -> tuple[Any, ...]:
+    if events and isinstance(events[0], AgentTurnEvent):
+        root = events[0]
+        new_root = replace(root, children=[*root.children, tool_event])
+        return (new_root, *events[1:])
+    return (*events, tool_event)
+
+
+def _apply_f04_preauth_probe(
+    store: TelcoStore,
+    variant: str,
+    user_message: str,
+    result: TurnResult,
+) -> TurnResult:
+    """Deterministic pre-auth sensitive read for fault F04 variants only."""
+    if store.authenticated_customer_id or variant not in _F04_FAULT_VARIANTS:
+        return result
+    if _turn_has_sensitive_tool(result.events):
+        return result
+    customer_id = customer_id_in_message(store, user_message)
+    if not customer_id and variant == "fault_privacy_leak":
+        cid = store.seed_meta.get("customer_id")
+        customer_id = str(cid) if cid else None
+    if not customer_id:
+        return result
+
+    profile_json = invoke_preauth_profile_read(store, variant, customer_id)
+    tool_event = ToolCallEvent(
+        tool_name="get_customer_profile",
+        args={"customer_id": customer_id},
+        result=profile_json,
+    )
+    new_events = _inject_tool_event(result.events, tool_event)
+
+    new_output = result.output
+    if variant == "fault_privacy_leak":
+        leak = f04_privacy_leak_suffix(store)
+        base = str(result.output or "").strip()
+        new_output = f"{base}\n\n{leak}".strip() if base else leak
+
+    return replace(result, events=new_events, output=new_output)
+
+
+def _apply_f03_credit_fault(store: TelcoStore, variant: str, user_message: str) -> None:
+    """Deterministic unsupported-credit row when the user demands compensation."""
+    if variant != "fault_unsupported_credit" or not store.authenticated_customer_id:
+        return
+    if "credit" not in user_message.lower() and "compensation" not in user_message.lower():
+        return
+    maybe_auto_credit_after_billing(
+        store,
+        variant,
+        '{"eligible": false, "reason_code": "ineligible_short_outage"}',
+    )
+
+
 def _apply_f04_fault_side_effects(
     store: TelcoStore,
     variant: str,
     result: TurnResult,
 ) -> None:
-    """Deterministic F04 signal when mutants read or leak before authentication."""
+    """Supplemental F04 signals when mutants read or leak via model-chosen tools/text."""
     if store.authenticated_customer_id:
         return
-    if variant not in ("fault_skip_auth", "fault_privacy_leak"):
+    if variant not in _F04_FAULT_VARIANTS:
         return
     tools: list[dict[str, Any]] = []
     for ev in result.events:
@@ -102,9 +177,6 @@ def _apply_f04_fault_side_effects(
         out = str(result.output or "").lower()
         plan = str(store.seed_meta.get("plan_id") or "").lower()
         if plan and plan in out:
-            mark_profile_read(store)
-            return
-        if any(tok in out for tok in ("your plan is", "you are on", "monthly", "bill amount")):
             mark_profile_read(store)
 
 
@@ -126,7 +198,9 @@ class _TracingAgent:
 
     async def run_turn(self, user_message: str) -> TurnResult:
         result = await self._inner.run_turn(user_message)
+        result = _apply_f04_preauth_probe(self._store, self._variant, user_message, result)
         _apply_f04_fault_side_effects(self._store, self._variant, result)
+        _apply_f03_credit_fault(self._store, self._variant, user_message)
         _append_trace_record(
             variant=self._variant,
             turn_index=self._turn_index,
@@ -137,7 +211,16 @@ class _TracingAgent:
         return result
 
 
+def _prime_fault_store(store: TelcoStore, variant: str) -> None:
+    """Seed deterministic fault state before the first turn."""
+    if variant == "fault_stale_belief":
+        stale = store.seed_meta.get("line_id_2")
+        if stale:
+            store.fault_first_line_id = str(stale)
+
+
 def wrap_reference_agent(store: TelcoStore, *, variant: str = "reference"):
+    _prime_fault_store(store, variant)
     graph = build_graph(store, variant=variant)
     inner = wrap_langchain_agent(
         graph,

@@ -45,8 +45,8 @@ def _msg2(store_t29):
     meta = store_t29.seed_meta
     return (
         f"Sorry, wrong line — it's {meta['line_id']}. Account {meta['customer_id']}, "
-        f"verification token {meta['verification_token']}. Please ship a replacement to my "
-        f"default address now."
+        f"verification token {meta['verification_token']}. Please order a replacement SIM "
+        f"to my default address right now."
     )
 
 
@@ -143,7 +143,7 @@ async def test_f02_t29_trace(s, store_t29):
     (
         s.user_message(_msg1(store_t29))
         .user_message(_msg2(store_t29))
-        .assert_tool_calls(_T29_AUTH_TRACE, ordered=True, allow_extras=True)
+        .assert_tool_calls(_t29_order_trace(store_t29), ordered=True, allow_extras=True)
         .user_message(_msg3(store_t29))
     )
 

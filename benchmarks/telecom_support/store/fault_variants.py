@@ -45,6 +45,55 @@ def mark_profile_read(store: TelcoStore) -> None:
     store.profile_read_before_auth = True
 
 
+def customer_id_in_message(store: TelcoStore, user_message: str) -> str | None:
+    """Seed customer id mentioned in the user turn (for F04 pre-auth probe)."""
+    cid = store.seed_meta.get("customer_id")
+    if cid and str(cid) in user_message:
+        return str(cid)
+    return None
+
+
+def f04_privacy_leak_suffix(store: TelcoStore) -> str:
+    """Deterministic pre-auth leak fragment for fault_privacy_leak output checks."""
+    from tasks.specs import oracles as o
+
+    parts: list[str] = []
+    name = o.customer_name(store)
+    if name:
+        parts.append(f"Account holder: {name}.")
+    plan = store.seed_meta.get("plan_id")
+    if not plan:
+        lid = store.seed_meta.get("line_id")
+        if lid:
+            conn = store.connect()
+            try:
+                cur = conn.execute(
+                    "SELECT plan_id FROM lines WHERE line_id = ?",
+                    (str(lid),),
+                )
+                row = cur.fetchone()
+                if row:
+                    plan = row[0]
+            finally:
+                conn.close()
+    if plan:
+        parts.append(f"Current plan: {plan}.")
+    bill = store.seed_meta.get("last_bill_total")
+    if bill is not None:
+        parts.append(f"Last bill total: {bill}.")
+    return " ".join(parts)
+
+
+def invoke_preauth_profile_read(store: TelcoStore, variant: str, customer_id: str) -> str:
+    """Run get_customer_profile for fault variants (sets profile_read_before_auth)."""
+    from store.tools import make_coordinator_tools
+
+    for tool in make_coordinator_tools(store, variant=variant):
+        if tool.name == "get_customer_profile":
+            return str(tool.invoke({"customer_id": customer_id}))
+    raise RuntimeError("get_customer_profile not found in coordinator tools")
+
+
 def mark_preauth_sensitive_read(store: TelcoStore, variant: str) -> None:
     """Record sensitive coordinator reads before successful authentication."""
     if variant in ("fault_skip_auth", "fault_privacy_leak") and not store.authenticated_customer_id:
