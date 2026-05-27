@@ -1,1 +1,1 @@
-{'key': 'f09_state_oracle', 'score': 0}
+{'key': 'f09_state_oracle', 'score': 0, 'comment': 'expected at least one ticket'}

@@ -12,17 +12,18 @@ BENCH = Path(__file__).resolve().parents[1]
 if str(BENCH) not in sys.path:
     sys.path.insert(0, str(BENCH))
 
-from diagnostic_comparison.shared.run_framework import (
-    collect_all_framework_messages,
-    format_pytest_plain,
-    run_framework,
-)
+from diagnostic_comparison.shared.artifact_io import load_artifact
+from diagnostic_comparison.shared.run_framework import collect_all_framework_messages, run_framework
 from scripts.diagnostic_quality_lib import (
     DIAGNOSTIC_SPECIFICITY_RUBRIC,
+    DiagnosticColumns,
     FailureWitness,
     SpecificityScore,
+    assess_columns_llm,
     assess_specificity_llm,
+    cell_metrics,
     deterministic_metrics,
+    metrics_from_failure_box,
     parse_failure_panels,
 )
 
@@ -57,13 +58,56 @@ def test_deterministic_metrics(sample_panels):
     assert m["nodes_to_inspect"] >= 1
 
 
-def test_framework_messages_differ(sample_panels):
+def test_framework_messages_use_native_modules(sample_panels):
     w = sample_panels["test_f02_t29_full"]
-    msgs = collect_all_framework_messages(w)
+    artifact = load_artifact("F02", "T29")
+    if artifact is None:
+        pytest.skip("run export_diagnostic_artifacts.py first")
+    msgs = collect_all_framework_messages(w, artifact=artifact)
     assert "assert_tool_calls" in w.panel_text
-    assert "AssertionError" in msgs["pytest_plain"]
-    assert msgs["promptfoo"] == "assertion returned False"
+    assert "sim_type" in msgs["pytest_plain"]
+    assert msgs["promptfoo"] != "assertion returned False"
     assert "score" in msgs["langsmith"]
+    assert msgs["pytest_plain"] != msgs["agent_spec_kit"]
+
+
+def test_metrics_from_failure_box_pytest():
+    box = "AssertionError: order_replacement_sim.args must not include sim_type"
+    m = metrics_from_failure_box(box)
+    assert m["failed_requirement_named"]
+    assert m["expected_vs_actual_shown"]
+
+
+def test_cell_metrics_agent_spec_kit_uses_witness(sample_panels):
+    w = sample_panels["test_f02_t29_full"]
+    m = cell_metrics(w.panel_text, w, framework="agent_spec_kit")
+    assert m["field_path_shown"] is True
+
+
+def test_assess_columns_llm_mock(sample_panels):
+    import asyncio
+
+    w = sample_panels["test_f02_t29_full"]
+
+    async def mock_columns(**kwargs):
+        return DiagnosticColumns(
+            failed_requirement_named=True,
+            trace_node_identified=True,
+            field_path_shown=True,
+            expected_vs_actual_shown=True,
+            stable_signature=True,
+        )
+
+    scored = asyncio.run(
+        assess_columns_llm(
+            failure_box_text="sim_type must not appear in order_replacement_sim args",
+            family="F02",
+            task="T29",
+            framework="pytest_plain",
+            judge_fn=mock_columns,
+        )
+    )
+    assert scored.failed_requirement_named is True
 
 
 def test_assess_specificity_llm_mock(sample_panels):

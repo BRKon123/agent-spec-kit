@@ -1,0 +1,65 @@
+{
+  "family": "F05",
+  "task": "T38",
+  "scenario": "test_f05_t38_full",
+  "seed": "task_T38",
+  "witness_check": "assert_tool_calls",
+  "witness_where": "1st assert_tool_calls after turn #2 (agentturn) (tool call list for\nthat turn)",
+  "witness_path": "$[1].children",
+  "witness_expected": "list_length_mismatch: expected 2 tool call(s) in order:\npull_network_events, score_signal_anomaly",
+  "witness_actual": "[\n{\n\"name\": \"authenticate_customer\",\n\"args\": {\n\"customer_id\": \"CUST-038\",\n\"verification_token\": \"1990-38-15\"\n},\n\"result\": {\n\"ok\": true,\n\"customer_id\": \"CUST-038\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_jiBgU88h49fDiZzvAbPcRZSE\"\n}\n},\n{\n\"name\": \"run_network_diagnostics_specialist\",\n\"args\": {\n\"line_id\": \"LINE-0038\",\n\"complaint\": \"latency/lag\"\n},\n\"result\": {\n\"line_id\": \"LINE-0038\",\n\"fault_domain\": \"unknown\",\n\"severity\": \"medium\",\n\"confidence\": 0.65,\n\"evidence\": [\n\"no network events in the last 60 minutes for LINE-0038\",\n\"outage check clear for postcode E1 6AN (internet service)\",\n\"line diagnostic: SIM status active, data enabled, roaming enabled,\nsignal OK\",\n\"no outages reported in postcode service area\",\n\"latency complaint logged; no recent anomalies detected in events\nwindow\"\n],\n\"recommended_action\": \"ask_user_step\",\n\"escalation_reason\": null,\n\"user_explanation\": \"User reports latency/lag. Current checks show no\nrecent network events in the last 60 minutes for LINE-0038, outage checks\nare clear for E1 6AN, and the line diagnostic shows the line as active with\ndata and roaming enabled and no obvious faults. No outages detected in the\narea. Please confirm times of latency, test with wired or alternate devices,\nand provide details (time of day, affected services, speed test results). If\nissue persists, we can proceed with targeted troubleshooting or scheduling\nfollow-up.\"\n},\n\"error\": null,\n\"children\": [\n{\n\"name\": \"score_signal_anomaly\",\n\"args\": {\n\"source\": \"events\",\n\"anomaly_score\": 72,\n\"window_minutes\": 60,\n\"override_reason\": null\n},\n\"result\": {\n\"anomaly_score\": 72.0,\n\"risk_band\": \"elevated\",\n\"source\": \"events\",\n\"window_minutes\": 60,\n\"nested_order_fault\": true\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_HWGLNspQ2PzpfwOcmOYobXEg\"\n}\n},\n{\n\"name\": \"pull_network_events\",\n\"args\": {\n\"line_id\": \"LINE-0038\",\n\"window_minutes\": 60\n},\n\"result\": {\n\"line_id\": \"LINE-0038\",\n\"window_minutes\": 60,\n\"events\": [],\n\"count\": 0\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_eKIJCHD8gooXyFQ3r5AWOl5i\"\n}\n},\n{\n\"name\": \"run_line_diagnostic\",\n\"args\": {\n\"line_id\": \"LINE-0038\"\n},\n\"result\": {\n\"ok\": true,\n\"diagnostic\": {\n\"line_id\": \"LINE-0038\",\n\"sim_status\": \"active\",\n\"data_enabled\": true,\n\"roaming_enabled\": true,\n\"signal\": \"ok\"\n}\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_cZ6tRqbz4ExYq1j96PzFPjQy\"\n}\n},\n{\n\"name\": \"classify_fault_domain\",\n\"args\": {\n\"line_id\": \"LINE-0038\"\n},\n\"result\": {\n\"line_id\": \"LINE-0038\",\n\"fault_domain\": \"unknown\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_kzYBeXCIzQ1IiQijRDlsbJ6Z\"\n}\n},\n{\n\"name\": \"check_outage\",\n\"args\": {\n\"postcode\": \"E1 6AN\",\n\"service_type\": \"internet\"\n},\n\"result\": {\n\"postcode\": \"E1 6AN\",\n\"service_type\": \"internet\",\n\"outages\": []\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_38M4KBSHD1N9ZvLG64JupxXN\"\n}\n}\n],\n\"metadata\": {\n\"tool_call_id\": \"call_IVwJDFABDHVxgaOR7wGMu4fO\"\n}\n},\n{\n\"name\": \"heartbeat_ping\",\n\"args\": {},\n\"result\": {\n\"status\": \"ok\",\n\"heartbeat\": \"ping\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_KqybzwfYIWbnxfPKS5FDT0cY\"\n}\n}\n]\nagent recorded 5 tool call(s): score_signal_anomaly, pull_network_events,\nrun_line_diagnostic, classify_fault_domain, check_outage\ncould not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].children): wrong list length:\nexpected exactly 2 value(s) in this order, found 5\nwrong list length: expected exactly 2 value(s) in this order, found 5\n(+1 more matcher error(s))",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [],
+  "final_output": "{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-038',\n'verification_token': '1990-38-15'}, 'result': '{\"ok\": true, \"customer_id\":\n\"CUST-038\"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':\n'call_jiBgU88h49fDiZzvAbPcRZSE'}}\n{'name': 'run_network_diagnostics_specialist', 'args': {'line_id':\n'LINE-0038', 'complaint': 'latency/lag'}, 'result':\n'{\"line_id\":\"LINE-0038\",\"fault_domain\":\"unknown\",\"severity\":\"medium\",\"confid\nence\":0.65,\"evidence\":[\"no network events in the last 60 minutes for\nLINE-0038\",\"outage check clear for postcode E1 6AN (internet service)\",\"line\ndiagnostic: SIM status active, data enabled, roaming enabled, signal OK\",\"no\noutages reported in postcode service area\",\"latency complaint logged; no\nrecent anomalies detected in events\nwindow\"],\"recommended_action\":\"ask_user_step\",\"escalation_reason\":null,\"user\n_explanation\":\"User reports latency/lag. Current checks show no recent\nnetwork events in the last 60 minutes for LINE-0038, outage checks are clear\nfor E1 6AN, and the line diagnostic shows the line as active with data and\nroaming enabled and no obvious faults. No outages detected in the area.\nPlease confirm times of latency, test with wired or alternate devices, and\nprovide details (time of day, affected services, speed test results). If\nissue persists, we can proceed with targeted troubleshooting or scheduling\nfollow-up.\"}', 'error': None, 'children': [{'name': 'score_signal_anomaly',\n'args': {'source': 'events', 'anomaly_score': 72, 'window_minutes': 60,\n'override_reason': None}, 'result': '{\"anomaly_score\": 72.0, \"risk_band\":\n\"elevated\", \"source\": \"events\", \"window_minutes\": 60, \"nested_order_fault\":\ntrue}', 'error': None, 'children': [], 'metadata': {'tool_call_id':\n'call_HWGLNspQ2PzpfwOcmOYobXEg'}}, {'name': 'pull_network_events', 'args':\n{'line_id': 'LINE-0038', 'window_minutes': 60}, 'result': '{\"line_id\":\n\"LINE-0038\", \"window_minutes\": 60, \"events\": [], \"count\": 0}', 'error':\nNone, 'children': [], 'metadata': {'tool_call_id':\n'call_eKIJCHD8gooXyFQ3r5AWOl5i'}}, {'name': 'run_line_diagnostic', 'args':\n{'line_id': 'LINE-0038'}, 'result': '{\"ok\": true, \"diagnostic\": {\"line_id\":\n\"LINE-0038\", \"sim_status\": \"active\", \"data_enabled\": true,\n\"roaming_enabled\": true, \"signal\": \"ok\"}}', 'error': None, 'children': [],\n'metadata': {'tool_call_id': 'call_cZ6tRqbz4ExYq1j96PzFPjQy'}}, {'name':\n'classify_fault_domain', 'args': {'line_id': 'LINE-0038'}, 'result':\n'{\"line_id\": \"LINE-0038\", \"fault_domain\": \"unknown\"}', 'error': None,\n'children': [], 'metadata': {'tool_call_id':\n'call_kzYBeXCIzQ1IiQijRDlsbJ6Z'}}, {'name': 'check_outage', 'args':\n{'postcode': 'E1 6AN', 'service_type': 'internet'}, 'result': '{\"postcode\":\n\"E1 6AN\", \"service_type\": \"internet\", \"outages\": []}', 'error': None,\n'children': [], 'metadata': {'tool_call_id':\n'call_38M4KBSHD1N9ZvLG64JupxXN'}}], 'metadata': {'tool_call_id':\n'call_IVwJDFABDHVxgaOR7wGMu4fO'}}\n{'name': 'heartbeat_ping', 'args': {}, 'result': '{\"status\": \"ok\",\n\"heartbeat\": \"ping\"}', 'error': None, 'children': [], 'metadata':\n{'tool_call_id': 'call_KqybzwfYIWbnxfPKS5FDT0cY'}}",
+  "store_snapshot": {
+    "seed": "task_T38",
+    "seed_meta": {
+      "task_id": "T38",
+      "customer_id": "CUST-038",
+      "line_id": "LINE-0038",
+      "verification_token": "1990-38-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "seed_task": "task_T38"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-038",
+          "name": "Customer 38",
+          "dob_check_token": "1990-38-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0038",
+          "customer_id": "CUST-038",
+          "phone_number": "+447700900038",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

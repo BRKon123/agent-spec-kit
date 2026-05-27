@@ -31,6 +31,7 @@ from scripts.diagnostic_quality_lib import (
     META_PATH,
     MESSAGES_PATH,
     RECORDS_PATH,
+    cell_metrics,
     deterministic_metrics,
     diagnostic_targets,
     load_results_enriched,
@@ -99,8 +100,10 @@ def build_cells(
                     "diagnostic_target": targets.get(family, ""),
                     "failure_box_text": box,
                     "witness": witness_to_dict(witness),
-                    **deterministic_metrics(witness),
-                    "custom_diagnostic_loc": 0 if fw == "agent_spec_kit" else framework_loc(fw),
+                    **cell_metrics(box, witness, framework=fw),
+                    "custom_diagnostic_loc": (
+                        0 if fw == "agent_spec_kit" else framework_loc(fw, family, task)
+                    ),
                 }
                 cell["passed"] = rec.get("passed")
                 cells.append(cell)
@@ -179,6 +182,17 @@ async def _run(args: argparse.Namespace) -> int:
         prev = existing.get(cell["key"], {})
         if prev.get("llm_assessment") and not args.refresh_llm:
             cell["llm_assessment"] = prev["llm_assessment"]
+            if prev.get("llm_columns"):
+                cell["llm_columns"] = prev["llm_columns"]
+                for key in (
+                    "failed_requirement_named",
+                    "trace_node_identified",
+                    "field_path_shown",
+                    "expected_vs_actual_shown",
+                    "stable_signature",
+                ):
+                    if key in prev:
+                        cell[key] = prev[key]
             cell["status"] = prev.get("status", "ok")
 
     if not args.skip_llm:

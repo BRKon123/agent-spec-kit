@@ -33,6 +33,7 @@ HEADER = dedent(
     from tasks.specs import oracles as o
     from tasks.specs import trace_oracles as to
     from agent_wrap import wrap_reference_agent
+    from tasks.specs.run_context import bind_scenario_context
     {manual_imports}
     '''
 )
@@ -167,6 +168,9 @@ def generate_file(family: str, task: str, variant: str) -> str:
         parts.append("    timeout_s=420.0,\n")
         parts.append(")\n")
         parts.append(f"async def test_f{fnum}_{task_lower}_{kind}(s, {scoped_store}):\n")
+        parts.append(
+            f"    bind_scenario_context('test_f{fnum}_{task_lower}_{kind}', variant={variant!r})\n"
+        )
         parts.append(body)
         if not body.endswith("\n"):
             parts.append("\n")

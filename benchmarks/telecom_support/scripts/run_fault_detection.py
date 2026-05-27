@@ -32,7 +32,15 @@ from scripts.fault_detection_lib import (  # noqa: E402
     variant_for_pair,
 )
 
-ENV_DISABLE_STEERING = {**os.environ, "TELCO_DISABLE_CALIBRATION_STEERING": "1"}
+DIAG_TRACE_DIR = BENCH / "tasks" / "fault_detection" / "diagnostic_artifacts" / "traces"
+DIAG_SNAPSHOT_DIR = BENCH / "tasks" / "fault_detection" / "diagnostic_artifacts" / "snapshots"
+
+ENV_DISABLE_STEERING = {
+    **os.environ,
+    "TELCO_DISABLE_CALIBRATION_STEERING": "1",
+    "TELCO_AGENT_TRACE_DIR": str(DIAG_TRACE_DIR),
+    "TELCO_STORE_SNAPSHOT_DIR": str(DIAG_SNAPSHOT_DIR),
+}
 
 
 def _scenario_paths_for_families(families: list[str] | None) -> list[Path]:

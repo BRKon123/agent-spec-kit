@@ -1,1 +1,1 @@
-assertion returned False
+{'pass': False, 'score': 0, 'reason': 'expected no\nget_customer_profile/get_plan_details/get_line_status before auth'}

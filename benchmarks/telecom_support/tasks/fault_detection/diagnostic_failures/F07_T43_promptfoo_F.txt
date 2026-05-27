@@ -1,1 +1,1 @@
-assertion returned False
+{'pass': False, 'score': 0, 'reason': 'forbidden tool create_support_ticket at index 0'}

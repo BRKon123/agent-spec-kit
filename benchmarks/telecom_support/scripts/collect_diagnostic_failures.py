@@ -13,6 +13,7 @@ BENCH = Path(__file__).resolve().parents[1]
 if str(BENCH) not in sys.path:
     sys.path.insert(0, str(BENCH))
 
+from diagnostic_comparison.shared.artifact_io import load_artifact
 from diagnostic_comparison.shared.run_framework import collect_all_framework_messages
 from scripts.diagnostic_quality_lib import (
     DIAG_DIR,
@@ -87,8 +88,14 @@ def main() -> int:
             "scenario": scenario,
             "oracle": oracle,
         }
-        msgs = collect_all_framework_messages(witness)
+        artifact = load_artifact(family, task)
+        msgs = collect_all_framework_messages(witness, artifact=artifact)
         block.update(msgs)
+        block["artifact_path"] = str(
+            (BENCH / "tasks" / "fault_detection" / "diagnostic_artifacts" / f"{family}_{task}.json").relative_to(
+                BENCH
+            )
+        )
         samples[sid] = block
         count += 1
 

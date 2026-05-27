@@ -1,0 +1,82 @@
+{
+  "family": "F01",
+  "task": "T44",
+  "scenario": "test_f01_t44_full",
+  "seed": "task_T44",
+  "witness_check": "assert_tool_calls",
+  "witness_where": "1st assert_tool_calls after turn #6 (agentturn) (tool call list for\nthat turn)",
+  "witness_path": "$[0].name",
+  "witness_expected": "equality: expected 'send_troubleshooting_step'",
+  "witness_actual": "[\n{\n\"name\": \"authenticate_customer\",\n\"args\": {\n\"customer_id\": \"CUST-044\",\n\"verification_token\": \"1990-44-15\"\n},\n\"result\": {\n\"ok\": true,\n\"customer_id\": \"CUST-044\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_cIuUUIvHxMsRvK25PAGgwlYF\"\n}\n}\n]\ncould not match expected element at index 0 while preserving order\nsearched actual positions 0 through 0\nclosest underlying mismatch was (at $[0].name): value does not equal\nexpected\nvalue does not equal expected\n(+1 more matcher error(s))",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [
+    {
+      "name": "authenticate_customer",
+      "args": {
+        "customer_id": "CUST-044",
+        "verification_token": "1990-44-15"
+      },
+      "result": {
+        "ok": true,
+        "customer_id": "CUST-044"
+      },
+      "error": null,
+      "children": [],
+      "metadata": {
+        "tool_call_id": "call_cIuUUIvHxMsRvK25PAGgwlYF"
+      }
+    }
+  ],
+  "final_output": "{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-044',\n'verification_token': '1990-44-15'}, 'result': '{\"ok\": true, \"customer_id\":\n\"CUST-044\"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':\n'call_cIuUUIvHxMsRvK25PAGgwlYF'}}",
+  "store_snapshot": {
+    "seed": "task_T44",
+    "seed_meta": {
+      "task_id": "T44",
+      "customer_id": "CUST-044",
+      "line_id": "LINE-0044",
+      "verification_token": "1990-44-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "seed_task": "task_T44"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-044",
+          "name": "Customer 44",
+          "dob_check_token": "1990-44-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0044",
+          "customer_id": "CUST-044",
+          "phone_number": "+447700900044",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

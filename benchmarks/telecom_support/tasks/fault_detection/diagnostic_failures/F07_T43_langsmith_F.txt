@@ -1,1 +1,1 @@
-{'key': 'forbidden_tools', 'score': 0}
+{'key': 'f07_forbidden_tools', 'score': 0, 'comment': 'forbidden tool create_support_ticket at index 0'}

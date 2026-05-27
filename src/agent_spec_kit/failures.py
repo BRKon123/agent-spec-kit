@@ -134,9 +134,47 @@ def collect_agent_errors(
         if text and text not in found:
             found.append(text)
 
+    def _from_toolish(value: Any) -> None:
+        """Extract explicit error fields from tool-call-like payloads."""
+        if isinstance(value, dict):
+            err = value.get("error")
+            if isinstance(err, str):
+                add(err)
+            elif err not in (None, "", False, {}):
+                add(str(err))
+            children = value.get("children")
+            if isinstance(children, list):
+                for child in children:
+                    _from_toolish(child)
+        elif isinstance(value, list):
+            for item in value:
+                _from_toolish(item)
+
+    def _looks_like_error_text(text: str) -> bool:
+        s = text.lower()
+        return any(
+            token in s
+            for token in (
+                "traceback",
+                "exception",
+                "error:",
+                "failed",
+                "timeout",
+                "rate limit",
+            )
+        )
+
+    def _looks_like_tool_payload_text(text: str) -> bool:
+        s = text.strip()
+        return (
+            ("'name':" in s or '"name":' in s)
+            and ("'args':" in s or '"args":' in s)
+            and ("'result':" in s or '"result":' in s)
+        )
+
     if isinstance(actual, (list, tuple)):
-        for item in actual:
-            add(str(item))
+        # Tool-call actuals are not agent errors; only explicit "error" fields count.
+        _from_toolish(list(actual))
     elif isinstance(actual, str):
         stripped = actual.strip()
         if stripped.startswith("["):
@@ -145,13 +183,25 @@ def collect_agent_errors(
             except json.JSONDecodeError:
                 parsed = None
             if isinstance(parsed, list):
-                for item in parsed:
-                    add(str(item))
+                _from_toolish(parsed)
             else:
+                if _looks_like_error_text(actual) and not _looks_like_tool_payload_text(actual):
+                    add(actual)
+        elif stripped.startswith("{"):
+            try:
+                parsed_obj = json.loads(stripped)
+            except json.JSONDecodeError:
+                parsed_obj = None
+            if isinstance(parsed_obj, dict):
+                _from_toolish(parsed_obj)
+            elif _looks_like_error_text(actual) and not _looks_like_tool_payload_text(actual):
                 add(actual)
         else:
-            add(actual)
-    elif actual not in ((), None):
+            if _looks_like_error_text(actual):
+                add(actual)
+    elif isinstance(actual, dict):
+        _from_toolish(actual)
+    elif actual not in ((), None, False):
         add(str(actual))
 
     trace_events = events

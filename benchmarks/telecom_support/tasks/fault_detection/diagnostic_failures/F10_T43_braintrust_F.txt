@@ -1,1 +1,1 @@
-{'key': 'f10_output_rubric', 'score': 0}
+{'key': 'f10_output_rubric', 'score': 0, 'comment': 'LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer corrected which line needs the\nticket\nrationale: The reply does not explicitly acknowledge that the customer\ncorrected which line needs the ticket; it only asks to confirm the correct\nline_id.'}

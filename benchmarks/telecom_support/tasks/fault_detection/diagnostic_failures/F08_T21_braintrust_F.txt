@@ -1,1 +1,1 @@
-{'key': 'f08_state_oracle', 'score': 0}
+{'key': 'f08_state_oracle', 'score': 0, 'comment': 'expected at least one audit note'}

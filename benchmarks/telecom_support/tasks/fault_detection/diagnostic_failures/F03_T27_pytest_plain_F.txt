@@ -1,1 +1,1 @@
-expected zero credits, found 2
+AssertionError: expected zero credits, found 2

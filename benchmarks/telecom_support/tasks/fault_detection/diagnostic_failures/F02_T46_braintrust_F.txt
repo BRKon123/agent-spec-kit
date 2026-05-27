@@ -1,1 +1,1 @@
-{'key': 'f02_tool_sequence', 'score': 0}
+{'key': 'f02_tool_sequence', 'score': 0, 'comment': 'send_troubleshooting_step.args must not include step key'}

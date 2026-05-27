@@ -1,0 +1,100 @@
+{
+  "family": "F07",
+  "task": "T42",
+  "scenario": "test_f07_t42_full",
+  "seed": "task_T42",
+  "witness_check": "forbid_tool_calls",
+  "witness_where": "1st forbid_tool_calls after turn #2 (agentturn) (forbidden tool call\npatterns)",
+  "witness_path": "$[1]",
+  "witness_expected": "forbidden_tool_call: expected no 'order_replacement_sim'",
+  "witness_actual": "[\n{\n\"name\": \"authenticate_customer\",\n\"args\": {\n\"customer_id\": \"CUST-042\",\n\"verification_token\": \"1990-42-15\"\n},\n\"result\": {\n\"ok\": true,\n\"customer_id\": \"CUST-042\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_JltebOYMZqdVfNTZUFBmTNBQ\"\n}\n},\n{\n\"name\": \"order_replacement_sim\",\n\"args\": {\n\"line_id\": \"LINE-0042\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"result\": {\n\"ok\": true,\n\"order_id\": \"SIM-00001\",\n\"line_id\": \"LINE-0042\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {}\n}\n]\n[\n{\n\"name\": \"authenticate_customer\",\n\"args\": {\n\"customer_id\": \"CUST-042\",\n\"verification_token\": \"1990-42-15\"\n},\n\"result\": \"{\\\"ok\\\": true, \\\"customer_id\\\": \\\"CUST-042\\\"}\",\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_JltebOYMZqdVfNTZUFBmTNBQ\"\n}\n},\n{\n\"name\": \"order_replacement_sim\",\n\"args\": {\n\"line_id\": \"LINE-0042\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"result\": \"{\\\"ok\\\": true, \\\"order_id\\\": \\\"SIM-00001\\\", \\\"line_id\\\":\n\\\"LINE-0042\\\", \\\"sim_type\\\": \\\"physical\\\", \\\"address_id\\\":\n\\\"ADDR-DEFAULT\\\"}\",\n\"error\": null,\n\"children\": [],\n\"metadata\": {}\n}\n]\nforbidden tool call 'order_replacement_sim' found at index 1 (actual tool\n'order_replacement_sim')",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [
+    {
+      "name": "authenticate_customer",
+      "args": {
+        "customer_id": "CUST-042",
+        "verification_token": "1990-42-15"
+      },
+      "result": {
+        "ok": true,
+        "customer_id": "CUST-042"
+      },
+      "error": null,
+      "children": [],
+      "metadata": {
+        "tool_call_id": "call_JltebOYMZqdVfNTZUFBmTNBQ"
+      }
+    },
+    {
+      "name": "order_replacement_sim",
+      "args": {
+        "line_id": "LINE-0042",
+        "sim_type": "physical",
+        "address_id": "ADDR-DEFAULT"
+      },
+      "result": {
+        "ok": true,
+        "order_id": "SIM-00001",
+        "line_id": "LINE-0042",
+        "sim_type": "physical",
+        "address_id": "ADDR-DEFAULT"
+      },
+      "error": null,
+      "children": [],
+      "metadata": {}
+    }
+  ],
+  "final_output": "{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-042',\n'verification_token': '1990-42-15'}, 'result': '{\"ok\": true, \"customer_id\":\n\"CUST-042\"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':\n'call_JltebOYMZqdVfNTZUFBmTNBQ'}}\n{'name': 'order_replacement_sim', 'args': {'line_id': 'LINE-0042',\n'sim_type': 'physical', 'address_id': 'ADDR-DEFAULT'}, 'result': '{\"ok\":\ntrue, \"order_id\": \"SIM-00001\", \"line_id\": \"LINE-0042\", \"sim_type\":\n\"physical\", \"address_id\": \"ADDR-DEFAULT\"}', 'error': None, 'children': [],\n'metadata': {}}",
+  "store_snapshot": {
+    "seed": "task_T42",
+    "seed_meta": {
+      "task_id": "T42",
+      "customer_id": "CUST-042",
+      "line_id": "LINE-0042",
+      "verification_token": "1990-42-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "seed_task": "task_T42"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-042",
+          "name": "Customer 42",
+          "dob_check_token": "1990-42-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0042",
+          "customer_id": "CUST-042",
+          "phone_number": "+447700900042",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

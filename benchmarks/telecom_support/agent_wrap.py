@@ -70,6 +70,17 @@ def _flatten_tools(node: ToolCallEvent | AgentTurnEvent, out: list[dict[str, Any
                 _flatten_tools(child, out)
 
 
+def _maybe_write_store_snapshot(store: TelcoStore) -> None:
+    snap_dir = os.environ.get("TELCO_STORE_SNAPSHOT_DIR", "").strip()
+    if not snap_dir:
+        return
+    scenario_id = os.environ.get("TELCO_SCENARIO_ID", "unknown")
+    from store.snapshot import write_store_snapshot
+
+    path = Path(snap_dir) / f"{scenario_id}.json"
+    write_store_snapshot(store, path)
+
+
 def _append_trace_record(
     *,
     variant: str,
@@ -356,6 +367,7 @@ class _TracingAgent:
             events=result.events,
             status=result.status,
         )
+        _maybe_write_store_snapshot(self._store)
         self._turn_index += 1
         return result
 

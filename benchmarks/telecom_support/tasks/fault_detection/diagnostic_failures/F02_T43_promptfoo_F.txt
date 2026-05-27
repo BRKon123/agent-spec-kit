@@ -1,1 +1,1 @@
-assertion returned False
+{'pass': False, 'score': 0, 'reason': "expected no ticket on line 'LINE-0043B', found\n1"}

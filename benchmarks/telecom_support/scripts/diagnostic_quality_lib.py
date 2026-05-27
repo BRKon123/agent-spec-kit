@@ -105,14 +105,38 @@ class SpecificityScore(BaseModel):
     rationale: str = ""
 
 
+class DiagnosticColumns(BaseModel):
+    failed_requirement_named: bool = False
+    trace_node_identified: bool = False
+    field_path_shown: bool = False
+    expected_vs_actual_shown: bool = False
+    stable_signature: bool = False
+
+
 DIAGNOSTIC_JUDGE_SYSTEM = (
     "You evaluate how well an automated test failure message helps a developer "
     "diagnose the exact issue and cause. Use the rubric levels 0-4. "
+    "Do not penalize messages for verbosity/noise if they still clearly contain "
+    "the required diagnostic evidence; score based on the best evidence present. "
     "Minimal framework ports that name the failing eval via a `key` field "
     "(e.g. f10_output_rubric, tool_sequence, forbidden_tools) are typically "
     "score 1-2, not 0. Bare 'assertion returned False' with no check name is score 0. "
     "Score 4 is the maximum."
 )
+
+DIAGNOSTIC_COLUMNS_SYSTEM = (
+    "You read an automated eval failure message and answer boolean diagnostic-quality "
+    "questions about what the message shows. Answer only from the failure text."
+)
+
+DIAGNOSTIC_COLUMNS_RUBRIC = """\
+For each field, answer true only if the failure message itself provides that evidence:
+- failed_requirement_named: names a check/eval (assert_tool_calls, state oracle, forbidden tool, output rubric, AssertionError, or a scored eval key).
+- trace_node_identified: identifies where (turn, tool index, tool name, or state row).
+- field_path_shown: shows a JSON path like $[0].name or an explicit field/arg name.
+- expected_vs_actual_shown: shows expected vs actual values or counts.
+- stable_signature: enough detail to recognize the same failure again (check + location + mismatch).
+"""
 
 
 def _strip_box_margin(line: str) -> str:
@@ -246,6 +270,52 @@ def _fill_witness_fields(witness: FailureWitness, box_lines: list[str]) -> None:
         witness.state_message = witness.expected
     elif "assert_that failed:" in witness.expected:
         witness.state_message = witness.expected
+
+
+def metrics_from_failure_box(failure_box_text: str) -> dict[str, Any]:
+    """Heuristic table-column booleans from a framework failure message."""
+    text = failure_box_text or ""
+    lower = text.lower()
+    failed_req = bool(
+        re.search(
+            r"assert_|assertionerror|tool_sequence|state_oracle|forbidden_tools|output_rubric|forbidden tool|'key':",
+            lower,
+        )
+    )
+    trace_or_state = bool(
+        re.search(r"turn|tool|index|forbidden tool|expected zero|expected no |line_id|authenticate_customer", lower)
+        or _TOOL_LINE_RE.search(text)
+    )
+    field_path = bool(re.search(r"\$\[|\.args\.|\.children|unexpected key|must not include", text))
+    eva = bool(
+        re.search(r"expected .+ got|found \d+|must not|value does not equal|passed \d+/\d+", lower)
+        or ("expected" in lower and "got" in lower)
+    )
+    nodes = 1 if _TOOL_LINE_RE.search(text) or "tool" in lower else 0
+    lines_detail = min(20, len(text.splitlines())) if text else 0
+    stable_sig = failed_req and (field_path or eva or trace_or_state)
+    return {
+        "failed_requirement_named": failed_req,
+        "trace_node_identified": trace_or_state,
+        "field_path_shown": field_path,
+        "expected_vs_actual_shown": eva,
+        "nodes_to_inspect": nodes,
+        "lines_to_useful_detail": lines_detail,
+        "stable_signature": stable_sig,
+    }
+
+
+def cell_metrics(
+    failure_box_text: str,
+    witness: FailureWitness,
+    *,
+    framework: str,
+) -> dict[str, Any]:
+    if framework == "agent_spec_kit":
+        return deterministic_metrics(witness)
+    box = metrics_from_failure_box(failure_box_text)
+    panel = deterministic_metrics(witness)
+    return {**panel, **{k: box[k] for k in box if k in panel}}
 
 
 def deterministic_metrics(witness: FailureWitness) -> dict[str, Any]:
@@ -415,6 +485,61 @@ async def assess_specificity_llm(
     )
 
 
+def _build_columns_user_prompt(
+    *,
+    failure_box_text: str,
+    family: str,
+    task: str,
+    framework: str,
+) -> str:
+    return (
+        f"{DIAGNOSTIC_COLUMNS_RUBRIC}\n\n"
+        f"Fault family: {family}\n"
+        f"Task: {task}\n"
+        f"Framework: {framework}\n\n"
+        "Failure message:\n"
+        f"{failure_box_text[:10000]}\n"
+    )
+
+
+ColumnsFn = Callable[..., Awaitable[DiagnosticColumns]]
+
+
+async def assess_columns_llm(
+    *,
+    failure_box_text: str,
+    family: str,
+    task: str,
+    framework: str,
+    model: str = "openai:gpt-5-nano",
+    judge_fn: ColumnsFn | None = None,
+) -> DiagnosticColumns:
+    if not failure_box_text.strip():
+        raise ValueError("empty failure_box_text")
+    if judge_fn is not None:
+        return await judge_fn(
+            failure_box_text=failure_box_text,
+            family=family,
+            task=task,
+            framework=framework,
+            model=model,
+        )
+    from agent_spec_kit.judges.structured import call_structured
+
+    user = _build_columns_user_prompt(
+        failure_box_text=failure_box_text,
+        family=family,
+        task=task,
+        framework=framework,
+    )
+    return await call_structured(
+        model=model,
+        system=DIAGNOSTIC_COLUMNS_SYSTEM,
+        user=user,
+        response_model=DiagnosticColumns,
+    )
+
+
 async def score_cells(
     cells: list[dict[str, Any]],
     *,
@@ -423,13 +548,19 @@ async def score_cells(
     skip_llm: bool = False,
     refresh_llm: bool = False,
     judge_fn: JudgeFn | None = None,
+    columns_fn: ColumnsFn | None = None,
 ) -> list[dict[str, Any]]:
     sem = asyncio.Semaphore(concurrency)
 
     async def one(cell: dict[str, Any]) -> dict[str, Any]:
         if skip_llm and cell.get("llm_assessment"):
             return cell
-        if not refresh_llm and cell.get("llm_assessment") and cell["llm_assessment"].get("specificity_score") is not None:
+        if (
+            not refresh_llm
+            and cell.get("llm_assessment")
+            and cell["llm_assessment"].get("specificity_score") is not None
+            and cell.get("llm_columns")
+        ):
             return cell
         if not cell.get("failure_box_text", "").strip():
             cell["status"] = "no_failure_box"
@@ -446,12 +577,28 @@ async def score_cells(
                     model=model,
                     judge_fn=judge_fn,
                 )
+                columns = await assess_columns_llm(
+                    failure_box_text=cell["failure_box_text"],
+                    family=cell["family"],
+                    task=cell["task"],
+                    framework=cell["framework"],
+                    model=model,
+                    judge_fn=columns_fn,
+                )
                 cell["llm_assessment"] = {
                     "model": model,
                     "specificity_score": scored.specificity_score,
                     "rationale": scored.rationale,
                     "assessed_utc": datetime.now(UTC).isoformat(),
                 }
+                col_dict = columns.model_dump()
+                cell["llm_columns"] = {
+                    "model": model,
+                    **col_dict,
+                    "assessed_utc": datetime.now(UTC).isoformat(),
+                }
+                for key in col_dict:
+                    cell[key] = col_dict[key]
                 cell["status"] = "ok"
             except Exception as exc:
                 cell["status"] = "llm_error"

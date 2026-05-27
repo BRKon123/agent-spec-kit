@@ -1,1 +1,1 @@
-expected at least one ticket
+AssertionError: expected at least one ticket

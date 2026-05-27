@@ -1,1 +1,1 @@
-{'key': 'tool_sequence', 'score': 0}
+{'key': 'f05_tool_sequence', 'score': 0, 'comment': 'missing run_network_diagnostics_specialist tool call'}

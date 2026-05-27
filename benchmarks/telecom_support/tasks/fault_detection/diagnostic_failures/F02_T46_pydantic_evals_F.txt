@@ -1,1 +1,1 @@
-AssertionError: mismatch at $[1].args.step
+AssertionError: send_troubleshooting_step.args must not include step key

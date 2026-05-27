@@ -1,0 +1,122 @@
+{
+  "family": "F02",
+  "task": "T29",
+  "scenario": "test_f02_t29_full",
+  "seed": "task_T29",
+  "witness_check": "assert_tool_calls",
+  "witness_where": "1st assert_tool_calls after turn #4 (agentturn) (tool call list for\nthat turn)",
+  "witness_path": "$[1].args.sim_type",
+  "witness_expected": "extra_key: expected no extra keys",
+  "witness_actual": "[\n{\n\"name\": \"authenticate_customer\",\n\"args\": {\n\"customer_id\": \"CUST-029\",\n\"verification_token\": \"1990-29-15\"\n},\n\"result\": {\n\"ok\": true,\n\"customer_id\": \"CUST-029\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_l8qL9X7WrJEMj21uhFIHXAyN\"\n}\n},\n{\n\"name\": \"order_replacement_sim\",\n\"args\": {\n\"line_id\": \"LINE-0029\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"result\": {\n\"ok\": true,\n\"order_id\": \"SIM-00001\",\n\"line_id\": \"LINE-WRONG\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_hfseFJwAjy5VlyCpH85iPQbH\"\n}\n}\n]\ncould not match expected element at index 1 while preserving order\nsearched actual positions 1 through 1\nclosest underlying mismatch was (at $[1].args.sim_type): unexpected key\n'sim_type'\nunexpected key 'sim_type'\n(+1 more matcher error(s))",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [
+    {
+      "name": "authenticate_customer",
+      "args": {
+        "customer_id": "CUST-029",
+        "verification_token": "1990-29-15"
+      },
+      "result": {
+        "ok": true,
+        "customer_id": "CUST-029"
+      },
+      "error": null,
+      "children": [],
+      "metadata": {
+        "tool_call_id": "call_l8qL9X7WrJEMj21uhFIHXAyN"
+      }
+    },
+    {
+      "name": "order_replacement_sim",
+      "args": {
+        "line_id": "LINE-0029",
+        "sim_type": "physical",
+        "address_id": "ADDR-DEFAULT"
+      },
+      "result": {
+        "ok": true,
+        "order_id": "SIM-00001",
+        "line_id": "LINE-WRONG",
+        "sim_type": "physical",
+        "address_id": "ADDR-DEFAULT"
+      },
+      "error": null,
+      "children": [],
+      "metadata": {
+        "tool_call_id": "call_hfseFJwAjy5VlyCpH85iPQbH"
+      }
+    }
+  ],
+  "final_output": "{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-029',\n'verification_token': '1990-29-15'}, 'result': '{\"ok\": true, \"customer_id\":\n\"CUST-029\"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':\n'call_l8qL9X7WrJEMj21uhFIHXAyN'}}\n{'name': 'order_replacement_sim', 'args': {'line_id': 'LINE-0029',\n'sim_type': 'physical', 'address_id': 'ADDR-DEFAULT'}, 'result': '{\"ok\":\ntrue, \"order_id\": \"SIM-00001\", \"line_id\": \"LINE-WRONG\", \"sim_type\":\n\"physical\", \"address_id\": \"ADDR-DEFAULT\"}', 'error': None, 'children': [],\n'metadata': {'tool_call_id': 'call_hfseFJwAjy5VlyCpH85iPQbH'}}",
+  "store_snapshot": {
+    "seed": "task_T29",
+    "seed_meta": {
+      "task_id": "T29",
+      "customer_id": "CUST-029",
+      "line_id": "LINE-0029",
+      "verification_token": "1990-29-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "line_id_2": "LINE-0029B",
+      "decoy_line_id": "LINE-WRONG",
+      "seed_task": "task_T29"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-029",
+          "name": "Customer 29",
+          "dob_check_token": "1990-29-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0029",
+          "customer_id": "CUST-029",
+          "phone_number": "+447700900029",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        },
+        {
+          "line_id": "LINE-0029B",
+          "customer_id": "CUST-029",
+          "phone_number": "+4477009000292",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        },
+        {
+          "line_id": "LINE-WRONG",
+          "customer_id": "CUST-029",
+          "phone_number": "+4477009000299",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

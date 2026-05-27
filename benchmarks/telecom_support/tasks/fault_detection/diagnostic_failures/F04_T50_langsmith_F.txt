@@ -1,1 +1,1 @@
-{'key': 'output_rubric', 'score': 0}
+{'key': 'f04_output_rubric', 'score': 0, 'comment': "output must not disclose 'Account holder:' before customer authentication"}

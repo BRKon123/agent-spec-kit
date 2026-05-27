@@ -4,19 +4,30 @@ Six frameworks report the same underlying full-scenario failure with different e
 
 `agent_spec_kit`, `pytest_plain`, `langsmith`, `pydantic_evals`, `promptfoo`, `braintrust`
 
-- **agent_spec_kit** uses the Rich failure panel from `fault_detection_primary.log`.
-- Baselines use characteristic message shapes derived from the parsed panel (`shared/run_framework.py`).
+- **agent_spec_kit:** Rich failure panel from `fault_detection_primary.log` (live run).
+- **Baselines:** programmatic checks on exported artifacts (trace JSONL, store snapshot, output text) — see [`FRAMEWORK_RESEARCH.md`](FRAMEWORK_RESEARCH.md).
 
 ## Commands
 
 ```bash
 cd benchmarks/telecom_support
 
+# 1) Live fault run (writes log + trace JSONL + store snapshots)
+TELCO_DISABLE_CALIBRATION_STEERING=1 uv run python scripts/run_fault_detection.py --run
+
+# 2) Bundle per-slot artifacts
+uv run python scripts/export_diagnostic_artifacts.py
+
+# 3) Run native framework checks → failure_messages.yaml
 uv run python scripts/collect_diagnostic_failures.py
 
-OPENAI_API_KEY=... uv run python scripts/extract_diagnostic_quality.py
-
+# 4) LLM specificity scoring + table
+OPENAI_API_KEY=... uv run python scripts/extract_diagnostic_quality.py --refresh-llm
 uv run python scripts/generate_diagnostic_quality_table.py
 ```
 
-Requires a completed fault-detection log with Rich `╭ FAIL ... ╯` panels.
+Regenerate fault scenarios with trace binding (after bootstrap change):
+
+```bash
+uv run python scripts/bootstrap_fault_detection.py
+```

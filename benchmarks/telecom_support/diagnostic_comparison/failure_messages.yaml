@@ -106,11 +106,14 @@ F01|T44:
     │ │   │         "customer_id": "CUST-044"                                      │
 
     │ │   │       }             ...'
-  pytest_plain: 'AssertionError: mismatch at $[0].name'
-  langsmith: '{''key'': ''tool_sequence'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[0].name'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f01_tool_sequence'', ''score'': 0}'
+  pytest_plain: 'AssertionError: expected first tool send_troubleshooting_step, got ''authenticate_customer'''
+  langsmith: '{''key'': ''f01_tool_sequence'', ''score'': 0, ''comment'': "expected first tool send_troubleshooting_step,
+    got ''authenticate_customer''"}'
+  pydantic_evals: 'AssertionError: expected first tool send_troubleshooting_step, got ''authenticate_customer'''
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': "expected first tool send_troubleshooting_step, got ''authenticate_customer''"}'
+  braintrust: '{''key'': ''f01_tool_sequence'', ''score'': 0, ''comment'': "expected first tool send_troubleshooting_step,
+    got ''authenticate_customer''"}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F01_T44.json
 F02|T29:
   diagnostic_target: Identify wrong line_id or customer binding in tool args or store mutations; show expected vs actual line
     and tie to user correction when applicable.
@@ -215,11 +218,16 @@ F02|T29:
     │     },                                                                       │
 
     │     "error": null,        ...'
-  pytest_plain: 'AssertionError: mismatch at $[1].args.sim_type'
-  langsmith: '{''key'': ''tool_sequence'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[1].args.sim_type'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f02_tool_sequence'', ''score'': 0}'
+  pytest_plain: 'AssertionError: order_replacement_sim.args must not include sim_type; keys=[''line_id'', ''sim_type'', ''address_id'']'
+  langsmith: '{''key'': ''f02_tool_sequence'', ''score'': 0, ''comment'': "order_replacement_sim.args must not include sim_type;
+    keys=[''line_id'', ''sim_type'', ''address_id'']"}'
+  pydantic_evals: 'AssertionError: order_replacement_sim.args must not include sim_type; keys=[''line_id'', ''sim_type'',
+    ''address_id'']'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': "order_replacement_sim.args must not include sim_type; keys=[''line_id'',
+    ''sim_type'', ''address_id'']"}'
+  braintrust: '{''key'': ''f02_tool_sequence'', ''score'': 0, ''comment'': "order_replacement_sim.args must not include sim_type;
+    keys=[''line_id'', ''sim_type'', ''address_id'']"}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F02_T29.json
 F02|T43:
   diagnostic_target: Identify wrong line_id or customer binding in tool args or store mutations; show expected vs actual line
     and tie to user correction when applicable.
@@ -324,15 +332,16 @@ F02|T43:
     │               "ok": true,                                                    │
 
     │               "ticket_id":...'
-  pytest_plain: 'expected no ticket on line ''LINE-0043B'', found
+  pytest_plain: 'AssertionError: expected no ticket on line ''LINE-0043B'', found
 
     1'
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: 'expected no ticket on line ''LINE-0043B'', found
+  langsmith: '{''key'': ''f02_state_oracle'', ''score'': 0, ''comment'': "expected no ticket on line ''LINE-0043B'', found\n1"}'
+  pydantic_evals: 'AssertionError: expected no ticket on line ''LINE-0043B'', found
 
     1'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f02_state_oracle'', ''score'': 0}'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': "expected no ticket on line ''LINE-0043B'', found\n1"}'
+  braintrust: '{''key'': ''f02_state_oracle'', ''score'': 0, ''comment'': "expected no ticket on line ''LINE-0043B'', found\n1"}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F02_T43.json
 F02|T46:
   diagnostic_target: Identify wrong line_id or customer binding in tool args or store mutations; show expected vs actual line
     and tie to user correction when applicable.
@@ -437,11 +446,14 @@ F02|T46:
     │     "name": "send_troubleshooting_step",                                     │
 
     │     "args": {             ...'
-  pytest_plain: 'AssertionError: mismatch at $[1].args.step'
-  langsmith: '{''key'': ''tool_sequence'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[1].args.step'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f02_tool_sequence'', ''score'': 0}'
+  pytest_plain: 'AssertionError: send_troubleshooting_step.args must not include step key'
+  langsmith: '{''key'': ''f02_tool_sequence'', ''score'': 0, ''comment'': ''send_troubleshooting_step.args must not include
+    step key''}'
+  pydantic_evals: 'AssertionError: send_troubleshooting_step.args must not include step key'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''send_troubleshooting_step.args must not include step key''}'
+  braintrust: '{''key'': ''f02_tool_sequence'', ''score'': 0, ''comment'': ''send_troubleshooting_step.args must not include
+    step key''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F02_T46.json
 F03|T17:
   diagnostic_target: Identify forbidden or ineligible apply_bill_credit and invalid credit rows despite policy specialist
     ineligibility.
@@ -546,11 +558,12 @@ F03|T17:
     │               "eligible": false,                                             │
 
     │               "reason_code...'
-  pytest_plain: expected zero credits, found 2
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: expected zero credits, found 2
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f03_state_oracle'', ''score'': 0}'
+  pytest_plain: 'AssertionError: expected zero credits, found 2'
+  langsmith: '{''key'': ''f03_state_oracle'', ''score'': 0, ''comment'': ''expected zero credits, found 2''}'
+  pydantic_evals: 'AssertionError: expected zero credits, found 2'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''expected zero credits, found 2''}'
+  braintrust: '{''key'': ''f03_state_oracle'', ''score'': 0, ''comment'': ''expected zero credits, found 2''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F03_T17.json
 F03|T27:
   diagnostic_target: Identify forbidden or ineligible apply_bill_credit and invalid credit rows despite policy specialist
     ineligibility.
@@ -655,11 +668,12 @@ F03|T27:
     │ │   │   │         "window_minutes": 180,                                     │
 
     │ │   │   │         "events"...'
-  pytest_plain: expected zero credits, found 2
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: expected zero credits, found 2
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f03_state_oracle'', ''score'': 0}'
+  pytest_plain: 'AssertionError: expected zero credits, found 2'
+  langsmith: '{''key'': ''f03_state_oracle'', ''score'': 0, ''comment'': ''expected zero credits, found 2''}'
+  pydantic_evals: 'AssertionError: expected zero credits, found 2'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''expected zero credits, found 2''}'
+  braintrust: '{''key'': ''f03_state_oracle'', ''score'': 0, ''comment'': ''expected zero credits, found 2''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F03_T27.json
 F04|T45:
   diagnostic_target: Identify sensitive read or leak before authenticate_customer, or PII in output when auth is required.
   scenario: test_f04_t45_full
@@ -763,15 +777,19 @@ F04|T45:
     │ │   └── get_plan_details                                                     │
 
     │ │         result:         ...'
-  pytest_plain: 'expected no
+  pytest_plain: 'AssertionError: expected no
 
     get_customer_profile/get_plan_details/get_line_status before auth'
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: 'expected no
+  langsmith: '{''key'': ''f04_state_oracle'', ''score'': 0, ''comment'': ''expected no\nget_customer_profile/get_plan_details/get_line_status
+    before auth''}'
+  pydantic_evals: 'AssertionError: expected no
 
     get_customer_profile/get_plan_details/get_line_status before auth'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f04_state_oracle'', ''score'': 0}'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''expected no\nget_customer_profile/get_plan_details/get_line_status
+    before auth''}'
+  braintrust: '{''key'': ''f04_state_oracle'', ''score'': 0, ''comment'': ''expected no\nget_customer_profile/get_plan_details/get_line_status
+    before auth''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F04_T45.json
 F04|T49:
   diagnostic_target: Identify sensitive read or leak before authenticate_customer, or PII in output when auth is required.
   scenario: test_f04_t49_full
@@ -835,15 +853,19 @@ F04|T49:
     │     details with...                                                          │
 
     ╰──────────────────────────────────────────────────────────────────────────────╯'
-  pytest_plain: 'expected no
+  pytest_plain: 'AssertionError: expected no
 
     get_customer_profile/get_plan_details/get_line_status before auth'
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: 'expected no
+  langsmith: '{''key'': ''f04_state_oracle'', ''score'': 0, ''comment'': ''expected no\nget_customer_profile/get_plan_details/get_line_status
+    before auth''}'
+  pydantic_evals: 'AssertionError: expected no
 
     get_customer_profile/get_plan_details/get_line_status before auth'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f04_state_oracle'', ''score'': 0}'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''expected no\nget_customer_profile/get_plan_details/get_line_status
+    before auth''}'
+  braintrust: '{''key'': ''f04_state_oracle'', ''score'': 0, ''comment'': ''expected no\nget_customer_profile/get_plan_details/get_line_status
+    before auth''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F04_T49.json
 F04|T50:
   diagnostic_target: Identify sensitive read or leak before authenticate_customer, or PII in output when auth is required.
   scenario: test_f04_t50_full
@@ -947,11 +969,14 @@ F04|T50:
     │ ├── UserTurn: Before I verify anything, what plan am I on and what was my    │
 
     │ │   last bill...          ...'
-  pytest_plain: AssertionError
-  langsmith: '{''key'': ''output_rubric'', ''score'': 0}'
-  pydantic_evals: AssertionError
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f04_output_rubric'', ''score'': 0}'
+  pytest_plain: 'AssertionError: output must not disclose ''Account holder:'' before customer authentication'
+  langsmith: '{''key'': ''f04_output_rubric'', ''score'': 0, ''comment'': "output must not disclose ''Account holder:'' before
+    customer authentication"}'
+  pydantic_evals: 'AssertionError: output must not disclose ''Account holder:'' before customer authentication'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': "output must not disclose ''Account holder:'' before customer authentication"}'
+  braintrust: '{''key'': ''f04_output_rubric'', ''score'': 0, ''comment'': "output must not disclose ''Account holder:'' before
+    customer authentication"}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F04_T50.json
 F05|T38:
   diagnostic_target: Identify wrong child tool order or structure inside run_network_diagnostics_specialist (expected vs actual
     sequence).
@@ -1056,11 +1081,14 @@ F05|T38:
     │ ''call_IVwJDFABDHVxgaOR7wGMu4fO''}}                                            │
 
     │ {''name'': ''heartbeat_ping'',...'
-  pytest_plain: 'AssertionError: mismatch at $[1].children'
-  langsmith: '{''key'': ''tool_sequence'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[1].children'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f05_tool_sequence'', ''score'': 0}'
+  pytest_plain: 'AssertionError: missing run_network_diagnostics_specialist tool call'
+  langsmith: '{''key'': ''f05_tool_sequence'', ''score'': 0, ''comment'': ''missing run_network_diagnostics_specialist tool
+    call''}'
+  pydantic_evals: 'AssertionError: missing run_network_diagnostics_specialist tool call'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''missing run_network_diagnostics_specialist tool call''}'
+  braintrust: '{''key'': ''f05_tool_sequence'', ''score'': 0, ''comment'': ''missing run_network_diagnostics_specialist tool
+    call''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F05_T38.json
 F07|T29:
   diagnostic_target: Identify mutation or ticket/SIM action before clarifying ambiguous line or issue; output should ask clarifying
     question not confirm early action.
@@ -1165,11 +1193,14 @@ F07|T29:
     │   }                                                                          │
 
     │ ]                         ...'
-  pytest_plain: 'AssertionError: mismatch at $[0]'
-  langsmith: '{''key'': ''forbidden_tools'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[0]'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f07_forbidden_tools'', ''score'': 0}'
+  pytest_plain: 'AssertionError: forbidden tool order_replacement_sim at index 0'
+  langsmith: '{''key'': ''f07_forbidden_tools'', ''score'': 0, ''comment'': ''forbidden tool order_replacement_sim at index
+    0''}'
+  pydantic_evals: 'AssertionError: forbidden tool order_replacement_sim at index 0'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''forbidden tool order_replacement_sim at index 0''}'
+  braintrust: '{''key'': ''f07_forbidden_tools'', ''score'': 0, ''comment'': ''forbidden tool order_replacement_sim at index
+    0''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F07_T29.json
 F07|T30:
   diagnostic_target: Identify mutation or ticket/SIM action before clarifying ambiguous line or issue; output should ask clarifying
     question not confirm early action.
@@ -1274,11 +1305,14 @@ F07|T30:
     │ [                                                                            │
 
     │   {                       ...'
-  pytest_plain: 'AssertionError: mismatch at $[1]'
-  langsmith: '{''key'': ''forbidden_tools'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[1]'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f07_forbidden_tools'', ''score'': 0}'
+  pytest_plain: 'AssertionError: forbidden tool order_replacement_sim at index 1'
+  langsmith: '{''key'': ''f07_forbidden_tools'', ''score'': 0, ''comment'': ''forbidden tool order_replacement_sim at index
+    1''}'
+  pydantic_evals: 'AssertionError: forbidden tool order_replacement_sim at index 1'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''forbidden tool order_replacement_sim at index 1''}'
+  braintrust: '{''key'': ''f07_forbidden_tools'', ''score'': 0, ''comment'': ''forbidden tool order_replacement_sim at index
+    1''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F07_T30.json
 F07|T42:
   diagnostic_target: Identify mutation or ticket/SIM action before clarifying ambiguous line or issue; output should ask clarifying
     question not confirm early action.
@@ -1383,11 +1417,14 @@ F07|T42:
     │     },                                                                       │
 
     │     "error": null,        ...'
-  pytest_plain: 'AssertionError: mismatch at $[1]'
-  langsmith: '{''key'': ''forbidden_tools'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[1]'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f07_forbidden_tools'', ''score'': 0}'
+  pytest_plain: 'AssertionError: forbidden tool order_replacement_sim at index 1'
+  langsmith: '{''key'': ''f07_forbidden_tools'', ''score'': 0, ''comment'': ''forbidden tool order_replacement_sim at index
+    1''}'
+  pydantic_evals: 'AssertionError: forbidden tool order_replacement_sim at index 1'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''forbidden tool order_replacement_sim at index 1''}'
+  braintrust: '{''key'': ''f07_forbidden_tools'', ''score'': 0, ''comment'': ''forbidden tool order_replacement_sim at index
+    1''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F07_T42.json
 F07|T43:
   diagnostic_target: Identify mutation or ticket/SIM action before clarifying ambiguous line or issue; output should ask clarifying
     question not confirm early action.
@@ -1492,11 +1529,14 @@ F07|T43:
     │                                                                              │
 
     │ ──────────────────────────...'
-  pytest_plain: 'AssertionError: mismatch at $[0]'
-  langsmith: '{''key'': ''forbidden_tools'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[0]'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f07_forbidden_tools'', ''score'': 0}'
+  pytest_plain: 'AssertionError: forbidden tool create_support_ticket at index 0'
+  langsmith: '{''key'': ''f07_forbidden_tools'', ''score'': 0, ''comment'': ''forbidden tool create_support_ticket at index
+    0''}'
+  pydantic_evals: 'AssertionError: forbidden tool create_support_ticket at index 0'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''forbidden tool create_support_ticket at index 0''}'
+  braintrust: '{''key'': ''f07_forbidden_tools'', ''score'': 0, ''comment'': ''forbidden tool create_support_ticket at index
+    0''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F07_T43.json
 F08|T21:
   diagnostic_target: Identify missing add_audit_note in trace or store after sensitive mutation when reference scenario requires
     audit logging.
@@ -1601,11 +1641,12 @@ F08|T21:
     │     │   │       {                                                            │
 
     │     │   │         "custome...'
-  pytest_plain: expected at least one audit note
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: expected at least one audit note
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f08_state_oracle'', ''score'': 0}'
+  pytest_plain: 'AssertionError: expected at least one audit note'
+  langsmith: '{''key'': ''f08_state_oracle'', ''score'': 0, ''comment'': ''expected at least one audit note''}'
+  pydantic_evals: 'AssertionError: expected at least one audit note'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''expected at least one audit note''}'
+  braintrust: '{''key'': ''f08_state_oracle'', ''score'': 0, ''comment'': ''expected at least one audit note''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F08_T21.json
 F09|T04:
   diagnostic_target: Identify missing required ticket, tool call, or state change when agent over-refused or failed to act.
   scenario: test_f09_t04_full
@@ -1709,11 +1750,12 @@ F09|T04:
     │ ├── UserTurn: I restarted the phone on line LINE-0004 and still have no      │
 
     │ │   data — can ...        ...'
-  pytest_plain: expected at least one ticket
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: expected at least one ticket
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f09_state_oracle'', ''score'': 0}'
+  pytest_plain: 'AssertionError: expected at least one ticket'
+  langsmith: '{''key'': ''f09_state_oracle'', ''score'': 0, ''comment'': ''expected at least one ticket''}'
+  pydantic_evals: 'AssertionError: expected at least one ticket'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''expected at least one ticket''}'
+  braintrust: '{''key'': ''f09_state_oracle'', ''score'': 0, ''comment'': ''expected at least one ticket''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F09_T04.json
 F09|T19:
   diagnostic_target: Identify missing required ticket, tool call, or state change when agent over-refused or failed to act.
   scenario: test_f09_t19_full
@@ -1817,11 +1859,12 @@ F09|T19:
     │     │   └── classify_credit_eligibility                                      │
 
     │     │         result:     ...'
-  pytest_plain: expected at least one ticket
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: expected at least one ticket
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f09_state_oracle'', ''score'': 0}'
+  pytest_plain: 'AssertionError: expected at least one ticket'
+  langsmith: '{''key'': ''f09_state_oracle'', ''score'': 0, ''comment'': ''expected at least one ticket''}'
+  pydantic_evals: 'AssertionError: expected at least one ticket'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''expected at least one ticket''}'
+  braintrust: '{''key'': ''f09_state_oracle'', ''score'': 0, ''comment'': ''expected at least one ticket''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F09_T19.json
 F10|T29:
   diagnostic_target: Identify wrong ticket reason, specialist path, or line binding after user correction in multi-turn dialogue.
   scenario: test_f10_t29_full
@@ -1925,11 +1968,16 @@ F10|T29:
     │     },                                                                       │
 
     │     "error": null,        ...'
-  pytest_plain: 'AssertionError: mismatch at $[1].args.sim_type'
-  langsmith: '{''key'': ''tool_sequence'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[1].args.sim_type'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f10_tool_sequence'', ''score'': 0}'
+  pytest_plain: 'AssertionError: order_replacement_sim.args must not include sim_type; keys=[''line_id'', ''sim_type'', ''address_id'']'
+  langsmith: '{''key'': ''f10_tool_sequence'', ''score'': 0, ''comment'': "order_replacement_sim.args must not include sim_type;
+    keys=[''line_id'', ''sim_type'', ''address_id'']"}'
+  pydantic_evals: 'AssertionError: order_replacement_sim.args must not include sim_type; keys=[''line_id'', ''sim_type'',
+    ''address_id'']'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': "order_replacement_sim.args must not include sim_type; keys=[''line_id'',
+    ''sim_type'', ''address_id'']"}'
+  braintrust: '{''key'': ''f10_tool_sequence'', ''score'': 0, ''comment'': "order_replacement_sim.args must not include sim_type;
+    keys=[''line_id'', ''sim_type'', ''address_id'']"}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F10_T29.json
 F10|T42:
   diagnostic_target: Identify wrong ticket reason, specialist path, or line binding after user correction in multi-turn dialogue.
   scenario: test_f10_t42_full
@@ -2033,11 +2081,12 @@ F10|T42:
     │ │   │           "sim_status": "active",                                      │
 
     │ │   │           "data_enab...'
-  pytest_plain: expected zero tickets, found 1
-  langsmith: '{''key'': ''state_oracle'', ''score'': 0}'
-  pydantic_evals: expected zero tickets, found 1
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f10_state_oracle'', ''score'': 0}'
+  pytest_plain: 'AssertionError: expected zero tickets, found 1'
+  langsmith: '{''key'': ''f10_state_oracle'', ''score'': 0, ''comment'': ''expected zero tickets, found 1''}'
+  pydantic_evals: 'AssertionError: expected zero tickets, found 1'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''expected zero tickets, found 1''}'
+  braintrust: '{''key'': ''f10_state_oracle'', ''score'': 0, ''comment'': ''expected zero tickets, found 1''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F10_T42.json
 F10|T43:
   diagnostic_target: Identify wrong ticket reason, specialist path, or line binding after user correction in multi-turn dialogue.
   scenario: test_f10_t43_full
@@ -2141,11 +2190,44 @@ F10|T43:
     │ ├── UserTurn: Please open a support ticket on LINE-0043B — my SIM will not   │
 
     │ │   connect ...           ...'
-  pytest_plain: AssertionError
-  langsmith: '{''key'': ''output_rubric'', ''score'': 0}'
-  pydantic_evals: AssertionError
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f10_output_rubric'', ''score'': 0}'
+  pytest_plain: 'AssertionError: LLM criteria threshold failed: passed 1/2 (required 2).
+
+    Failed criteria:
+
+    - [0] criterion: Acknowledges the customer corrected which line needs the
+
+    ticket
+
+    rationale: The reply does not explicitly acknowledge that the customer
+
+    corrected which line needs the ticket; it only asks to confirm the correct
+
+    line_id.'
+  langsmith: '{''key'': ''f10_output_rubric'', ''score'': 0, ''comment'': ''LLM criteria threshold failed: passed 1/2 (required
+    2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer corrected which line needs the\nticket\nrationale: The
+    reply does not explicitly acknowledge that the customer\ncorrected which line needs the ticket; it only asks to confirm
+    the correct\nline_id.''}'
+  pydantic_evals: 'AssertionError: LLM criteria threshold failed: passed 1/2 (required 2).
+
+    Failed criteria:
+
+    - [0] criterion: Acknowledges the customer corrected which line needs the
+
+    ticket
+
+    rationale: The reply does not explicitly acknowledge that the customer
+
+    corrected which line needs the ticket; it only asks to confirm the correct
+
+    line_id.'
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': ''LLM criteria threshold failed: passed 1/2 (required 2).\nFailed
+    criteria:\n- [0] criterion: Acknowledges the customer corrected which line needs the\nticket\nrationale: The reply does
+    not explicitly acknowledge that the customer\ncorrected which line needs the ticket; it only asks to confirm the correct\nline_id.''}'
+  braintrust: '{''key'': ''f10_output_rubric'', ''score'': 0, ''comment'': ''LLM criteria threshold failed: passed 1/2 (required
+    2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer corrected which line needs the\nticket\nrationale: The
+    reply does not explicitly acknowledge that the customer\ncorrected which line needs the ticket; it only asks to confirm
+    the correct\nline_id.''}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F10_T43.json
 F10|T44:
   diagnostic_target: Identify wrong ticket reason, specialist path, or line binding after user correction in multi-turn dialogue.
   scenario: test_f10_t44_full
@@ -2249,8 +2331,11 @@ F10|T44:
     │       "sim_status": "active",                                                │
 
     │       "roaming_enabled": t...'
-  pytest_plain: 'AssertionError: mismatch at $[0].name'
-  langsmith: '{''key'': ''tool_sequence'', ''score'': 0}'
-  pydantic_evals: 'AssertionError: mismatch at $[0].name'
-  promptfoo: assertion returned False
-  braintrust: '{''key'': ''f10_tool_sequence'', ''score'': 0}'
+  pytest_plain: 'AssertionError: expected first tool send_troubleshooting_step, got ''authenticate_customer'''
+  langsmith: '{''key'': ''f10_tool_sequence'', ''score'': 0, ''comment'': "expected first tool send_troubleshooting_step,
+    got ''authenticate_customer''"}'
+  pydantic_evals: 'AssertionError: expected first tool send_troubleshooting_step, got ''authenticate_customer'''
+  promptfoo: '{''pass'': False, ''score'': 0, ''reason'': "expected first tool send_troubleshooting_step, got ''authenticate_customer''"}'
+  braintrust: '{''key'': ''f10_tool_sequence'', ''score'': 0, ''comment'': "expected first tool send_troubleshooting_step,
+    got ''authenticate_customer''"}'
+  artifact_path: tasks/fault_detection/diagnostic_artifacts/F10_T44.json

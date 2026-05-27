@@ -1,0 +1,75 @@
+{
+  "family": "F02",
+  "task": "T46",
+  "scenario": "test_f02_t46_full",
+  "seed": "task_T46",
+  "witness_check": "assert_tool_calls",
+  "witness_where": "1st assert_tool_calls after turn #6 (agentturn) (tool call list for\nthat turn)",
+  "witness_path": "$[1].args.step",
+  "witness_expected": "extra_key: expected no extra keys",
+  "witness_actual": "[\n{\n\"name\": \"authenticate_customer\",\n\"args\": {\n\"customer_id\": \"CUST-046\",\n\"verification_token\": \"1990-46-15\"\n},\n\"result\": {\n\"ok\": true,\n\"customer_id\": \"CUST-046\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_UKw6o5cfK0UP7agTPRT4PLvv\"\n}\n},\n{\n\"name\": \"send_troubleshooting_step\",\n\"args\": {\n\"line_id\": \"LINE-0046\",\n\"step\": \"Please restart your device, toggle airplane mode off and on,\nand reinsert the SIM. If the issue persists after the reboot, ensure mobile\ndata is enabled and try manually selecting the network (e.g., 4G/LTE).\"\n},\n\"result\": {\n\"ok\": true,\n\"line_id\": \"LINE-0046\",\n\"step\": \"Please restart your device, toggle airplane mode off and on,\nand reinsert the SIM. If the issue persists after the reboot, ensure mobile\ndata is enabled and try manually selecting the network (e.g., 4G/LTE).\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_KgT1ZAsfubGrN4aWf3OItbPl\"\n}\n},\n{\n\"name\": \"create_support_ticket\",\n\"args\": {\n\"customer_id\": \"CUST-046\",\n\"line_id\": \"LINE-0046\",\n\"reason\": \"Diagnostic ticket: LINE-0046 connectivity issue; initial\ntroubleshooting steps performed (restart device, toggle airplane mode,\nreinsert SIM; ensure mobile data is on and manual network selection).\nRequest further diagnostic investigation.\",\n\"priority\": \"normal\"\n},\n\"result\": {\n\"ok\": true,\n\"ticket_id\": \"TCK-00001\",\n\"status\": \"open\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_dd70F6kP005nLjakFJa55iBz\"\n}\n}\n]\ncould not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].args.step): unexpected key 'step'\nunexpected key 'step'\n(+1 more matcher error(s))",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [],
+  "final_output": "{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-046',\n'verification_token': '1990-46-15'}, 'result': '{\"ok\": true, \"customer_id\":\n\"CUST-046\"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':\n'call_UKw6o5cfK0UP7agTPRT4PLvv'}}\n{'name': 'send_troubleshooting_step', 'args': {'line_id': 'LINE-0046',\n'step': 'Please restart your device, toggle airplane mode off and on, and\nreinsert the SIM. If the issue persists after the reboot, ensure mobile data\nis enabled and try manually selecting the network (e.g., 4G/LTE).'},\n'result': '{\"ok\": true, \"line_id\": \"LINE-0046\", \"step\": \"Please restart your\ndevice, toggle airplane mode off and on, and reinsert the SIM. If the issue\npersists after the reboot, ensure mobile data is enabled and try manually\nselecting the network (e.g., 4G/LTE).\"}', 'error': None, 'children': [],\n'metadata': {'tool_call_id': 'call_KgT1ZAsfubGrN4aWf3OItbPl'}}\n{'name': 'create_support_ticket', 'args': {'customer_id': 'CUST-046',\n'line_id': 'LINE-0046', 'reason': 'Diagnostic ticket: LINE-0046 connectivity\nissue; initial troubleshooting steps performed (restart device, toggle\nairplane mode, reinsert SIM; ensure mobile data is on and manual network\nselection). Request further diagnostic investigation.', 'priority':\n'normal'}, 'result': '{\"ok\": true, \"ticket_id\": \"TCK-00001\", \"status\":\n\"open\"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':\n'call_dd70F6kP005nLjakFJa55iBz'}}",
+  "store_snapshot": {
+    "seed": "task_T46",
+    "seed_meta": {
+      "task_id": "T46",
+      "customer_id": "CUST-046",
+      "line_id": "LINE-0046",
+      "verification_token": "1990-46-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "line_id_2": "LINE-0046B",
+      "seed_task": "task_T46"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-046",
+          "name": "Customer 46",
+          "dob_check_token": "1990-46-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0046",
+          "customer_id": "CUST-046",
+          "phone_number": "+447700900046",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        },
+        {
+          "line_id": "LINE-0046B",
+          "customer_id": "CUST-046",
+          "phone_number": "+4477009000462",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

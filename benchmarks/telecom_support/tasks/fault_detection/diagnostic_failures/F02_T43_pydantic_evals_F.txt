@@ -1,2 +1,2 @@
-expected no ticket on line 'LINE-0043B', found
+AssertionError: expected no ticket on line 'LINE-0043B', found
 1

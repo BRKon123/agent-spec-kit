@@ -1,0 +1,104 @@
+{
+  "family": "F07",
+  "task": "T29",
+  "scenario": "test_f07_t29_full",
+  "seed": "task_T29",
+  "witness_check": "forbid_tool_calls",
+  "witness_where": "1st forbid_tool_calls after turn #2 (agentturn) (forbidden tool call\npatterns)",
+  "witness_path": "$[0]",
+  "witness_expected": "forbidden_tool_call: expected no 'order_replacement_sim'",
+  "witness_actual": "[\n{\n\"name\": \"order_replacement_sim\",\n\"args\": {\n\"line_id\": \"LINE-0029B\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"result\": {\n\"ok\": true,\n\"order_id\": \"SIM-00001\",\n\"line_id\": \"LINE-0029B\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {}\n}\n]\n[\n{\n\"name\": \"order_replacement_sim\",\n\"args\": {\n\"line_id\": \"LINE-0029B\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"result\": \"{\\\"ok\\\": true, \\\"order_id\\\": \\\"SIM-00001\\\", \\\"line_id\\\":\n\\\"LINE-0029B\\\", \\\"sim_type\\\": \\\"physical\\\", \\\"address_id\\\":\n\\\"ADDR-DEFAULT\\\"}\",\n\"error\": null,\n\"children\": [],\n\"metadata\": {}\n}\n]\nforbidden tool call 'order_replacement_sim' found at index 0 (actual tool\n'order_replacement_sim')",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [
+    {
+      "name": "order_replacement_sim",
+      "args": {
+        "line_id": "LINE-0029B",
+        "sim_type": "physical",
+        "address_id": "ADDR-DEFAULT"
+      },
+      "result": {
+        "ok": true,
+        "order_id": "SIM-00001",
+        "line_id": "LINE-0029B",
+        "sim_type": "physical",
+        "address_id": "ADDR-DEFAULT"
+      },
+      "error": null,
+      "children": [],
+      "metadata": {}
+    }
+  ],
+  "final_output": "{'name': 'order_replacement_sim', 'args': {'line_id': 'LINE-0029B',\n'sim_type': 'physical', 'address_id': 'ADDR-DEFAULT'}, 'result': '{\"ok\":\ntrue, \"order_id\": \"SIM-00001\", \"line_id\": \"LINE-0029B\", \"sim_type\":\n\"physical\", \"address_id\": \"ADDR-DEFAULT\"}', 'error': None, 'children': [],\n'metadata': {}}",
+  "store_snapshot": {
+    "seed": "task_T29",
+    "seed_meta": {
+      "task_id": "T29",
+      "customer_id": "CUST-029",
+      "line_id": "LINE-0029",
+      "verification_token": "1990-29-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "line_id_2": "LINE-0029B",
+      "decoy_line_id": "LINE-WRONG",
+      "seed_task": "task_T29"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-029",
+          "name": "Customer 29",
+          "dob_check_token": "1990-29-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0029",
+          "customer_id": "CUST-029",
+          "phone_number": "+447700900029",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        },
+        {
+          "line_id": "LINE-0029B",
+          "customer_id": "CUST-029",
+          "phone_number": "+4477009000292",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        },
+        {
+          "line_id": "LINE-WRONG",
+          "customer_id": "CUST-029",
+          "phone_number": "+4477009000299",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

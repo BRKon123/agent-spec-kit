@@ -1,1 +1,1 @@
-{'key': 'f03_state_oracle', 'score': 0}
+{'key': 'f03_state_oracle', 'score': 0, 'comment': 'expected zero credits, found 2'}

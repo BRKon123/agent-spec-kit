@@ -1,1 +1,1 @@
-{'key': 'f02_state_oracle', 'score': 0}
+{'key': 'f02_state_oracle', 'score': 0, 'comment': "expected no ticket on line 'LINE-0043B', found\n1"}
