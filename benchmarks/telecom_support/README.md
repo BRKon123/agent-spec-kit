@@ -29,6 +29,15 @@ uv run python benchmarks/telecom_support/scripts/generate_fault_detection_table.
 
 Artifacts: [`tasks/fault_detection/`](tasks/fault_detection/) (`fault_matrix.yaml`, `eligibility.json`, `fault_detection_results.json`, generated `FAULT_DETECTION_TABLE.md`).
 
+User simulation study (manual canonical path vs LLM-powered persona simulations):
+
+```bash
+uv run python benchmarks/telecom_support/scripts/run_user_simulation_study.py
+uv run python benchmarks/telecom_support/scripts/generate_user_simulation_table.py
+```
+
+Artifacts: `tasks/user_simulation/user_simulation_study.json`, `tasks/user_simulation/user_simulation_study.md`, `tasks/user_simulation/path_signatures.json`, `tasks/user_simulation/failure_signatures.json`, transcript JSON under `tasks/user_simulation/transcripts/`.
+
 Legacy pilot (unsupported credit on `task_pilot_credit`):
 
 ```bash

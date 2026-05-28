@@ -8,6 +8,7 @@ import pytest
 
 import agent_spec_kit.match as m
 from agent_spec_kit import create_scenario
+from agent_spec_kit.events import AgentTurnEvent, ToolCallEvent
 from agent_spec_kit.run import TurnResult
 
 
@@ -107,3 +108,82 @@ def test_assert_output_defaults_to_last_speaker() -> None:
     s.simulate_conversation(seed_actor="user", seed_input="h", max_turns=2)
     s.assert_output(m.contains("A1"))
     _run(s.materialise())
+
+
+def test_assert_output_up_to_now_aggregates_speaker_outputs() -> None:
+    a = _Scripted(["A1", "A2"])
+    u = _Scripted(["U1", "U2"])
+    s = create_scenario(a, user=u)
+    s.simulate_conversation(seed_actor="user", seed_input="seed", max_turns=4)
+    s.assert_output(m.contains("A1\nA2"), actor="agent", turn="up_to_now")
+    _run(s.materialise())
+
+
+def test_assert_tool_calls_up_to_now_aggregates_agent_tools() -> None:
+    class _ToolAgent:
+        def __init__(self) -> None:
+            self._i = 0
+
+        async def run_turn(self, user_message: str) -> TurnResult:
+            del user_message
+            self._i += 1
+            root = AgentTurnEvent(agent_output=f"a{self._i}")
+            root.children.append(ToolCallEvent(tool_name=f"t{self._i}", args={}, result="ok"))
+            return TurnResult(output=f"a{self._i}", events=(root,))
+
+    u = _Scripted(["u1", "u2"])
+    s = create_scenario(_ToolAgent(), user=u)
+    s.simulate_conversation(seed_actor="user", seed_input="seed", max_turns=4)
+    s.assert_tool_calls(
+        [m.tool_call("t1"), m.tool_call("t2")],
+        ordered=True,
+        allow_extras=True,
+        actor="agent",
+        turn="up_to_now",
+    )
+    _run(s.materialise())
+
+
+def test_stop_on_actor_agent_ignores_matching_user_turn() -> None:
+    a = _Scripted(["A1"])
+    u = _Scripted(["STOP"])
+    s = create_scenario(a, user=u)
+    s.simulate_conversation(
+        seed_actor="user",
+        seed_input="seed",
+        max_turns=2,
+        stop_condition=m.contains("STOP"),
+        stop_on_actor="agent",
+    )
+    _run(s.materialise())
+    assert len(s.turn_results) == 2
+    assert s.turn_results[0].actor == "user"
+    assert s.turn_results[1].actor == "agent"
+
+
+def test_stop_on_actor_user_ignores_matching_agent_turn() -> None:
+    a = _Scripted(["STOP"])
+    u = _Scripted(["U1"])
+    s = create_scenario(a, user=u)
+    s.simulate_conversation(
+        seed_actor="agent",
+        seed_input="seed",
+        max_turns=2,
+        stop_condition=m.contains("STOP"),
+        stop_on_actor="user",
+    )
+    _run(s.materialise())
+    assert len(s.turn_results) == 2
+
+
+def test_stop_on_actor_any_keeps_legacy_behavior() -> None:
+    a = _Scripted(["STOP", "A2"])
+    s = create_scenario(a)
+    s.simulate_conversation(
+        seed_actor="agent",
+        seed_input="seed",
+        max_turns=2,
+        stop_condition=m.contains("STOP"),
+    )
+    _run(s.materialise())
+    assert len(s.turn_results) == 1

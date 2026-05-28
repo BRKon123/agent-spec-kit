@@ -41,7 +41,7 @@ class _EnvAssertStep:
 @dataclass
 class _OutputAssertStep:
     matcher: Any
-    turn: Literal["last"]
+    turn: Literal["last", "up_to_now"]
     actor: str | None
 
 
@@ -50,7 +50,7 @@ class _ToolCallsAssertStep:
     spec: Any
     ordered: bool
     allow_extras: bool
-    turn: Literal["last"]
+    turn: Literal["last", "up_to_now"]
     actor: str | None
 
 
@@ -58,7 +58,7 @@ class _ToolCallsAssertStep:
 class _ForbidToolCallsStep:
     spec: Any
     ordered: bool
-    turn: Literal["last"]
+    turn: Literal["last", "up_to_now"]
     actor: str | None
 
 
@@ -66,6 +66,7 @@ class _ForbidToolCallsStep:
 class _SimulateStep:
     max_turns: int
     stop_condition: Any | None
+    stop_on_actor: Literal["agent", "user", "any"]
     seed_actor: str | None
     seed_input: str | None
 
@@ -212,6 +213,30 @@ def tool_dicts_from_transcript(
     return []
 
 
+def _tool_dicts_up_to_now(
+    turn_results: list[ConversationTurn], *, actor: str
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for turn in turn_results:
+        if turn.actor != actor:
+            continue
+        out.extend(_tool_dicts_from_conversation_turn(turn))
+    return out
+
+
+def _outputs_up_to_now(turn_results: list[ConversationTurn], *, actor: str) -> str:
+    chunks: list[str] = []
+    for turn in turn_results:
+        if turn.actor != actor:
+            continue
+        out = turn.output
+        if isinstance(out, str):
+            chunks.append(out)
+        elif out is not None:
+            chunks.append(str(out))
+    return "\n".join(chunks)
+
+
 @dataclass
 class Scenario:
     """Queued scenario steps; run with :meth:`materialise`."""
@@ -266,16 +291,20 @@ class Scenario:
         *,
         max_turns: int,
         stop_condition: Any | None = None,
+        stop_on_actor: Literal["agent", "user", "any"] = "any",
         seed_actor: str | None = None,
         seed_input: str | None = None,
     ) -> Scenario:
         """Queue a simulation segment. ``max_turns`` counts simulation messages/turns."""
         if max_turns < 1:
             raise ValueError("max_turns must be >= 1")
+        if stop_on_actor not in ("agent", "user", "any"):
+            raise ValueError("stop_on_actor must be 'agent', 'user', or 'any'")
         self._steps.append(
             _SimulateStep(
                 max_turns=max_turns,
                 stop_condition=stop_condition,
+                stop_on_actor=stop_on_actor,
                 seed_actor=seed_actor,
                 seed_input=seed_input,
             )
@@ -312,10 +341,12 @@ class Scenario:
         return self
 
     def assert_output(
-        self, matcher: Any, *, turn: Literal["last"] = "last", actor: str | None = None
+        self,
+        matcher: Any,
+        *,
+        turn: Literal["last", "up_to_now"] = "last",
+        actor: str | None = None,
     ) -> Scenario:
-        if turn != "last":
-            raise ValueError("only turn='last' is supported")
         self._steps.append(_OutputAssertStep(matcher=matcher, turn=turn, actor=actor))
         return self
 
@@ -325,7 +356,7 @@ class Scenario:
         *,
         ordered: bool = True,
         allow_extras: bool = True,
-        turn: Literal["last"] = "last",
+        turn: Literal["last", "up_to_now"] = "last",
         actor: str | None = None,
     ) -> Scenario:
         self._steps.append(
@@ -345,7 +376,7 @@ class Scenario:
         *,
         ordered: bool = True,
         allow_extras: bool = True,  # noqa: ARG002 — reserved for API symmetry
-        turn: Literal["last"] = "last",
+        turn: Literal["last", "up_to_now"] = "last",
         actor: str | None = None,
     ) -> Scenario:
         del allow_extras
@@ -368,11 +399,20 @@ class Scenario:
             raise KeyError(f"unknown case parameter {name!r} (not in this scenario run)") from e
 
     def check_output(
-        self, spec: Any, *, turn: Literal["last"] = "last", actor: str | None = None
+        self,
+        spec: Any,
+        *,
+        turn: Literal["last", "up_to_now"] = "last",
+        actor: str | None = None,
     ) -> MatchResult:
         self._require_post_checks_ready()
-        tr = self._conversation_for_assert(actor)
-        return match_check(spec, tr.output)
+        if turn == "last":
+            tr = self._conversation_for_assert(actor)
+            return match_check(spec, tr.output)
+        if turn == "up_to_now":
+            a = self._default_assert_actor() if actor is None else actor
+            return match_check(spec, _outputs_up_to_now(self._turn_results, actor=a))
+        raise ValueError("turn must be 'last' or 'up_to_now'")
 
     def check_tool_calls(
         self,
@@ -380,25 +420,36 @@ class Scenario:
         *,
         ordered: bool = True,
         allow_extras: bool = True,
-        turn: Literal["last"] = "last",
+        turn: Literal["last", "up_to_now"] = "last",
         actor: str | None = None,
     ) -> MatchResult:
         self._require_post_checks_ready()
-        if turn != "last":
-            raise ValueError("only turn='last' is supported")
-        tr = self._conversation_for_assert(actor)
-        actual = _tool_dicts_from_conversation_turn(tr)
+        if turn == "last":
+            tr = self._conversation_for_assert(actor)
+            actual = _tool_dicts_from_conversation_turn(tr)
+        elif turn == "up_to_now":
+            a = self._default_assert_actor() if actor is None else actor
+            actual = _tool_dicts_up_to_now(self._turn_results, actor=a)
+        else:
+            raise ValueError("turn must be 'last' or 'up_to_now'")
         list_spec = _coerce_tool_calls_list_spec(spec, ordered=ordered, allow_extras=allow_extras)
         return match_check(list_spec, actual)
 
     async def async_check_output(
-        self, spec: Any, *, turn: Literal["last"] = "last", actor: str | None = None
+        self,
+        spec: Any,
+        *,
+        turn: Literal["last", "up_to_now"] = "last",
+        actor: str | None = None,
     ) -> MatchResult:
         self._require_post_checks_ready()
-        if turn != "last":
-            raise ValueError("only turn='last' is supported")
-        tr = self._conversation_for_assert(actor)
-        return await match_async_check(spec, tr.output)
+        if turn == "last":
+            tr = self._conversation_for_assert(actor)
+            return await match_async_check(spec, tr.output)
+        if turn == "up_to_now":
+            a = self._default_assert_actor() if actor is None else actor
+            return await match_async_check(spec, _outputs_up_to_now(self._turn_results, actor=a))
+        raise ValueError("turn must be 'last' or 'up_to_now'")
 
     async def async_check_tool_calls(
         self,
@@ -406,14 +457,18 @@ class Scenario:
         *,
         ordered: bool = True,
         allow_extras: bool = True,
-        turn: Literal["last"] = "last",
+        turn: Literal["last", "up_to_now"] = "last",
         actor: str | None = None,
     ) -> MatchResult:
         self._require_post_checks_ready()
-        if turn != "last":
-            raise ValueError("only turn='last' is supported")
-        tr = self._conversation_for_assert(actor)
-        actual = _tool_dicts_from_conversation_turn(tr)
+        if turn == "last":
+            tr = self._conversation_for_assert(actor)
+            actual = _tool_dicts_from_conversation_turn(tr)
+        elif turn == "up_to_now":
+            a = self._default_assert_actor() if actor is None else actor
+            actual = _tool_dicts_up_to_now(self._turn_results, actor=a)
+        else:
+            raise ValueError("turn must be 'last' or 'up_to_now'")
         list_spec = _coerce_tool_calls_list_spec(spec, ordered=ordered, allow_extras=allow_extras)
         return await match_async_check(list_spec, actual)
 
@@ -513,6 +568,9 @@ class Scenario:
         self._next_actor = self._other_actor(ct.actor) if self._other_actor_exists() else ct.actor
 
     async def _run_simulation_segment(self, step: _SimulateStep) -> None:
+        def _should_check_stop(actor: str) -> bool:
+            return step.stop_on_actor == "any" or actor == step.stop_on_actor
+
         first = not self._simulation_started and not self._turn_results
         if first:
             if step.seed_actor is None or step.seed_input is None:
@@ -558,9 +616,14 @@ class Scenario:
             last_actor_for_stop = tr0.actor
             turns_in_segment = 1
 
-        if step.stop_condition is not None and last_output_for_stop is not None:
+        if (
+            step.stop_condition is not None
+            and last_output_for_stop is not None
+            and last_actor_for_stop is not None
+            and _should_check_stop(last_actor_for_stop)
+        ):
             r0 = await match_async_check(step.stop_condition, last_output_for_stop)
-            if r0.ok and last_actor_for_stop is not None:
+            if r0.ok:
                 return
 
         turn_budget = step.max_turns
@@ -571,7 +634,7 @@ class Scenario:
             tnext = await self._run_agent_turn(n, self._next_input)
             self._append_turn(tnext)
             out_s = tnext.output if isinstance(tnext.output, str) else str(tnext.output) if tnext.output is not None else ""
-            if step.stop_condition is not None:
+            if step.stop_condition is not None and _should_check_stop(tnext.actor):
                 r1 = await match_async_check(step.stop_condition, out_s)
                 if r1.ok:
                     return
@@ -622,25 +685,36 @@ class Scenario:
             if not self._turn_results:
                 msg = "assert_output/assert_tool_calls require a preceding user_message step in the queue"
                 raise AssertionError(msg)
-            conversation_turn = self._conversation_for_assert(step.actor)
-            r = await match_async_check(step.matcher, conversation_turn.output)
+            if step.turn == "last":
+                conversation_turn = self._conversation_for_assert(step.actor)
+                actual_output: Any = conversation_turn.output
+            elif step.turn == "up_to_now":
+                a = self._default_assert_actor() if step.actor is None else step.actor
+                actual_output = _outputs_up_to_now(self._turn_results, actor=a)
+            else:
+                raise ValueError("turn must be 'last' or 'up_to_now'")
+            r = await match_async_check(step.matcher, actual_output)
             _raise_match_step(
                 self,
                 step_kind="assert_output",
                 label="assert_output",
                 result=r,
                 matcher_spec=step.matcher,
-                actual=conversation_turn.output,
+                actual=actual_output,
             )
             return
         if isinstance(step, _ToolCallsAssertStep):
             if not self._turn_results:
                 msg = "assert_output/assert_tool_calls require a preceding user_message step in the queue"
                 raise AssertionError(msg)
-            if step.turn != "last":
-                raise ValueError("only turn='last' is supported")
-            conversation_turn = self._conversation_for_assert(step.actor)
-            actual = _tool_dicts_from_conversation_turn(conversation_turn)
+            if step.turn == "last":
+                conversation_turn = self._conversation_for_assert(step.actor)
+                actual = _tool_dicts_from_conversation_turn(conversation_turn)
+            elif step.turn == "up_to_now":
+                a = self._default_assert_actor() if step.actor is None else step.actor
+                actual = _tool_dicts_up_to_now(self._turn_results, actor=a)
+            else:
+                raise ValueError("turn must be 'last' or 'up_to_now'")
             list_spec = _coerce_tool_calls_list_spec(
                 step.spec,
                 ordered=step.ordered,
@@ -660,10 +734,14 @@ class Scenario:
             if not self._turn_results:
                 msg = "forbid_tool_calls require a preceding user_message step in the queue"
                 raise AssertionError(msg)
-            if step.turn != "last":
-                raise ValueError("only turn='last' is supported")
-            conversation_turn = self._conversation_for_assert(step.actor)
-            actual = _tool_dicts_from_conversation_turn(conversation_turn)
+            if step.turn == "last":
+                conversation_turn = self._conversation_for_assert(step.actor)
+                actual = _tool_dicts_from_conversation_turn(conversation_turn)
+            elif step.turn == "up_to_now":
+                a = self._default_assert_actor() if step.actor is None else step.actor
+                actual = _tool_dicts_up_to_now(self._turn_results, actor=a)
+            else:
+                raise ValueError("turn must be 'last' or 'up_to_now'")
             forbid_spec = forbidden_tool_calls_matcher(step.spec, ordered=step.ordered)
             r = await match_async_check(forbid_spec, actual)
             _raise_match_step(

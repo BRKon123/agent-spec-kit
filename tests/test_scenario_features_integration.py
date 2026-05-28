@@ -277,6 +277,27 @@ def test_check_output_and_tool_calls_post_simulation() -> None:
     assert s.check_tool_calls([m.tool_call("t1")], ordered=True, allow_extras=True).ok
 
 
+def test_check_output_and_tool_calls_up_to_now_post_simulation() -> None:
+    a = _Scripted(
+        [
+            _tr("first with tool", "t1"),
+            _tr("second with tool", "t2"),
+        ]
+    )
+    u = _Scripted([_tr("u1"), _tr("u2")])
+    s = create_scenario(a, user=u)
+    s.simulate_conversation(seed_actor="user", seed_input="seed", max_turns=4)
+    _run(s.materialise())
+    assert s.check_output(m.contains("first with tool\nsecond with tool"), turn="up_to_now", actor="agent").ok
+    assert s.check_tool_calls(
+        [m.tool_call("t1"), m.tool_call("t2")],
+        ordered=True,
+        allow_extras=True,
+        turn="up_to_now",
+        actor="agent",
+    ).ok
+
+
 def test_cartesian_injects_both_axes_and_case_objects() -> None:
     reset_registries()
 
