@@ -8,10 +8,12 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from agent_wrap import wrap_reference_agent
+from store.store import TelcoStore
 from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from tasks.user_simulation.scenarios.common import (
+    SIM_CHAT_OPEN,
     Persona,
     build_user_prompt,
     build_user_simulator,
@@ -19,15 +21,24 @@ from tasks.user_simulation.scenarios.common import (
     llm_model_cases,
     persona_cases,
     seeded_store,
+    sim_stop,
 )
 TASK_ID = "T38"
+
+
+def _scenario_facts(_store: TelcoStore) -> str:
+    return (
+        "- Your connection keeps lagging on and off.\n"
+        "- You want thorough network diagnostics and confidence their systems are responding.\n"
+    )
+
 INTENT = "Run specialist diagnostics while handling status/heartbeat checks."
 PERSONAS = [
-    Persona(0, "patient_diagnostic_user", "patient", "Waits for diagnostics.", "early_full", "low"),
-    Persona(1, "reassurance_seeking_user", "anxious", "Asks if agent is still there.", "progressive", "medium"),
-    Persona(2, "technical_user", "technical", "Requests concise technical updates.", "progressive", "low"),
-    Persona(3, "anxious_user", "anxious", "Worries chat has frozen.", "progressive", "medium"),
-    Persona(4, "brief_response_user", "brief", "Wants short status updates only.", "minimal_then_expand", "low"),
+    Persona(0, "patient_diagnostic_user", "patient", "Waits for diagnostics.", "reveal_upfront", "low"),
+    Persona(1, "reassurance_seeking_user", "anxious", "Asks if agent is still there.", "reveal_when_prompted", "medium"),
+    Persona(2, "technical_user", "technical", "Requests concise technical updates.", "reveal_when_prompted", "low"),
+    Persona(3, "anxious_user", "anxious", "Worries chat has frozen.", "reveal_when_prompted", "medium"),
+    Persona(4, "brief_response_user", "brief", "Wants short status updates only.", "reveal_when_prompted", "low"),
 ]
 @ek.fixture
 async def store_us_t38():
@@ -43,7 +54,16 @@ async def task_agent_us_t38(store_us_t38):
 @ek.parametrize("llm_model", llm_model_cases())
 @ek.parametrize("persona", persona_cases(PERSONAS))
 async def user_simulator_us_t38(store_us_t38, llm_model: str, persona: Persona):
-    yield build_user_simulator(llm_model=llm_model, prompt=build_user_prompt(task_id=TASK_ID, intent=INTENT, persona=persona, meta=store_us_t38.seed_meta))
+    yield build_user_simulator(
+        llm_model=llm_model,
+        prompt=build_user_prompt(
+            task_id=TASK_ID,
+            intent=INTENT,
+            persona=persona,
+            meta=store_us_t38.seed_meta,
+            scenario_facts=_scenario_facts(store_us_t38),
+        ),
+    )
 @ek.scenario(
     agent_fixture="task_agent_us_t38",
     repeats=1,
@@ -66,22 +86,25 @@ async def test_t38_sim_study(s, store_us_t38):  # noqa: ARG001
         # Equivalent to early network-diagnostic + liveness/status exchange.
         s.simulate_conversation(
             seed_actor="user",
-            seed_input="Session start. Explain your support request.",
-            max_turns=4,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant indicates network diagnostics are being run or reviewed.",
-                    "Assistant provides a status/heartbeat style progress acknowledgement.",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            seed_input=SIM_CHAT_OPEN,
+            max_turns=5,
+            stop_condition=sim_stop(
+                "Assistant indicates network diagnostics are being run or reviewed.",
+                "Assistant provides a status/heartbeat style progress acknowledgement.",
             ),
             stop_on_actor="agent",
         )
         .assert_output(m.string(min_len=5), actor="agent")
         # manual_checkpoint_2 -> sim_segment_2:
         # Preserve full trace and no-mutation guarantees after diagnostics path completes.
-        .simulate_conversation(max_turns=6)
+        .simulate_conversation(
+            max_turns=7,
+            stop_condition=sim_stop(
+                "Assistant completed or summarized network diagnostics and line status.",
+                "Assistant provided heartbeat or liveness-style progress without mutating account state.",
+            ),
+            stop_on_actor="agent",
+        )
         .assert_tool_calls(
             [
                 m.tool_call("authenticate_customer"),

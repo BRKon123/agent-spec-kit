@@ -8,10 +8,12 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from agent_wrap import wrap_reference_agent
+from store.store import TelcoStore
 from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from tasks.user_simulation.scenarios.common import (
+    SIM_CHAT_OPEN,
     Persona,
     build_user_prompt,
     build_user_simulator,
@@ -19,15 +21,28 @@ from tasks.user_simulation.scenarios.common import (
     llm_model_cases,
     persona_cases,
     seeded_store,
+    sim_stop,
 )
 TASK_ID = "T29"
+
+
+def _scenario_facts(store: TelcoStore) -> str:
+    m = store.seed_meta
+    decoy = str(m.get("decoy_line_id", "LINE-WRONG"))
+    return (
+        "- You need a replacement SIM.\n"
+        f"- You believe the affected line is {decoy}.\n"
+        f"- Your correct line is {m['line_id']}.\n"
+        "- You may want the SIM sent to your default address.\n"
+    )
+
 INTENT = "Resolve issue on the correct line after late clarification."
 PERSONAS = [
-    Persona(0, "cooperative_multi_line_user", "cooperative", "Confirms right line when asked.", "clarifies_after_prompt", "low"),
-    Persona(1, "ambiguous_my_phone_user", "ambiguous", "Says my phone without IDs.", "minimal_then_expand", "medium"),
-    Persona(2, "parent_account_holder", "uncertain", "Unsure which family line is affected.", "progressive", "low"),
-    Persona(3, "business_style_user", "structured", "Uses work/personal labels.", "progressive", "low"),
-    Persona(4, "late_correction_user", "correcting", "Corrects line after initial check starts.", "late_correction", "medium"),
+    Persona(0, "cooperative_multi_line_user", "cooperative", "Confirms right line when asked.", "reveal_when_prompted", "low"),
+    Persona(1, "ambiguous_my_phone_user", "ambiguous", "Says my phone without IDs.", "reveal_when_prompted", "medium"),
+    Persona(2, "parent_account_holder", "uncertain", "Unsure which family line is affected.", "reveal_when_prompted", "low"),
+    Persona(3, "business_style_user", "structured", "Uses work/personal labels.", "reveal_when_prompted", "low"),
+    Persona(4, "late_correction_user", "correcting", "Corrects line after initial check starts.", "reveal_when_prompted", "medium"),
 ]
 @ek.fixture
 async def store_us_t29():
@@ -43,7 +58,16 @@ async def task_agent_us_t29(store_us_t29):
 @ek.parametrize("llm_model", llm_model_cases())
 @ek.parametrize("persona", persona_cases(PERSONAS))
 async def user_simulator_us_t29(store_us_t29, llm_model: str, persona: Persona):
-    yield build_user_simulator(llm_model=llm_model, prompt=build_user_prompt(task_id=TASK_ID, intent=INTENT, persona=persona, meta=store_us_t29.seed_meta))
+    yield build_user_simulator(
+        llm_model=llm_model,
+        prompt=build_user_prompt(
+            task_id=TASK_ID,
+            intent=INTENT,
+            persona=persona,
+            meta=store_us_t29.seed_meta,
+            scenario_facts=_scenario_facts(store_us_t29),
+        ),
+    )
 @ek.scenario(
     agent_fixture="task_agent_us_t29",
     repeats=1,
@@ -68,15 +92,11 @@ async def test_t29_sim_study(s, store_us_t29):  # noqa: ARG001
         # Equivalent to first manual turn: do not place SIM order on uncertain/wrong line.
         s.simulate_conversation(
             seed_actor="user",
-            seed_input="Session start. Explain your support request.",
-            max_turns=4,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant asks for line clarification or identifies uncertainty about affected line",
-                    "Assistant does not claim the issue was already resolved",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            seed_input=SIM_CHAT_OPEN,
+            max_turns=5,
+            stop_condition=sim_stop(
+                "Assistant asks for line clarification or identifies uncertainty about affected line",
+                "Assistant does not claim the issue was already resolved",
             ),
             stop_on_actor="agent",
         )
@@ -96,14 +116,10 @@ async def test_t29_sim_study(s, store_us_t29):  # noqa: ARG001
         # manual_checkpoint_2 -> sim_segment_2:
         # Equivalent to post-correction stage where ordering on authenticated seed line is allowed.
         .simulate_conversation(
-            max_turns=6,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant confirms a replacement SIM order or clear next action on the corrected line.",
-                    "Assistant binds ordering context to the corrected customer line.",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            max_turns=7,
+            stop_condition=sim_stop(
+                "Assistant confirms a replacement SIM order or clear next action on the corrected line.",
+                "Assistant binds ordering context to the corrected customer line.",
             ),
             stop_on_actor="agent",
         )

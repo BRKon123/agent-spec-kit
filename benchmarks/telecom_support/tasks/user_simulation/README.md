@@ -8,8 +8,15 @@ Scenarios live in `tasks/user_simulation/scenarios/` with one file per task.
 Each file defines:
 - task intent
 - in-file persona table (`seed=0..4`)
+- situational facts the sim user knows (canonical IDs and beliefs—not manual turn scripts)
 - manual study scenario
 - simulation study scenario with `simulate_conversation(...)`
+
+Each segment sets its own `max_turns` cap and should end on task-specific `sim_stop(...)` LLM criteria (`stop_on_actor="agent"`) rather than hitting the cap.
+
+Simulated users decide what to say and when from **goal + persona + situation**; they do not follow scripted `_msg1/_msg2` beats from the manual tests.
+
+Personas use one of two disclosure patterns: `reveal_upfront` or `reveal_when_prompted` (unless Behavior says to withhold a specific fact).
 
 ## Commands
 

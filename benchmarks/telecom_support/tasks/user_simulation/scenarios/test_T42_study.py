@@ -8,10 +8,12 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from agent_wrap import wrap_reference_agent
+from store.store import TelcoStore
 from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from tasks.user_simulation.scenarios.common import (
+    SIM_CHAT_OPEN,
     Persona,
     build_user_prompt,
     build_user_simulator,
@@ -19,16 +21,30 @@ from tasks.user_simulation.scenarios.common import (
     llm_model_cases,
     persona_cases,
     seeded_store,
+    sim_stop,
 )
 TASK_ID = "T42"
 INTENT = "Handle user issue change mid-conversation and update path."
 PERSONAS = [
-    Persona(0, "honest_correction_user", "honest", "Corrects issue quickly.", "early_correction", "low"),
-    Persona(1, "confused_symptom_user", "confused", "Mixes symptom labels.", "progressive", "low"),
-    Persona(2, "late_realisation_user", "realising", "Changes issue later in conversation.", "late_correction", "medium"),
-    Persona(3, "multi_issue_user", "multi_issue", "Mentions multiple issues before prioritizing.", "progressive", "medium"),
-    Persona(4, "apologetic_corrector", "apologetic", "Explicitly apologizes while correcting.", "late_correction", "low"),
+    Persona(0, "honest_correction_user", "honest", "Corrects mistaken details quickly when relevant.", "reveal_upfront", "low"),
+    Persona(1, "confused_symptom_user", "confused", "Mixes symptom labels.", "reveal_when_prompted", "low"),
+    Persona(2, "late_realisation_user", "realising", "Changes issue later in conversation.", "reveal_when_prompted", "medium"),
+    Persona(3, "multi_issue_user", "multi_issue", "Mentions multiple issues before prioritizing.", "reveal_when_prompted", "medium"),
+    Persona(4, "apologetic_corrector", "apologetic", "Explicitly apologizes while correcting.", "reveal_when_prompted", "low"),
 ]
+
+
+def _scenario_facts(store: TelcoStore) -> str:
+    m = store.seed_meta
+    return (
+        "- Mobile data is not working at all.\n"
+        f"- Your line is {m['line_id']}.\n"
+        "- You may have found your SIM in the laundry (you thought it was lost).\n"
+        "- You do not want a replacement SIM shipped.\n"
+        "- The core issue is still the data problem.\n"
+    )
+
+
 @ek.fixture
 async def store_us_t42():
     store = seeded_store(TASK_ID)
@@ -43,7 +59,16 @@ async def task_agent_us_t42(store_us_t42):
 @ek.parametrize("llm_model", llm_model_cases())
 @ek.parametrize("persona", persona_cases(PERSONAS))
 async def user_simulator_us_t42(store_us_t42, llm_model: str, persona: Persona):
-    yield build_user_simulator(llm_model=llm_model, prompt=build_user_prompt(task_id=TASK_ID, intent=INTENT, persona=persona, meta=store_us_t42.seed_meta))
+    yield build_user_simulator(
+        llm_model=llm_model,
+        prompt=build_user_prompt(
+            task_id=TASK_ID,
+            intent=INTENT,
+            persona=persona,
+            meta=store_us_t42.seed_meta,
+            scenario_facts=_scenario_facts(store_us_t42),
+        ),
+    )
 @ek.scenario(
     agent_fixture="task_agent_us_t42",
     repeats=1,
@@ -66,15 +91,11 @@ async def test_t42_sim_study(s, store_us_t42):  # noqa: ARG001
         # Equivalent to first turn where assistant should avoid premature SIM ordering.
         s.simulate_conversation(
             seed_actor="user",
-            seed_input="Session start. Explain your support request.",
-            max_turns=4,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant asks clarifying questions about the issue or line status.",
-                    "Assistant does not confirm shipping or ordering a replacement SIM.",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            seed_input=SIM_CHAT_OPEN,
+            max_turns=5,
+            stop_condition=sim_stop(
+                "Assistant asks clarifying questions about the issue or line status.",
+                "Assistant does not confirm shipping or ordering a replacement SIM.",
             ),
             stop_on_actor="agent",
         )
@@ -90,14 +111,10 @@ async def test_t42_sim_study(s, store_us_t42):  # noqa: ARG001
         # manual_checkpoint_2 -> sim_segment_2:
         # Equivalent to mid-conversation issue switch: keep no-order and no-mutation guarantees.
         .simulate_conversation(
-            max_turns=4,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant acknowledges changed or corrected issue context from the user.",
-                    "Assistant still avoids confirming replacement SIM shipment.",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            max_turns=5,
+            stop_condition=sim_stop(
+                "Assistant acknowledges changed or corrected issue context from the user.",
+                "Assistant still avoids confirming replacement SIM shipment.",
             ),
             stop_on_actor="agent",
         )
@@ -113,7 +130,14 @@ async def test_t42_sim_study(s, store_us_t42):  # noqa: ARG001
         )
         # manual_checkpoint_3 -> sim_segment_3:
         # End-of-run aggregate parity with full manual oracle.
-        .simulate_conversation(max_turns=4)
+        .simulate_conversation(
+            max_turns=6,
+            stop_condition=sim_stop(
+                "Assistant focuses on mobile data connectivity or line status rather than ordering a SIM.",
+                "Assistant does not confirm a replacement SIM was shipped or ordered.",
+            ),
+            stop_on_actor="agent",
+        )
         .assert_that(lambda: o.assert_no_mutations(store_us_t42))
         .assert_output(
             to.issue_binding_output(

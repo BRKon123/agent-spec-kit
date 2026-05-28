@@ -8,9 +8,11 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from agent_wrap import wrap_reference_agent
+from store.store import TelcoStore
 from tasks.specs import oracles as o
 from tasks.specs.run_context import bind_scenario_context
 from tasks.user_simulation.scenarios.common import (
+    SIM_CHAT_OPEN,
     Persona,
     build_user_prompt,
     build_user_simulator,
@@ -18,15 +20,40 @@ from tasks.user_simulation.scenarios.common import (
     llm_model_cases,
     persona_cases,
     seeded_store,
+    sim_stop,
 )
 TASK_ID = "T35"
+
+
+def _scenario_facts(store: TelcoStore) -> str:
+    m = store.seed_meta
+    tid = m.get("existing_ticket_id", "TCK-EXIST-01")
+    return (
+        f"- existing_ticket_id: {tid}\n"
+        "- You want that open ticket escalated, not a duplicate created.\n"
+    )
+
 INTENT = "Escalate an existing ticket without creating duplicates."
 PERSONAS = [
-    Persona(0, "has_ticket_reference_ready", "prepared", "Provides ticket id immediately.", "early_full", "low"),
-    Persona(1, "does_not_know_ticket_id", "uncertain", "Says previous support exists without reference.", "clarifies_after_prompt", "low"),
-    Persona(2, "frustrated_repeat_caller", "frustrated", "Mentions repeated explanations.", "progressive", "medium"),
-    Persona(3, "wants_manager_escalation", "pressure", "Asks for manager escalation quickly.", "early_full", "high"),
-    Persona(4, "detail_heavy_user", "detailed", "Provides chronology and prior advice.", "early_full", "low"),
+    Persona(0, "has_ticket_reference_ready", "prepared", "Provides ticket id immediately.", "reveal_upfront", "low"),
+    Persona(
+        1,
+        "does_not_know_ticket_id",
+        "uncertain",
+        "Says previous support exists; withholds ticket id until asked, then may say you cannot find it.",
+        "reveal_when_prompted",
+        "low",
+    ),
+    Persona(
+        2,
+        "frustrated_repeat_caller",
+        "frustrated",
+        "Mentions repeated explanations; gives ticket id when agent asks for reference.",
+        "reveal_when_prompted",
+        "medium",
+    ),
+    Persona(3, "wants_manager_escalation", "pressure", "Asks for manager escalation quickly.", "reveal_upfront", "high"),
+    Persona(4, "detail_heavy_user", "detailed", "Provides chronology and prior advice.", "reveal_upfront", "low"),
 ]
 @ek.fixture
 async def store_us_t35():
@@ -42,7 +69,16 @@ async def task_agent_us_t35(store_us_t35):
 @ek.parametrize("llm_model", llm_model_cases())
 @ek.parametrize("persona", persona_cases(PERSONAS))
 async def user_simulator_us_t35(store_us_t35, llm_model: str, persona: Persona):
-    yield build_user_simulator(llm_model=llm_model, prompt=build_user_prompt(task_id=TASK_ID, intent=INTENT, persona=persona, meta=store_us_t35.seed_meta))
+    yield build_user_simulator(
+        llm_model=llm_model,
+        prompt=build_user_prompt(
+            task_id=TASK_ID,
+            intent=INTENT,
+            persona=persona,
+            meta=store_us_t35.seed_meta,
+            scenario_facts=_scenario_facts(store_us_t35),
+        ),
+    )
 @ek.scenario(
     agent_fixture="task_agent_us_t35",
     repeats=1,
@@ -65,22 +101,25 @@ async def test_t35_sim_study(s, store_us_t35):  # noqa: ARG001
         # Equivalent to identifying existing ticket/escalation context.
         s.simulate_conversation(
             seed_actor="user",
-            seed_input="Session start. Explain your support request.",
-            max_turns=4,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant discusses existing ticket reference or escalation path.",
-                    "Assistant has not yet confirmed a duplicate new ticket was created.",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            seed_input=SIM_CHAT_OPEN,
+            max_turns=5,
+            stop_condition=sim_stop(
+                "Assistant discusses existing ticket reference or escalation path.",
+                "Assistant has not yet confirmed a duplicate new ticket was created.",
             ),
             stop_on_actor="agent",
         )
         .assert_output(m.string(min_len=5), actor="agent")
         # manual_checkpoint_2 -> sim_segment_2:
         # Preserve full-oracle trace/state/output outcomes for escalation-without-duplication.
-        .simulate_conversation(max_turns=6)
+        .simulate_conversation(
+            max_turns=7,
+            stop_condition=sim_stop(
+                "Assistant confirms the existing ticket was escalated or states a clear escalation outcome.",
+                "Assistant has not created a duplicate new ticket.",
+            ),
+            stop_on_actor="agent",
+        )
         .assert_tool_calls(
             [
                 m.tool_call("authenticate_customer"),

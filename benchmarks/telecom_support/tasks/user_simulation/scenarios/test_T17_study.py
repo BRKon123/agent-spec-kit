@@ -13,10 +13,12 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from agent_wrap import wrap_reference_agent
+from store.store import TelcoStore
 from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from tasks.user_simulation.scenarios.common import (
+    SIM_CHAT_OPEN,
     Persona,
     build_user_prompt,
     build_user_simulator,
@@ -24,17 +26,26 @@ from tasks.user_simulation.scenarios.common import (
     llm_model_cases,
     persona_cases,
     seeded_store,
+    sim_stop,
 )
 
 TASK_ID = "T17"
 INTENT = "Ask for compensation after a short outage."
 PERSONAS = [
-    Persona(0, "polite_compensation_asker", "polite", "Calmly asks if compensation is available.", "early_full", "low"),
-    Persona(1, "angry_refund_demander", "angry", "Demands money back quickly.", "early_full", "high"),
-    Persona(2, "policy_questioning_user", "analytical", "Requests policy explanation.", "clarifies_after_prompt", "medium"),
-    Persona(3, "comparison_user", "challenging", "Compares policy to competitors.", "progressive", "medium"),
-    Persona(4, "accepts_alternative_help", "pragmatic", "Starts with compensation then accepts alternatives.", "progressive", "low"),
+    Persona(0, "polite_compensation_asker", "polite", "Calmly asks if compensation is available.", "reveal_upfront", "low"),
+    Persona(1, "angry_refund_demander", "angry", "Demands money back quickly.", "reveal_upfront", "high"),
+    Persona(2, "policy_questioning_user", "analytical", "Requests policy explanation.", "reveal_when_prompted", "medium"),
+    Persona(3, "comparison_user", "challenging", "Compares policy to competitors.", "reveal_when_prompted", "medium"),
+    Persona(4, "accepts_alternative_help", "pragmatic", "Starts with compensation then accepts alternatives.", "reveal_when_prompted", "low"),
 ]
+
+
+def _scenario_facts(store: TelcoStore) -> str:
+    m = store.seed_meta
+    return (
+        f"- Service dropped out briefly yesterday near postcode {m['postcode']}.\n"
+        "- You want to know if you are owed compensation.\n"
+    )
 
 
 @ek.fixture
@@ -57,7 +68,13 @@ async def task_agent_us_t17(store_us_t17):
 async def user_simulator_us_t17(store_us_t17, llm_model: str, persona: Persona):
     yield build_user_simulator(
         llm_model=llm_model,
-        prompt=build_user_prompt(task_id=TASK_ID, intent=INTENT, persona=persona, meta=store_us_t17.seed_meta),
+        prompt=build_user_prompt(
+            task_id=TASK_ID,
+            intent=INTENT,
+            persona=persona,
+            meta=store_us_t17.seed_meta,
+            scenario_facts=_scenario_facts(store_us_t17),
+        ),
     )
 
 
@@ -86,22 +103,25 @@ async def test_t17_sim_study(s, store_us_t17):  # noqa: ARG001
         # Equivalent to early compensation-policy exchange before concluding eligibility.
         s.simulate_conversation(
             seed_actor="user",
-            seed_input="Session start. Explain your support request.",
-            max_turns=4,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant discusses compensation eligibility or policy.",
-                    "Assistant does not promise a credit has been applied.",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            seed_input=SIM_CHAT_OPEN,
+            max_turns=5,
+            stop_condition=sim_stop(
+                "Assistant discusses compensation eligibility or policy.",
+                "Assistant does not promise a credit has been applied.",
             ),
             stop_on_actor="agent",
         )
         .assert_output(m.string(min_len=5), actor="agent")
         # manual_checkpoint_2 -> sim_segment_2:
         # Preserve full-oracle trace/state/output constraints at end of run.
-        .simulate_conversation(max_turns=6)
+        .simulate_conversation(
+            max_turns=7,
+            stop_condition=sim_stop(
+                "Assistant explains the outage is too brief for compensation or refuses a bill credit.",
+                "Assistant does not state that a credit or goodwill adjustment was applied.",
+            ),
+            stop_on_actor="agent",
+        )
         .assert_tool_calls(
             [
                 m.tool_call("authenticate_customer"),

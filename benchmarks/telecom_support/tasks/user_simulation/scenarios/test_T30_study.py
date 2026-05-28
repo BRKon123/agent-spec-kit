@@ -11,15 +11,34 @@ from agent_wrap import wrap_reference_agent
 from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
-from tasks.user_simulation.scenarios.common import Persona, build_user_prompt, build_user_simulator, cleanup_store, llm_model_cases, persona_cases, seeded_store
+from store.store import TelcoStore
+from tasks.user_simulation.scenarios.common import (
+    SIM_CHAT_OPEN,
+    Persona,
+    build_user_prompt,
+    build_user_simulator,
+    cleanup_store,
+    llm_model_cases,
+    persona_cases,
+    seeded_store,
+    sim_stop,
+)
 TASK_ID = "T30"
+
+
+def _scenario_facts(_store: TelcoStore) -> str:
+    return (
+        "- You moved house and need your address updated, then a replacement SIM.\n"
+        "- Your new address is not verified yet; a SIM must not ship until that is sorted.\n"
+    )
+
 INTENT = "Handle address verification before replacement SIM order."
 PERSONAS = [
-    Persona(0, "cooperative_mover", "cooperative", "Provides new address details when asked.", "clarifies_after_prompt", "low"),
-    Persona(1, "impatient_delivery_focused_user", "impatient", "Pushes for immediate shipment.", "early_full", "medium"),
-    Persona(2, "unclear_address_user", "uncertain", "Provides partial address first.", "progressive", "low"),
-    Persona(3, "security_conscious_user", "cautious", "Asks why verification is required.", "clarifies_after_prompt", "low"),
-    Persona(4, "temporary_address_user", "boundary_testing", "Requests non-default delivery location.", "progressive", "medium"),
+    Persona(0, "cooperative_mover", "cooperative", "Provides new address details when asked.", "reveal_when_prompted", "low"),
+    Persona(1, "impatient_delivery_focused_user", "impatient", "Pushes for immediate shipment.", "reveal_upfront", "medium"),
+    Persona(2, "unclear_address_user", "uncertain", "Provides partial address first.", "reveal_when_prompted", "low"),
+    Persona(3, "security_conscious_user", "cautious", "Asks why verification is required.", "reveal_when_prompted", "low"),
+    Persona(4, "temporary_address_user", "boundary_testing", "Requests non-default delivery location.", "reveal_when_prompted", "medium"),
 ]
 @ek.fixture
 async def store_us_t30():
@@ -35,7 +54,16 @@ async def task_agent_us_t30(store_us_t30):
 @ek.parametrize("llm_model", llm_model_cases())
 @ek.parametrize("persona", persona_cases(PERSONAS))
 async def user_simulator_us_t30(store_us_t30, llm_model: str, persona: Persona):
-    yield build_user_simulator(llm_model=llm_model, prompt=build_user_prompt(task_id=TASK_ID, intent=INTENT, persona=persona, meta=store_us_t30.seed_meta))
+    yield build_user_simulator(
+        llm_model=llm_model,
+        prompt=build_user_prompt(
+            task_id=TASK_ID,
+            intent=INTENT,
+            persona=persona,
+            meta=store_us_t30.seed_meta,
+            scenario_facts=_scenario_facts(store_us_t30),
+        ),
+    )
 @ek.scenario(agent_fixture="task_agent_us_t30", repeats=1, tags=("telecom", "user-simulation", "task:T30", "method:manual", "oracle:F"))
 async def test_t30_manual_study(s, store_us_t30):
     bind_scenario_context("test_t30_manual_study", variant="reference")
@@ -49,15 +77,11 @@ async def test_t30_sim_study(s, store_us_t30):  # noqa: ARG001
         # Match manual expectation that auth/clarification happens before any SIM order.
         s.simulate_conversation(
             seed_actor="user",
-            seed_input="Session start. Explain your support request.",
-            max_turns=4,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant discusses address verification or update requirement before shipping.",
-                    "Assistant does not claim a replacement SIM has already been ordered.",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            seed_input=SIM_CHAT_OPEN,
+            max_turns=5,
+            stop_condition=sim_stop(
+                "Assistant discusses address verification or update requirement before shipping.",
+                "Assistant does not claim a replacement SIM has already been ordered.",
             ),
             stop_on_actor="agent",
         )
@@ -80,7 +104,14 @@ async def test_t30_sim_study(s, store_us_t30):  # noqa: ARG001
         )
         # manual_checkpoint_2 -> sim_segment_2:
         # Continue while preserving full oracle no-order constraint across cumulative trace.
-        .simulate_conversation(max_turns=6)
+        .simulate_conversation(
+            max_turns=6,
+            stop_condition=sim_stop(
+                "Assistant confirms address must be verified or updated before shipping a replacement SIM.",
+                "Assistant has not placed or confirmed a replacement SIM order.",
+            ),
+            stop_on_actor="agent",
+        )
         .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN, actor="agent", turn="up_to_now")
         .assert_that(lambda: o.assert_no_sim_orders(store_us_t30))
     )

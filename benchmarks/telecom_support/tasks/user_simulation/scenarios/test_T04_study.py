@@ -13,10 +13,12 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from agent_wrap import wrap_reference_agent
+from store.store import TelcoStore
 from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from tasks.user_simulation.scenarios.common import (
+    SIM_CHAT_OPEN,
     Persona,
     build_user_prompt,
     build_user_simulator,
@@ -24,17 +26,26 @@ from tasks.user_simulation.scenarios.common import (
     llm_model_cases,
     persona_cases,
     seeded_store,
+    sim_stop,
 )
 
 TASK_ID = "T04"
 INTENT = "Escalate data failure after restart was already attempted."
 PERSONAS = [
-    Persona(0, "straightforward_reporter", "cooperative", "States restart already done.", "early_full", "low"),
-    Persona(1, "frustrated_but_cooperative", "frustrated", "Wants quick escalation but answers questions.", "early_full", "medium"),
-    Persona(2, "evidence_heavy_user", "detailed", "Shares timestamps and observed symptoms.", "early_full", "low"),
-    Persona(3, "minimal_answer_user", "brief", "Gives short replies that force targeted prompts.", "minimal_then_expand", "low"),
-    Persona(4, "skeptical_user", "skeptical", "Questions why diagnostics are needed.", "clarifies_after_prompt", "medium"),
+    Persona(0, "straightforward_reporter", "cooperative", "States restart already done.", "reveal_upfront", "low"),
+    Persona(1, "frustrated_but_cooperative", "frustrated", "Wants quick escalation but answers questions.", "reveal_upfront", "medium"),
+    Persona(2, "evidence_heavy_user", "detailed", "Shares timestamps and observed symptoms.", "reveal_upfront", "low"),
+    Persona(3, "minimal_answer_user", "brief", "Keeps replies short until the agent asks follow-ups.", "reveal_when_prompted", "low"),
+    Persona(4, "skeptical_user", "skeptical", "Questions why diagnostics are needed.", "reveal_when_prompted", "medium"),
 ]
+
+
+def _scenario_facts(store: TelcoStore) -> str:
+    m = store.seed_meta
+    return (
+        f"- Mobile data is not working on line {m['line_id']}.\n"
+        "- Whether you have already restarted is up to your persona; you want help if it is still broken.\n"
+    )
 
 
 @ek.fixture
@@ -55,7 +66,13 @@ async def task_agent_us_t04(store_us_t04):
 @ek.parametrize("llm_model", llm_model_cases())
 @ek.parametrize("persona", persona_cases(PERSONAS))
 async def user_simulator_us_t04(store_us_t04, llm_model: str, persona: Persona):
-    prompt = build_user_prompt(task_id=TASK_ID, intent=INTENT, persona=persona, meta=store_us_t04.seed_meta)
+    prompt = build_user_prompt(
+        task_id=TASK_ID,
+        intent=INTENT,
+        persona=persona,
+        meta=store_us_t04.seed_meta,
+        scenario_facts=_scenario_facts(store_us_t04),
+    )
     yield build_user_simulator(llm_model=llm_model, prompt=prompt)
 
 
@@ -75,22 +92,25 @@ async def test_t04_sim_study(s, store_us_t04):  # noqa: ARG001
         # Closest equivalent to early manual diagnostic/restart dialogue before ticket creation.
         s.simulate_conversation(
             seed_actor="user",
-            seed_input="Session start. Explain your issue to mobile support.",
-            max_turns=4,
-            stop_condition=m.llm_criteria(
-                criteria=[
-                    "Assistant acknowledges restart or asks to confirm restart/diagnostic context.",
-                    "Assistant has not yet clearly confirmed that a support ticket was created.",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
+            seed_input=SIM_CHAT_OPEN,
+            max_turns=5,
+            stop_condition=sim_stop(
+                "Assistant acknowledges restart or asks to confirm restart/diagnostic context.",
+                "Assistant has not yet clearly confirmed that a support ticket was created.",
             ),
             stop_on_actor="agent",
         )
         .assert_output(m.string(min_len=5), actor="agent")
         # manual_checkpoint_2 -> sim_segment_2:
         # Manual full oracle expects eventual ticket creation with mutation claim.
-        .simulate_conversation(max_turns=6)
+        .simulate_conversation(
+            max_turns=7,
+            stop_condition=sim_stop(
+                "Assistant confirms a support ticket was created or clearly commits to opening one.",
+                "The connectivity issue has been addressed with a concrete next step.",
+            ),
+            stop_on_actor="agent",
+        )
         .assert_tool_calls(
             [
                 m.tool_call("record_user_action"),
