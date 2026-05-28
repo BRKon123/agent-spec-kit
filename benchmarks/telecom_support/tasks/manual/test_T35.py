@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -53,7 +54,8 @@ _T35_TRACE = [
     m.tool_call("escalate_ticket"),
 ]
 
-_T35_OUTPUT = m.one_of(m.contains("escalat"), m.contains("policy"))
+def _t35_output(store_t35):
+    return to.ticket_escalation_output(store_t35)
 
 
 @ek.scenario(
@@ -67,7 +69,7 @@ async def test_t35_full(s, store_t35):
         s.user_message(_msg(store_t35))
         .assert_tool_calls(_T35_TRACE, ordered=True, allow_extras=True)
         .assert_that(lambda: o.assert_ticket_count(store_t35, 1))
-        .assert_output(_T35_OUTPUT)
+        .assert_output(_t35_output(store_t35))
     )
 
 
@@ -107,5 +109,5 @@ async def test_t35_state(s, store_t35):
 async def test_t35_output(s, store_t35):
     (
         s.user_message(_msg(store_t35))
-        .assert_output(_T35_OUTPUT)
+        .assert_output(_t35_output(store_t35))
     )

@@ -10,6 +10,7 @@ import agent_spec_kit.match as m
 from agent_wrap import wrap_reference_agent
 from store.store import TelcoStore
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from tasks.user_simulation.scenarios.common import (
     SIM_CHAT_OPEN,
@@ -132,7 +133,7 @@ async def test_t35_sim_study(s, store_us_t35):  # noqa: ARG001
         )
         .assert_that(lambda: o.assert_ticket_count(store_us_t35, 1))
         .assert_output(
-            m.one_of(m.contains("escalat"), m.contains("policy")),
+            to.ticket_escalation_output(store_us_t35),
             actor="agent",
             turn="up_to_now",
         )

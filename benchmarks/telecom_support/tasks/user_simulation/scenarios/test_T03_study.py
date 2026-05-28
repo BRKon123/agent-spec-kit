@@ -8,6 +8,7 @@ if str(_ROOT) not in sys.path:
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 from agent_wrap import wrap_reference_agent
+from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from store.store import TelcoStore
 from tasks.user_simulation.scenarios.common import (
@@ -82,7 +83,11 @@ async def test_t03_sim_study(s, store_us_t03):  # noqa: ARG001
             ),
             stop_on_actor="agent",
         )
-        .assert_output(m.string(min_len=5), actor="agent")
+        .assert_output(
+            to.troubleshooting_without_ticket_output(),
+            actor="agent",
+            turn="up_to_now",
+        )
         .simulate_conversation(
             max_turns=6,
             stop_condition=sim_stop(
@@ -92,5 +97,9 @@ async def test_t03_sim_study(s, store_us_t03):  # noqa: ARG001
             stop_on_actor="agent",
         )
         .assert_tool_calls([], ordered=True, allow_extras=True, actor="agent", turn="up_to_now")
-        .assert_output(m.string(min_len=20), actor="agent", turn="up_to_now")
+        .assert_output(
+            to.troubleshooting_without_ticket_output(),
+            actor="agent",
+            turn="up_to_now",
+        )
     )

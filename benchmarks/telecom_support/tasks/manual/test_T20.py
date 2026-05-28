@@ -49,24 +49,7 @@ _T20_TRACE = []
 
 
 def _t20_output(store_t20):
-    parts: list = [
-        m.one_of(
-            m.contains("authenticate"),
-            m.contains("verification"),
-            m.contains("verify"),
-            m.contains("identity"),
-        ),
-    ]
-    plan = store_t20.seed_meta.get("plan_id")
-    if plan:
-        parts.append(m.not_(m.contains(str(plan))))
-    name = o.customer_name(store_t20)
-    if name:
-        parts.append(m.not_(m.contains(name)))
-    bill = store_t20.seed_meta.get("last_bill_total")
-    if bill is not None:
-        parts.append(m.not_(m.contains(str(bill))))
-    return m.all_of(*parts)
+    return to.preauth_composite_output(store_t20, "billing", "breakdown", "plan")
 
 
 @ek.scenario(

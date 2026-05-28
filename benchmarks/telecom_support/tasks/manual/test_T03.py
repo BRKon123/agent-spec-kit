@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -70,12 +71,7 @@ async def test_t03_full(s, store_t03):
             )
             .assert_that(lambda: o.assert_no_tickets(store_t03))
             .assert_that(lambda: o.assert_no_credit_rows(store_t03))
-            .assert_output(
-                m.all_of(
-                    m.one_of(m.contains("restart"), m.contains("reboot")),
-                    m.contains("step"),
-                )
-            )
+            .assert_output(to.troubleshooting_without_ticket_output())
         )
 
 
@@ -126,10 +122,5 @@ async def test_t03_output(s, store_t03):
     meta = store_t03.seed_meta
     (
             s.user_message(_msg(store_t03))
-            .assert_output(
-                m.all_of(
-                    m.one_of(m.contains("restart"), m.contains("reboot")),
-                    m.contains("step"),
-                )
-            )
+            .assert_output(to.troubleshooting_without_ticket_output())
         )

@@ -135,13 +135,7 @@ async def test_t17_sim_study(s, store_us_t17):  # noqa: ARG001
         .forbid_tool_calls(to.CREDIT_FORBIDDEN, actor="agent", turn="up_to_now")
         .assert_that(lambda: o.assert_no_credit_rows(store_us_t17))
         .assert_output(
-            m.llm_criteria(
-                criteria=[
-                    "Explains that a brief or short outage is not eligible for compensation or a bill credit",
-                ],
-                threshold=1,
-                model="openai:gpt-5-nano",
-            ),
+            to.compensation_ineligible_output(),
             actor="agent",
             turn="up_to_now",
         )

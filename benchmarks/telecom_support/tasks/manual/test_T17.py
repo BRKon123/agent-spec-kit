@@ -54,13 +54,7 @@ _T17_TRACE = [
     m.tool_call("run_billing_policy_specialist"),
 ]
 
-_T17_OUTPUT = m.llm_criteria(
-    criteria=[
-        "Explains that a brief or short outage is not eligible for compensation or a bill credit",
-    ],
-    threshold=1,
-    model="openai:gpt-5-nano",
-)
+_T17_OUTPUT = to.compensation_ineligible_output()
 
 
 @ek.scenario(

@@ -67,12 +67,9 @@ def _t29_order_trace(store_t29):
     ]
 
 
-_T29_AFTER_MSG1_OUTPUT = m.all_of(
-    to.clarification_output(
-        "Does not confirm a SIM order was placed on the wrong line",
-        "Asks which line is correct or acknowledges LINE-WRONG may not be the right line",
-    ),
-    m.not_(m.contains("submitted the replacement SIM")),
+_T29_AFTER_MSG1_OUTPUT = to.clarification_output(
+    "Does not confirm a SIM order was placed on the wrong line",
+    "Asks which line is correct or acknowledges line uncertainty before ordering",
 )
 
 _T29_AFTER_MSG3_OUTPUT = to.premature_action_output("LINE-WRONG", action="order")

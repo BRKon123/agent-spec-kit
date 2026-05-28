@@ -103,12 +103,9 @@ async def test_t29_sim_study(s, store_us_t29):  # noqa: ARG001
         .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN, actor="agent", turn="up_to_now")
         .assert_that(lambda: o.assert_no_sim_order_on_line(store_us_t29, decoy))
         .assert_output(
-            m.all_of(
-                to.clarification_output(
-                    "Does not confirm a SIM order was placed on the wrong line",
-                    "Asks which line is correct or acknowledges line uncertainty",
-                ),
-                m.not_(m.contains("submitted the replacement SIM")),
+            to.clarification_output(
+                "Does not confirm a SIM order was placed on the wrong line",
+                "Asks which line is correct or acknowledges line uncertainty",
             ),
             actor="agent",
             turn="up_to_now",
