@@ -2,20 +2,41 @@
 
 from __future__ import annotations
 
+import dataclasses
+import hashlib
 import json
+import platform
 import re
 import sys
+import uuid
 from dataclasses import asdict
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 
+import agent_spec_kit as ask
+from agent_spec_kit.cli import (
+    _aggregate_scenario_result,
+    _save_fuzz_trials_for_repeat,
+    _save_repeat_auxiliary,
+    _write_repeat_blobs,
+    collect_git_metadata,
+)
 from agent_spec_kit.discovery import collect_module_paths, import_paths
 from agent_spec_kit.fixture_graph import scenario_case_runs
 from agent_spec_kit.registries import ScenarioDef, iter_scenarios, reset_registries
+from agent_spec_kit.result_store import LocalResultStore
 from agent_spec_kit.runner import JobResult, run_scenario_job
 from agent_spec_kit.scenario_core import tool_dicts_from_turn_data
+from agent_spec_kit.storage_records import (
+    RunRecord,
+    ScenarioResultRecord,
+    StorageConfig,
+    parameter_key,
+    scenario_key,
+)
 
 BENCH = Path(__file__).resolve().parents[1]
 REPO = BENCH.parents[1]
@@ -151,3 +172,120 @@ def append_jsonl(path: Path, record: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, default=str) + "\n")
+
+
+def _ui_run_id() -> str:
+    ts = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
+    return f"run_{ts}_{uuid.uuid4().hex[:6]}"
+
+
+def _experiment_id(name: str) -> str:
+    return "exp_" + hashlib.sha1(name.encode("utf-8")).hexdigest()[:12]  # noqa: S324
+
+
+def _now_iso() -> str:
+    return datetime.now(tz=UTC).isoformat()
+
+
+class UiStudyRunLogger:
+    """Persist study jobs to ``LocalResultStore`` for the agent-spec-kit results browser."""
+
+    def __init__(
+        self,
+        *,
+        experiment: str = "user-simulation-study",
+        notes: str | None = None,
+        study_run_id: str | None = None,
+        command: str | None = None,
+    ) -> None:
+        self.store = LocalResultStore(StorageConfig(root=REPO / ".agent_spec_kit"))
+        self.run_id = _ui_run_id()
+        git_meta = collect_git_metadata()
+        metadata: dict[str, str] = {}
+        if study_run_id:
+            metadata["study_run_id"] = study_run_id
+        self.store.create_run(
+            RunRecord(
+                run_id=self.run_id,
+                experiment_name=experiment,
+                experiment_id=_experiment_id(experiment),
+                started_at=_now_iso(),
+                status="passed",
+                command=command
+                or "benchmarks/telecom_support/scripts/run_user_simulation_study.py",
+                notes=notes,
+                metadata=metadata,
+                git_commit=git_meta["git_commit"],
+                git_branch=git_meta["git_branch"],
+                git_dirty=git_meta["git_dirty"],
+                python_version=platform.python_version(),
+                package_version=getattr(ask, "__version__", None),
+            )
+        )
+        self._scenario_records: dict[tuple[str, int], ScenarioResultRecord] = {}
+        self._scenario_repeats: dict[str, list[Any]] = {}
+
+    def register(self, sdef: ScenarioDef, case_index: int) -> None:
+        case = scenario_case_runs(sdef)[case_index]
+        record = ScenarioResultRecord(
+            scenario_result_id=f"{self.run_id}_{sdef.module}.{sdef.name}_{case_index:03d}",
+            run_id=self.run_id,
+            scenario_name=sdef.name,
+            scenario_module=sdef.module,
+            scenario_file=sdef.source,
+            scenario_key=scenario_key(sdef.name, case),
+            parameter_key=parameter_key(case),
+            parameters={k: v.id for k, v in case.items()},
+            tags=sdef.tags,
+            status="skipped",
+            repeats_total=sdef.repeats,
+            repeats_passed=0,
+            repeats_failed=0,
+            duration_ms=None,
+            summary={},
+            fuzz_config_json=None,
+        )
+        key = (f"{sdef.module}.{sdef.name}", case_index)
+        self._scenario_records[key] = record
+        self._scenario_repeats[record.scenario_result_id] = []
+        self.store.save_scenario_result(record)
+
+    def persist_job(self, sdef: ScenarioDef, case_index: int, job: JobResult) -> None:
+        key = (f"{sdef.module}.{sdef.name}", case_index)
+        sr = self._scenario_records.get(key)
+        if sr is None:
+            return
+        repeat_record, assertions = _write_repeat_blobs(
+            store=self.store,
+            run_id=self.run_id,
+            scenario_result_id=sr.scenario_result_id,
+            result=job,
+        )
+        self.store.save_repeat_result(repeat_record)
+        _save_fuzz_trials_for_repeat(
+            store=self.store,
+            run_id=self.run_id,
+            scenario_result_id=sr.scenario_result_id,
+            result=job,
+        )
+        _save_repeat_auxiliary(
+            store=self.store,
+            run_id=self.run_id,
+            scenario_result_id=sr.scenario_result_id,
+            result=job,
+        )
+        for assertion in assertions:
+            self.store.save_assertion_result(assertion)
+        if job.fuzz_config_json and sr.fuzz_config_json is None:
+            self._scenario_records[key] = dataclasses.replace(
+                sr, fuzz_config_json=job.fuzz_config_json
+            )
+        self._scenario_repeats[sr.scenario_result_id].append(repeat_record)
+
+    def finish(self) -> str:
+        for sr in self._scenario_records.values():
+            repeats = self._scenario_repeats[sr.scenario_result_id]
+            self.store.save_scenario_result(_aggregate_scenario_result(sr, repeats))
+        summary = self.store.compute_run_summary(self.run_id)
+        self.store.finish_run(self.run_id, summary)
+        return self.run_id

@@ -21,9 +21,14 @@ Personas use one of two disclosure patterns: `reveal_upfront` or `reveal_when_pr
 ## Commands
 
 ```bash
-uv run python benchmarks/telecom_support/scripts/run_user_simulation_study.py
+# From repo root; logs all scenario jobs to .agent_spec_kit/ for the results browser UI
+uv run python benchmarks/telecom_support/scripts/run_user_simulation_study.py --include-interesting
+uv run agent-spec-kit ui --open   # filter by experiment: user-simulation-study
+
 uv run python benchmarks/telecom_support/scripts/generate_user_simulation_table.py
 ```
+
+Each study run also sets `ui_run_id` in `user_simulation_study.json` (unless `--no-ui`).
 
 ## Artifacts
 

@@ -14,6 +14,7 @@ from typing import Any
 
 from user_simulation_lib import (
     BENCH,
+    UiStudyRunLogger,
     append_jsonl,
     discover_user_sim_scenarios,
     load_study_config,
@@ -73,6 +74,7 @@ async def _run(args: argparse.Namespace) -> int:
             sim_defs.append((task, sdef))
 
     records: list[dict[str, Any]] = []
+    ui_run_id: str | None = None
     out_dir = BENCH / "tasks" / "user_simulation"
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     runs_root = out_dir / "transcripts"
@@ -147,7 +149,7 @@ async def _run(args: argparse.Namespace) -> int:
                 "duration_s": job.duration_s,
             },
         )
-        return task, method, job
+        return task, method, sdef, case_index, job
 
     work_items: list[tuple[str, str, Any, int]] = []
     for task, sdef in sorted(manual_defs):
@@ -156,6 +158,16 @@ async def _run(args: argparse.Namespace) -> int:
     for task, sdef in sorted(sim_defs):
         for idx in range(len(scenario_case_runs(sdef))):
             work_items.append((task, "sim", sdef, idx))
+
+    ui_logger: UiStudyRunLogger | None = None
+    if not args.no_ui:
+        ui_logger = UiStudyRunLogger(
+            experiment=args.experiment,
+            notes=args.notes,
+            study_run_id=run_id,
+        )
+        for _task, _method, sdef, idx in work_items:
+            ui_logger.register(sdef, idx)
 
     sem = asyncio.Semaphore(max(1, args.workers))
 
@@ -169,16 +181,24 @@ async def _run(args: argparse.Namespace) -> int:
     )
     completed = 0
     for fut in asyncio.as_completed([_bounded(*item) for item in work_items]):
-        task, method, job = await fut
+        task, method, sdef, case_index, job = await fut
         rec = record_from_job(task, method, job)
         records.append(rec)
         write_transcript(transcripts_dir / f"{task}_{method}_{job.case_id}.json", job)
+        if ui_logger is not None:
+            ui_logger.persist_job(sdef, case_index, job)
         completed += 1
         _log(f"[user-sim] progress {completed}/{total}")
+
+    if ui_logger is not None:
+        ui_run_id = ui_logger.finish()
+        _log(f"[user-sim] UI run logged: {ui_run_id} (open agent-spec-kit ui, experiment={args.experiment})")
 
     study = {
         "generated_utc": datetime.now(UTC).isoformat(),
         "run_id": run_id,
+        "ui_run_id": ui_run_id,
+        "ui_experiment": args.experiment if not args.no_ui else None,
         "run_dir": str(run_dir.relative_to(BENCH)),
         "run_log_path": str(run_log_path.relative_to(BENCH)),
         "run_events_path": str(run_events_path.relative_to(BENCH)),
@@ -221,6 +241,17 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--include-interesting", action="store_true", help="Include optional T03/T44 tasks.")
     ap.add_argument("-n", "--workers", type=int, default=12, help="Parallel workers (default: 12).")
+    ap.add_argument(
+        "--experiment",
+        default="user-simulation-study",
+        help="Experiment name in the agent-spec-kit UI result store (default: user-simulation-study).",
+    )
+    ap.add_argument("--notes", default=None, help="Optional notes stored on the UI run record.")
+    ap.add_argument(
+        "--no-ui",
+        action="store_true",
+        help="Skip writing to .agent_spec_kit/ (study JSON and transcripts still written).",
+    )
     args = ap.parse_args()
     return asyncio.run(_run(args))
 
