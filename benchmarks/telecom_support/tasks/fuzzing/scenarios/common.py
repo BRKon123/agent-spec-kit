@@ -25,7 +25,7 @@ from tasks.user_simulation.scenarios.common import (
 BENCH = Path(__file__).resolve().parents[3]
 CONFIG_PATH = BENCH / "tasks" / "fuzzing" / "study_config.yaml"
 SEEDS_DIR = BENCH / "tasks" / "fuzzing" / "seeds"
-FUZZ_TRIALS = 2
+FUZZ_TRIALS = 1
 
 
 @dataclass(frozen=True)

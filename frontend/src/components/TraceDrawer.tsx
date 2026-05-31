@@ -8,24 +8,31 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { Badge } from "@/components/ui/badge";
-import { useRepeatTrace } from "@/api/queries";
+import { useFuzzTrial, useRepeatTrace } from "@/api/queries";
 import { TraceTree } from "@/components/TraceTree";
 import { FailureCard } from "@/components/FailureCard";
+import { FuzzTrialTraceContent } from "@/components/FuzzTrialTraceContent";
 import { InlineError, InlineLoading } from "@/components/Inline";
 import { formatDuration } from "@/lib/utils";
 import type { AgentEventNode } from "@/lib/types";
 
 export function TraceDrawer({
   repeatId,
+  fuzzTrialId,
   open,
   onOpenChange,
+  onFuzzTrialSelect,
 }: {
   repeatId: string | null;
+  fuzzTrialId?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onFuzzTrialSelect?: (trialId: string) => void;
 }) {
-  const trace = useRepeatTrace(repeatId ?? undefined);
+  const trace = useRepeatTrace(fuzzTrialId ? undefined : (repeatId ?? undefined));
+  const fuzzTrial = useFuzzTrial(fuzzTrialId ?? undefined);
   const t = trace.data;
+  const ft = fuzzTrial.data;
   const hasFuzzTrials = Boolean(t?.fuzz_trials && t.fuzz_trials.length > 0);
   const [panelWidth, setPanelWidth] = useState<number>(760);
   const dragState = useRef<{ startX: number; startWidth: number } | null>(null);
@@ -55,9 +62,23 @@ export function TraceDrawer({
     document.body.style.userSelect = "none";
     document.body.style.cursor = "col-resize";
   };
+
   const primaryAssertionType =
     t?.assertions?.find((a) => a.status !== "passed")?.assertion_type ??
     t?.assertions?.[0]?.assertion_type;
+
+  const title = fuzzTrialId
+    ? ft?.scenario_name ?? "Fuzz trial"
+    : t?.scenario_key ?? "Trace";
+
+  const description = fuzzTrialId && ft
+    ? `Trial #${ft.trial_index}${ft.summary_label ? ` • ${ft.summary_label}` : ""} • ${formatDuration(ft.duration_ms)}${ft.failure_kind ? ` • ${ft.failure_kind}` : ""}`
+    : t
+      ? `Repeat ${t.repeat_index} • ${formatDuration(t.duration_ms)}${t.failure_kind ? ` • ${t.failure_kind}` : ""}`
+      : "Loading trace details…";
+
+  const status = fuzzTrialId && ft ? ft.status : t?.status;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -73,22 +94,16 @@ export function TraceDrawer({
         <DialogHeader>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <DialogTitle className="truncate">
-                {t ? t.scenario_key : "Trace"}
-              </DialogTitle>
-              <DialogDescription>
-                {t
-                  ? `Repeat ${t.repeat_index} • ${formatDuration(t.duration_ms)}${t.failure_kind ? ` • ${t.failure_kind}` : ""}`
-                  : "Loading trace details…"}
-              </DialogDescription>
+              <DialogTitle className="truncate">{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
             </div>
-            {t && (
+            {status && (
               <div className="flex items-center gap-2 pr-8">
-                <Badge status={t.status} />
+                <Badge status={status} />
               </div>
             )}
           </div>
-          {t && (t.tags.length > 0 || Object.keys(t.parameters).length > 0) && (
+          {!fuzzTrialId && t && (t.tags.length > 0 || Object.keys(t.parameters).length > 0) && (
             <div className="flex flex-wrap items-center gap-1 mt-2">
               {Object.entries(t.parameters).map(([k, v]) => (
                 <span
@@ -108,13 +123,31 @@ export function TraceDrawer({
               ))}
             </div>
           )}
+          {fuzzTrialId && ft && (
+            <div className="flex flex-wrap items-center gap-1 mt-2">
+              <span className="text-[10px] font-mono text-slate-600 bg-slate-100 rounded px-1.5 py-0.5">
+                trial={ft.trial_index}
+              </span>
+              {ft.seed != null && (
+                <span className="text-[10px] font-mono text-slate-600 bg-slate-100 rounded px-1.5 py-0.5">
+                  seed={ft.seed}
+                </span>
+              )}
+            </div>
+          )}
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto p-4 space-y-4">
-          {trace.isLoading && <InlineLoading label="Loading trace…" />}
-          {trace.isError && (
+          {fuzzTrialId && fuzzTrial.isLoading && <InlineLoading label="Loading fuzz trial…" />}
+          {fuzzTrialId && fuzzTrial.isError && (
+            <InlineError error={fuzzTrial.error} onRetry={() => fuzzTrial.refetch()} />
+          )}
+          {fuzzTrialId && ft && <FuzzTrialTraceContent trial={ft} />}
+
+          {!fuzzTrialId && trace.isLoading && <InlineLoading label="Loading trace…" />}
+          {!fuzzTrialId && trace.isError && (
             <InlineError error={trace.error} onRetry={() => trace.refetch()} />
           )}
-          {t && (
+          {!fuzzTrialId && t && (
             <>
               {!hasFuzzTrials && t.output_preview && (
                 <div className="rounded-md border border-slate-200 bg-white p-3">
@@ -150,6 +183,9 @@ export function TraceDrawer({
               {t.fuzz_trials && t.fuzz_trials.length > 0 && (
                 <section>
                   <h3 className="text-sm font-semibold mb-2">Fuzz trials</h3>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Click a trial to view its event trace and failure details.
+                  </p>
                   <div className="overflow-x-auto rounded-md border border-slate-200">
                     <table className="w-full text-xs">
                       <thead className="bg-slate-50 text-slate-500 text-left">
@@ -160,12 +196,18 @@ export function TraceDrawer({
                         </tr>
                       </thead>
                       <tbody>
-                        {t.fuzz_trials.map((ft) => (
-                          <tr key={ft.trial_id} className="border-t border-slate-100">
-                            <td className="px-2 py-1.5 tabular-nums">{ft.trial_index}</td>
-                            <td className="px-2 py-1.5 text-slate-700">{ft.summary_label || "—"}</td>
+                        {t.fuzz_trials.map((trial) => (
+                          <tr
+                            key={trial.trial_id}
+                            className="border-t border-slate-100 cursor-pointer hover:bg-slate-50"
+                            onClick={() => onFuzzTrialSelect?.(trial.trial_id)}
+                          >
+                            <td className="px-2 py-1.5 tabular-nums">{trial.trial_index}</td>
+                            <td className="px-2 py-1.5 text-slate-700">
+                              {trial.summary_label || "—"}
+                            </td>
                             <td className="px-2 py-1.5">
-                              <Badge status={ft.status} />
+                              <Badge status={trial.status} />
                             </td>
                           </tr>
                         ))}

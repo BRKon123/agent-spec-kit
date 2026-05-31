@@ -53,6 +53,7 @@ export function RunDetailPage() {
   const fuzzTrials = useFuzzTrialsForRun(runId);
   const [sideOpen, setSideOpen] = useState(true);
   const [traceRepeatId, setTraceRepeatId] = useState<string | null>(null);
+  const [traceFuzzTrialId, setTraceFuzzTrialId] = useState<string | null>(null);
   const [traceOpen, setTraceOpen] = useState(false);
   const [selectedTrialId, setSelectedTrialId] = useState<string | null>(null);
 
@@ -94,7 +95,15 @@ export function RunDetailPage() {
       scenario.repeats.find((r) => r.status !== "passed") ?? scenario.repeats[0];
     if (!preferred?.repeat_result_id) return;
     setSelectedTrialId(null);
+    setTraceFuzzTrialId(null);
     setTraceRepeatId(preferred.repeat_result_id);
+    setTraceOpen(true);
+  };
+
+  const onTrialRowClick = (trialId: string) => {
+    setSelectedTrialId(trialId);
+    setTraceRepeatId(null);
+    setTraceFuzzTrialId(trialId);
     setTraceOpen(true);
   };
 
@@ -181,11 +190,7 @@ export function RunDetailPage() {
                 fuzzTrials={fuzzTrials.data ?? []}
                 visibility={columnVisibility}
                 onScenarioRowClick={onScenarioRowClick}
-                onTrialRowClick={(trialId) => {
-                  setTraceOpen(false);
-                  setTraceRepeatId(null);
-                  setSelectedTrialId(trialId);
-                }}
+                onTrialRowClick={onTrialRowClick}
               />
             )}
           </CardContent>
@@ -208,8 +213,16 @@ export function RunDetailPage() {
 
       <TraceDrawer
         repeatId={traceRepeatId}
+        fuzzTrialId={traceFuzzTrialId}
         open={traceOpen}
-        onOpenChange={setTraceOpen}
+        onOpenChange={(open) => {
+          setTraceOpen(open);
+          if (!open) {
+            setTraceFuzzTrialId(null);
+            setTraceRepeatId(null);
+          }
+        }}
+        onFuzzTrialSelect={onTrialRowClick}
       />
     </div>
   );

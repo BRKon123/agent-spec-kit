@@ -13,7 +13,7 @@ primary_tasks:
   - T44
   - T45
   - T49
-framework_trials: 2
+framework_trials: 1
 calibration_steering: false
 agent:
   variant: reference

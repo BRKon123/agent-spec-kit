@@ -131,7 +131,7 @@ def record_from_fuzz_job(
     seed = None
     mutation_operator = None
     mutation_seed = None
-    framework_trials = int(cfg.get("framework_trials", 2))
+    framework_trials = int(cfg.get("framework_trials", 1))
     invalid_run_reason = None
 
     if method == "sim":

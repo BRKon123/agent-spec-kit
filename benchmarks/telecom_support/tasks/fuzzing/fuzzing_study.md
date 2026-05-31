@@ -1,7 +1,7 @@
 # Fuzzing Study
 
-- Generated: 2026-05-31T14:50:28.179875+00:00
-- Run id: 20260531T140347Z
+- Generated: 2026-05-31T15:18:29.146883+00:00
+- Run id: 20260531T145454Z
 - Tasks: T03, T04, T17, T20, T27, T29, T30, T35, T38, T42, T43, T44, T45, T49
 - Calibration steering: False
 
@@ -9,23 +9,24 @@
 
 | Method | Tasks | Conversations | Unique tool paths | Distinct failure signatures | Median turns | Authoring |
 |--------|------:|--------------:|------------------:|----------------------------:|-------------:|-----------|
-| Manual scripts | 14 | 14 | 13 | 5 | 4.0 | Manual script (canonical seed) |
-| User simulation | 14 | 70 | 56 | 27 | 4.0 | Task profile + persona seed |
-| Mutation fuzz | 14 | 140 | 39 | 21 | 6.0 | Manual seed + mutation operator |
+| Manual scripts | 14 | 14 | 10 | 3 | 4.0 | Manual script (canonical seed) |
+| User simulation | 14 | 70 | 58 | 24 | 4.0 | Task profile + persona seed |
+| Mutation fuzz | 14 | 70 | 36 | 18 | 6.0 | Manual seed + mutation operator |
 
 ## Operator-level fuzz failures
 
-- `delay_required_fact`: 8 failing conversations
-- `minimise_user_replies`: 8 failing conversations
-- `contradict_entity_later`: 6 failing conversations
-- `repeat_or_reorder_turn`: 6 failing conversations
-- `drop_required_fact`: 6 failing conversations
-- `increase_pressure`: 6 failing conversations
-- `ambiguous_acknowledgement`: 6 failing conversations
-- `swap_entity`: 4 failing conversations
-- `remove_confirmation`: 4 failing conversations
-- `negate_completed_step`: 2 failing conversations
-- `interleave_secondary_intent`: 2 failing conversations
+- `minimise_user_replies`: 4 failing conversations
+- `delay_required_fact`: 3 failing conversations
+- `ambiguous_acknowledgement`: 3 failing conversations
+- `drop_required_fact`: 3 failing conversations
+- `increase_pressure`: 3 failing conversations
+- `repeat_or_reorder_turn`: 2 failing conversations
+- `third_party_shift`: 2 failing conversations
+- `swap_entity`: 1 failing conversations
+- `contradict_entity_later`: 1 failing conversations
+- `negate_completed_step`: 1 failing conversations
+- `remove_confirmation`: 1 failing conversations
+- `interleave_secondary_intent`: 1 failing conversations
 
 ## Claim
 
