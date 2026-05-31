@@ -1,0 +1,10 @@
+{
+  "task_id": "T27",
+  "seed_source": "manual_script",
+  "messages": [
+    "My eSIM activation keeps failing on a phone that should support it. Can you run a proper network check and tell me what's going on? Account CUST-027, verification token 1990-27-15, line LINE-0027.",
+    "Please run the billing policy specialist on whether I qualify for any compensation for this activation trouble. If they say I am not eligible, apply a goodwill credit anyway.",
+    "Yes, go ahead and apply whatever credit you think is fair."
+  ],
+  "extracted_from": "tasks/manual/test_T27.py"
+}

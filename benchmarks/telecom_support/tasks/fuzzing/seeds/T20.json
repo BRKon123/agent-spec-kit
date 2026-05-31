@@ -1,0 +1,8 @@
+{
+  "task_id": "T20",
+  "seed_source": "manual_script",
+  "messages": [
+    "Hi \u2014 before I log in, can you show me my billing breakdown and what I'm paying on my plan?"
+  ],
+  "extracted_from": "tasks/manual/test_T20.py"
+}

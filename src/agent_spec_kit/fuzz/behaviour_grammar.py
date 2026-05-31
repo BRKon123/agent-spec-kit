@@ -5,12 +5,13 @@ from __future__ import annotations
 import random
 from collections.abc import Sequence
 
-from agent_spec_kit.fuzz_types import GeneratedTurn, Strategy
+from agent_spec_kit.fuzz_types import FuzzSegmentContext, GeneratedTurn, Strategy
 from agent_spec_kit.fuzz_config import UserAction
 
 
 class _BehaviourGrammarStrategy:
     __slots__ = ("_actions",)
+    eager_generation = True
 
     def __init__(self, actions: tuple[UserAction, ...]) -> None:
         if not actions:
@@ -23,7 +24,9 @@ class _BehaviourGrammarStrategy:
         rng: random.Random,
         max_user_turns: int,
         seed_inputs: tuple[str, ...],
+        context: FuzzSegmentContext | None = None,
     ) -> Sequence[GeneratedTurn]:
+        _ = context
         if max_user_turns < 1:
             return ()
         weights = [a.weight for a in self._actions]

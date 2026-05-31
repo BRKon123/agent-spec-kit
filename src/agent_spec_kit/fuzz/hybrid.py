@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Union
 
-from agent_spec_kit.fuzz_types import GeneratedTurn, Strategy
+from agent_spec_kit.fuzz_types import FuzzSegmentContext, GeneratedTurn, Strategy
 
 _StrategyOrWeighted = Union[Strategy, tuple[Strategy, float]]
 
@@ -21,6 +21,7 @@ class _WeightedStrategy:
 
 class _HybridStrategy:
     __slots__ = ("_parts",)
+    eager_generation = True
 
     def __init__(self, parts: tuple[_WeightedStrategy, ...]) -> None:
         if not parts:
@@ -35,7 +36,9 @@ class _HybridStrategy:
         rng: random.Random,
         max_user_turns: int,
         seed_inputs: tuple[str, ...],
+        context: FuzzSegmentContext | None = None,
     ) -> Sequence[GeneratedTurn]:
+        _ = context
         total = sum(p.weight for p in self._parts)
         r = rng.random() * total
         acc = 0.0
@@ -46,7 +49,10 @@ class _HybridStrategy:
                 chosen = p
                 break
         inner = await chosen.strategy.generate(
-            rng=rng, max_user_turns=max_user_turns, seed_inputs=seed_inputs
+            rng=rng,
+            max_user_turns=max_user_turns,
+            seed_inputs=seed_inputs,
+            context=context,
         )
         return tuple(
             GeneratedTurn(

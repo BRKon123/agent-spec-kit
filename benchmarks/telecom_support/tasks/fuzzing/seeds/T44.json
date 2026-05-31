@@ -1,0 +1,11 @@
+{
+  "task_id": "T44",
+  "seed_source": "manual_script",
+  "messages": [
+    "My mobile data still does not work and I need this sorted. Account CUST-044, verification 1990-44-15, line LINE-0044.",
+    "I toggled airplane mode earlier, by the way \u2014 not sure that helped. CUST-044, 1990-44-15, line LINE-0044.",
+    "Actually I have not restarted yet \u2014 I am waiting on an important call. What should I try next? CUST-044, 1990-44-15, line LINE-0044.",
+    "Can you send me the next troubleshooting step only \u2014 no ticket or escalation yet. CUST-044, 1990-44-15, line LINE-0044."
+  ],
+  "extracted_from": "tasks/manual/test_T44.py"
+}

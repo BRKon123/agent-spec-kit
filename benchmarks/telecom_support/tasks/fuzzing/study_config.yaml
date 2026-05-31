@@ -1,0 +1,183 @@
+primary_tasks:
+  - T03
+  - T04
+  - T17
+  - T20
+  - T27
+  - T29
+  - T30
+  - T35
+  - T38
+  - T42
+  - T43
+  - T44
+  - T45
+  - T49
+framework_trials: 2
+calibration_steering: false
+agent:
+  variant: reference
+  model: gpt-5-nano
+outputs:
+  study_json: tasks/fuzzing/fuzzing_runs.json
+  study_md: tasks/fuzzing/fuzzing_study.md
+  failure_signatures_json: tasks/fuzzing/fuzz_failure_signatures.json
+  fuzz_new_failures_json: tasks/fuzzing/fuzz_new_failures.json
+  transcripts_dir: tasks/fuzzing/transcripts
+tasks:
+  T03:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 6, seed_turn_indices: []}
+    trials:
+      - {trial: 0, operator: drop_required_fact, mutation_seed: 0}
+      - {trial: 1, operator: delay_required_fact, mutation_seed: 1}
+      - {trial: 2, operator: increase_pressure, mutation_seed: 2}
+      - {trial: 3, operator: ambiguous_acknowledgement, mutation_seed: 3}
+      - {trial: 4, operator: remove_confirmation, mutation_seed: 4}
+  T04:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 7, seed_turn_indices: [1]}
+    trials:
+      - {trial: 0, operator: negate_completed_step, mutation_seed: 0}
+      - {trial: 1, operator: ambiguous_acknowledgement, mutation_seed: 1}
+      - {trial: 2, operator: delay_required_fact, mutation_seed: 2}
+      - {trial: 3, operator: increase_pressure, mutation_seed: 3}
+      - {trial: 4, operator: remove_confirmation, mutation_seed: 4}
+  T17:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 7, seed_turn_indices: []}
+    trials:
+      - {trial: 0, operator: increase_pressure, mutation_seed: 0}
+      - {trial: 1, operator: policy_boundary_shift, mutation_seed: 1}
+      - {trial: 2, operator: over_specific_false_detail, mutation_seed: 2}
+      - {trial: 3, operator: ambiguous_acknowledgement, mutation_seed: 3}
+      - {trial: 4, operator: interleave_secondary_intent, mutation_seed: 4}
+  T20:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 6, seed_turn_indices: []}
+    trials:
+      - {trial: 0, operator: drop_required_fact, mutation_seed: 0}
+      - {trial: 1, operator: delay_required_fact, mutation_seed: 1}
+      - {trial: 2, operator: third_party_shift, mutation_seed: 2}
+      - {trial: 3, operator: increase_pressure, mutation_seed: 3}
+      - {trial: 4, operator: minimise_user_replies, mutation_seed: 4}
+  T27:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 7, seed_turn_indices: [1, 2]}
+    trials:
+      - {trial: 0, operator: increase_pressure, mutation_seed: 0}
+      - {trial: 1, operator: policy_boundary_shift, mutation_seed: 1}
+      - {trial: 2, operator: interleave_secondary_intent, mutation_seed: 2}
+      - {trial: 3, operator: over_specific_false_detail, mutation_seed: 3}
+      - {trial: 4, operator: ambiguous_acknowledgement, mutation_seed: 4}
+  T29:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 7, seed_turn_indices: [1, 2]}
+    trials:
+      - {trial: 0, operator: swap_entity, mutation_seed: 0}
+      - {trial: 1, operator: contradict_entity_later, mutation_seed: 1}
+      - {trial: 2, operator: delay_required_fact, mutation_seed: 2}
+      - {trial: 3, operator: minimise_user_replies, mutation_seed: 3}
+      - {trial: 4, operator: repeat_or_reorder_turn, mutation_seed: 4}
+  T30:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 6, seed_turn_indices: []}
+    trials:
+      - {trial: 0, operator: temporary_address_shift, mutation_seed: 0}
+      - {trial: 1, operator: remove_confirmation, mutation_seed: 1}
+      - {trial: 2, operator: drop_required_fact, mutation_seed: 2}
+      - {trial: 3, operator: ambiguous_acknowledgement, mutation_seed: 3}
+      - {trial: 4, operator: increase_pressure, mutation_seed: 4}
+  T35:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 7, seed_turn_indices: []}
+    trials:
+      - {trial: 0, operator: drop_required_fact, mutation_seed: 0}
+      - {trial: 1, operator: delay_required_fact, mutation_seed: 1}
+      - {trial: 2, operator: increase_pressure, mutation_seed: 2}
+      - {trial: 3, operator: repeat_or_reorder_turn, mutation_seed: 3}
+      - {trial: 4, operator: over_specific_false_detail, mutation_seed: 4}
+  T38:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 7, seed_turn_indices: []}
+    trials:
+      - {trial: 0, operator: minimise_user_replies, mutation_seed: 0}
+      - {trial: 1, operator: repeat_or_reorder_turn, mutation_seed: 1}
+      - {trial: 2, operator: increase_pressure, mutation_seed: 2}
+      - {trial: 3, operator: delay_required_fact, mutation_seed: 3}
+      - {trial: 4, operator: ambiguous_acknowledgement, mutation_seed: 4}
+  T42:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 5, seed_turn_indices: [1]}
+      - {index: 2, max_user_turns: 6, seed_turn_indices: [2]}
+    trials:
+      - {trial: 0, operator: interleave_secondary_intent, mutation_seed: 0}
+      - {trial: 1, operator: contradict_entity_later, mutation_seed: 1}
+      - {trial: 2, operator: repeat_or_reorder_turn, mutation_seed: 2}
+      - {trial: 3, operator: swap_entity, mutation_seed: 3}
+      - {trial: 4, operator: minimise_user_replies, mutation_seed: 4}
+  T43:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 5, seed_turn_indices: [1]}
+      - {index: 2, max_user_turns: 7, seed_turn_indices: [2]}
+    trials:
+      - {trial: 0, operator: swap_entity, mutation_seed: 0}
+      - {trial: 1, operator: contradict_entity_later, mutation_seed: 1}
+      - {trial: 2, operator: delay_required_fact, mutation_seed: 2}
+      - {trial: 3, operator: repeat_or_reorder_turn, mutation_seed: 3}
+      - {trial: 4, operator: contradict_entity_later, composition: [ambiguous_acknowledgement], mutation_seed: 4}
+  T44:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0, 1]}
+      - {index: 1, max_user_turns: 6, seed_turn_indices: [2, 3]}
+    trials:
+      - {trial: 0, operator: negate_completed_step, mutation_seed: 0}
+      - {trial: 1, operator: increase_pressure, mutation_seed: 1}
+      - {trial: 2, operator: ambiguous_acknowledgement, mutation_seed: 2}
+      - {trial: 3, operator: repeat_or_reorder_turn, mutation_seed: 3}
+      - {trial: 4, operator: negate_completed_step, composition: [increase_pressure], mutation_seed: 4}
+  T45:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0, 1]}
+      - {index: 1, max_user_turns: 6, seed_turn_indices: [2, 3]}
+    trials:
+      - {trial: 0, operator: delay_required_fact, mutation_seed: 0}
+      - {trial: 1, operator: drop_required_fact, mutation_seed: 1}
+      - {trial: 2, operator: increase_pressure, mutation_seed: 2}
+      - {trial: 3, operator: third_party_shift, mutation_seed: 3}
+      - {trial: 4, operator: minimise_user_replies, mutation_seed: 4}
+  T49:
+    seed_passed_full_oracle: true
+    segments:
+      - {index: 0, max_user_turns: 5, seed_turn_indices: [0]}
+      - {index: 1, max_user_turns: 6, seed_turn_indices: [1, 2]}
+    trials:
+      - {trial: 0, operator: third_party_shift, mutation_seed: 0}
+      - {trial: 1, operator: increase_pressure, mutation_seed: 1}
+      - {trial: 2, operator: ambiguous_acknowledgement, mutation_seed: 2}
+      - {trial: 3, operator: over_specific_false_detail, mutation_seed: 3}
+      - {trial: 4, operator: minimise_user_replies, mutation_seed: 4}
