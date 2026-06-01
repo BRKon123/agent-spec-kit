@@ -185,11 +185,7 @@ def get_fuzz_trial_detail(
             detail=f"No fuzz trial with id {trial_id!r}",
             instance=str(request.url.path),
         )
-    transcript, err = loaders.load_blob_safely(row.get("transcript_blob_path"))
-    blob_errors: dict[str, str] = {}
-    if err:
-        blob_errors["transcript"] = err
-    return {**row, "transcript": transcript, "blob_errors": blob_errors}
+    return loaders.build_fuzz_trial_detail(row)
 
 
 @router.get(

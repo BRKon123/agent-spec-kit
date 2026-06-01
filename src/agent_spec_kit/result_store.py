@@ -215,6 +215,10 @@ class LocalResultStore:
         ft_cols = {row[1] for row in conn.execute("PRAGMA table_info(fuzz_trials)").fetchall()}
         if "per_step_user_turns_json" not in ft_cols:
             conn.execute("ALTER TABLE fuzz_trials ADD COLUMN per_step_user_turns_json TEXT")
+        if "counterexample_blob_path" not in ft_cols:
+            conn.execute("ALTER TABLE fuzz_trials ADD COLUMN counterexample_blob_path TEXT")
+        if "raw_error_blob_path" not in ft_cols:
+            conn.execute("ALTER TABLE fuzz_trials ADD COLUMN raw_error_blob_path TEXT")
         sh_cols = {row[1] for row in conn.execute("PRAGMA table_info(shrink_results)").fetchall()}
         if "generative_step_index" not in sh_cols:
             conn.execute("ALTER TABLE shrink_results ADD COLUMN generative_step_index INTEGER")
@@ -390,8 +394,8 @@ class LocalResultStore:
                     user_turns_json, behaviour_labels_json, behaviour_details_json, summary_label,
                     failure_signature_json, failure_kind, failure_message,
                     started_at, finished_at, duration_ms, transcript_blob_path,
-                    per_step_user_turns_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    per_step_user_turns_json, counterexample_blob_path, raw_error_blob_path
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(trial_id) DO UPDATE SET
                     status=excluded.status,
                     finished_at=excluded.finished_at,
@@ -399,7 +403,9 @@ class LocalResultStore:
                     failure_kind=excluded.failure_kind,
                     failure_message=excluded.failure_message,
                     transcript_blob_path=excluded.transcript_blob_path,
-                    per_step_user_turns_json=excluded.per_step_user_turns_json
+                    per_step_user_turns_json=excluded.per_step_user_turns_json,
+                    counterexample_blob_path=excluded.counterexample_blob_path,
+                    raw_error_blob_path=excluded.raw_error_blob_path
                 """,
                 (
                     result.trial_id,
@@ -419,6 +425,8 @@ class LocalResultStore:
                     result.duration_ms,
                     result.transcript_blob_path,
                     per_step_json,
+                    result.counterexample_blob_path,
+                    result.raw_error_blob_path,
                 ),
             )
             conn.commit()
@@ -581,6 +589,8 @@ class LocalResultStore:
             "finished_at": row["finished_at"],
             "duration_ms": row["duration_ms"],
             "transcript_blob_path": row["transcript_blob_path"],
+            "counterexample_blob_path": row["counterexample_blob_path"],
+            "raw_error_blob_path": row["raw_error_blob_path"],
             "run_id": row["run_id"],
             "scenario_name": row["scenario_name"],
             "scenario_module": row["scenario_module"],

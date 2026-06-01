@@ -63,6 +63,50 @@ def load_blob_safely(path: str | None) -> tuple[Any | None, str | None]:
         return None, f"{type(e).__name__}: {e}"
 
 
+def _turn_index_from_counterexample(counterexample: Any) -> int | None:
+    if not isinstance(counterexample, dict):
+        return None
+    location = counterexample.get("location")
+    if not isinstance(location, str):
+        return None
+    for part in location.split(","):
+        part = part.strip()
+        if part.startswith("turn "):
+            try:
+                return int(part.removeprefix("turn ").strip())
+            except ValueError:
+                return None
+    return None
+
+
+def build_fuzz_trial_detail(row: dict[str, Any]) -> dict[str, Any]:
+    """Build a fuzz-trial detail dict with transcript and failure blobs loaded."""
+    blob_errors: dict[str, str] = {}
+
+    transcript, err = load_blob_safely(row.get("transcript_blob_path"))
+    if err:
+        blob_errors["transcript"] = err
+    counterexample, err = load_blob_safely(row.get("counterexample_blob_path"))
+    if err:
+        blob_errors["counterexample"] = err
+    raw_error, err = load_blob_safely(row.get("raw_error_blob_path"))
+    if err:
+        blob_errors["raw_error"] = err
+
+    counterexample = repair_counterexample_for_display(
+        counterexample,
+        transcript,
+        turn_index=_turn_index_from_counterexample(counterexample),
+    )
+
+    out = {k: v for k, v in row.items() if not k.endswith("_blob_path")}
+    out["transcript"] = transcript
+    out["counterexample"] = counterexample
+    out["raw_error"] = raw_error
+    out["blob_errors"] = blob_errors
+    return out
+
+
 def build_repeat_trace(
     store: LocalResultStore, repeat_result_id: str
 ) -> dict[str, Any] | None:

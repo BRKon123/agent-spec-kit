@@ -728,9 +728,10 @@ async def run_single_fuzz_trial_async(
             "path": cx.path,
             "expected_summary": cx.expected_summary,
             "actual_min": cx.actual_min,
-            "notes": tuple(cx.notes),
+            "notes": list(cx.notes),
             "check_kind": cx.check_kind,
             "location_detail": cx.location_detail,
+            "events": list(cx.events) if cx.events else None,
         }
     return {
         "trial_index": trial_index,
@@ -747,6 +748,7 @@ async def run_single_fuzz_trial_async(
         "turn_results": turns,
         "failure_signature": sig.as_dict() if sig else None,
         "counterexample": cx_payload,
+        "raw_error": raw_err,
         "ok": ok_t,
     }
 

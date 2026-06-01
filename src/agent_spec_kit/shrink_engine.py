@@ -6,6 +6,7 @@ import os
 from collections.abc import Awaitable, Callable, Sequence
 
 from agent_spec_kit.fuzz_config import ShrinkConfig, ShrinkPassSpec
+from agent_spec_kit.shrink.llm_simplify import apply_llm_semantic_simplify
 
 
 def _simplify_message(msg: str) -> tuple[str, ...]:
@@ -83,7 +84,9 @@ async def _apply_pass(
     if spec.kind == "llm_semantic_simplify":
         if not (os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")):
             return current, candidates_evaluated
-        raise RuntimeError("llm_semantic_simplify is not implemented yet (API key present)")
+        return await apply_llm_semantic_simplify(
+            current, spec, verify_batch=verify_batch
+        )
 
     return current, candidates_evaluated
 

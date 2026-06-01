@@ -231,6 +231,20 @@ def _save_fuzz_trials_for_repeat(
         per_step: tuple[tuple[str, ...], ...] | None = None
         if pst is not None:
             per_step = tuple(tuple(str(u) for u in seg) for seg in pst)
+        counterexample_blob = None
+        cx = trial.get("counterexample")
+        if isinstance(cx, dict):
+            counterexample_blob = write_json_blob(
+                run_blob_dir / f"{repeat_id}_trial{tid:04d}_counterexample.json.gz",
+                _to_jsonable(cx),
+            )
+        raw_error_blob = None
+        raw_err = trial.get("raw_error")
+        if raw_err:
+            raw_error_blob = write_json_blob(
+                run_blob_dir / f"{repeat_id}_trial{tid:04d}_raw_error.json.gz",
+                {"error": raw_err},
+            )
         store.save_fuzz_trial(
             FuzzTrialRecord(
                 trial_id=trial_id,
@@ -253,6 +267,8 @@ def _save_fuzz_trials_for_repeat(
                 finished_at=result.finished_at,
                 duration_ms=int(float(trial.get("duration_s", 0)) * 1000),
                 transcript_blob_path=transcript_blob,
+                counterexample_blob_path=counterexample_blob,
+                raw_error_blob_path=raw_error_blob,
                 per_step_user_turns=per_step,
             )
         )

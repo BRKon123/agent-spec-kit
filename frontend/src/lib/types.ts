@@ -172,6 +172,8 @@ export interface FuzzTrialRunRow extends FuzzTrialSummary {
 
 export interface FuzzTrialDetail extends FuzzTrialRunRow {
   transcript: ConversationTurn[] | null;
+  counterexample: Counterexample | null;
+  raw_error: { error: string } | null;
   blob_errors: Record<string, string>;
 }
 
