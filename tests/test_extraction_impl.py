@@ -57,7 +57,8 @@ def test_extract_regression_appends_scenario(tmp_path: Path) -> None:
     assert target.exists()
     text = target.read_text(encoding="utf-8")
     assert "reg_test_1" in text
-    assert "await s.user_message" in text
+    assert "s.user_message" in text
+    assert "await s.user_message" not in text
 
 
 def test_extract_regression_skip_duplicate(tmp_path: Path) -> None:

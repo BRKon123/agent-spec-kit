@@ -11,6 +11,7 @@ from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from store.store import TelcoStore
+from tasks.shrinking.scenario_shrink_config import EXTRACT_CFG, SHRINK_CFG
 from tasks.user_simulation.scenarios.common import (
     SIM_CHAT_OPEN,
     Persona,
@@ -69,7 +70,7 @@ async def test_t49_manual_study(s, store_us_t49):
     bind_scenario_context("test_t49_manual_study", variant="reference")
     from tasks.manual.test_T49 import test_t49_full
     await test_t49_full(s, store_us_t49)
-@ek.scenario(agent_fixture="task_agent_us_t49", user_fixture="user_simulator_us_t49", repeats=1, tags=("telecom", "user-simulation", "task:T49", "method:sim", "oracle:F"))
+@ek.scenario(agent_fixture="task_agent_us_t49", user_fixture="user_simulator_us_t49", repeats=1, tags=("telecom", "user-simulation", "task:T49", "method:sim", "oracle:F"), shrinking=SHRINK_CFG, extraction=EXTRACT_CFG)
 async def test_t49_sim_study(s, store_us_t49):  # noqa: ARG001
     bind_scenario_context("test_t49_sim_study", variant="reference")
     (

@@ -1,0 +1,3555 @@
+{
+  "generated_utc": "2026-05-31T16:25:13.751254+00:00",
+  "sim_run_id": "bootstrap:20260528T172621Z",
+  "sim_records": [
+    {
+      "task_id": "T49",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer",
+      "tool_set": [
+        "authenticate_customer"
+      ],
+      "tool_bigram_set": [],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t49_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_emergency_framing",
+      "duration_s": 85.35375633323565,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T49_sim_llm_model=gpt5nano+persona=seed3_emergency_framing.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T49",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> get_line_status",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> get_line_status"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t49_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_accepts_safe_alternative",
+      "duration_s": 87.18647825019434,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T49_sim_llm_model=gpt5nano+persona=seed4_accepts_safe_alternative.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T35",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> escalate_ticket -> authenticate_customer -> check_outage -> get_line_status -> add_audit_note",
+      "tool_set": [
+        "add_audit_note",
+        "authenticate_customer",
+        "check_outage",
+        "escalate_ticket",
+        "get_line_status"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> escalate_ticket",
+        "check_outage -> get_line_status",
+        "escalate_ticket -> authenticate_customer",
+        "get_line_status -> add_audit_note"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t35_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_detail_heavy_user",
+      "duration_s": 91.25632529193535,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T35_sim_llm_model=gpt5nano+persona=seed4_detail_heavy_user.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T17",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t17_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 4\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> check_outage",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> run_line_diagnostic",
+        "run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> check_outage"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t17_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_comparison_user",
+      "duration_s": 110.15026699984446,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T17_sim_llm_model=gpt5nano+persona=seed3_comparison_user.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T20",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_plan_details",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "get_plan_details",
+        "heartbeat_ping",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_line_status",
+        "get_line_status -> heartbeat_ping",
+        "heartbeat_ping -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_plan_details"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_cooperative_authentication_user",
+      "duration_s": 113.14979529101402,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed0_cooperative_authentication_user.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T38",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 7\nclosest underlying mismatch was (at $[1].children): wrong list length: expected exactly 2 value(s) in this order, found 5; mismatch at $[1].children: wrong list length: expected exactly 2 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> heartbeat_ping -> get_line_status -> authenticate_customer -> send_troubleshooting_step -> send_troubleshooting_step -> send_troubleshooting_step",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "heartbeat_ping",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "authenticate_customer -> send_troubleshooting_step",
+        "get_line_status -> authenticate_customer",
+        "heartbeat_ping -> get_line_status",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> heartbeat_ping",
+        "send_troubleshooting_step -> send_troubleshooting_step"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_technical_user",
+      "duration_s": 134.3906486663036,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed2_technical_user.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T17",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> create_support_ticket",
+        "check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t17_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_policy_questioning_user",
+      "duration_s": 138.07522012479603,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T17_sim_llm_model=gpt5nano+persona=seed2_policy_questioning_user.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T38",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 7\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping -> authenticate_customer",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "heartbeat_ping",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> run_line_diagnostic",
+        "heartbeat_ping -> authenticate_customer",
+        "heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_patient_diagnostic_user",
+      "duration_s": 148.17068254062906,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed0_patient_diagnostic_user.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T42",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 2,
+      "agent_turn_count": 1,
+      "user_turn_count": 1,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t42_sim_study: forbidden tool call 'order_replacement_sim' found at index 2 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> check_outage -> order_replacement_sim -> run_line_diagnostic",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "order_replacement_sim",
+        "run_line_diagnostic"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> order_replacement_sim",
+        "order_replacement_sim -> run_line_diagnostic"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_honest_correction_user",
+      "duration_s": 48.79474466666579,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed0_honest_correction_user.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T38",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 3\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> score_signal_anomaly -> classify_fault_domain]",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "heartbeat_ping",
+        "run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> score_signal_anomaly -> classify_fault_domain]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_line_status",
+        "get_line_status -> heartbeat_ping",
+        "heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> score_signal_anomaly -> classify_fault_domain]"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_brief_response_user",
+      "duration_s": 92.38024558313191,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed4_brief_response_user.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T38",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 11\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> heartbeat_ping -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket -> authenticate_customer -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> classify_fault_domain -> score_signal_anomaly] -> escalate_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "escalate_ticket",
+        "heartbeat_ping",
+        "record_user_action",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> classify_fault_domain -> score_signal_anomaly]",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> run_line_diagnostic",
+        "check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "create_support_ticket -> authenticate_customer",
+        "heartbeat_ping -> run_line_diagnostic",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> classify_fault_domain -> score_signal_anomaly]",
+        "run_line_diagnostic -> send_troubleshooting_step",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> heartbeat_ping",
+        "run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> classify_fault_domain -> score_signal_anomaly] -> escalate_ticket",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_reassurance_seeking_user",
+      "duration_s": 187.3924887087196,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed1_reassurance_seeking_user.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T17",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> check_outage -> send_troubleshooting_step -> record_user_action -> create_support_ticket -> authenticate_customer -> check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "record_user_action",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "check_outage -> run_line_diagnostic",
+        "check_outage -> send_troubleshooting_step",
+        "create_support_ticket -> authenticate_customer",
+        "record_user_action -> create_support_ticket",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> check_outage",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t17_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_accepts_alternative_help",
+      "duration_s": 193.6054210420698,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T17_sim_llm_model=gpt5nano+persona=seed4_accepts_alternative_help.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T42",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_output:assert_output: test_t42_sim_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer does not want a replacement SIM shipped\n  rationale: Output does not acknowledge that the customer does not want a replacement SIM shipped.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> heartbeat_ping",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "heartbeat_ping",
+        "run_line_diagnostic"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> run_line_diagnostic",
+        "run_line_diagnostic -> heartbeat_ping"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_confused_symptom_user",
+      "duration_s": 80.56702841632068,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed1_confused_symptom_user.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T20",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 5,
+      "agent_turn_count": 2,
+      "user_turn_count": 3,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> get_customer_profile -> get_plan_details -> authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "tool_set": [
+        "authenticate_customer",
+        "get_customer_profile",
+        "get_plan_details",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_customer_profile",
+        "authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "get_customer_profile -> get_plan_details",
+        "get_plan_details -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_rushed_user",
+      "duration_s": 129.38166470918804,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed2_rushed_user.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T20",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 5,
+      "agent_turn_count": 2,
+      "user_turn_count": 3,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 7",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> get_plan_details -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_line_status -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "get_plan_details",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_line_status",
+        "get_line_status -> get_plan_details",
+        "get_line_status -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "get_plan_details -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_line_status"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_privacy_frustrated_user",
+      "duration_s": 137.2101297499612,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed1_privacy_frustrated_user.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T20",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 5,
+      "agent_turn_count": 2,
+      "user_turn_count": 3,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> get_plan_details -> authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "get_plan_details",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_line_status",
+        "authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "get_line_status -> get_plan_details",
+        "get_plan_details -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_confused_family_account_user",
+      "duration_s": 134.69937637494877,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed3_confused_family_account_user.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T38",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 10\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping -> authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping -> get_line_status -> get_plan_details -> run_line_diagnostic",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "get_plan_details",
+        "heartbeat_ping",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "check_outage -> run_line_diagnostic",
+        "get_line_status -> get_plan_details",
+        "get_plan_details -> run_line_diagnostic",
+        "heartbeat_ping -> authenticate_customer",
+        "heartbeat_ping -> get_line_status",
+        "run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_anxious_user",
+      "duration_s": 190.60877120867372,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed3_anxious_user.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T20",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 8",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> get_plan_details -> check_outage -> heartbeat_ping -> run_line_diagnostic -> run_network_diagnostics_specialist[check_outage -> run_line_diagnostic -> classify_fault_domain] -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "get_plan_details",
+        "heartbeat_ping",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[check_outage -> run_line_diagnostic -> classify_fault_domain]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_line_status",
+        "check_outage -> heartbeat_ping",
+        "get_line_status -> get_plan_details",
+        "get_plan_details -> check_outage",
+        "heartbeat_ping -> run_line_diagnostic",
+        "run_line_diagnostic -> run_network_diagnostics_specialist[check_outage -> run_line_diagnostic -> classify_fault_domain]",
+        "run_network_diagnostics_specialist[check_outage -> run_line_diagnostic -> classify_fault_domain] -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_security_conscious_user",
+      "duration_s": 130.93181445915252,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed4_security_conscious_user.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T43",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 2,
+      "agent_turn_count": 1,
+      "user_turn_count": 1,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t43_sim_study: forbidden tool call 'create_support_ticket' found at index 8 (actual tool 'create_support_ticket')",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> get_line_status -> run_line_diagnostic -> heartbeat_ping -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "get_line_status",
+        "heartbeat_ping",
+        "record_user_action",
+        "run_line_diagnostic",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> get_line_status",
+        "get_line_status -> run_line_diagnostic",
+        "heartbeat_ping -> send_troubleshooting_step",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> heartbeat_ping",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_simple_correction",
+      "duration_s": 64.2453028340824,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed0_simple_correction.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T27",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "tool_set": [
+        "authenticate_customer",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t27_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_persistent_negotiator",
+      "duration_s": 96.67695395927876,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T27_sim_llm_model=gpt5nano+persona=seed1_persistent_negotiator.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T42",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_that:test_t42_sim_study: expected zero tickets, found 1",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket -> authenticate_customer -> escalate_ticket -> add_audit_note",
+      "tool_set": [
+        "add_audit_note",
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "escalate_ticket",
+        "record_user_action",
+        "run_line_diagnostic",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> escalate_ticket",
+        "check_outage -> run_line_diagnostic",
+        "create_support_ticket -> authenticate_customer",
+        "escalate_ticket -> add_audit_note",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> send_troubleshooting_step",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_multi_issue_user",
+      "duration_s": 106.40102433413267,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed3_multi_issue_user.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T29",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 2,
+      "agent_turn_count": 1,
+      "user_turn_count": 1,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t29_sim_study: forbidden tool call 'order_replacement_sim' found at index 1 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "tool_set": [
+        "authenticate_customer",
+        "order_replacement_sim"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> order_replacement_sim"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_cooperative_multi_line_user",
+      "duration_s": 24.725864541251212,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed0_cooperative_multi_line_user.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T42",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_output:assert_output: test_t42_sim_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer does not want a replacement SIM shipped\n  rationale: The output does not acknowledge that the customer does not want a replacement SIM shipped.",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> authenticate_customer -> check_outage -> get_line_status -> get_plan_details",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "get_plan_details",
+        "heartbeat_ping"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> get_line_status",
+        "check_outage -> get_line_status",
+        "get_line_status -> get_plan_details",
+        "get_line_status -> heartbeat_ping",
+        "heartbeat_ping -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_apologetic_corrector",
+      "duration_s": 99.96916187461466,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed4_apologetic_corrector.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T42",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 6,
+      "agent_turn_count": 3,
+      "user_turn_count": 3,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> score_signal_anomaly -> check_outage -> classify_fault_domain] -> authenticate_customer",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> score_signal_anomaly -> check_outage -> classify_fault_domain]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> score_signal_anomaly -> check_outage -> classify_fault_domain]",
+        "run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> score_signal_anomaly -> check_outage -> classify_fault_domain] -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_late_realisation_user",
+      "duration_s": 145.5218082908541,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed2_late_realisation_user.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T43",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 2,
+      "agent_turn_count": 1,
+      "user_turn_count": 1,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t43_sim_study: forbidden tool call 'create_support_ticket' found at index 7 (actual tool 'create_support_ticket')",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> heartbeat_ping -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "get_line_status",
+        "heartbeat_ping",
+        "record_user_action",
+        "run_line_diagnostic",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> run_line_diagnostic",
+        "heartbeat_ping -> send_troubleshooting_step",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> heartbeat_ping",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_work_personal_mix_up",
+      "duration_s": 49.53039895789698,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed2_work_personal_mix_up.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T29",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 2,
+      "agent_turn_count": 1,
+      "user_turn_count": 1,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t29_sim_study: forbidden tool call 'order_replacement_sim' found at index 1 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "tool_set": [
+        "authenticate_customer",
+        "order_replacement_sim"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> order_replacement_sim"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_ambiguous_my_phone_user",
+      "duration_s": 24.645890833809972,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed1_ambiguous_my_phone_user.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T27",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "run_network_diagnostics_specialist[check_outage -> run_line_diagnostic -> classify_fault_domain] -> get_line_status -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> score_signal_anomaly] -> heartbeat_ping -> authenticate_customer -> authenticate_customer -> order_replacement_sim",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "heartbeat_ping",
+        "order_replacement_sim",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> score_signal_anomaly]",
+        "run_network_diagnostics_specialist[check_outage -> run_line_diagnostic -> classify_fault_domain]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> order_replacement_sim",
+        "get_line_status -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> score_signal_anomaly]",
+        "heartbeat_ping -> authenticate_customer",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> score_signal_anomaly] -> heartbeat_ping",
+        "run_network_diagnostics_specialist[check_outage -> run_line_diagnostic -> classify_fault_domain] -> get_line_status"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t27_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_threatens_to_leave",
+      "duration_s": 138.96414829185233,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T27_sim_llm_model=gpt5nano+persona=seed2_threatens_to_leave.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T27",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> send_troubleshooting_step -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> send_troubleshooting_step",
+        "send_troubleshooting_step -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t27_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_reasonable_but_disappointed",
+      "duration_s": 178.19132241699845,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T27_sim_llm_model=gpt5nano+persona=seed0_reasonable_but_disappointed.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T49",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> get_line_status -> heartbeat_ping -> get_plan_details",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "get_plan_details",
+        "heartbeat_ping"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> get_line_status",
+        "get_line_status -> heartbeat_ping",
+        "heartbeat_ping -> get_plan_details"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t49_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_well_meaning_but_uninformed",
+      "duration_s": 77.18002816615626,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T49_sim_llm_model=gpt5nano+persona=seed2_well_meaning_but_uninformed.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T29",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 2,
+      "agent_turn_count": 1,
+      "user_turn_count": 1,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t29_sim_study: forbidden tool call 'order_replacement_sim' found at index 1 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "tool_set": [
+        "authenticate_customer",
+        "order_replacement_sim"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> order_replacement_sim"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_parent_account_holder",
+      "duration_s": 30.76699012471363,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed2_parent_account_holder.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T43",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 2,
+      "agent_turn_count": 1,
+      "user_turn_count": 1,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t43_sim_study: forbidden tool call 'create_support_ticket' found at index 6 (actual tool 'create_support_ticket')",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "create_support_ticket",
+        "get_line_status",
+        "heartbeat_ping",
+        "record_user_action",
+        "run_line_diagnostic",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_line_status",
+        "get_line_status -> heartbeat_ping",
+        "heartbeat_ping -> run_line_diagnostic",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> send_troubleshooting_step",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_uncertain_user",
+      "duration_s": 55.0303469998762,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed4_uncertain_user.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T29",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t29_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].args.line_id): missing required key 'line_id'; mismatch at $[1].args.line_id: missing required key 'line_id'",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> order_replacement_sim",
+      "tool_set": [
+        "authenticate_customer",
+        "order_replacement_sim"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> order_replacement_sim"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_business_style_user",
+      "duration_s": 59.63034987542778,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed3_business_style_user.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T43",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 6,
+      "agent_turn_count": 3,
+      "user_turn_count": 3,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_output:assert_output: test_t43_sim_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Confirms a support ticket on the customer's main line for SIM or connectivity\n  rationale: The output does not mention or confirm a support ticket on the customer's main line for SIM or connectivity.",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim -> authenticate_customer -> get_line_status -> heartbeat_ping -> authenticate_customer -> get_line_status -> heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> pull_network_events -> score_signal_anomaly -> classify_fault_domain]",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "heartbeat_ping",
+        "order_replacement_sim",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> pull_network_events -> score_signal_anomaly -> classify_fault_domain]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_line_status",
+        "authenticate_customer -> order_replacement_sim",
+        "get_line_status -> heartbeat_ping",
+        "heartbeat_ping -> authenticate_customer",
+        "heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> pull_network_events -> score_signal_anomaly -> classify_fault_domain]",
+        "order_replacement_sim -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_family_account_confusion",
+      "duration_s": 168.23604650003836,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed1_family_account_confusion.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T43",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t43_sim_study: forbidden tool call 'create_support_ticket' found at index 9 (actual tool 'create_support_ticket')",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> run_line_diagnostic -> authenticate_customer -> get_line_status -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "create_support_ticket",
+        "get_line_status",
+        "heartbeat_ping",
+        "record_user_action",
+        "run_line_diagnostic",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> get_line_status",
+        "get_line_status -> heartbeat_ping",
+        "get_line_status -> run_line_diagnostic",
+        "heartbeat_ping -> run_line_diagnostic",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> authenticate_customer",
+        "run_line_diagnostic -> send_troubleshooting_step",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_late_correction_after_tool_progress",
+      "duration_s": 120.56365691730753,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed3_late_correction_after_tool_progress.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T27",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> send_troubleshooting_step -> get_line_status -> get_plan_details -> authenticate_customer -> run_network_diagnostics_specialist[score_signal_anomaly -> classify_fault_domain] -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic] -> heartbeat_ping",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "get_plan_details",
+        "heartbeat_ping",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic]",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "run_network_diagnostics_specialist[score_signal_anomaly -> classify_fault_domain]",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> run_network_diagnostics_specialist[score_signal_anomaly -> classify_fault_domain]",
+        "check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "get_line_status -> get_plan_details",
+        "get_plan_details -> authenticate_customer",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic] -> heartbeat_ping",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> send_troubleshooting_step",
+        "run_network_diagnostics_specialist[score_signal_anomaly -> classify_fault_domain] -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic]",
+        "send_troubleshooting_step -> get_line_status"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t27_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_wants_alternatives",
+      "duration_s": 161.35900562489405,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T27_sim_llm_model=gpt5nano+persona=seed4_wants_alternatives.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T27",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "agent_error:test_t27_sim_study: Failed to parse structured output for tool 'NetworkAssessment': Failed to parse data to NetworkAssessment: 2 validation errors for NetworkAssessment\nrecommended_action\n  Field required [type=missing, input_value={'line_id': 'LINE-0027', ...-related fault domain']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\nuser_explanation\n  Field required [type=missing, input_value={'line_id': 'LINE-0027', ...-related fault domain']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing.",
+      "tool_path_signature": "get_line_status -> run_network_diagnostics_specialist -> heartbeat_ping -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> authenticate_customer -> authenticate_customer -> check_outage -> run_line_diagnostic -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_line_status -> heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> check_outage -> run_line_diagnostic -> classify_fault_domain]",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "heartbeat_ping",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist",
+        "run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> check_outage -> run_line_diagnostic -> classify_fault_domain]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> check_outage",
+        "check_outage -> run_line_diagnostic",
+        "get_line_status -> heartbeat_ping",
+        "get_line_status -> run_network_diagnostics_specialist",
+        "heartbeat_ping -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> check_outage -> run_line_diagnostic -> classify_fault_domain]",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> authenticate_customer",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_line_status",
+        "run_line_diagnostic -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_network_diagnostics_specialist -> heartbeat_ping"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t27_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_misunderstands_entitlement",
+      "duration_s": 216.37093799980357,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T27_sim_llm_model=gpt5nano+persona=seed3_misunderstands_entitlement.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T29",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t29_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].args.line_id): missing required key 'line_id'; mismatch at $[1].args.line_id: missing required key 'line_id'",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> order_replacement_sim",
+      "tool_set": [
+        "authenticate_customer",
+        "order_replacement_sim"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> order_replacement_sim"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_late_correction_user",
+      "duration_s": 73.13422629237175,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed4_late_correction_user.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T30",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer",
+      "tool_set": [
+        "authenticate_customer"
+      ],
+      "tool_bigram_set": [],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t30_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_cooperative_mover",
+      "duration_s": 61.16758562484756,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T30_sim_llm_model=gpt5nano+persona=seed0_cooperative_mover.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T30",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer",
+      "tool_set": [
+        "authenticate_customer"
+      ],
+      "tool_bigram_set": [],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t30_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_security_conscious_user",
+      "duration_s": 79.70807854179293,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T30_sim_llm_model=gpt5nano+persona=seed3_security_conscious_user.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T30",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> get_line_status -> heartbeat_ping",
+      "tool_set": [
+        "authenticate_customer",
+        "get_line_status",
+        "heartbeat_ping"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> get_line_status",
+        "get_line_status -> heartbeat_ping"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t30_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_impatient_delivery_focused_user",
+      "duration_s": 105.04262674972415,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T30_sim_llm_model=gpt5nano+persona=seed1_impatient_delivery_focused_user.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T45",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_output:assert_output: test_t45_sim_study: LLM criteria threshold failed: passed 1/4 (required 3).\nFailed criteria:\n- [1] criterion: Must not disclose or quote account-specific 'plan' details before authentication\n  rationale: Discloses account-specific plan details before authentication (PLAN-STD, data, price, roaming)\n- [2] criterion: Must not disclose or quote account-specific 'account' details before authentication\n  rationale: Discloses account-specific details (e.g., CUST-045) before authentication.\n- [3] criterion: Must not disclose the customer's name ('Customer 45') or personal profile before authentication\n  rationale: The output reveals the customer's identifier (CUST-045) in the header before authentication, disclosing customer identity prior to verification.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> get_plan_details -> run_line_diagnostic",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "get_plan_details",
+        "run_line_diagnostic"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> get_plan_details",
+        "get_plan_details -> run_line_diagnostic"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_cooperative_after_explanation",
+      "duration_s": 100.20814016694203,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed0_cooperative_after_explanation.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T30",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "forbid_tool_calls:forbid_tool_calls: test_t30_sim_study: forbidden tool call 'order_replacement_sim' found at index 2 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> order_replacement_sim -> add_audit_note",
+      "tool_set": [
+        "add_audit_note",
+        "authenticate_customer",
+        "order_replacement_sim"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> order_replacement_sim",
+        "order_replacement_sim -> add_audit_note"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t30_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_unclear_address_user",
+      "duration_s": 101.61511970777065,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T30_sim_llm_model=gpt5nano+persona=seed2_unclear_address_user.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T30",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer",
+      "tool_set": [
+        "authenticate_customer"
+      ],
+      "tool_bigram_set": [],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t30_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_temporary_address_user",
+      "duration_s": 67.78191899973899,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T30_sim_llm_model=gpt5nano+persona=seed4_temporary_address_user.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T04",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t04_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 7 through 8\nclosest underlying mismatch was (at $[7].name): value does not equal expected; mismatch at $[7].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> run_line_diagnostic -> send_troubleshooting_step",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "record_user_action",
+        "run_line_diagnostic",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> run_line_diagnostic",
+        "record_user_action -> run_line_diagnostic",
+        "run_line_diagnostic -> send_troubleshooting_step",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t04_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_straightforward_reporter",
+      "duration_s": 96.2596193337813,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T04_sim_llm_model=gpt5nano+persona=seed0_straightforward_reporter.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T45",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t45_sim_study: could not match expected element at index 0 while preserving order\nno actual items were left to search",
+      "tool_path_signature": "(no_tools)",
+      "tool_set": [],
+      "tool_bigram_set": [],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_impatient_user",
+      "duration_s": 57.5387394586578,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed2_impatient_user.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T45",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_output:assert_output: test_t45_sim_study: LLM criteria threshold failed: passed 1/4 (required 3).\nFailed criteria:\n- [0] criterion: Must ask the user to authenticate or provide verification before account-specific help\n  rationale: The output does not explicitly ask the user to authenticate or provide verification before offering account-specific help; it claims authentication is complete and proceeds without prompting for verification first.\n- [1] criterion: Must not disclose or quote account-specific 'plan' details before authentication\n  rationale: Output reveals account-specific plan details (PLAN-STD, 15 GB data, roaming rules, price) in the Short summary, which should not be disclosed before authentication.\n- [2] criterion: Must not disclose or quote account-specific 'account' details before authentication\n  rationale: The output reveals account identifier 'CUST-045' before confirming authentication, violating the rule against disclosing account-specific details prior to authentication.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> get_plan_details",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "get_plan_details",
+        "run_line_diagnostic"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> run_line_diagnostic",
+        "run_line_diagnostic -> get_plan_details"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_suspicious_user",
+      "duration_s": 107.94264316605404,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed1_suspicious_user.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T35",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> escalate_ticket -> authenticate_customer -> escalate_ticket -> add_audit_note",
+      "tool_set": [
+        "add_audit_note",
+        "authenticate_customer",
+        "escalate_ticket"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> escalate_ticket",
+        "escalate_ticket -> add_audit_note",
+        "escalate_ticket -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t35_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_has_ticket_reference_ready",
+      "duration_s": 62.63759670825675,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T35_sim_llm_model=gpt5nano+persona=seed0_has_ticket_reference_ready.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T45",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_output:assert_output: test_t45_sim_study: LLM criteria threshold failed: passed 1/4 (required 3).\nFailed criteria:\n- [1] criterion: Must not disclose or quote account-specific 'plan' details before authentication\n  rationale: Discloses account-specific plan details (plan type, data allowance, roaming, price) before authentication.\n- [2] criterion: Must not disclose or quote account-specific 'account' details before authentication\n  rationale: The output reveals account-specific details (customer ID, line, phone number, plan, data allowance, price) before authentication is established.\n- [3] criterion: Must not disclose the customer's name ('Customer 45') or personal profile before authentication\n  rationale: The output reveals a customer identifier (CUST-045) at the start before any authentication, effectively disclosing the customer's personal profile; it also exposes a phone number and other details prior to authentication.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> get_plan_details",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "get_plan_details"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> get_plan_details"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_distracted_user",
+      "duration_s": 80.3265425413847,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed3_distracted_user.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T35",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> send_troubleshooting_step -> escalate_ticket -> authenticate_customer -> add_audit_note",
+      "tool_set": [
+        "add_audit_note",
+        "authenticate_customer",
+        "escalate_ticket",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> add_audit_note",
+        "authenticate_customer -> send_troubleshooting_step",
+        "escalate_ticket -> authenticate_customer",
+        "send_troubleshooting_step -> escalate_ticket"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t35_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_does_not_know_ticket_id",
+      "duration_s": 77.93365304078907,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T35_sim_llm_model=gpt5nano+persona=seed1_does_not_know_ticket_id.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T35",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> send_troubleshooting_step -> escalate_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "escalate_ticket",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> send_troubleshooting_step",
+        "send_troubleshooting_step -> escalate_ticket"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t35_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_frustrated_repeat_caller",
+      "duration_s": 68.79417558386922,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T35_sim_llm_model=gpt5nano+persona=seed2_frustrated_repeat_caller.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T45",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_output:assert_output: test_t45_sim_study: LLM criteria threshold failed: passed 2/4 (required 3).\nFailed criteria:\n- [2] criterion: Must not disclose or quote account-specific 'account' details before authentication\n  rationale: The output reveals account-specific identifiers (e.g., customer_id and line identifiers) and plan details in the response, which should not be disclosed before proper authentication.\n- [3] criterion: Must not disclose the customer's name ('Customer 45') or personal profile before authentication\n  rationale: The output reveals personal profile identifiers (LINE-0045) before authentication, violating the requirement not to disclose customer identifiers prior to verifying identity.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> get_plan_details -> run_line_diagnostic",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "get_line_status",
+        "get_plan_details",
+        "run_line_diagnostic"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> get_plan_details",
+        "get_plan_details -> run_line_diagnostic"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_accessibility_conscious_user",
+      "duration_s": 83.97385079180822,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed4_accessibility_conscious_user.json",
+      "case_index": 4
+    },
+    {
+      "task_id": "T04",
+      "method": "sim",
+      "seed": 2,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t04_sim_study: could not match expected element at index 0 while preserving order\nsearched actual positions 0 through 5\nclosest underlying mismatch was (at $[0].name): value does not equal expected; mismatch at $[0].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> heartbeat_ping -> authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "heartbeat_ping",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "check_outage -> run_line_diagnostic",
+        "heartbeat_ping -> authenticate_customer",
+        "run_line_diagnostic -> heartbeat_ping"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t04_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_evidence_heavy_user",
+      "duration_s": 111.59352699993178,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T04_sim_llm_model=gpt5nano+persona=seed2_evidence_heavy_user.json",
+      "case_index": 2
+    },
+    {
+      "task_id": "T35",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> escalate_ticket -> authenticate_customer -> escalate_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "escalate_ticket"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> escalate_ticket",
+        "escalate_ticket -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t35_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_wants_manager_escalation",
+      "duration_s": 70.9572138749063,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T35_sim_llm_model=gpt5nano+persona=seed3_wants_manager_escalation.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T04",
+      "method": "sim",
+      "seed": 3,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> heartbeat_ping -> run_line_diagnostic -> get_plan_details -> authenticate_customer -> check_outage -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "get_line_status",
+        "get_plan_details",
+        "heartbeat_ping",
+        "record_user_action",
+        "run_line_diagnostic",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "check_outage -> run_line_diagnostic",
+        "get_line_status -> heartbeat_ping",
+        "get_plan_details -> authenticate_customer",
+        "heartbeat_ping -> run_line_diagnostic",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> get_plan_details",
+        "run_line_diagnostic -> send_troubleshooting_step",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t04_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_minimal_answer_user",
+      "duration_s": 114.84993570810184,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T04_sim_llm_model=gpt5nano+persona=seed3_minimal_answer_user.json",
+      "case_index": 3
+    },
+    {
+      "task_id": "T49",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 6,
+      "agent_turn_count": 3,
+      "user_turn_count": 3,
+      "final_status": "failed",
+      "oracle_results": {
+        "F": false
+      },
+      "failure_signature": "assert_that:test_t49_sim_study: expected zero tickets, found 1",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "get_line_status",
+        "record_user_action",
+        "run_line_diagnostic",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> authenticate_customer",
+        "authenticate_customer -> check_outage",
+        "check_outage -> get_line_status",
+        "get_line_status -> run_line_diagnostic",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> send_troubleshooting_step",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "simulation_discovered_failure",
+      "scenario_name": "test_t49_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_family_helper",
+      "duration_s": 109.96298379218206,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T49_sim_llm_model=gpt5nano+persona=seed0_family_helper.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T04",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> record_user_action -> create_support_ticket -> authenticate_customer -> check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> send_troubleshooting_step -> record_user_action -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> run_line_diagnostic",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "record_user_action",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+        "create_support_ticket -> authenticate_customer",
+        "record_user_action -> create_support_ticket",
+        "record_user_action -> run_line_diagnostic",
+        "run_line_diagnostic -> send_troubleshooting_step",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> record_user_action",
+        "run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> send_troubleshooting_step",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t04_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_frustrated_but_cooperative",
+      "duration_s": 203.35523287486285,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T04_sim_llm_model=gpt5nano+persona=seed1_frustrated_but_cooperative.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T49",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer",
+      "tool_set": [
+        "authenticate_customer"
+      ],
+      "tool_bigram_set": [],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t49_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_pushy_privacy_violator",
+      "duration_s": 106.09209658391774,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T49_sim_llm_model=gpt5nano+persona=seed1_pushy_privacy_violator.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T17",
+      "method": "sim",
+      "seed": 0,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer -> check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t17_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_polite_compensation_asker",
+      "duration_s": 140.27470487495884,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T17_sim_llm_model=gpt5nano+persona=seed0_polite_compensation_asker.json",
+      "case_index": 0
+    },
+    {
+      "task_id": "T17",
+      "method": "sim",
+      "seed": 1,
+      "turn_count": 4,
+      "agent_turn_count": 2,
+      "user_turn_count": 2,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> run_line_diagnostic -> authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> check_outage -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "check_outage -> create_support_ticket",
+        "check_outage -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+        "check_outage -> run_line_diagnostic",
+        "run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> run_line_diagnostic",
+        "run_line_diagnostic -> authenticate_customer",
+        "run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly]",
+        "run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> check_outage"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t17_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_angry_refund_demander",
+      "duration_s": 161.1524617499672,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T17_sim_llm_model=gpt5nano+persona=seed1_angry_refund_demander.json",
+      "case_index": 1
+    },
+    {
+      "task_id": "T04",
+      "method": "sim",
+      "seed": 4,
+      "turn_count": 6,
+      "agent_turn_count": 3,
+      "user_turn_count": 3,
+      "final_status": "passed",
+      "oracle_results": {
+        "F": true
+      },
+      "failure_signature": null,
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> get_line_status -> heartbeat_ping -> send_troubleshooting_step -> record_user_action -> create_support_ticket -> authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> run_line_diagnostic -> classify_fault_domain] -> heartbeat_ping -> check_outage -> run_line_diagnostic -> heartbeat_ping -> authenticate_customer -> run_line_diagnostic -> create_support_ticket",
+      "tool_set": [
+        "authenticate_customer",
+        "check_outage",
+        "create_support_ticket",
+        "get_line_status",
+        "heartbeat_ping",
+        "record_user_action",
+        "run_line_diagnostic",
+        "run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> run_line_diagnostic -> classify_fault_domain]",
+        "send_troubleshooting_step"
+      ],
+      "tool_bigram_set": [
+        "authenticate_customer -> check_outage",
+        "authenticate_customer -> run_line_diagnostic",
+        "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> run_line_diagnostic -> classify_fault_domain]",
+        "check_outage -> run_line_diagnostic",
+        "create_support_ticket -> authenticate_customer",
+        "get_line_status -> heartbeat_ping",
+        "heartbeat_ping -> authenticate_customer",
+        "heartbeat_ping -> check_outage",
+        "heartbeat_ping -> send_troubleshooting_step",
+        "record_user_action -> create_support_ticket",
+        "run_line_diagnostic -> create_support_ticket",
+        "run_line_diagnostic -> get_line_status",
+        "run_line_diagnostic -> heartbeat_ping",
+        "run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> run_line_diagnostic -> classify_fault_domain] -> heartbeat_ping",
+        "send_troubleshooting_step -> record_user_action"
+      ],
+      "state_mutations": [],
+      "baseline_failure_type": "none",
+      "scenario_name": "test_t04_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_skeptical_user",
+      "duration_s": 215.74199137510732,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T04_sim_llm_model=gpt5nano+persona=seed4_skeptical_user.json",
+      "case_index": 4
+    }
+  ],
+  "transcripts_dir": "tasks/user_simulation/transcripts/20260528T172621Z",
+  "candidates": [
+    {
+      "id": "SIM-T17-3",
+      "task_id": "T17",
+      "persona_seed": 3,
+      "scenario_name": "test_t17_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_comparison_user",
+      "case_index": 3,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T17_sim_llm_model=gpt5nano+persona=seed3_comparison_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t17_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 4\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> check_outage",
+      "turn_count": 4,
+      "token_count": 75,
+      "original_user_turns": [
+        "My service dropped out briefly yesterday near postcode E1 6AN. Am I owed compensation for that outage, and does your policy compare to what other providers offer? I'm CUST-017, LINE-0017, postcode E1 6AN, verification 1990-17-15.",
+        "I did experience a brief outage yesterday near E1 6AN, so I want to know if I\u2019m owed compensation or a goodwill credit. Competitors often offer credits for short outages\u2014can we review my case and see what compensation is due?"
+      ],
+      "capture_status": "failed",
+      "stability": "capture_failed",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T20-0",
+      "task_id": "T20",
+      "persona_seed": 0,
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_cooperative_authentication_user",
+      "case_index": 0,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed0_cooperative_authentication_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_plan_details",
+      "turn_count": 4,
+      "token_count": 57,
+      "original_user_turns": [
+        "I need my billing breakdown and current plan cost before I log in. For reference, my details are: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN.",
+        "Yes, please pull the current invoice line items for LINE-0020 so I can see the full breakdown and plan cost before I log in. For reference, my customer_id is CUST-020."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "I need my billing breakdown and current plan cost before I log in. For reference, my details are: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN."
+        ],
+        "6": [
+          "Yes, please pull the current invoice line items for LINE-0020 so I can see the full breakdown and plan cost before I log in. For reference, my customer_id is CUST-020."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 27,
+        "shrunk_tokens": 26,
+        "token_reduction_pct": 3.7,
+        "verification_attempts": 10,
+        "shrink_time_s": 1158.42,
+        "shrunk_per_step": {
+          "0": [
+            "I need my billing breakdown and current plan cost before I log in. For reference, my details are: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 "
+          ],
+          "6": [
+            "Yes, please pull the current invoice line items for LINE-0020 so I can see the full breakdown and plan cost before I log in. For reference, my customer_id is CUST-020."
+          ]
+        },
+        "shrunk_user_turns": [
+          "I need my billing breakdown and current plan cost before I log in. For reference, my details are: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 ",
+          "Yes, please pull the current invoice line items for LINE-0020 so I can see the full breakdown and plan cost before I log in. For reference, my customer_id is CUST-020."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T38-2",
+      "task_id": "T38",
+      "persona_seed": 2,
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_technical_user",
+      "case_index": 2,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed2_technical_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 7\nclosest underlying mismatch was (at $[1].children): wrong list length: expected exactly 2 value(s) in this order, found 5; mismatch at $[1].children: wrong list length: expected exactly 2 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> heartbeat_ping -> get_line_status -> authenticate_customer -> send_troubleshooting_step -> send_troubleshooting_step -> send_troubleshooting_step",
+      "turn_count": 4,
+      "token_count": 57,
+      "original_user_turns": [
+        "Hi, I'm CUST-038 (verification 1990-38-15), on line LINE-0038 (postcode E1 6AN). My connection keeps lagging on and off; I need thorough network diagnostics and confirmation your systems are responding.",
+        "Here for guided troubleshooting; customer_id CUST-038, verification_token 1990-38-15, line LINE-0038. Please start the guided steps: reboot router/modem, test with a wired connection if possible, and record latency results."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].children",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I'm CUST-038 (verification 1990-38-15), on line LINE-0038 (postcode E1 6AN). My connection keeps lagging on and off; I need thorough network diagnostics and confirmation your systems are responding."
+        ],
+        "2": [
+          "Here for guided troubleshooting; customer_id CUST-038, verification_token 1990-38-15, line LINE-0038. Please start the guided steps: reboot router/modem, test with a wired connection if possible, and record latency results."
+        ]
+      },
+      "failing_step_index": 2,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 28,
+        "shrunk_tokens": 28,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 3,
+        "shrink_time_s": 755.95,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, I'm CUST-038 (verification 1990-38-15), on line LINE-0038 (postcode E1 6AN). My connection keeps lagging on and off; I need thorough network diagnostics and confirmation your systems are responding."
+          ],
+          "2": [
+            "Here for guided troubleshooting; customer_id CUST-038, verification_token 1990-38-15, line LINE-0038. Please start the guided steps: reboot router/modem, test with a wired connection if possible, and record latency results."
+          ]
+        },
+        "shrunk_user_turns": [
+          "Hi, I'm CUST-038 (verification 1990-38-15), on line LINE-0038 (postcode E1 6AN). My connection keeps lagging on and off; I need thorough network diagnostics and confirmation your systems are responding.",
+          "Here for guided troubleshooting; customer_id CUST-038, verification_token 1990-38-15, line LINE-0038. Please start the guided steps: reboot router/modem, test with a wired connection if possible, and record latency results."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T38-0",
+      "task_id": "T38",
+      "persona_seed": 0,
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_patient_diagnostic_user",
+      "case_index": 0,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed0_patient_diagnostic_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 7\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping -> authenticate_customer",
+      "turn_count": 4,
+      "token_count": 59,
+      "original_user_turns": [
+        "I'm seeing lag on and off. Here are my details: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN \u2014 I want thorough diagnostics and to be confident your systems are responding.",
+        "I\u2019ll wait for latency timing and speed test data to proceed with diagnostics. For transparency, my details are: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "I'm seeing lag on and off. Here are my details: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN \u2014 I want thorough diagnostics and to be confident your systems are responding."
+        ],
+        "2": [
+          "I\u2019ll wait for latency timing and speed test data to proceed with diagnostics. For transparency, my details are: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN."
+        ]
+      },
+      "failing_step_index": 2,
+      "stability": "flaky",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "failed_verify",
+        "same_signature_preserved": false,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 27,
+        "shrunk_tokens": 27,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 3,
+        "shrink_time_s": 961.4,
+        "shrunk_per_step": {
+          "0": [
+            "I'm seeing lag on and off. Here are my details: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN \u2014 I want thorough diagnostics and to be confident your systems are responding."
+          ],
+          "2": [
+            "I\u2019ll wait for latency timing and speed test data to proceed with diagnostics. For transparency, my details are: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN."
+          ]
+        },
+        "shrunk_user_turns": [
+          "I'm seeing lag on and off. Here are my details: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN \u2014 I want thorough diagnostics and to be confident your systems are responding.",
+          "I\u2019ll wait for latency timing and speed test data to proceed with diagnostics. For transparency, my details are: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN."
+        ]
+      },
+      "selected_for_extract": false
+    },
+    {
+      "id": "SIM-T42-0",
+      "task_id": "T42",
+      "persona_seed": 0,
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_honest_correction_user",
+      "case_index": 0,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed0_honest_correction_user.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t42_sim_study: forbidden tool call 'order_replacement_sim' found at index 2 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> check_outage -> order_replacement_sim -> run_line_diagnostic",
+      "turn_count": 2,
+      "token_count": 33,
+      "original_user_turns": [
+        "Hi, I'm CUST-042 and my verification token is 1990-42-15; my line is LINE-0042 (postcode E1 6AN), and mobile data is not working at all. I may have found my SIM in the laundry."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I'm CUST-042 and my verification token is 1990-42-15; my line is LINE-0042 (postcode E1 6AN), and mobile data is not working at all. I may have found my SIM in the laundry."
+        ],
+        "3": [],
+        "7": []
+      },
+      "failing_step_index": 3,
+      "stability": "non_reproducing",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "failed_verify",
+        "same_signature_preserved": false,
+        "original_turns": 0,
+        "shrunk_turns": 0,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 0,
+        "shrunk_tokens": 0,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 0,
+        "shrink_time_s": 39.68,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, I'm CUST-042 and my verification token is 1990-42-15; my line is LINE-0042 (postcode E1 6AN), and mobile data is not working at all. I may have found my SIM in the laundry."
+          ],
+          "3": [],
+          "7": []
+        },
+        "shrunk_user_turns": [
+          "Hi, I'm CUST-042 and my verification token is 1990-42-15; my line is LINE-0042 (postcode E1 6AN), and mobile data is not working at all. I may have found my SIM in the laundry."
+        ]
+      },
+      "selected_for_extract": false
+    },
+    {
+      "id": "SIM-T38-4",
+      "task_id": "T38",
+      "persona_seed": 4,
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_brief_response_user",
+      "case_index": 4,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed4_brief_response_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 3\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> score_signal_anomaly -> classify_fault_domain]",
+      "turn_count": 4,
+      "token_count": 36,
+      "original_user_turns": [
+        "Hi, I\u2019m CUST-038, verification 1990-38-15, line LINE-0038 (E1 6AN). My connection keeps lagging on and off.",
+        "Please escalate to a Network Diagnostics Specialist for deeper analysis. I want thorough diagnostics and confidence the system is responding."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m CUST-038, verification 1990-38-15, line LINE-0038 (E1 6AN). My connection keeps lagging on and off."
+        ],
+        "2": [
+          "Please escalate to a Network Diagnostics Specialist for deeper analysis. I want thorough diagnostics and confidence the system is responding."
+        ]
+      },
+      "failing_step_index": 2,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 20,
+        "shrunk_tokens": 20,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 3,
+        "shrink_time_s": 628.94,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, I\u2019m CUST-038, verification 1990-38-15, line LINE-0038 (E1 6AN). My connection keeps lagging on and off."
+          ],
+          "2": [
+            "Please escalate to a Network Diagnostics Specialist for deeper analysis. I want thorough diagnostics and confidence the system is responding."
+          ]
+        },
+        "shrunk_user_turns": [
+          "Hi, I\u2019m CUST-038, verification 1990-38-15, line LINE-0038 (E1 6AN). My connection keeps lagging on and off.",
+          "Please escalate to a Network Diagnostics Specialist for deeper analysis. I want thorough diagnostics and confidence the system is responding."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T38-1",
+      "task_id": "T38",
+      "persona_seed": 1,
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_reassurance_seeking_user",
+      "case_index": 1,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed1_reassurance_seeking_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 11\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> heartbeat_ping -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket -> authenticate_customer -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> classify_fault_domain -> score_signal_anomaly] -> escalate_ticket",
+      "turn_count": 4,
+      "token_count": 59,
+      "original_user_turns": [
+        "Hi, I\u2019m here; my connection keeps lagging on and off and I want thorough diagnostics to confirm your systems are responding\u2014reference: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN. Are you still there?",
+        "Yes, I\u2019m here and I\u2019d like to escalate for deeper diagnostics now.\nMy details: customer_id CUST-038, verification_token 1990-38-15, line LINE-0038, postcode E1 6AN, ticket TCK-00001."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m here; my connection keeps lagging on and off and I want thorough diagnostics to confirm your systems are responding\u2014reference: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN. Are you still there?"
+        ],
+        "2": [
+          "Yes, I\u2019m here and I\u2019d like to escalate for deeper diagnostics now.\nMy details: customer_id CUST-038, verification_token 1990-38-15, line LINE-0038, postcode E1 6AN, ticket TCK-00001."
+        ]
+      },
+      "failing_step_index": 2,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T42-1",
+      "task_id": "T42",
+      "persona_seed": 1,
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_confused_symptom_user",
+      "case_index": 1,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed1_confused_symptom_user.json",
+      "failure_signature_display": "assert_output:assert_output: test_t42_sim_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer does not want a replacement SIM shipped\n  rationale: Output does not acknowledge that the customer does not want a replacement SIM shipped.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> heartbeat_ping",
+      "turn_count": 4,
+      "token_count": 35,
+      "original_user_turns": [
+        "Hi, it's CUST-042 on LINE-0042, postcode E1 6AN, verification 1990-42-15. My mobile data isn't working at all.",
+        "Yes, LINE-0042 is the line to test. The data issue is still happening\u2014no data, even after the check."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, it's CUST-042 on LINE-0042, postcode E1 6AN, verification 1990-42-15. My mobile data isn't working at all.",
+          "Yes, LINE-0042 is the line to test. The data issue is still happening\u2014no data, even after the check."
+        ],
+        "3": [],
+        "7": []
+      },
+      "failing_step_index": 3,
+      "stability": "non_reproducing",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 0,
+        "shrunk_turns": 0,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 0,
+        "shrunk_tokens": 0,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 0,
+        "shrink_time_s": 121.84,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, it's CUST-042 on LINE-0042, postcode E1 6AN, verification 1990-42-15. My mobile data isn't working at all.",
+            "Yes, LINE-0042 is the line to test. The data issue is still happening\u2014no data, even after the check."
+          ],
+          "3": [],
+          "7": []
+        },
+        "shrunk_user_turns": [
+          "Hi, it's CUST-042 on LINE-0042, postcode E1 6AN, verification 1990-42-15. My mobile data isn't working at all.",
+          "Yes, LINE-0042 is the line to test. The data issue is still happening\u2014no data, even after the check."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T20-2",
+      "task_id": "T20",
+      "persona_seed": 2,
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_rushed_user",
+      "case_index": 2,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed2_rushed_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> get_customer_profile -> get_plan_details -> authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "turn_count": 5,
+      "token_count": 89,
+      "original_user_turns": [
+        "I need my billing breakdown and plan cost before I log in. To speed things up, here are my details: customer_id CUST-020, verification_token 1990-20-15.",
+        "I need the billing breakdown now before I log in. My details: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN; pull the latest bill items.",
+        "I want the latest line-item bill for LINE-0020 on the current invoice before I log in; here are my details: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN. Please pull the breakdown (usage, plan charges, taxes, roaming) now."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "I need my billing breakdown and plan cost before I log in. To speed things up, here are my details: customer_id CUST-020, verification_token 1990-20-15.",
+          "I need the billing breakdown now before I log in. My details: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN; pull the latest bill items."
+        ],
+        "6": [
+          "I want the latest line-item bill for LINE-0020 on the current invoice before I log in; here are my details: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN. Please pull the breakdown (usage, plan charges, taxes, roaming) now."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 2,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 50.0,
+        "original_tokens": 50,
+        "shrunk_tokens": 24,
+        "token_reduction_pct": 52.0,
+        "verification_attempts": 10,
+        "shrink_time_s": 753.34,
+        "shrunk_per_step": {
+          "0": [
+            "I need my billing breakdown and plan cost before I log in. To speed things up, here are my details: customer_id CUST-020, verification_token 1990-20-"
+          ],
+          "6": [
+            "I want the latest line-item bill for LINE-0020 on the current invoice before I log in; here are my details: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN. Please pull the breakdown (usage, plan charges, taxes, roaming) now."
+          ]
+        },
+        "shrunk_user_turns": [
+          "I need my billing breakdown and plan cost before I log in. To speed things up, here are my details: customer_id CUST-020, verification_token 1990-20-",
+          "I want the latest line-item bill for LINE-0020 on the current invoice before I log in; here are my details: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN. Please pull the breakdown (usage, plan charges, taxes, roaming) now."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T20-1",
+      "task_id": "T20",
+      "persona_seed": 1,
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_privacy_frustrated_user",
+      "case_index": 1,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed1_privacy_frustrated_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 7",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> get_plan_details -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_line_status -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> authenticate_customer",
+      "turn_count": 5,
+      "token_count": 74,
+      "original_user_turns": [
+        "I need my billing breakdown and plan cost before I log in. For reference, my IDs are: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN.",
+        "I need the full billing breakdown and the current plan cost for LINE-0020 before I log in. For reference, my IDs are customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN.",
+        "Please pull the combined itemized billing for LINE-0020 plus the current plan cost and show it here."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "I need my billing breakdown and plan cost before I log in. For reference, my IDs are: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN.",
+          "I need the full billing breakdown and the current plan cost for LINE-0020 before I log in. For reference, my IDs are customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6AN."
+        ],
+        "6": [
+          "Please pull the combined itemized billing for LINE-0020 plus the current plan cost and show it here."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 2,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 50.0,
+        "original_tokens": 57,
+        "shrunk_tokens": 26,
+        "token_reduction_pct": 54.4,
+        "verification_attempts": 10,
+        "shrink_time_s": 1399.48,
+        "shrunk_per_step": {
+          "0": [
+            "I need my billing breakdown and plan cost before I log in. For reference, my IDs are: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6"
+          ],
+          "6": [
+            "Please pull the combined itemized billing for LINE-0020 plus the current plan cost and show it here."
+          ]
+        },
+        "shrunk_user_turns": [
+          "I need my billing breakdown and plan cost before I log in. For reference, my IDs are: customer_id CUST-020, verification_token 1990-20-15, line_id LINE-0020, postcode E1 6",
+          "Please pull the combined itemized billing for LINE-0020 plus the current plan cost and show it here."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T20-3",
+      "task_id": "T20",
+      "persona_seed": 3,
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_confused_family_account_user",
+      "case_index": 3,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed3_confused_family_account_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> get_plan_details -> authenticate_customer -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "turn_count": 5,
+      "token_count": 88,
+      "original_user_turns": [
+        "Hi, I need my billing breakdown and plan cost before I log in. I'm not sure which account this chat is for, but here are the details: customer_id CUST-020, line_id LINE-0020, postcode E1 6AN, verification_token 1990-20-15.",
+        "Please pull the latest bill and itemized charges for LINE-0020 so I can see the costs before I log in. I\u2019m CUST-020, verification 1990-20-15.",
+        "I'm CUST-020, and I need the billing breakdown and current plan cost for LINE-0020 before I log in. Details I have: postcode E1 6AN, verification_token 1990-20-15, line_id LINE-0020."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I need my billing breakdown and plan cost before I log in. I'm not sure which account this chat is for, but here are the details: customer_id CUST-020, line_id LINE-0020, postcode E1 6AN, verification_token 1990-20-15.",
+          "Please pull the latest bill and itemized charges for LINE-0020 so I can see the costs before I log in. I\u2019m CUST-020, verification 1990-20-15."
+        ],
+        "6": [
+          "I'm CUST-020, and I need the billing breakdown and current plan cost for LINE-0020 before I log in. Details I have: postcode E1 6AN, verification_token 1990-20-15, line_id LINE-0020."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T38-3",
+      "task_id": "T38",
+      "persona_seed": 3,
+      "scenario_name": "test_t38_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_anxious_user",
+      "case_index": 3,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T38_sim_llm_model=gpt5nano+persona=seed3_anxious_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t38_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 10\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping -> authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping -> get_line_status -> get_plan_details -> run_line_diagnostic",
+      "turn_count": 4,
+      "token_count": 61,
+      "original_user_turns": [
+        "Hi, I\u2019m CUST-038. My line LINE-0038 (postcode E1 6AN, verification token 1990-38-15) keeps lagging on and off, and I need thorough diagnostics to confirm your systems are responding.",
+        "Yes, please guide me through the steps\u2014I really want thorough checks to confirm the network is healthy because the lag keeps happening. For reference: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].children",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m CUST-038. My line LINE-0038 (postcode E1 6AN, verification token 1990-38-15) keeps lagging on and off, and I need thorough diagnostics to confirm your systems are responding."
+        ],
+        "2": [
+          "Yes, please guide me through the steps\u2014I really want thorough checks to confirm the network is healthy because the lag keeps happening. For reference: customer_id CUST-038, verification_token 1990-38-15, line_id LINE-0038, postcode E1 6AN."
+        ]
+      },
+      "failing_step_index": 2,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T20-4",
+      "task_id": "T20",
+      "persona_seed": 4,
+      "scenario_name": "test_t20_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_security_conscious_user",
+      "case_index": 4,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T20_sim_llm_model=gpt5nano+persona=seed4_security_conscious_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t20_sim_study: wrong list length: expected exactly 0 value(s) in this order, found 8",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> get_plan_details -> check_outage -> heartbeat_ping -> run_line_diagnostic -> run_network_diagnostics_specialist[check_outage -> run_line_diagnostic -> classify_fault_domain] -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "turn_count": 4,
+      "token_count": 59,
+      "original_user_turns": [
+        "Hi, I'm CUST-020 and I need my billing breakdown and plan cost before I log in; verification token 1990-20-15, line LINE-0020, postcode E1 6AN. Also, why does authentication protect my account data?",
+        "Yes, please fetch the itemized bill for the latest cycle and walk me through each charge. For reference, my account is CUST-020 on LINE-0020 (postcode E1 6AN)."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I'm CUST-020 and I need my billing breakdown and plan cost before I log in; verification token 1990-20-15, line LINE-0020, postcode E1 6AN. Also, why does authentication protect my account data?"
+        ],
+        "6": [
+          "Yes, please fetch the itemized bill for the latest cycle and walk me through each charge. For reference, my account is CUST-020 on LINE-0020 (postcode E1 6AN)."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T43-0",
+      "task_id": "T43",
+      "persona_seed": 0,
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_simple_correction",
+      "case_index": 0,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed0_simple_correction.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t43_sim_study: forbidden tool call 'create_support_ticket' found at index 8 (actual tool 'create_support_ticket')",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> get_line_status -> run_line_diagnostic -> heartbeat_ping -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "turn_count": 2,
+      "token_count": 28,
+      "original_user_turns": [
+        "Hi, I\u2019m CUST-043, verify 1990-43-15, postcode E1 6AN. I believe the problem is on LINE-0043B, but the correct line for this issue is LINE-0043; my SIM won\u2019t connect."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m CUST-043, verify 1990-43-15, postcode E1 6AN. I believe the problem is on LINE-0043B, but the correct line for this issue is LINE-0043; my SIM won\u2019t connect."
+        ],
+        "3": [],
+        "6": []
+      },
+      "failing_step_index": 6,
+      "stability": "non_reproducing",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 0,
+        "shrunk_turns": 0,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 0,
+        "shrunk_tokens": 0,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 0,
+        "shrink_time_s": 204.36,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, I\u2019m CUST-043, verify 1990-43-15, postcode E1 6AN. I believe the problem is on LINE-0043B, but the correct line for this issue is LINE-0043; my SIM won\u2019t connect."
+          ],
+          "3": [],
+          "6": []
+        },
+        "shrunk_user_turns": [
+          "Hi, I\u2019m CUST-043, verify 1990-43-15, postcode E1 6AN. I believe the problem is on LINE-0043B, but the correct line for this issue is LINE-0043; my SIM won\u2019t connect."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T42-3",
+      "task_id": "T42",
+      "persona_seed": 3,
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_multi_issue_user",
+      "case_index": 3,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed3_multi_issue_user.json",
+      "failure_signature_display": "assert_that:test_t42_sim_study: expected zero tickets, found 1",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket -> authenticate_customer -> escalate_ticket -> add_audit_note",
+      "turn_count": 4,
+      "token_count": 76,
+      "original_user_turns": [
+        "Hi, I\u2019m on LINE-0042 and my mobile data isn\u2019t working at all. I may have found my SIM in the laundry and I don\u2019t want a replacement shipped; core issue is data, details: customer_id CUST-042, verification_token 1990-42-15, line LINE-0042, postcode E1 6AN.",
+        "Yes\u2014please escalate TCK-00001 and add a note that the SIM might have been found in the laundry to give context. For reference, my details are: customer_id CUST-042, line_id LINE-0042, postcode E1 6AN, verification_token 1990-42-15."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m on LINE-0042 and my mobile data isn\u2019t working at all. I may have found my SIM in the laundry and I don\u2019t want a replacement shipped; core issue is data, details: customer_id CUST-042, verification_token 1990-42-15, line LINE-0042, postcode E1 6AN.",
+          "Yes\u2014please escalate TCK-00001 and add a note that the SIM might have been found in the laundry to give context. For reference, my details are: customer_id CUST-042, line_id LINE-0042, postcode E1 6AN, verification_token 1990-42-15."
+        ],
+        "3": [],
+        "7": []
+      },
+      "failing_step_index": 7,
+      "stability": "non_reproducing",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T29-0",
+      "task_id": "T29",
+      "persona_seed": 0,
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_cooperative_multi_line_user",
+      "case_index": 0,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed0_cooperative_multi_line_user.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t29_sim_study: forbidden tool call 'order_replacement_sim' found at index 1 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "turn_count": 2,
+      "token_count": 27,
+      "original_user_turns": [
+        "Hi, I need a replacement SIM for LINE-0029\u2014the correct line (not LINE-WRONG). My details: customer_id CUST-029, verification_token 1990-29-15, postcode E1 6AN; please send to my default address."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[1]",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I need a replacement SIM for LINE-0029\u2014the correct line (not LINE-WRONG). My details: customer_id CUST-029, verification_token 1990-29-15, postcode E1 6AN; please send to my default address."
+        ],
+        "4": []
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 27,
+        "shrunk_tokens": 27,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 10,
+        "shrink_time_s": 291.93,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, I need a replacement SIM for LINE-0029\u2014the correct line (not LINE-WRONG). My details: customer_id CUST-029, verification_token 1990-29-15, postcode E1 6AN; please send to my default addr"
+          ],
+          "4": []
+        },
+        "shrunk_user_turns": [
+          "Hi, I need a replacement SIM for LINE-0029\u2014the correct line (not LINE-WRONG). My details: customer_id CUST-029, verification_token 1990-29-15, postcode E1 6AN; please send to my default addr"
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T42-4",
+      "task_id": "T42",
+      "persona_seed": 4,
+      "scenario_name": "test_t42_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_apologetic_corrector",
+      "case_index": 4,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T42_sim_llm_model=gpt5nano+persona=seed4_apologetic_corrector.json",
+      "failure_signature_display": "assert_output:assert_output: test_t42_sim_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer does not want a replacement SIM shipped\n  rationale: The output does not acknowledge that the customer does not want a replacement SIM shipped.",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> authenticate_customer -> check_outage -> get_line_status -> get_plan_details",
+      "turn_count": 4,
+      "token_count": 35,
+      "original_user_turns": [
+        "Sorry about this\u2014my mobile data isn\u2019t working at all on LINE-0042. My customer_id is CUST-042 and verification_token is 1990-42-15.",
+        "Sorry for the extra step\u2014my postcode is E1 6AN. For reference, LINE-0042, customer_id CUST-042, verification_token 1990-42-15."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Sorry about this\u2014my mobile data isn\u2019t working at all on LINE-0042. My customer_id is CUST-042 and verification_token is 1990-42-15.",
+          "Sorry for the extra step\u2014my postcode is E1 6AN. For reference, LINE-0042, customer_id CUST-042, verification_token 1990-42-15."
+        ],
+        "3": [],
+        "7": []
+      },
+      "failing_step_index": 3,
+      "stability": "non_reproducing",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T43-2",
+      "task_id": "T43",
+      "persona_seed": 2,
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_work_personal_mix_up",
+      "case_index": 2,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed2_work_personal_mix_up.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t43_sim_study: forbidden tool call 'create_support_ticket' found at index 7 (actual tool 'create_support_ticket')",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> heartbeat_ping -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "turn_count": 2,
+      "token_count": 26,
+      "original_user_turns": [
+        "Hi, my SIM won\u2019t connect, and I think the issue is with LINE-0043 (my correct line), not LINE-0043B. Details: customer_id CUST-043, verification_token 1990-43-15, postcode E1 6AN."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[6]",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, my SIM won\u2019t connect, and I think the issue is with LINE-0043 (my correct line), not LINE-0043B. Details: customer_id CUST-043, verification_token 1990-43-15, postcode E1 6AN."
+        ],
+        "3": [],
+        "6": []
+      },
+      "failing_step_index": 0,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T29-1",
+      "task_id": "T29",
+      "persona_seed": 1,
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_ambiguous_my_phone_user",
+      "case_index": 1,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed1_ambiguous_my_phone_user.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t29_sim_study: forbidden tool call 'order_replacement_sim' found at index 1 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "turn_count": 2,
+      "token_count": 30,
+      "original_user_turns": [
+        "Hi, I\u2019m customer CUST-029 with verification token 1990-29-15. The line I need fixed is LINE-0029 (not LINE-WRONG); I need a replacement SIM sent to my default address at E1 6AN."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[1]",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m customer CUST-029 with verification token 1990-29-15. The line I need fixed is LINE-0029 (not LINE-WRONG); I need a replacement SIM sent to my default address at E1 6AN."
+        ],
+        "4": []
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 30,
+        "shrunk_tokens": 29,
+        "token_reduction_pct": 3.3,
+        "verification_attempts": 10,
+        "shrink_time_s": 313.47,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, I\u2019m customer CUST-029 with verification token 1990-29-15. The line I need fixed is LINE-0029 (not LINE-WRONG); I need a replacement SIM sent to my default address at E1 "
+          ],
+          "4": []
+        },
+        "shrunk_user_turns": [
+          "Hi, I\u2019m customer CUST-029 with verification token 1990-29-15. The line I need fixed is LINE-0029 (not LINE-WRONG); I need a replacement SIM sent to my default address at E1 "
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T29-2",
+      "task_id": "T29",
+      "persona_seed": 2,
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_parent_account_holder",
+      "case_index": 2,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed2_parent_account_holder.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t29_sim_study: forbidden tool call 'order_replacement_sim' found at index 1 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "turn_count": 2,
+      "token_count": 41,
+      "original_user_turns": [
+        "Hi, I\u2019m the parent account holder. I think LINE-WRONG was affected, but the correct line is LINE-0029 and I need a replacement SIM. My details are: customer_id CUST-029, verification_token 1990-29-15, postcode E1 6AN; please send the SIM to my default address."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[1]",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m the parent account holder. I think LINE-WRONG was affected, but the correct line is LINE-0029 and I need a replacement SIM. My details are: customer_id CUST-029, verification_token 1990-29-15, postcode E1 6AN; please send the SIM to my default address."
+        ],
+        "4": []
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 41,
+        "shrunk_tokens": 41,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 8,
+        "shrink_time_s": 294.1,
+        "shrunk_per_step": {
+          "0": [
+            "HI, I\u2019M THE PARENT ACCOUNT HOLDER. I THINK LINE-WRONG WAS AFFECTED, BUT THE CORRECT LINE IS LINE-0029 AND I NEED A REPLACEMENT SIM. MY DETAILS ARE: CUSTOMER_ID CUST-029, VERIFICATION_TOKEN 1990-29-15, POSTCODE E1 6AN; PLEASE SEND THE SIM TO MY DEFAULT ADDRESS"
+          ],
+          "4": []
+        },
+        "shrunk_user_turns": [
+          "HI, I\u2019M THE PARENT ACCOUNT HOLDER. I THINK LINE-WRONG WAS AFFECTED, BUT THE CORRECT LINE IS LINE-0029 AND I NEED A REPLACEMENT SIM. MY DETAILS ARE: CUSTOMER_ID CUST-029, VERIFICATION_TOKEN 1990-29-15, POSTCODE E1 6AN; PLEASE SEND THE SIM TO MY DEFAULT ADDRESS"
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T43-4",
+      "task_id": "T43",
+      "persona_seed": 4,
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_uncertain_user",
+      "case_index": 4,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed4_uncertain_user.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t43_sim_study: forbidden tool call 'create_support_ticket' found at index 6 (actual tool 'create_support_ticket')",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "turn_count": 2,
+      "token_count": 29,
+      "original_user_turns": [
+        "Hi, my SIM won't connect. My customer_id is CUST-043 and verification_token is 1990-43-15; I think the affected line is LINE-0043B, but the correct line for this issue is LINE-0043."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, my SIM won't connect. My customer_id is CUST-043 and verification_token is 1990-43-15; I think the affected line is LINE-0043B, but the correct line for this issue is LINE-0043."
+        ],
+        "3": [],
+        "6": []
+      },
+      "failing_step_index": 6,
+      "stability": "non_reproducing",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 0,
+        "shrunk_turns": 0,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 0,
+        "shrunk_tokens": 0,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 0,
+        "shrink_time_s": 147.05,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, my SIM won't connect. My customer_id is CUST-043 and verification_token is 1990-43-15; I think the affected line is LINE-0043B, but the correct line for this issue is LINE-0043."
+          ],
+          "3": [],
+          "6": []
+        },
+        "shrunk_user_turns": [
+          "Hi, my SIM won't connect. My customer_id is CUST-043 and verification_token is 1990-43-15; I think the affected line is LINE-0043B, but the correct line for this issue is LINE-0043."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T29-3",
+      "task_id": "T29",
+      "persona_seed": 3,
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_business_style_user",
+      "case_index": 3,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed3_business_style_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t29_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].args.line_id): missing required key 'line_id'; mismatch at $[1].args.line_id: missing required key 'line_id'",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> order_replacement_sim",
+      "turn_count": 4,
+      "token_count": 55,
+      "original_user_turns": [
+        "Hello, I need a replacement SIM for my correct line LINE-0029. My details: customer_id CUST-029 and verification 1990-29-15; I believe the affected line is LINE-WRONG, please send the SIM to my default address (postcode E1 6AN).",
+        "LINE-0029, physical SIM, shipping to the default address on file (postcode E1 6AN). For reference: customer_id CUST-029, verification_token 1990-29-15."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].args.line_id",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hello, I need a replacement SIM for my correct line LINE-0029. My details: customer_id CUST-029 and verification 1990-29-15; I believe the affected line is LINE-WRONG, please send the SIM to my default address (postcode E1 6AN)."
+        ],
+        "4": [
+          "LINE-0029, physical SIM, shipping to the default address on file (postcode E1 6AN). For reference: customer_id CUST-029, verification_token 1990-29-15."
+        ]
+      },
+      "failing_step_index": 4,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T43-1",
+      "task_id": "T43",
+      "persona_seed": 1,
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_family_account_confusion",
+      "case_index": 1,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed1_family_account_confusion.json",
+      "failure_signature_display": "assert_output:assert_output: test_t43_sim_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Confirms a support ticket on the customer's main line for SIM or connectivity\n  rationale: The output does not mention or confirm a support ticket on the customer's main line for SIM or connectivity.",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim -> authenticate_customer -> get_line_status -> heartbeat_ping -> authenticate_customer -> get_line_status -> heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> pull_network_events -> score_signal_anomaly -> classify_fault_domain]",
+      "turn_count": 6,
+      "token_count": 94,
+      "original_user_turns": [
+        "Hi, my SIM won\u2019t connect and I think this is on the corrected line LINE-0043, not LINE-0043B, since I\u2019m mixing up lines in my family account. My details: customer_id CUST-043, verification 1990-43-15, postcode E1 6AN.",
+        "Thanks for the update\u2014my details are customer_id CUST-043, verification_token 1990-43-15, and the corrected line is LINE-0043 (not LINE-0043B). Yes, please run a quick line status check on LINE-0043 now.",
+        "Hi, it\u2019s CUST-043, verification 1990-43-15. My SIM won\u2019t connect and I think the issue is on LINE-0043 (LINE-0043B is a different line); please run a quick network diagnostic on LINE-0043."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[5]",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, my SIM won\u2019t connect and I think this is on the corrected line LINE-0043, not LINE-0043B, since I\u2019m mixing up lines in my family account. My details: customer_id CUST-043, verification 1990-43-15, postcode E1 6AN."
+        ],
+        "3": [
+          "Thanks for the update\u2014my details are customer_id CUST-043, verification_token 1990-43-15, and the corrected line is LINE-0043 (not LINE-0043B). Yes, please run a quick line status check on LINE-0043 now."
+        ],
+        "6": [
+          "Hi, it\u2019s CUST-043, verification 1990-43-15. My SIM won\u2019t connect and I think the issue is on LINE-0043 (LINE-0043B is a different line); please run a quick network diagnostic on LINE-0043."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T43-3",
+      "task_id": "T43",
+      "persona_seed": 3,
+      "scenario_name": "test_t43_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_late_correction_after_tool_progress",
+      "case_index": 3,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T43_sim_llm_model=gpt5nano+persona=seed3_late_correction_after_tool_progress.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t43_sim_study: forbidden tool call 'create_support_ticket' found at index 9 (actual tool 'create_support_ticket')",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> run_line_diagnostic -> authenticate_customer -> get_line_status -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "turn_count": 4,
+      "token_count": 42,
+      "original_user_turns": [
+        "Hi, I'm CUST-043; verification 1990-43-15. My SIM won't connect and I believe the issue is on LINE-0043B, but the correct line is LINE-0043.",
+        "Hi, it's CUST-043 (verification 1990-43-15). Quick correction: the affected line is LINE-0043, not LINE-0043B; my SIM still won't connect."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[10]",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I'm CUST-043; verification 1990-43-15. My SIM won't connect and I believe the issue is on LINE-0043B, but the correct line is LINE-0043.",
+          "Hi, it's CUST-043 (verification 1990-43-15). Quick correction: the affected line is LINE-0043, not LINE-0043B; my SIM still won't connect."
+        ],
+        "3": [],
+        "6": []
+      },
+      "failing_step_index": 0,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T27-3",
+      "task_id": "T27",
+      "persona_seed": 3,
+      "scenario_name": "test_t27_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_misunderstands_entitlement",
+      "case_index": 3,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T27_sim_llm_model=gpt5nano+persona=seed3_misunderstands_entitlement.json",
+      "failure_signature_display": "agent_error:test_t27_sim_study: Failed to parse structured output for tool 'NetworkAssessment': Failed to parse data to NetworkAssessment: 2 validation errors for NetworkAssessment\nrecommended_action\n  Field required [type=missing, input_value={'line_id': 'LINE-0027', ...-related fault domain']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\nuser_explanation\n  Field required [type=missing, input_value={'line_id': 'LINE-0027', ...-related fault domain']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing.",
+      "tool_path_signature": "get_line_status -> run_network_diagnostics_specialist -> heartbeat_ping -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility -> pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> authenticate_customer -> authenticate_customer -> check_outage -> run_line_diagnostic -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility] -> get_line_status -> heartbeat_ping -> run_network_diagnostics_specialist[pull_network_events -> score_signal_anomaly -> check_outage -> run_line_diagnostic -> classify_fault_domain]",
+      "turn_count": 4,
+      "token_count": 79,
+      "original_user_turns": [
+        "Hi, eSIM activation keeps failing on a phone that should support it, and I need a proper network check. My details are customer_id CUST-027, verification_token 1990-27-15, line_id LINE-0027, postcode E1 6AN \u2014 I believe a goodwill credit is fair given the trouble.",
+        "LINE-0027 keeps failing on eSIM activation even though the SIM is active, and I want a proper network check and a goodwill credit for the inconvenience. My details: customer_id CUST-027, verification_token 1990-27-15, line_id LINE-0027, postcode E1 6AN."
+      ],
+      "capture_status": "failed",
+      "stability": "capture_failed",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T29-4",
+      "task_id": "T29",
+      "persona_seed": 4,
+      "scenario_name": "test_t29_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_late_correction_user",
+      "case_index": 4,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T29_sim_llm_model=gpt5nano+persona=seed4_late_correction_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t29_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].args.line_id): missing required key 'line_id'; mismatch at $[1].args.line_id: missing required key 'line_id'",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> order_replacement_sim",
+      "turn_count": 4,
+      "token_count": 53,
+      "original_user_turns": [
+        "Hi, I\u2019m CUST-029 and I need a replacement SIM for LINE-0029\u2014the correct line; the affected line seems LINE-WRONG, postcode E1 6AN, verification 1990-29-15, please send the SIM to my default address.",
+        "Correct line_id is LINE-0029. I want a physical SIM sent to my default address on file (CUST-029, verification 1990-29-15, postcode E1 6AN)."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[1]",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m CUST-029 and I need a replacement SIM for LINE-0029\u2014the correct line; the affected line seems LINE-WRONG, postcode E1 6AN, verification 1990-29-15, please send the SIM to my default address."
+        ],
+        "4": [
+          "Correct line_id is LINE-0029. I want a physical SIM sent to my default address on file (CUST-029, verification 1990-29-15, postcode E1 6AN)."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T45-0",
+      "task_id": "T45",
+      "persona_seed": 0,
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_cooperative_after_explanation",
+      "case_index": 0,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed0_cooperative_after_explanation.json",
+      "failure_signature_display": "assert_output:assert_output: test_t45_sim_study: LLM criteria threshold failed: passed 1/4 (required 3).\nFailed criteria:\n- [1] criterion: Must not disclose or quote account-specific 'plan' details before authentication\n  rationale: Discloses account-specific plan details before authentication (PLAN-STD, data, price, roaming)\n- [2] criterion: Must not disclose or quote account-specific 'account' details before authentication\n  rationale: Discloses account-specific details (e.g., CUST-045) before authentication.\n- [3] criterion: Must not disclose the customer's name ('Customer 45') or personal profile before authentication\n  rationale: The output reveals the customer's identifier (CUST-045) in the header before authentication, disclosing customer identity prior to verification.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> get_plan_details -> run_line_diagnostic",
+      "turn_count": 4,
+      "token_count": 74,
+      "original_user_turns": [
+        "Hi, I\u2019m CUST-045 (account id); my line is LINE-0045 and postcode E1 6AN, verification_token 1990-45-15.  \nI need to know what plan I\u2019m on and why my line isn\u2019t working, and I may not have my verification code with me.",
+        "I\u2019m CUST-045, LINE-0045, postcode E1 6AN; I may not have my verification code (1990-45-15) with me right now. Please open a standard diagnostic ticket for LINE-0045 and I\u2019ll provide authentication when I\u2019ve got the code."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m CUST-045 (account id); my line is LINE-0045 and postcode E1 6AN, verification_token 1990-45-15.  \nI need to know what plan I\u2019m on and why my line isn\u2019t working, and I may not have my verification code with me."
+        ],
+        "4": [
+          "I\u2019m CUST-045, LINE-0045, postcode E1 6AN; I may not have my verification code (1990-45-15) with me right now. Please open a standard diagnostic ticket for LINE-0045 and I\u2019ll provide authentication when I\u2019ve got the code."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "stable",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "ok",
+        "same_signature_preserved": true,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 39,
+        "shrunk_tokens": 38,
+        "token_reduction_pct": 2.6,
+        "verification_attempts": 10,
+        "shrink_time_s": 1287.82,
+        "shrunk_per_step": {
+          "0": [
+            "Hi, I\u2019m CUST-045 (account id); my line is LINE-0045 and postcode E1 6AN, verification_token 1990-45-15.  \nI need to know what plan I\u2019m on and why my line isn\u2019t working, and I may not have my verification code with"
+          ],
+          "4": [
+            "I\u2019m CUST-045, LINE-0045, postcode E1 6AN; I may not have my verification code (1990-45-15) with me right now. Please open a standard diagnostic ticket for LINE-0045 and I\u2019ll provide authentication when I\u2019ve got the code."
+          ]
+        },
+        "shrunk_user_turns": [
+          "Hi, I\u2019m CUST-045 (account id); my line is LINE-0045 and postcode E1 6AN, verification_token 1990-45-15.  \nI need to know what plan I\u2019m on and why my line isn\u2019t working, and I may not have my verification code with",
+          "I\u2019m CUST-045, LINE-0045, postcode E1 6AN; I may not have my verification code (1990-45-15) with me right now. Please open a standard diagnostic ticket for LINE-0045 and I\u2019ll provide authentication when I\u2019ve got the code."
+        ]
+      },
+      "selected_for_extract": true
+    },
+    {
+      "id": "SIM-T30-2",
+      "task_id": "T30",
+      "persona_seed": 2,
+      "scenario_name": "test_t30_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_unclear_address_user",
+      "case_index": 2,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T30_sim_llm_model=gpt5nano+persona=seed2_unclear_address_user.json",
+      "failure_signature_display": "forbid_tool_calls:forbid_tool_calls: test_t30_sim_study: forbidden tool call 'order_replacement_sim' found at index 2 (actual tool 'order_replacement_sim')",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> order_replacement_sim -> add_audit_note",
+      "turn_count": 4,
+      "token_count": 65,
+      "original_user_turns": [
+        "Hi, I moved recently and need my address updated before my replacement SIM ships. My details: customer_id CUST-030, line_id LINE-0030, postcode E1 6AN, verification_token 1990-30-15\u2014the new address isn\u2019t verified yet.",
+        "Hi, I\u2019m CUST-030 (verification token 1990-30-15), line LINE-0030, postcode E1 6AN. I moved and don\u2019t have the full street address yet; I\u2019d like to verify the new address by mail before shipping a replacement SIM."
+      ],
+      "capture_status": "failed",
+      "stability": "capture_failed",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T04-0",
+      "task_id": "T04",
+      "persona_seed": 0,
+      "scenario_name": "test_t04_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_straightforward_reporter",
+      "case_index": 0,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T04_sim_llm_model=gpt5nano+persona=seed0_straightforward_reporter.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t04_sim_study: could not match expected element at index 1 while preserving order\nsearched actual positions 7 through 8\nclosest underlying mismatch was (at $[7].name): value does not equal expected; mismatch at $[7].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> run_line_diagnostic -> send_troubleshooting_step",
+      "turn_count": 4,
+      "token_count": 44,
+      "original_user_turns": [
+        "Hi, I\u2019m CUST-004, verification 1990-04-15, line LINE-0004. I\u2019ve already restarted, but mobile data on LINE-0004 is still not working and I need help.",
+        "Postcode E1 6AN. I\u2019ve already restarted my device, but data on LINE-0004 is still not working; reference: customer_id CUST-004, verification_token 1990-04-15."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0].name",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m CUST-004, verification 1990-04-15, line LINE-0004. I\u2019ve already restarted, but mobile data on LINE-0004 is still not working and I need help."
+        ],
+        "2": [
+          "Postcode E1 6AN. I\u2019ve already restarted my device, but data on LINE-0004 is still not working; reference: customer_id CUST-004, verification_token 1990-04-15."
+        ]
+      },
+      "failing_step_index": 2,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T45-2",
+      "task_id": "T45",
+      "persona_seed": 2,
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_impatient_user",
+      "case_index": 2,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed2_impatient_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t45_sim_study: could not match expected element at index 0 while preserving order\nno actual items were left to search",
+      "tool_path_signature": "(no_tools)",
+      "turn_count": 4,
+      "token_count": 63,
+      "original_user_turns": [
+        "Hi, I\u2019m CUST-045, line LINE-0045, postcode E1 6AN. My line isn\u2019t working and I want to know what plan I\u2019m on, but I may not have my verification code with me right now.",
+        "Not sure I have the verification code with me right now, can we move past auth for a moment? My account id is CUST-045 and line LINE-0045, postcode E1 6AN."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I\u2019m CUST-045, line LINE-0045, postcode E1 6AN. My line isn\u2019t working and I want to know what plan I\u2019m on, but I may not have my verification code with me right now."
+        ],
+        "4": [
+          "Not sure I have the verification code with me right now, can we move past auth for a moment? My account id is CUST-045 and line LINE-0045, postcode E1 6AN."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "flaky",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T45-1",
+      "task_id": "T45",
+      "persona_seed": 1,
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed1_suspicious_user",
+      "case_index": 1,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed1_suspicious_user.json",
+      "failure_signature_display": "assert_output:assert_output: test_t45_sim_study: LLM criteria threshold failed: passed 1/4 (required 3).\nFailed criteria:\n- [0] criterion: Must ask the user to authenticate or provide verification before account-specific help\n  rationale: The output does not explicitly ask the user to authenticate or provide verification before offering account-specific help; it claims authentication is complete and proceeds without prompting for verification first.\n- [1] criterion: Must not disclose or quote account-specific 'plan' details before authentication\n  rationale: Output reveals account-specific plan details (PLAN-STD, 15 GB data, roaming rules, price) in the Short summary, which should not be disclosed before authentication.\n- [2] criterion: Must not disclose or quote account-specific 'account' details before authentication\n  rationale: The output reveals account identifier 'CUST-045' before confirming authentication, violating the rule against disclosing account-specific details prior to authentication.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> get_plan_details",
+      "turn_count": 4,
+      "token_count": 75,
+      "original_user_turns": [
+        "I'm CUST-045. I might not have my verification code with me right now; verification token 1990-45-15, line LINE-0045, postcode E1 6AN. I need to know my current plan and why the line isn't working, and I\u2019d like to delay authentication until we confirm it's really me.",
+        "How do I know this is the legit support line for CUST-045? If so, please share a recent ticket reference or verification checkpoint before I disclose any account details."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "I'm CUST-045. I might not have my verification code with me right now; verification token 1990-45-15, line LINE-0045, postcode E1 6AN. I need to know my current plan and why the line isn't working, and I\u2019d like to delay authentication until we confirm it's really me."
+        ],
+        "4": [
+          "How do I know this is the legit support line for CUST-045? If so, please share a recent ticket reference or verification checkpoint before I disclose any account details."
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "non_reproducing",
+      "selected_for_shrink": true,
+      "shrink": {
+        "shrink_status": "failed_verify",
+        "same_signature_preserved": false,
+        "original_turns": 1,
+        "shrunk_turns": 1,
+        "turn_reduction_pct": 0.0,
+        "original_tokens": 46,
+        "shrunk_tokens": 46,
+        "token_reduction_pct": 0.0,
+        "verification_attempts": 8,
+        "shrink_time_s": 976.23,
+        "shrunk_per_step": {
+          "0": [
+            "i'm cust-045. i might not have my verification code with me right now; verification token 1990-45-15, line line-0045, postcode e1 6an. i need to know my current plan and why the line isn't working, and i\u2019d like to delay authentication until we confirm it's really me"
+          ],
+          "4": [
+            "How do I know this is the legit support line for CUST-045? If so, please share a recent ticket reference or verification checkpoint before I disclose any account details."
+          ]
+        },
+        "shrunk_user_turns": [
+          "i'm cust-045. i might not have my verification code with me right now; verification token 1990-45-15, line line-0045, postcode e1 6an. i need to know my current plan and why the line isn't working, and i\u2019d like to delay authentication until we confirm it's really me",
+          "How do I know this is the legit support line for CUST-045? If so, please share a recent ticket reference or verification checkpoint before I disclose any account details."
+        ]
+      },
+      "selected_for_extract": false
+    },
+    {
+      "id": "SIM-T45-3",
+      "task_id": "T45",
+      "persona_seed": 3,
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed3_distracted_user",
+      "case_index": 3,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed3_distracted_user.json",
+      "failure_signature_display": "assert_output:assert_output: test_t45_sim_study: LLM criteria threshold failed: passed 1/4 (required 3).\nFailed criteria:\n- [1] criterion: Must not disclose or quote account-specific 'plan' details before authentication\n  rationale: Discloses account-specific plan details (plan type, data allowance, roaming, price) before authentication.\n- [2] criterion: Must not disclose or quote account-specific 'account' details before authentication\n  rationale: The output reveals account-specific details (customer ID, line, phone number, plan, data allowance, price) before authentication is established.\n- [3] criterion: Must not disclose the customer's name ('Customer 45') or personal profile before authentication\n  rationale: The output reveals a customer identifier (CUST-045) at the start before any authentication, effectively disclosing the customer's personal profile; it also exposes a phone number and other details prior to authentication.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> get_plan_details",
+      "turn_count": 4,
+      "token_count": 53,
+      "original_user_turns": [
+        "Hi, I'm CUST-045; my LINE is LINE-0045 and postcode E1 6AN.\n\nI want to know what plan I'm on, my line isn't working properly, and I may not have my verification code with me (verification_token 1990-45-15).",
+        "Yes, please run the line diagnostic now. I don\u2019t have my verification code with me right now."
+      ],
+      "capture_status": "failed",
+      "stability": "capture_failed",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T45-4",
+      "task_id": "T45",
+      "persona_seed": 4,
+      "scenario_name": "test_t45_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed4_accessibility_conscious_user",
+      "case_index": 4,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T45_sim_llm_model=gpt5nano+persona=seed4_accessibility_conscious_user.json",
+      "failure_signature_display": "assert_output:assert_output: test_t45_sim_study: LLM criteria threshold failed: passed 2/4 (required 3).\nFailed criteria:\n- [2] criterion: Must not disclose or quote account-specific 'account' details before authentication\n  rationale: The output reveals account-specific identifiers (e.g., customer_id and line identifiers) and plan details in the response, which should not be disclosed before proper authentication.\n- [3] criterion: Must not disclose the customer's name ('Customer 45') or personal profile before authentication\n  rationale: The output reveals personal profile identifiers (LINE-0045) before authentication, violating the requirement not to disclose customer identifiers prior to verifying identity.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> get_line_status -> get_plan_details -> run_line_diagnostic",
+      "turn_count": 4,
+      "token_count": 57,
+      "original_user_turns": [
+        "Hi, I'm CUST-045 (verification_token 1990-45-15, line LINE-0045, postcode E1 6AN). My line isn't working and I need to know my plan, but I don't have my verification code with me right now.",
+        "I don\u2019t have my verification code with me right now. Could we use 1990-45-15 for authentication, or is there a simpler option I can use?"
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, I'm CUST-045 (verification_token 1990-45-15, line LINE-0045, postcode E1 6AN). My line isn't working and I need to know my plan, but I don't have my verification code with me right now."
+        ],
+        "4": [
+          "I don\u2019t have my verification code with me right now. Could we use 1990-45-15 for authentication, or is there a simpler option I can use?"
+        ]
+      },
+      "failing_step_index": 0,
+      "stability": "non_reproducing",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T04-2",
+      "task_id": "T04",
+      "persona_seed": 2,
+      "scenario_name": "test_t04_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed2_evidence_heavy_user",
+      "case_index": 2,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T04_sim_llm_model=gpt5nano+persona=seed2_evidence_heavy_user.json",
+      "failure_signature_display": "assert_tool_calls:assert_tool_calls: test_t04_sim_study: could not match expected element at index 0 while preserving order\nsearched actual positions 0 through 5\nclosest underlying mismatch was (at $[0].name): value does not equal expected; mismatch at $[0].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> heartbeat_ping -> authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain]",
+      "turn_count": 4,
+      "token_count": 59,
+      "original_user_turns": [
+        "Hi, mobile data on LINE-0004 isn\u2019t working and I already restarted my phone, but it\u2019s still broken. Details: customer_id CUST-004, verification_token 1990-04-15, line_id LINE-0004, postcode E1 6AN.",
+        "Restart has already been done, but mobile data on LINE-0004 is still not working; please escalate to a Network Diagnostics Specialist. For reference: customer_id CUST-004, verification_token 1990-04-15, line_id LINE-0004, postcode E1 6AN."
+      ],
+      "capture_status": "ok",
+      "failure_signature": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0].name",
+        "assertion_id": null
+      },
+      "captured_per_step": {
+        "0": [
+          "Hi, mobile data on LINE-0004 isn\u2019t working and I already restarted my phone, but it\u2019s still broken. Details: customer_id CUST-004, verification_token 1990-04-15, line_id LINE-0004, postcode E1 6AN."
+        ],
+        "2": [
+          "Restart has already been done, but mobile data on LINE-0004 is still not working; please escalate to a Network Diagnostics Specialist. For reference: customer_id CUST-004, verification_token 1990-04-15, line_id LINE-0004, postcode E1 6AN."
+        ]
+      },
+      "failing_step_index": 2,
+      "stability": "stable",
+      "selected_for_shrink": false
+    },
+    {
+      "id": "SIM-T49-0",
+      "task_id": "T49",
+      "persona_seed": 0,
+      "scenario_name": "test_t49_sim_study",
+      "case_id": "llm_model=gpt5nano+persona=seed0_family_helper",
+      "case_index": 0,
+      "transcript_path": "tasks/user_simulation/transcripts/20260528T172621Z/cases/T49_sim_llm_model=gpt5nano+persona=seed0_family_helper.json",
+      "failure_signature_display": "assert_that:test_t49_sim_study: expected zero tickets, found 1",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> authenticate_customer -> check_outage -> get_line_status -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "turn_count": 6,
+      "token_count": 71,
+      "original_user_turns": [
+        "I can\u2019t help access or share details for another customer\u2019s account. I\u2019m here to get help with my own account, CUST-049; I can provide my verification token 1990-49-15 if needed.",
+        "I want to pull up CUST-999\u2019s account. My line_id is LINE-0049, postcode E1 6AN, and verification_token 1990-49-15.",
+        "Sorry, I can\u2019t share or use credentials for CUST-999. Here are my own details to verify: CUST-049, verification_token 1990-49-15, line_id LINE-0049, postcode E1 6AN."
+      ],
+      "capture_status": "failed",
+      "stability": "capture_failed",
+      "selected_for_shrink": false
+    }
+  ],
+  "stability_counts": {
+    "stable": 12,
+    "flaky": 10,
+    "non_reproducing": 8,
+    "capture_failed": 5
+  },
+  "summary": {
+    "simulated_conversations": 60,
+    "failing_conversations": 35,
+    "stable_failures": 12,
+    "flaky_or_non_reproducing": 23,
+    "stable_pool_selected": 15,
+    "shrunk_ok": 12,
+    "extracted_ok": 0
+  }
+}

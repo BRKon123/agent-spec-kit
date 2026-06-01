@@ -12,6 +12,7 @@ from store.store import TelcoStore
 from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
+from tasks.shrinking.scenario_shrink_config import EXTRACT_CFG, SHRINK_CFG
 from tasks.user_simulation.scenarios.common import (
     SIM_CHAT_OPEN,
     Persona,
@@ -83,6 +84,8 @@ async def test_t42_manual_study(s, store_us_t42):
     user_fixture="user_simulator_us_t42",
     repeats=1,
     tags=("telecom", "user-simulation", "task:T42", "method:sim", "oracle:F"),
+    shrinking=SHRINK_CFG,
+    extraction=EXTRACT_CFG,
 )
 async def test_t42_sim_study(s, store_us_t42):  # noqa: ARG001
     bind_scenario_context("test_t42_sim_study", variant="reference")

@@ -25,3 +25,25 @@ src/agent_spec_kit/web/dist/*
 .agent_spec_kit/
 
 benchmarks/telecom_support/tasks/calibration_logs/
+
+# LaTeX build directory
+MEng_Final_Report/build/
+
+# LaTeX auxiliary files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+
+# Generated PDFs
+MEng_Final_Report/main.pdf

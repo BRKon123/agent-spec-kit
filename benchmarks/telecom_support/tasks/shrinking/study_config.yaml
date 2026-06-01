@@ -1,0 +1,33 @@
+# Regression extraction runs via tasks/extraction/study_config.yaml (extracted_sim/).
+primary_tasks:
+  - T04
+  - T17
+  - T20
+  - T27
+  - T29
+  - T30
+  - T35
+  - T38
+  - T42
+  - T43
+  - T45
+  - T49
+persona_seeds: [0, 1, 2, 3, 4]
+confirm_runs: 2
+caps:
+  max_stable_pool: 15
+  max_to_shrink: 15
+  max_to_extract: 20
+shrink:
+  max_attempts_per_shrink: 10
+  passes:
+    - remove_user_turns
+    - simplify_user_messages
+extraction:
+  target_file: extracted_sim_regressions.py
+outputs:
+  results_json: tasks/shrinking/user_sim_shrink_results.json
+  shrink_md: tasks/shrinking/user_sim_shrink_results.md
+  extraction_md: tasks/regressions/user_sim_extraction_results.md
+  examples_md: tasks/regressions/user_sim_regression_examples.md
+  transcripts_dir: tasks/user_simulation/transcripts

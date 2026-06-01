@@ -12,6 +12,7 @@ from tasks.specs import oracles as o
 from tasks.specs import trace_oracles as to
 from tasks.specs.run_context import bind_scenario_context
 from store.store import TelcoStore
+from tasks.shrinking.scenario_shrink_config import EXTRACT_CFG, SHRINK_CFG
 from tasks.user_simulation.scenarios.common import (
     SIM_CHAT_OPEN,
     Persona,
@@ -66,7 +67,7 @@ async def test_t20_manual_study(s, store_us_t20):
     bind_scenario_context("test_t20_manual_study", variant="reference")
     from tasks.manual.test_T20 import test_t20_full
     await test_t20_full(s, store_us_t20)
-@ek.scenario(agent_fixture="task_agent_us_t20", user_fixture="user_simulator_us_t20", repeats=1, tags=("telecom", "user-simulation", "task:T20", "method:sim", "oracle:F"))
+@ek.scenario(agent_fixture="task_agent_us_t20", user_fixture="user_simulator_us_t20", repeats=1, tags=("telecom", "user-simulation", "task:T20", "method:sim", "oracle:F"), shrinking=SHRINK_CFG, extraction=EXTRACT_CFG)
 async def test_t20_sim_study(s, store_us_t20):  # noqa: ARG001
     bind_scenario_context("test_t20_sim_study", variant="reference")
     preauth_output = to.preauth_composite_output(store_us_t20, "billing", "breakdown", "plan")

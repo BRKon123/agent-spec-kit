@@ -56,6 +56,8 @@ class ShrinkConfig:
     passes: tuple[ShrinkPassSpec, ...]
     confirm_runs: int = 3
     min_reproductions: int = 2
+    #: Cap total shrink verification batches per failure (``None`` = unlimited).
+    max_attempts_per_shrink: int | None = None
 
     def __post_init__(self) -> None:
         # Be forgiving for common Python tuple footgun:
@@ -70,6 +72,8 @@ class ShrinkConfig:
             raise ValueError("ShrinkConfig.confirm_runs must be >= 1")
         if self.min_reproductions < 1:
             raise ValueError("ShrinkConfig.min_reproductions must be >= 1")
+        if self.max_attempts_per_shrink is not None and self.max_attempts_per_shrink < 1:
+            raise ValueError("ShrinkConfig.max_attempts_per_shrink must be >= 1 when set")
 
 
 DuplicatePolicy = str  # "skip" | "replace" | "append_variant" | "error"

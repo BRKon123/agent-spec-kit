@@ -44,22 +44,33 @@ def _candidates_simplify_messages(turns: tuple[str, ...]) -> list[tuple[str, ...
     return out
 
 
+def _take_budget(cands: list[tuple[str, ...]], budget: int | None) -> list[tuple[str, ...]]:
+    if budget is None:
+        return cands
+    return cands[:budget]
+
+
 async def _apply_pass(
     current: tuple[str, ...],
     spec: ShrinkPassSpec,
     *,
     verify_batch: Callable[[Sequence[tuple[str, ...]]], Awaitable[list[bool]]],
+    budget: int | None = None,
 ) -> tuple[tuple[str, ...], int]:
     candidates_evaluated = 0
     if spec.kind == "remove_user_turns":
         changed = True
         while changed:
+            if budget is not None and budget <= 0:
+                break
             changed = False
-            cands = _candidates_remove_one(current)
+            cands = _take_budget(_candidates_remove_one(current), budget)
             if not cands:
                 break
             results = await verify_batch(cands)
             candidates_evaluated += len(cands)
+            if budget is not None:
+                budget -= len(cands)
             wins = [c for c, ok in zip(cands, results, strict=True) if ok]
             if wins:
                 current = min(wins, key=lambda c: (len(c), sum(len(x) for x in c)))
@@ -69,12 +80,16 @@ async def _apply_pass(
     if spec.kind == "simplify_user_messages":
         changed = True
         while changed:
+            if budget is not None and budget <= 0:
+                break
             changed = False
-            cands = _candidates_simplify_messages(current)
+            cands = _take_budget(_candidates_simplify_messages(current), budget)
             if not cands:
                 break
             results = await verify_batch(cands)
             candidates_evaluated += len(cands)
+            if budget is not None:
+                budget -= len(cands)
             wins = [c for c, ok in zip(cands, results, strict=True) if ok]
             if wins:
                 current = min(wins, key=lambda c: (len(c), sum(len(x) for x in c)))
@@ -82,11 +97,14 @@ async def _apply_pass(
         return current, candidates_evaluated
 
     if spec.kind == "llm_semantic_simplify":
+        if budget is not None and budget <= 0:
+            return current, candidates_evaluated
         if not (os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")):
             return current, candidates_evaluated
-        return await apply_llm_semantic_simplify(
-            current, spec, verify_batch=verify_batch
-        )
+        cur, n = await apply_llm_semantic_simplify(current, spec, verify_batch=verify_batch)
+        if budget is not None:
+            n = min(n, budget)
+        return cur, candidates_evaluated + n
 
     return current, candidates_evaluated
 
@@ -104,9 +122,14 @@ async def shrink_user_turns(
     """
     current = original
     total_candidates = 0
+    budget = shrinking.max_attempts_per_shrink
     for spec in shrinking.passes:
-        cur, n = await _apply_pass(current, spec, verify_batch=verify_batch)
+        if budget is not None and budget <= 0:
+            break
+        cur, n = await _apply_pass(current, spec, verify_batch=verify_batch, budget=budget)
         total_candidates += n
+        if budget is not None:
+            budget -= n
         current = cur
     return current, total_candidates
 

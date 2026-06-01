@@ -1,0 +1,53 @@
+% \section{Objectives}
+% \section{Challenges}
+% \section{Contributions}
+\chapter{Introduction}
+
+Large Language Models (LLMs) are being rapidly adopted in industry for tasks such as customer support, legal clause analysis, internal knowledge retrieval, and healthcare summarisation. These workflows rely heavily on the design of prompts that align with specific goals, user preferences, and domain-specific constraints. As adoption grows, developers increasingly require systematic ways to evaluate their pipelines and automatically optimise prompts based on performance or user feedback. However, existing tools fall short of enabling this in practice.\newline
+
+In many real-world settings, prompt development is still carried out manually through a slow and error-prone process. Developers inspect outputs across multiple examples, identify failure cases, hypothesise why the model behaved incorrectly, and then attempt to hand-craft prompt updates to address these issues. This process often involves significant back-and-forth: a change that improves performance on one example may degrade performance on another, and understanding whether a prompt change genuinely improves overall behaviour requires repeatedly re-running evaluations. In domain-specific and subjective tasks, where there is no single correct answer and quality judgements depend on expert interpretation, this manual iteration becomes particularly frustrating and time-consuming. Much of the developer’s effort is spent coordinating feedback across multiple prompt iterations rather than making systematic progress.\newline
+
+More fundamentally, this manual workflow places a significant burden on developers. The human is required both to define what constitutes a good output and to perform the optimisation itself. In contrast to standard machine learning, where a loss function provides the training signal and optimisation algorithms handle credit assignment and parameter updates, prompt engineering forces developers to reason implicitly about which parts of a prompt caused an error, how they should be changed, and how those changes may affect behaviour elsewhere. This hidden optimisation complexity makes prompt iteration slow and error prone for developers, particularly in subjective and domain-specific settings.\newline
+
+DSPy represents an important step toward addressing this gap \cite{khattab2023dspycompilingdeclarativelanguage}. Developers construct declarative ``prompt programs'' and apply optimisers such as MIPROv2 to automatically tune instructions and, optionally, few-shot examples to improve task performance \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}. However, it assumes access to a well-defined evaluation function (e.g.\ accuracy) and is typically demonstrated on structured tasks with known ground-truth answers, such as HotPotQA, which can be scored automatically \cite{yang2018hotpotqadatasetdiverseexplainable}.\newline
+
+In contrast, many real-world industry tasks lack a single, fixed notion of a ``correct'' answer. For example:
+\begin{itemize}
+    \item A doctor may want a clinical summary tailored to a specific patient and clinical context.
+    \item A lawyer may need to identify non-standard clauses in a contract, prioritised by risk.
+    \item A financial analyst may want insights personalised to an individual risk profile.
+\end{itemize}
+
+In these settings, output quality is subjective, contextual, and often determined by a domain expert rather than a universal metric. Generic automated metrics and LLM-as-judge approaches can therefore be brittle or misaligned, particularly in specialised domains \cite{wang2023largelanguagemodelsfair}. The core insight motivating this project is that prompt optimisation in practice should be human-in-the-loop: developers and stakeholders must be able to define what ``good'' looks like, attach feedback directly to system behaviour, and use that feedback to guide prompt updates over time.
+
+\section{Objectives}
+
+The aim of this project is to design and evaluate a human-in-the-loop prompt optimisation framework that supports:
+\begin{itemize}
+    \item Explicit specification of optimisable prompt regions within complex LLM pipelines or agentic systems.
+    \item Human feedback that can be attached to specific prompt components or execution steps.
+    \item Iterative optimisation methods that learn from human preferences and annotations, rather than requiring a single scalar evaluation metric.
+\end{itemize}
+
+\section{Proposed Contributions}
+
+This project proposes the following contributions.
+
+\subsection*{Prompt Optimisation Framework}
+
+A lightweight Python library for:
+\begin{itemize}
+    \item Defining prompt structures with static and optimisable sections (e.g.\ optimising instruction blocks while keeping retrieved context fixed).
+    \item Integrating with existing LLM pipelines or agents and logging execution traces.
+    \item Attaching human evaluation and feedback to traces and individual prompt components.
+\end{itemize}
+
+\subsection*{Human-Feedback-Driven Optimiser}
+
+An prompt optimiser that:
+\begin{itemize}
+    \item Consumes pairwise preferences (e.g.\ output A vs.\ output B) and/or case-by-case correctness or quality annotations.
+    \item Proposes targeted prompt edits based on the components implicated by human feedback.
+\end{itemize}
+
+It is likely that the design and implementation of this optimiser changes as the project progresses
