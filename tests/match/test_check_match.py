@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Sequence
 import pytest
 
@@ -206,3 +207,35 @@ def test_contains_can_be_case_sensitive() -> None:
 
     fail = m.check(m.contains("hello", case_sensitive=True), "Hello there")
     assert not fail.ok
+
+
+def test_one_of_failure_propagates_inner_error() -> None:
+    r = m.check(m.one_of(1, m.string(min_len=5)), 3)
+    assert not r.ok
+    assert r.errors[0].code == "one_of"
+    assert "one_of:" in r.errors[0].message
+    assert "does not equal expected" in r.errors[0].message
+    assert len(r.errors) >= 2
+    assert r.errors[1].code == "equality"
+    witness = json.loads(r.errors[0].witness_json or "{}")
+    assert witness["inner_error"]["code"] == "equality"
+
+
+def test_all_of_failure_propagates_inner_error() -> None:
+    r = m.check(m.all_of(m.contains("hello"), m.contains("bye")), "hello there")
+    assert not r.ok
+    assert r.errors[0].code == "all_of"
+    assert "all_of:" in r.errors[0].message
+    assert "substring" in r.errors[0].message.lower() or "contain" in r.errors[0].message.lower()
+    assert any(e.code == "predicate" for e in r.errors[1:])
+    witness = json.loads(r.errors[0].witness_json or "{}")
+    assert "inner_error" in witness
+
+
+def test_all_of_nested_not_failure_propagates_not_and_contains() -> None:
+    r = m.check(m.all_of(m.contains("hello"), m.not_(m.contains("bye"))), "hello bye")
+    assert not r.ok
+    assert r.errors[0].code == "all_of"
+    assert "all_of:" in r.errors[0].message
+    assert "not:" in r.errors[0].message
+    assert any(e.code == "not" for e in r.errors)
