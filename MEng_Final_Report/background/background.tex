@@ -86,7 +86,7 @@ HELM addressed part of this limitation by framing evaluation as a coverage probl
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/helm_taxonomy.png}
-  \caption{HELM contrasts dataset-collection benchmarks with a top-down taxonomy of scenarios defined by task, source material, demographic, time period, and language, mapping existing datasets and highlighting coverage gaps \cite{liang2022helm}.}
+  \caption{HELM evaluation design (left vs.\ right). \textbf{Previous work} treats each benchmark (e.g.\ Natural Questions, IMDB) as a separate dataset. \textbf{HELM} instead describes each test setting by five choices---what task, what source text, which audience, what time period, and which language---then links known benchmarks to those paths; question marks mark combinations that are not yet covered \cite{liang2022helm}.}
   \label{fig:helm-taxonomy}
 \end{figure}
 
@@ -102,7 +102,7 @@ The rise of open-ended chat models also made reference-based metrics less adequa
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.78\textwidth]{figures/geval_pipeline.png}
-  \caption{The G-Eval pipeline: evaluation criteria and automatically generated chain-of-thought steps define a judge prompt, which scores the target output via a form-filling step and a probability-weighted aggregate score \cite{liu2023geval}.}
+  \caption{G-Eval uses an LLM as a judge in four steps \cite{liu2023geval}: (1)~the evaluator defines the task and scoring rubric (e.g.\ coherence 1--5); (2)~the judge model automatically writes step-by-step evaluation instructions; (3)~those instructions are applied to the source text and the candidate output to be graded; (4)~the final score is a weighted average over the judge's probability for each rating, not just a single picked number.}
   \label{fig:geval-pipeline}
 \end{figure}
 
@@ -115,7 +115,7 @@ RAG evaluation frameworks illustrate a more component-oriented alternative. RAGA
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/aries_pipeline.png}
-  \caption{The ARES pipeline: synthetic queries are generated from in-domain passages, lightweight LLM judges are trained on a small human-validated set, and RAG systems are ranked with prediction-powered inference and confidence intervals \cite{saadfalcon2023ares}.}
+  \caption{ARES evaluates retrieval-augmented systems in three stages \cite{saadfalcon2023ares}: (1)~an LLM creates synthetic question--answer pairs from the domain's own documents; (2)~LLM judges are trained on those examples plus a small set of human-checked labels; (3)~the judges score different RAG pipelines and produce a ranked comparison with statistical confidence intervals.}
   \label{fig:ares-pipeline}
 \end{figure}
 
@@ -191,7 +191,7 @@ ToolLLM and ToolBench scaled this idea to a much larger API space. Qin et al. co
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.9\textwidth]{figures/toolbench_construction_pipeline.png}
-  \caption{ToolBench construction and evaluation pipeline: APIs are collected from RapidAPI, instructions and solution paths are generated, an API retriever and ToolLLaMA are trained, and ToolEval scores the final answers \cite{qin2023toollm}.}
+  \caption{ToolBench pipeline \cite{qin2023toollm}. \textbf{Build the dataset:} collect real APIs from RapidAPI; use an LLM to write example user tasks (\emph{instructions}) and the correct sequence of API calls for each task (\emph{solution paths}). \textbf{Train:} fine-tune LLaMA on that data to obtain ToolLLaMA, and train a retriever that picks relevant APIs for a given task. \textbf{Test:} for a new instruction, the retriever supplies APIs, ToolLLaMA calls them via RapidAPI, produces a final answer, and ToolEval checks whether the answer solves the task.}
   \label{fig:toolbench-pipeline}
 \end{figure}
 
@@ -254,6 +254,13 @@ AppWorld is especially important for stateful agent evaluation. It provides a co
 \end{figure}
 
 $\tau$-bench focuses on dynamic tool-agent-user interaction in realistic domains such as retail and airline tasks \cite{yao2024taubench}. It uses simulated users, domain-specific APIs, and policy guidelines, then evaluates success by comparing the final database state with an annotated goal state. It also introduces \textit{pass}$^k$ to measure how consistently an agent succeeds over repeated trials. This combination of simulated interaction, tool use, domain policy, final-state evaluation, and repeated runs is highly representative of where agent evaluation is heading. It treats an LLM agent less like a text generator and more like an unreliable controller in a stateful environment.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\textwidth]{figures/tao_bench_setup.png}
+  \caption{$\tau$-bench setup and an example airline trajectory \cite{yao2024taubench}. \textbf{(a)} A simulated user (with a goal persona), an agent guided by domain policy, and database-backed tools (e.g.\ \texttt{book\_reservation}, \texttt{cancel\_reservation}) interact over multiple turns. \textbf{(b)} In one episode the agent reads reservation details from the database, explains policy limits to the user, then writes a cancellation---success is decided by whether the final database state matches the goal, not by the wording of the reply alone.}
+  \label{fig:taubench-setup}
+\end{figure}
 
 ToolSandbox makes the same point from another direction. Lu et al. argue that previous tool-use evaluations often rely on stateless services, single-turn prompts, or off-policy trajectories, and introduce a benchmark with stateful tool execution, implicit dependencies between tools, on-policy user simulation, and milestone-based evaluation \cite{lu2024toolsandbox}. This is important because many real tasks cannot be evaluated only at the end. An agent may need to satisfy intermediate conditions, obtain missing information, or respect dependencies that are not obvious from a single tool schema. Milestone evaluation allows the process itself to be inspected rather than treating the trajectory as a black box.
 
