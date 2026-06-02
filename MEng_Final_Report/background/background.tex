@@ -86,7 +86,7 @@ HELM addressed part of this limitation by framing evaluation as a coverage probl
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/helm_taxonomy.png}
-  \caption{HELM evaluation design (left vs.\ right). \textbf{Previous work} treats each benchmark (e.g.\ Natural Questions, IMDB) as a separate dataset. \textbf{HELM} instead describes each test setting by five choices---what task, what source text, which audience, what time period, and which language---then links known benchmarks to those paths; question marks mark combinations that are not yet covered \cite{liang2022helm}.}
+  \caption{HELM evaluation design (left vs.\ right). \textbf{Previous work} treats each benchmark (e.g.\ Natural Questions, IMDB) as a separate dataset. \textbf{HELM} instead describes each test setting by five choices, what task, what source text, which audience, what time period, and which language, then links known benchmarks to those paths; question marks mark combinations that are not yet covered \cite{liang2022helm}.}
   \label{fig:helm-taxonomy}
 \end{figure}
 
@@ -147,7 +147,7 @@ DeepEval and Ragas provide more application-oriented evaluation abstractions. De
   \label{fig:geval-prompt}
 \end{figure}
 
-Ragas was originally designed for RAG evaluation, decomposing quality into dimensions such as faithfulness, answer relevance, context precision, and context recall \cite{es2023ragas,ragasDocs}. More recent versions also include agent metrics such as tool call accuracy, tool call F1, and agent goal accuracy \cite{ragasDocs}. Agent goal accuracy is a binary multi-turn metric: an evaluator LLM reads the full interaction trace, infers the outcome the agent reached, and judges whether it matches the user's goal---either against a provided reference outcome or by inferring the goal from the conversation \cite{ragasDocs}.
+Ragas was originally designed for RAG evaluation, decomposing quality into dimensions such as faithfulness, answer relevance, context precision, and context recall \cite{es2023ragas,ragasDocs}. More recent versions also include agent metrics such as tool call accuracy, tool call F1, and agent goal accuracy \cite{ragasDocs}. Agent goal accuracy is a binary multi-turn metric: an evaluator LLM reads the full interaction trace, infers the outcome the agent reached, and judges whether it matches the user's goal, either against a provided reference outcome or by inferring the goal from the conversation \cite{ragasDocs}.
 
 These libraries are valuable because they recognise that LLM systems should not only be judged by final-answer quality. However, their tool checks are still relatively metric-oriented. They are useful for comparing expected and actual tool calls, but they are less ergonomic when a developer wants to specify precise properties of a tool argument or a structured output. For example, checking that a particular tool argument contains the substring \texttt{urgent}, or that a nested structured output field satisfies a domain-specific predicate, is not usually a first-class assertion. It generally requires custom code, a custom metric, or reshaping the output into the format expected by the evaluator. This makes simple behavioural expectations feel heavier than ordinary software tests.
 
@@ -258,7 +258,7 @@ $\tau$-bench focuses on dynamic tool-agent-user interaction in realistic domains
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/tao_bench_setup.png}
-  \caption{$\tau$-bench setup and an example airline trajectory \cite{yao2024taubench}. \textbf{(a)} A simulated user (with a goal persona), an agent guided by domain policy, and database-backed tools (e.g.\ \texttt{book\_reservation}, \texttt{cancel\_reservation}) interact over multiple turns. \textbf{(b)} In one episode the agent reads reservation details from the database, explains policy limits to the user, then writes a cancellation---success is decided by whether the final database state matches the goal, not by the wording of the reply alone.}
+  \caption{$\tau$-bench setup and an example airline trajectory \cite{yao2024taubench}. \textbf{(a)} A simulated user (with a goal persona), an agent guided by domain policy, and database-backed tools (e.g.\ \texttt{book\_reservation}, \texttt{cancel\_reservation}) interact over multiple turns. \textbf{(b)} In one episode the agent reads reservation details from the database, explains policy limits to the user, then writes a cancellation, and success is decided by whether the final database state matches the goal, not by the wording of the reply alone.}
   \label{fig:taubench-setup}
 \end{figure}
 
@@ -273,7 +273,36 @@ Together, these benchmarks show a clear trend. The field is moving from static f
 
 The software-testing literature provides useful language for understanding the evaluation problem. A test oracle is a mechanism for deciding whether the observed behaviour of a system is correct. Barr et al. describe the oracle problem as one of the central difficulties in software testing: generating inputs is not enough if there is no reliable way to determine whether the output is right \cite{barr2015oracle}. LLM systems intensify this problem because outputs are open-ended, context-dependent, and often partially correct. A strict string comparison is usually too brittle, while an unconstrained natural-language judgment may be too vague.
 
-For LLM agents, there is rarely a single oracle. Instead, different aspects of behaviour require different checks. A final answer may be judged by semantic relevance or factuality. A structured output may be checked against a schema. A tool call may be checked by function name, arguments, order, and result. A stateful environment may be checked by invariants or postconditions. A security property may be checked by whether the agent refused an unsafe request or ignored untrusted instructions. This suggests that agent evaluation should be built from multiple smaller oracles rather than from one universal score.
+For LLM agents, there is rarely a single oracle. Instead, different aspects of behaviour require different checks. A final answer may be judged by semantic relevance or factuality. A structured output may be checked against a schema. A tool call may be checked by function name, arguments, order, and result. A stateful environment may be checked by invariants or postconditions. A security property may be checked by whether the agent refused an unsafe request or ignored untrusted instructions. This suggests that agent evaluation should be built from multiple smaller oracles rather than from one universal score. Table~\ref{tab:agent-oracle-types} shows some example oracle types.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{p{0.22\textwidth}p{0.40\textwidth}X}
+\toprule
+\textbf{Oracle type} & \textbf{Example check} & \textbf{Failure diagnosed} \\
+\midrule
+Final-output & Response contains ``refund confirmed'' & Misleading final message \\
+
+Structured-output & \texttt{priority = "high"} in JSON & Wrong field content \\
+
+Tool-name & Calls \texttt{cancel\_order}, not \texttt{create\_refund} & Wrong or forbidden tool \\
+
+Tool-argument & Correct tool, wrong \texttt{order\_id} & Wrong or unsafe arguments \\
+
+Tool-order & \texttt{lookup\_user} before \texttt{update\_account} & Bad tool sequencing \\
+
+State & \texttt{order.status = "cancelled"}; no side effects & Wrong environment state \\
+
+Policy/safety & Refuses to leak private data & Policy or permission violation \\
+
+LLM-judge & Empathetic, appropriate tone & Subjective quality issues \\
+\bottomrule
+\end{tabularx}
+\caption{Examples of oracle types for evaluating LLM agents (not exhaustive). Agent correctness is usually distributed across the final message, structured outputs, tool calls, tool arguments, tool order, external state, and policy compliance, so no single oracle is sufficient.}
+\label{tab:agent-oracle-types}
+\end{table}
 
 Structured evidence is therefore essential. If an evaluator records only that a scenario failed, the developer still has to reconstruct the interaction manually. If the evaluator records the conversation, tool calls, arguments, observations, and state checks, then the failure becomes diagnosable. This mirrors conventional testing practice, where assertion failures ideally identify the expected value, the actual value, and the location of the mismatch. In agent systems, the corresponding location may be a turn, a tool call, a nested argument path, or a postcondition over state.
 
@@ -292,7 +321,7 @@ Shrinking is the companion idea. When QuickCheck finds a failing random input, i
 
 In LLM agent testing, shrinking is more subtle than in ordinary input testing. A conversation is not just a string; it is an interactive sequence where removing one turn may change all later turns. A shrinker must preserve enough context for the failure to remain meaningful, and it must distinguish between reproducing the same failure and producing a different failure. Nevertheless, the conceptual value is the same as in delta debugging: reduce developer effort by isolating the failure-inducing part of a complex interaction.
 
-Fuzzing provides another testing lineage. Traditional fuzzing repeatedly mutates inputs to discover crashes, security vulnerabilities, or unexpected behaviours. LLM-specific fuzzing work has adapted this idea to prompts and safety failures. GPTFuzzer uses seed prompts, mutation operators, and a judgment model to generate jailbreak prompts automatically \cite{yu2023gptfuzzer}. FuzzLLM takes a more structured approach \cite{yao2023fuzzllm}. It classifies jailbreak attacks into three base types---role play (altering conversational context through a scenario), output constraint (redirecting attention at the output level), and privilege escalation (inducing the model to break its restrictions)---and combines them into seven template classes, from single-base attacks through pairwise and triple combinations. Each jailbreak prompt is built from three components: a fuzzing template that carries the attack class, a constraint set that shapes how the attack is phrased, and a set of policy-violating questions. Templates can be paraphrased to increase diversity before being sent to a target model; a separate label model then acts as an oracle, checking whether the response violates usage policy.
+Fuzzing provides another testing lineage. Traditional fuzzing repeatedly mutates inputs to discover crashes, security vulnerabilities, or unexpected behaviours. LLM-specific fuzzing work has adapted this idea to prompts and safety failures. GPTFuzzer uses seed prompts, mutation operators, and a judgment model to generate jailbreak prompts automatically \cite{yu2023gptfuzzer}. FuzzLLM takes a more structured approach \cite{yao2023fuzzllm}. It classifies jailbreak attacks into three base types: role play (altering conversational context through a scenario), output constraint (redirecting attention at the output level), and privilege escalation (inducing the model to break its restrictions), and combines them into seven template classes, from single-base attacks through pairwise and triple combinations. Each jailbreak prompt is built from three components: a fuzzing template that carries the attack class, a constraint set that shapes how the attack is phrased, and a set of policy-violating questions. Templates can be paraphrased to increase diversity before being sent to a target model; a separate label model then acts as an oracle, checking whether the response violates usage policy.
 
 \begin{figure}[htbp]
   \centering
@@ -301,7 +330,7 @@ Fuzzing provides another testing lineage. Traditional fuzzing repeatedly mutates
   \label{fig:fuzzllm-pipeline}
 \end{figure}
 
-Although these papers focus mainly on safety and red teaming, they show that systematic variation plus an oracle can discover failures at scale---a pattern that extends beyond jailbreak testing. The limitation of safety-focused prompt fuzzing is that it usually targets a narrow failure predicate, such as whether a model produces disallowed content. Agent testing requires broader predicates. A generated user behaviour may be interesting because it triggers a wrong tool call, an unnecessary clarification, a policy violation, or a state error. This means that fuzzing for agents should be guided by domain-specific assertions and should preserve enough trace information to diagnose the failure. The value of fuzzing is not merely that it finds more failures, but that it explores behaviours that manual scripts may miss.
+Although these papers focus mainly on safety and red teaming, they show that systematic variation plus an oracle can discover failures at scale, a pattern that extends beyond jailbreak testing. The limitation of safety-focused prompt fuzzing is that it usually targets a narrow failure predicate, such as whether a model produces disallowed content. Agent testing requires broader predicates. A generated user behaviour may be interesting because it triggers a wrong tool call, an unnecessary clarification, a policy violation, or a state error. This means that fuzzing for agents should be guided by domain-specific assertions and should preserve enough trace information to diagnose the failure. The value of fuzzing is not merely that it finds more failures, but that it explores behaviours that manual scripts may miss.
 
 A further issue is distribution. Randomly generated user messages are not automatically useful. If generation is too unconstrained, many cases will be unrealistic or irrelevant; if it is too constrained, it may only reproduce the manual examples that were already known. Property-based testing addresses the analogous problem through generators that encode domain structure. For LLM agents, the generator may need to encode user personas, task variants, missing information, ambiguous phrasing, or adversarial but plausible behaviour. This suggests that generative testing is most valuable when it is scenario-aware: the generated variation should remain inside the domain of the task while still exploring corners that a human tester may not have enumerated.
 
@@ -317,7 +346,7 @@ Prompt and pipeline optimization is related to agent testing, but it is not the 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.92\textwidth]{figures/prompt_optimisers_across_rollouts.png}
-  \caption{Learning curves for GEPA, MIPROv2, and GRPO on HotpotQA and IFBench: prompt optimizers reach higher validation scores with far fewer rollouts than GRPO, while test-set stars show held-out performance \cite{agrawal2025gepa,opsahlong2024optimizing}. The improvement is entirely defined by the chosen evaluation metric---optimization is powerful, but only as good as the signal it optimizes.}
+  \caption{Learning curves for GEPA, MIPROv2, and GRPO on HotpotQA and IFBench: prompt optimizers reach higher validation scores with far fewer rollouts than GRPO, while test-set stars show held-out performance \cite{agrawal2025gepa,opsahlong2024optimizing}. The improvement is entirely defined by the chosen evaluation metric. Optimization is powerful, but only as good as the signal it optimizes.}
   \label{fig:prompt-optimisers-rollouts}
 \end{figure}
 
