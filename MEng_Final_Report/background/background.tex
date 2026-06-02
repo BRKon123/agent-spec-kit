@@ -19,7 +19,7 @@ The GPT-3 work made this shift especially clear. Brown et al. showed that a suff
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.75\textwidth]{figures/few_shot_prompt_example.png}
+  \includegraphics[width=0.8\textwidth]{figures/few_shot_prompt_example.png}
   \caption{Few-shot prompting: the model receives a task description and demonstration examples in context, then completes a new instance without weight updates \cite{brown2020language}.}
   \label{fig:few-shot-prompt}
 \end{figure}
@@ -28,7 +28,7 @@ Prompting research further demonstrated that model behaviour can change substant
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.75\textwidth]{figures/chain_of_thought_prompting_example.png}
+  \includegraphics[width=0.8\textwidth]{figures/chain_of_thought_prompting_example.png}
   \caption{Chain-of-thought prompting: intermediate reasoning steps are included in the prompt so the model can follow a similar decomposition at inference time \cite{wei2022chain}.}
   \label{fig:chain-of-thought}
 \end{figure}
@@ -41,7 +41,7 @@ The same shift is even clearer in tool-using agents. ReAct introduced a pattern 
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\textwidth]{figures/react_prompting.png}
+  \includegraphics[width=0.9\textwidth]{figures/react_prompting.png}
   \caption{ReAct prompting interleaves natural-language reasoning (\textit{Thought}) with executable actions (\textit{Act}) and environment observations (\textit{Obs}) \cite{yao2023react}.}
   \label{fig:react-prompting}
 \end{figure}
@@ -55,7 +55,14 @@ This transition from text generation to agentic execution is the central backgro
 
 Hallucination remains the most widely discussed failure mode of LLMs. In a single-turn question-answering setting, hallucination usually means that the model states unsupported or false information with high confidence. In an agentic setting, the same phenomenon can manifest in more operationally dangerous ways. An agent can hallucinate the contents of a tool result, infer a state that the environment has not actually reached, or claim that an action has been completed when it has not. Because later steps may depend on earlier observations, a single hallucinated intermediate assumption can propagate through a trajectory and produce a final state that is difficult to diagnose by reading only the last response.
 
-Tool use introduces several additional failure classes. First, an agent may fail at tool selection: it may call a search tool when a database lookup is required, or call a write action when it should only inspect state. Second, it may fail at argument construction: it may choose the right tool but provide the wrong identifier, date, quantity, or filter. Third, it may fail at sequencing: even correct individual calls may be wrong if made in the wrong order. Fourth, the agent may fail to abstain. In real systems, a safe agent often needs to ask for clarification, refuse to proceed, or stop after insufficient information rather than forcing a tool call. Function-calling benchmarks such as BFCL explicitly identify abstention and multi-step function-calling as important capabilities, illustrating that tool-use quality cannot be reduced to a single final answer \cite{patil2025bfcl}.
+Tool use introduces several additional failure classes. First, an agent may fail at tool selection: it may call a search tool when a database lookup is required, or call a write action when it should only inspect state. Second, it may fail at argument construction: it may choose the right tool but provide the wrong identifier, date, quantity, or filter. Third, it may fail at sequencing: even correct individual calls may be wrong if made in the wrong order. Fourth, the agent may fail to abstain. In real systems, a safe agent often needs to ask for clarification, refuse to proceed, or stop after insufficient information rather than forcing a tool call. Function-calling benchmarks such as BFCL explicitly identify abstention and multi-step function-calling as important capabilities, illustrating that tool-use quality cannot be reduced to a single final answer \cite{patil2025bfcl}. ToolEmu systematically surfaces these patterns in an LM-emulated tool sandbox, showing that correct tool choice does not guarantee safe execution when arguments are wrong, fabricated, or misaligned with the instruction \cite{ruan2024toolemu}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=1\textwidth]{figures/tool_emu_failure_examples.png}
+  \caption{Typical failures of LM agents in ToolEmu \cite{ruan2024toolemu}: fabrication or unwarranted assumptions [(c), (d)], instruction misinterpretation [(c)], erroneous executions [(b)], and risk ignorance [(a), (e)]. Several panels show the right tool invoked with incorrect or unsafe arguments [(c), (d)]. Trajectories are simplified for illustration; risky actions are highlighted in red and notable issues in yellow.}
+  \label{fig:toolemu-failures}
+\end{figure}
 
 Multi-turn interaction makes these issues more pronounced. AgentBench evaluates LLMs as agents across multiple interactive environments and reports that long-term reasoning, decision-making, and instruction following remain major obstacles \cite{liu2023agentbench}. MINT similarly evaluates agents in multi-turn interaction with tools and language feedback, showing that single-turn ability does not necessarily transfer to multi-turn settings \cite{wang2023mint}. In multi-turn tasks, the agent must remember prior constraints, update its plan after feedback, and maintain consistency across the conversation. This means that evaluation must consider the conversation as a trajectory rather than as a set of isolated responses.
 
@@ -76,11 +83,41 @@ Before considering agent-specific benchmarks, it is useful to understand the bro
 
 HELM addressed part of this limitation by framing evaluation as a coverage problem across scenarios and metrics \cite{liang2022helm}. Rather than reporting only a single accuracy number, HELM evaluates models across dimensions such as robustness, fairness, calibration, toxicity, and efficiency. This multi-metric view is important because it resists the temptation to treat language-model quality as one scalar. A model can be accurate but poorly calibrated, efficient but unsafe, or robust on some prompt variations but brittle on others. The same principle applies even more strongly to agents: an agent may be successful according to a final-state metric while being inefficient, risky, or policy-violating along the way.
 
-The rise of open-ended chat models also made reference-based metrics less adequate. Metrics such as exact match, BLEU, and ROUGE assume that good outputs overlap with a reference answer, but many valid responses may use different wording or structure. LLM-as-a-judge methods attempt to solve this by using a strong model to evaluate another model's output. G-Eval uses GPT-4 with rubric-like prompts and chain-of-thought style evaluation to score natural-language generation outputs, reporting stronger correlation with human judgments than many traditional metrics \cite{liu2023geval}. MT-Bench and Chatbot Arena popularized pairwise and model-judge evaluation for conversational assistants, while also studying the limitations and biases of such judges \cite{zheng2023judging}. Other pairwise evaluation methods similarly use model comparisons for instruction-following evaluation, often with additional controls for judge biases.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\textwidth]{figures/helm_taxonomy.png}
+  \caption{HELM contrasts dataset-collection benchmarks with a top-down taxonomy of scenarios defined by task, source material, demographic, time period, and language, mapping existing datasets and highlighting coverage gaps \cite{liang2022helm}.}
+  \label{fig:helm-taxonomy}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/helm_multiple_metrics.png}
+  \caption{Multi-metric evaluation in HELM: the same scenarios are scored across accuracy, calibration, robustness, fairness, bias, toxicity, and efficiency rather than a single benchmark-specific metric \cite{liang2022helm}.}
+  \label{fig:helm-multi-metric}
+\end{figure}
+
+The rise of open-ended chat models also made reference-based metrics less adequate. Metrics such as exact match, BLEU, and ROUGE assume that good outputs overlap with a reference answer, but many valid responses may use different wording or structure. LLM-as-a-judge methods attempt to solve this by using a strong model to evaluate another model's output. G-Eval uses GPT-4 with rubric-like prompts and chain-of-thought style evaluation to score natural-language generation outputs, reporting stronger correlation with human judgments than many traditional metrics \cite{liu2023geval}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{figures/geval_pipeline.png}
+  \caption{The G-Eval pipeline: evaluation criteria and automatically generated chain-of-thought steps define a judge prompt, which scores the target output via a form-filling step and a probability-weighted aggregate score \cite{liu2023geval}.}
+  \label{fig:geval-pipeline}
+\end{figure}
+
+MT-Bench and Chatbot Arena popularized pairwise and model-judge evaluation for conversational assistants, while also studying the limitations and biases of such judges \cite{zheng2023judging}. Other pairwise evaluation methods similarly use model comparisons for instruction-following evaluation, often with additional controls for judge biases.
 
 These approaches are useful because they scale better than human evaluation and can handle open-ended natural language. However, they have important limitations for agent testing. A model judge can assess whether a final answer sounds helpful, but it may not reliably know whether the agent called the correct tool, whether a database was updated correctly, or whether a hidden domain rule was violated. It may also be biased toward verbose responses, familiar model styles, or plausible explanations. In a tool-using environment, a natural-language judge is therefore best seen as one possible oracle among several, not as a complete substitute for executable checks.
 
 RAG evaluation frameworks illustrate a more component-oriented alternative. RAGAS decomposes RAG evaluation into dimensions such as context relevance, faithfulness, and answer relevance, allowing a system to be evaluated without always requiring a reference answer \cite{es2023ragas}. ARES similarly evaluates RAG systems along component dimensions, using synthetic data, lightweight judges, and a small amount of human annotation to improve reliability \cite{saadfalcon2023ares}. These frameworks are important because they show that a pipeline should be evaluated at the level of its components and evidence flow. Nevertheless, RAG evaluation is still narrower than full agent evaluation. A RAG system usually retrieves documents and generates an answer; an agent may read and write state, use multiple tools, interact with users, and make decisions whose effects persist beyond the final message.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\textwidth]{figures/aries_pipeline.png}
+  \caption{The ARES pipeline: synthetic queries are generated from in-domain passages, lightweight LLM judges are trained on a small human-validated set, and RAG systems are ranked with prediction-powered inference and confidence intervals \cite{saadfalcon2023ares}.}
+  \label{fig:ares-pipeline}
+\end{figure}
 
 The broader lesson is that scalar metrics are useful but incomplete. A scalar score can support ranking and regression tracking, but it often hides the reason for failure. In an agent system, the practical debugging question is not merely whether the score decreased, but where the failure occurred: in the model's interpretation of the instruction, the tool choice, the tool arguments, the response to an observation, the final output, or the side effects on the environment. This motivates evaluation methods that preserve traces and expose structured failure information rather than collapsing everything into a single number.
 
@@ -122,7 +159,16 @@ Promptfoo is therefore one of the more practical tools for developer-led LLM tes
 
 \subsection{Observability-Focused Tools}
 
-A related group of tools focuses on observability rather than evaluation alone. LangSmith provides tracing, evaluation, prompt testing, feedback collection, and production monitoring for LLM applications \cite{langsmithDocs}. Langfuse similarly provides open-source tracing, prompt management, evaluation, user feedback, and monitoring for LLM systems \cite{langfuseDocs}. These tools are important because agent failures are often hard to understand without seeing the full execution trace: the prompts, model responses, tool calls, tool outputs, intermediate steps, latency, and cost.
+A related group of tools focuses on observability rather than evaluation alone. LangSmith provides tracing, evaluation, prompt testing, feedback collection, and production monitoring for LLM applications \cite{langsmithDocs}. Langfuse similarly provides open-source application tracing, prompt management, evaluation, user feedback, and monitoring for LLM systems \cite{langfuseDocs}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\textwidth]{figures/langfuse_example_trace.png}
+  \caption{Example Langfuse trace for a RAG-style QA request: nested observations record retrieval (embedding and vector-store lookup), prompt retrieval, and final generation, with per-step latency, token usage, inputs, outputs, and cost \cite{langfuseDocs}.}
+  \label{fig:langfuse-trace}
+\end{figure}
+
+These tools are important because agent failures are often hard to understand without seeing the full execution trace: the prompts, model responses, tool calls, tool outputs, intermediate steps, latency, and cost.
 
 Observability tools are therefore highly complementary to evaluation libraries. They help developers inspect what happened during a run. However, observability does not by itself define what should have happened. A trace viewer can show that a tool was called, but the developer still needs a concise way to specify that the tool should only have been called after another condition, that its arguments should satisfy particular properties, that the final output should mention a required concept, and that the external state should end in a valid configuration.
 
@@ -142,9 +188,30 @@ A first wave of tool-use benchmarks focused on whether LLMs could map natural-la
 
 ToolLLM and ToolBench scaled this idea to a much larger API space. Qin et al. collected more than 16,000 real-world APIs and generated instructions involving both single-tool and multi-tool scenarios \cite{qin2023toollm}. This reflects an important reality of deployed agents: they may have access to many tools, and the difficulty is not only calling a tool, but identifying the relevant subset of tools and composing them correctly. ToolLLM also introduced ToolEval as an automatic evaluator, showing that the evaluation problem grows with the tool space. A wrong call may be syntactically valid but semantically inappropriate, and a partially correct call chain may still fail the user's goal.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/toolbench_construction_pipeline.png}
+  \caption{ToolBench construction and evaluation pipeline: APIs are collected from RapidAPI, instructions and solution paths are generated, an API retriever and ToolLLaMA are trained, and ToolEval scores the final answers \cite{qin2023toollm}.}
+  \label{fig:toolbench-pipeline}
+\end{figure}
+
 StableToolBench later addressed reproducibility problems in large-scale tool-use evaluation. Guo et al. observed that benchmarks relying on real online APIs can be unstable because API status, outputs, and availability change over time \cite{guo2024stabletoolbench}. Their virtual API server and stable evaluation system illustrate a key engineering principle for agent evaluation: the environment must be controlled enough that differences in results can be attributed to the agent rather than to external noise. This is a recurring challenge in any benchmark or testing framework that exercises tools, because real tools are often stateful, non-deterministic, rate-limited, or unavailable.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.55\textwidth]{figures/api_status_change_breakdown.png}
+  \caption{Breakdown of live API call outcomes in StableToolBench: fewer than half of calls succeed, with parsing errors, connectivity failures, and authorisation issues dominating non-success cases \cite{guo2024stabletoolbench}.}
+  \label{fig:stabletoolbench-api-status}
+\end{figure}
+
 BFCL provides a more recent and systematic view of function calling. It evaluates capabilities such as function selection, relevance detection, AST-based argument checking, executable calls, parallel calls, multi-turn interactions, and agentic scenarios \cite{patil2025bfcl}. Its importance lies in making tool-call correctness precise. A final response may be impossible to judge without knowing whether the call was syntactically valid, whether the arguments matched the schema, whether the right number of calls were made, and whether the model should have abstained. BFCL therefore captures a core idea for agent evaluation: the intermediate interface between the model and the software environment must itself be tested.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figures/ast_based_function_evaluation.png}
+  \caption{AST-based function-call evaluation in BFCL: the generated call is parsed and checked for function name, required and optional parameters, types, and values against the reference \cite{patil2025bfcl}.}
+  \label{fig:bfcl-ast-eval}
+\end{figure}
 
 Despite their usefulness, function-calling benchmarks still cover only part of the agent problem. Many tasks require more than producing the correct call in isolation. The agent may need to ask the user for missing information, interpret tool results, update long-lived state, and avoid unwanted side effects. In such settings, evaluating individual calls is necessary but not sufficient. The next step in the literature is therefore toward executable environments that can measure whether the sequence of calls actually achieved the intended goal.
 
@@ -155,15 +222,36 @@ They also show why tool traces should be normalized before evaluation. Different
 \section{Executable and Stateful Agent Benchmarks}
 \label{sec:bg-stateful-benchmarks}
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/agent_bench_overview.png}
+  \caption{AgentBench evaluates an LLM-as-agent across eight interactive environments spanning operating systems, databases, knowledge graphs, games, household simulation, lateral-thinking puzzles, and web tasks \cite{liu2023agentbench}.}
+  \label{fig:agentbench-overview}
+\end{figure}
+
 AgentBench is one of the broad early benchmarks that explicitly evaluates LLMs as agents rather than as static text predictors \cite{liu2023agentbench}. It includes multiple interactive environments and emphasizes reasoning, decision-making, and instruction following over multi-turn interactions. The significance of AgentBench is that it shifts the unit of evaluation from a single prompt to an episode. The model must act repeatedly, observe the consequences, and continue toward a goal. This already resembles software-system testing more than traditional NLP benchmarking.
 
 WebArena adds realism by evaluating agents in reproducible web environments \cite{zhou2023webarena}. It includes tasks across websites such as shopping, social discussion, content management, and map-based interactions. The benchmark reports a substantial gap between strong LLM agents and human performance, showing that realistic web tasks remain difficult even for capable models. WebArena matters because the state of the website is part of the task. A response that says the task is complete is not sufficient; the environment must actually reflect the correct outcome.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{figures/webagent_environment.png}
+  \caption{WebArena: an agent acts on self-hosted websites and tool sites with programmatic validators that check functional success or failure from the resulting environment state \cite{zhou2023webarena}.}
+  \label{fig:webarena-environment}
+\end{figure}
 
 SWE-bench extends executable evaluation into software engineering. Jimenez et al. evaluate whether models can resolve real GitHub issues by modifying code and passing tests \cite{jimenez2024swebench}. Although SWE-bench is not primarily a conversational tool-use benchmark, it is highly relevant because it uses external execution as the oracle. A model's patch is judged by whether it passes tests in a repository, not by whether its explanation sounds plausible. This is a strong example of the broader movement toward functional evaluation: when the task has real side effects, the best evidence of success is often executable behaviour.
 
 Planning benchmarks provide another angle. PlanBench evaluates LLMs on planning and reasoning about change, focusing on whether models can reason about preconditions, effects, and goal states \cite{valmeekam2023planbench}. This matters because many agents implicitly perform planning even when they are not using a classical planner. They must decide which actions are possible, which actions are necessary, and how actions change the world. Failures in planning often appear as missing steps, impossible tool calls, or incorrect assumptions about state.
 
 AppWorld is especially important for stateful agent evaluation. It provides a controllable environment of day-to-day apps with hundreds of APIs and uses programmatic state-based unit tests to check whether tasks were completed correctly \cite{trivedi2024appworld}. Crucially, AppWorld also checks for collateral damage: an agent should not satisfy the main goal by making unrelated or harmful changes elsewhere. This illustrates a central limitation of final-answer evaluation. A textual answer can say that the right action was performed, but only a state-based check can determine whether the external system was actually updated correctly and safely.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/app_world_engine_and_benchmark.png}
+  \caption{AppWorld Engine and Benchmark: simulated apps and a local database support a stateful assistant whose success is verified by EvalTests over the initial and final environment states \cite{trivedi2024appworld}.}
+  \label{fig:appworld-engine}
+\end{figure}
 
 $\tau$-bench focuses on dynamic tool-agent-user interaction in realistic domains such as retail and airline tasks \cite{yao2024taubench}. It uses simulated users, domain-specific APIs, and policy guidelines, then evaluates success by comparing the final database state with an annotated goal state. It also introduces \textit{pass}$^k$ to measure how consistently an agent succeeds over repeated trials. This combination of simulated interaction, tool use, domain policy, final-state evaluation, and repeated runs is highly representative of where agent evaluation is heading. It treats an LLM agent less like a text generator and more like an unreliable controller in a stateful environment.
 
@@ -197,9 +285,16 @@ Shrinking is the companion idea. When QuickCheck finds a failing random input, i
 
 In LLM agent testing, shrinking is more subtle than in ordinary input testing. A conversation is not just a string; it is an interactive sequence where removing one turn may change all later turns. A shrinker must preserve enough context for the failure to remain meaningful, and it must distinguish between reproducing the same failure and producing a different failure. Nevertheless, the conceptual value is the same as in delta debugging: reduce developer effort by isolating the failure-inducing part of a complex interaction.
 
-Fuzzing provides another testing lineage. Traditional fuzzing repeatedly mutates inputs to discover crashes, security vulnerabilities, or unexpected behaviours. LLM-specific fuzzing work has adapted this idea to prompts and safety failures. GPTFuzzer uses seed prompts, mutation operators, and a judgment model to generate jailbreak prompts automatically \cite{yu2023gptfuzzer}. FuzzLLM similarly proposes a fuzzing framework for discovering jailbreak vulnerabilities by varying attack templates and constraints \cite{yao2023fuzzllm}. Although these papers focus mainly on safety and red teaming, they show that fuzzing is now an active method for testing LLM systems rather than a loose analogy.
+Fuzzing provides another testing lineage. Traditional fuzzing repeatedly mutates inputs to discover crashes, security vulnerabilities, or unexpected behaviours. LLM-specific fuzzing work has adapted this idea to prompts and safety failures. GPTFuzzer uses seed prompts, mutation operators, and a judgment model to generate jailbreak prompts automatically \cite{yu2023gptfuzzer}. FuzzLLM takes a more structured approach \cite{yao2023fuzzllm}. It classifies jailbreak attacks into three base types---role play (altering conversational context through a scenario), output constraint (redirecting attention at the output level), and privilege escalation (inducing the model to break its restrictions)---and combines them into seven template classes, from single-base attacks through pairwise and triple combinations. Each jailbreak prompt is built from three components: a fuzzing template that carries the attack class, a constraint set that shapes how the attack is phrased, and a set of policy-violating questions. Templates can be paraphrased to increase diversity before being sent to a target model; a separate label model then acts as an oracle, checking whether the response violates usage policy.
 
-The limitation of safety-focused prompt fuzzing is that it usually targets a narrow failure predicate, such as whether a model produces disallowed content. Agent testing requires broader predicates. A generated user behaviour may be interesting because it triggers a wrong tool call, an unnecessary clarification, a policy violation, or a state error. This means that fuzzing for agents should be guided by domain-specific assertions and should preserve enough trace information to diagnose the failure. The value of fuzzing is not merely that it finds more failures, but that it explores behaviours that manual scripts may miss.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{figures/fuzz_llm_pipeline.png}
+  \caption{FuzzLLM pipeline: prompts are assembled from base and combo-class templates with constraints and policy-violating questions, executed against a target model, and automatically classified by a label-model oracle \cite{yao2023fuzzllm}.}
+  \label{fig:fuzzllm-pipeline}
+\end{figure}
+
+Although these papers focus mainly on safety and red teaming, they show that systematic variation plus an oracle can discover failures at scale---a pattern that extends beyond jailbreak testing. The limitation of safety-focused prompt fuzzing is that it usually targets a narrow failure predicate, such as whether a model produces disallowed content. Agent testing requires broader predicates. A generated user behaviour may be interesting because it triggers a wrong tool call, an unnecessary clarification, a policy violation, or a state error. This means that fuzzing for agents should be guided by domain-specific assertions and should preserve enough trace information to diagnose the failure. The value of fuzzing is not merely that it finds more failures, but that it explores behaviours that manual scripts may miss.
 
 A further issue is distribution. Randomly generated user messages are not automatically useful. If generation is too unconstrained, many cases will be unrealistic or irrelevant; if it is too constrained, it may only reproduce the manual examples that were already known. Property-based testing addresses the analogous problem through generators that encode domain structure. For LLM agents, the generator may need to encode user personas, task variants, missing information, ambiguous phrasing, or adversarial but plausible behaviour. This suggests that generative testing is most valuable when it is scenario-aware: the generated variation should remain inside the domain of the task while still exploring corners that a human tester may not have enumerated.
 
@@ -211,6 +306,13 @@ Regression testing completes the testing loop. Once a failure is found and under
 \label{sec:bg-adjacent-optimisation}
 
 Prompt and pipeline optimization is related to agent testing, but it is not the same problem. DSPy provides a declarative framework for composing language-model calls and optimizing prompts or demonstrations against a metric \cite{khattab2023dspy}. MIPRO extends this line by optimizing instructions and demonstrations in multi-stage language-model programs \cite{opsahlong2024optimizing}. GEPA uses reflective prompt evolution and natural-language feedback to search for improved prompts \cite{agrawal2025gepa}. Prompt optimization with human feedback similarly explores how human preferences can guide prompt search when scalar metrics are unreliable \cite{lin2024prompt}. These systems are relevant because they show that prompts and LLM pipelines can be treated as tunable artefacts rather than fixed strings.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{figures/prompt_optimisers_across_rollouts.png}
+  \caption{Learning curves for GEPA, MIPROv2, and GRPO on HotpotQA and IFBench: prompt optimizers reach higher validation scores with far fewer rollouts than GRPO, while test-set stars show held-out performance \cite{agrawal2025gepa,opsahlong2024optimizing}. The improvement is entirely defined by the chosen evaluation metric---optimization is powerful, but only as good as the signal it optimizes.}
+  \label{fig:prompt-optimisers-rollouts}
+\end{figure}
 
 However, optimization frameworks assume that there is an objective to optimize. In well-defined question-answering tasks, that objective might be exact-match accuracy or F1. In RAG tasks, it might be answer faithfulness or context relevance. In open-ended agent settings, the objective is often harder to write down. A domain expert may care about tool ordering, safety constraints, side effects, and conversational quality simultaneously. Optimizing a single scalar proxy can therefore hide important trade-offs. This is why the testing perspective remains necessary even when optimization is available. Testing does not only ask which prompt scores highest; it asks what behaviour occurred, why it failed, and whether known failures remain fixed.
 
