@@ -4,15 +4,49 @@
 \section{From Language Models to Agentic Systems}
 \label{sec:bg-llms-to-agents}
 
-Modern large language models are built on the Transformer architecture, introduced by Vaswani et al. as a sequence model based entirely on attention rather than recurrence or convolution \cite{vaswani2017attention}. The central mechanism is self-attention: for each token, the model learns to weight other tokens in the sequence according to their relevance. This made it possible to train large models efficiently on massive text corpora and to capture long-range dependencies that earlier recurrent models struggled to preserve. For this report, the important point is not the internal mathematics of attention itself, but the way that Transformer scaling produced models that can be treated as general-purpose language interfaces. Once a model can interpret a natural-language instruction, generate structured text, and maintain some conversational context, it can be embedded into a larger software system as a planner, controller, or decision-making component.
+Modern large language models are built on the Transformer architecture, introduced by Vaswani et al. as a sequence model based entirely on attention rather than recurrence or convolution \cite{vaswani2017attention}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.40\textwidth]{figures/transformer_architecture.png}
+  \caption{The Transformer encoder--decoder architecture \cite{vaswani2017attention}.}
+  \label{fig:transformer-architecture}
+\end{figure}
+
+The central mechanism is self-attention: for each token, the model learns to weight other tokens in the sequence according to their relevance. This made it possible to train large models efficiently on massive text corpora and to capture long-range dependencies that earlier recurrent models struggled to preserve. For this report, the important point is not the internal mathematics of attention itself, but the way that Transformer scaling produced models that can be treated as general-purpose language interfaces. Once a model can interpret a natural-language instruction, generate structured text, and maintain some conversational context, it can be embedded into a larger software system as a planner, controller, or decision-making component.
 
 The GPT-3 work made this shift especially clear. Brown et al. showed that a sufficiently large pretrained language model could perform many tasks through in-context learning, using a prompt and a few examples rather than task-specific gradient updates \cite{brown2020language}. This changed the engineering model around language systems. Instead of training a separate classifier or sequence-to-sequence model for every task, developers could often specify a task through instructions, demonstrations, and formatting constraints. Instruction tuning and reinforcement learning from human feedback then made this interaction pattern more reliable, with Ouyang et al. showing that models trained to follow user instructions were preferred by human evaluators over much larger base models that had not received the same alignment process \cite{ouyang2022training}. These developments made LLMs attractive as building blocks for applications, but they also introduced a new reliability problem: much of the application's behaviour is now controlled by a probabilistic natural-language component rather than by conventional deterministic code.
 
-Prompting research further demonstrated that model behaviour can change substantially depending on how a task is framed. Chain-of-thought prompting showed that asking a model to produce intermediate reasoning steps can improve performance on arithmetic, symbolic, and commonsense tasks \cite{wei2022chain}. Kojima et al. showed that even a short zero-shot instruction such as asking the model to reason step by step can elicit similar behaviour in sufficiently capable models \cite{kojima2022large}. Wang et al. then introduced self-consistency, where several reasoning traces are sampled and the final answer is selected by agreement across traces \cite{wang2022self}. These papers are often discussed as prompt-engineering methods, but they are also important for evaluation. They show that the final answer is only one part of the behaviour: a model may take different internal or external paths to reach that answer, and repeated executions of the same task may not agree. The idea of evaluating a system over repeated trials therefore emerges naturally from the stochasticity and prompt sensitivity of LLMs.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/few_shot_prompt_example.png}
+  \caption{Few-shot prompting: the model receives a task description and demonstration examples in context, then completes a new instance without weight updates \cite{brown2020language}.}
+  \label{fig:few-shot-prompt}
+\end{figure}
+
+Prompting research further demonstrated that model behaviour can change substantially depending on how a task is framed. Few-shot prompting, in which a small set of input--output demonstrations is included in the prompt, lets the model infer the task from examples alone rather than from weight updates \cite{brown2020language}. Chain-of-thought prompting showed that asking a model to produce intermediate reasoning steps can improve performance on arithmetic, symbolic, and commonsense tasks \cite{wei2022chain}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/chain_of_thought_prompting_example.png}
+  \caption{Chain-of-thought prompting: intermediate reasoning steps are included in the prompt so the model can follow a similar decomposition at inference time \cite{wei2022chain}.}
+  \label{fig:chain-of-thought}
+\end{figure}
+
+Kojima et al. showed that even a short zero-shot instruction such as asking the model to reason step by step can elicit similar behaviour in sufficiently capable models \cite{kojima2022large}. Wang et al. then introduced self-consistency, where several reasoning traces are sampled and the final answer is selected by agreement across traces \cite{wang2022self}. These papers are often discussed as prompt-engineering methods, but they are also important for evaluation. They show that the final answer is only one part of the behaviour: a model may take different internal or external paths to reach that answer, and repeated executions of the same task may not agree. The idea of evaluating a system over repeated trials therefore emerges naturally from the stochasticity and prompt sensitivity of LLMs.
 
 As LLMs were incorporated into larger pipelines, retrieval-augmented generation became one of the most influential architectures. Lewis et al. proposed combining a parametric language model with a non-parametric retrieval component, so that the model could condition its generation on retrieved passages rather than relying only on information stored in its weights \cite{lewis2020retrieval}. RAG is important because it turns a single model call into a multi-component system: a query must be represented, documents must be retrieved, context must be selected, and the generator must use that context faithfully. This creates more opportunities for failure, but also creates more places to test. The retriever may return irrelevant information, the generator may ignore the retrieved evidence, or the final answer may be relevant but unsupported. Consequently, the evaluation of RAG systems already moves beyond checking the final string and toward checking the behaviour of interacting components.
 
-The same shift is even clearer in tool-using agents. ReAct introduced a pattern in which an LLM interleaves reasoning traces with actions, such as search queries or environment commands \cite{yao2023react}. This allows the model to gather information, observe the result, and decide on the next step. Toolformer pushed the idea further by showing that language models can be trained to decide when to call external tools and how to use their results \cite{schick2023toolformer}. Gorilla similarly focused on connecting LLMs to large collections of APIs, evaluating whether the model could select and call the correct API from natural-language instructions \cite{patil2023gorilla}. These systems make the agent's execution trace a first-class object: the model's behaviour is no longer just a paragraph of generated text, but a sequence of decisions, tool calls, observations, and state changes.
+The same shift is even clearer in tool-using agents. ReAct introduced a pattern in which an LLM interleaves reasoning traces with actions, such as search queries or environment commands \cite{yao2023react}. This allows the model to gather information, observe the result, and decide on the next step.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/react_prompting.png}
+  \caption{ReAct prompting interleaves natural-language reasoning (\textit{Thought}) with executable actions (\textit{Act}) and environment observations (\textit{Obs}) \cite{yao2023react}.}
+  \label{fig:react-prompting}
+\end{figure}
+
+Toolformer pushed the idea further by showing that language models can be trained to decide when to call external tools and how to use their results \cite{schick2023toolformer}. Gorilla similarly focused on connecting LLMs to large collections of APIs, evaluating whether the model could select and call the correct API from natural-language instructions \cite{patil2023gorilla}. These systems make the agent's execution trace a first-class object: the model's behaviour is no longer just a paragraph of generated text, but a sequence of decisions, tool calls, observations, and state changes.
 
 This transition from text generation to agentic execution is the central background for the rest of this chapter. A conventional language benchmark asks whether a model can answer a question. A tool-using agent benchmark asks whether a model can pursue a goal in an environment. That distinction matters because the failure modes are different. An agent may choose the wrong tool, pass a subtly wrong argument, call tools in the wrong order, violate a domain policy, misread an observation, or leave the external environment in an invalid state. The final message may be polished and plausible while the underlying action sequence is wrong. Conversely, a final answer may be linguistically imperfect while the operational behaviour is correct. This is why recent work increasingly treats LLM agents as executable systems rather than as ordinary natural-language generation systems.
 
@@ -53,6 +87,53 @@ The broader lesson is that scalar metrics are useful but incomplete. A scalar sc
 This does not mean that scalar metrics should be abandoned. Benchmarks still need aggregate numbers in order to compare models, track progress, and communicate results. The issue is that the aggregate should be treated as a summary over a richer set of observations, not as the observation itself. A useful testing report should allow the reader to move from a high-level failure rate to concrete examples, and then from each example to the specific assertion or behavioural expectation that failed. This mirrors good practice in conventional software testing, where a test suite may report a percentage of passing tests, but developers debug by inspecting individual failing assertions, stack traces, logs, and inputs.
 
 The granularity of the oracle should also match the granularity of the claim. If the claim is that a model is generally helpful in conversation, a judge score or preference comparison may be reasonable. If the claim is that an agent can safely operate a booking system, the evidence should include whether it selected the correct booking operation, used the right dates and passenger details, followed cancellation or refund policies, and left the database in the right state. This is why agent evaluation often requires multiple kinds of checks in the same scenario. The natural-language surface of the conversation, the structured tool interface, and the environment state each provide different evidence about correctness.
+
+\section{Existing Evaluation Libraries and Observability Tooling}
+\label{sec:existing_eval_libraries}
+
+Alongside academic benchmarks, several practical libraries have emerged for evaluating LLM applications during development. These tools are useful because they move evaluation closer to the developer workflow: test cases can be rerun, prompts and models can be compared, and failures can be inspected more systematically than with ad hoc scripts. However, they also show that current tooling is still only partially suited to evaluating stateful, tool-using agents.
+
+\subsection{OpenAI Evals}
+
+OpenAI Evals is an open-source framework for evaluating LLMs and LLM systems \cite{openaiEvals}. It provides a general structure for defining datasets, running models on examples, and grading the resulting outputs. This is useful when developers want repeatable evaluation suites for comparing model versions or prompt changes. Evals can also use model-graded checks, where another LLM judges whether the output satisfies some rubric.
+
+The limitation is that OpenAI Evals is still mainly organised around examples and graders. This works well for many single-turn tasks, but is less natural for agent evaluations where the important behaviour may be distributed across several turns, tool calls, and state changes. It can be extended with custom logic, but the framework does not provide a particularly direct scenario-level language for asserting, for example, that a user-facing output, a sequence of tool calls, and the resulting application state are all correct together.
+
+\subsection{DeepEval and Ragas}
+
+DeepEval and Ragas provide more application-oriented evaluation abstractions. DeepEval presents LLM evaluation in a unit-testing style and ships ready-made metrics, including G-Eval \cite{liu2023geval}, alongside measures for RAG, conversations, safety, and agentic behaviour \cite{deepevalDocs}. Its tool correctness metric evaluates whether expected tools were called, with options to consider input parameters and tool outputs \cite{deepevalDocs}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/geval_instantiation_code_snippet.png}
+  \caption{G-Eval prompt instantiation using the DeepEval library: evaluation criteria and chain-of-thought instructions are composed into a judge prompt for scoring model outputs \cite{liu2023geval,deepevalDocs}.}
+  \label{fig:geval-prompt}
+\end{figure}
+
+Ragas was originally designed for RAG evaluation, decomposing quality into dimensions such as faithfulness, answer relevance, context precision, and context recall \cite{es2023ragas,ragasDocs}. More recent versions also include agent metrics such as tool call accuracy, tool call F1, and agent goal accuracy \cite{ragasDocs}. Agent goal accuracy is a binary multi-turn metric: an evaluator LLM reads the full interaction trace, infers the outcome the agent reached, and judges whether it matches the user's goal---either against a provided reference outcome or by inferring the goal from the conversation \cite{ragasDocs}.
+
+These libraries are valuable because they recognise that LLM systems should not only be judged by final-answer quality. However, their tool checks are still relatively metric-oriented. They are useful for comparing expected and actual tool calls, but they are less ergonomic when a developer wants to specify precise properties of a tool argument or a structured output. For example, checking that a particular tool argument contains the substring \texttt{urgent}, or that a nested structured output field satisfies a domain-specific predicate, is not usually a first-class assertion. It generally requires custom code, a custom metric, or reshaping the output into the format expected by the evaluator. This makes simple behavioural expectations feel heavier than ordinary software tests.
+
+\subsection{Promptfoo}
+
+Promptfoo is an open-source tool for evaluating and red-teaming LLM applications using declarative test cases \cite{promptfooDocs}. It supports prompt and model comparison, assertions, CI/CD workflows, caching, and multiple providers. It also includes deterministic assertions such as equality, substring containment, regex matching, JSON validation, and custom JavaScript or Python assertions \cite{promptfooDocs}. This makes it closer to traditional test-driven development than many purely metric-based evaluation frameworks.
+
+Promptfoo is therefore one of the more practical tools for developer-led LLM testing. However, its main abstraction is still the prompt/application test case and its assertions. More complex agent checks, especially those involving multi-turn traces, tool-call arguments, structured outputs, and stateful side effects, can become awkward unless the developer writes custom assertion logic. It provides a useful assertion vocabulary, but it is less focused on representing a full agent scenario as a single object with output checks, tool checks, and state checks expressed together.
+
+\subsection{Observability-Focused Tools}
+
+A related group of tools focuses on observability rather than evaluation alone. LangSmith provides tracing, evaluation, prompt testing, feedback collection, and production monitoring for LLM applications \cite{langsmithDocs}. Langfuse similarly provides open-source tracing, prompt management, evaluation, user feedback, and monitoring for LLM systems \cite{langfuseDocs}. These tools are important because agent failures are often hard to understand without seeing the full execution trace: the prompts, model responses, tool calls, tool outputs, intermediate steps, latency, and cost.
+
+Observability tools are therefore highly complementary to evaluation libraries. They help developers inspect what happened during a run. However, observability does not by itself define what should have happened. A trace viewer can show that a tool was called, but the developer still needs a concise way to specify that the tool should only have been called after another condition, that its arguments should satisfy particular properties, that the final output should mention a required concept, and that the external state should end in a valid configuration.
+
+\subsection{Gaps in Existing Libraries}
+
+Existing libraries cover many important parts of the evaluation workflow, but they leave a gap for scenario-driven agent testing. Some tools are strong at scoring final outputs. Others provide RAG or tool-use metrics. Others provide trace observability and production monitoring. What is still missing is a developer-friendly way to define a complete agent scenario and attach explicit checks over the different surfaces of behaviour.
+
+In particular, current tooling does not make it easy enough to combine output assertions, tool-call assertions, and state assertions in one coherent test. A developer should be able to express checks such as: the final response contains a required phrase, a particular tool was called with an argument satisfying a property, a forbidden tool was not called, and the resulting state matches the intended outcome. These checks should be easy to read, easy to modify, and should produce useful diagnostic output explaining which part of the scenario failed.
+
+This is especially important for LLM agents because failures are often not visible in the final response alone. An agent may answer politely while calling the wrong tool, using the wrong argument, skipping a required step, or leaving the system in an invalid state. Conversely, a generic score may indicate failure without showing whether the problem was in the output, the tool trajectory, or the state transition. The main gap is therefore not simply the absence of metrics, but the absence of concise scenario-style evaluation tooling that treats the full agent trace as the object being tested.
+
 
 \section{Tool-Use and Function-Calling Benchmarks}
 \label{sec:bg-tool-benchmarks}
@@ -131,7 +212,7 @@ Regression testing completes the testing loop. Once a failure is found and under
 
 Prompt and pipeline optimization is related to agent testing, but it is not the same problem. DSPy provides a declarative framework for composing language-model calls and optimizing prompts or demonstrations against a metric \cite{khattab2023dspy}. MIPRO extends this line by optimizing instructions and demonstrations in multi-stage language-model programs \cite{opsahlong2024optimizing}. GEPA uses reflective prompt evolution and natural-language feedback to search for improved prompts \cite{agrawal2025gepa}. Prompt optimization with human feedback similarly explores how human preferences can guide prompt search when scalar metrics are unreliable \cite{lin2024prompt}. These systems are relevant because they show that prompts and LLM pipelines can be treated as tunable artefacts rather than fixed strings.
 
-However, optimization frameworks assume that there is an objective to optimize. In well-defined question-answering tasks, that objective might be exact-match accuracy or F1. In RAG tasks, it might be answer faithfulness or context relevance. In open-ended agent settings, the objective is often harder to write down. A domain expert may care about tool ordering, safety constraints, side effects, latency, and conversational quality simultaneously. Optimizing a single scalar proxy can therefore hide important trade-offs. This is why the testing perspective remains necessary even when optimization is available. Testing does not only ask which prompt scores highest; it asks what behaviour occurred, why it failed, and whether known failures remain fixed.
+However, optimization frameworks assume that there is an objective to optimize. In well-defined question-answering tasks, that objective might be exact-match accuracy or F1. In RAG tasks, it might be answer faithfulness or context relevance. In open-ended agent settings, the objective is often harder to write down. A domain expert may care about tool ordering, safety constraints, side effects, and conversational quality simultaneously. Optimizing a single scalar proxy can therefore hide important trade-offs. This is why the testing perspective remains necessary even when optimization is available. Testing does not only ask which prompt scores highest; it asks what behaviour occurred, why it failed, and whether known failures remain fixed.
 
 The relationship between the two areas is complementary. A testing framework can produce the evidence and regression cases that later guide optimization. An optimization framework can search for prompts or policies that perform better on those tests. But the literature suggests that without good evaluation artefacts, optimization can become misdirected. A system may improve on a judge score while becoming less safe, less interpretable, or less reliable under interaction. For agentic systems, optimization should therefore be downstream of structured evaluation rather than a substitute for it.
 
