@@ -1,53 +1,36 @@
 % \section{Objectives}
 % \section{Challenges}
 % \section{Contributions}
+
 \chapter{Introduction}
 
-Large Language Models (LLMs) are being rapidly adopted in industry for tasks such as customer support, legal clause analysis, internal knowledge retrieval, and healthcare summarisation. These workflows rely heavily on the design of prompts that align with specific goals, user preferences, and domain-specific constraints. As adoption grows, developers increasingly require systematic ways to evaluate their pipelines and automatically optimise prompts based on performance or user feedback. However, existing tools fall short of enabling this in practice.\newline
+\section{Motivation}
 
-In many real-world settings, prompt development is still carried out manually through a slow and error-prone process. Developers inspect outputs across multiple examples, identify failure cases, hypothesise why the model behaved incorrectly, and then attempt to hand-craft prompt updates to address these issues. This process often involves significant back-and-forth: a change that improves performance on one example may degrade performance on another, and understanding whether a prompt change genuinely improves overall behaviour requires repeatedly re-running evaluations. In domain-specific and subjective tasks, where there is no single correct answer and quality judgements depend on expert interpretation, this manual iteration becomes particularly frustrating and time-consuming. Much of the developer’s effort is spent coordinating feedback across multiple prompt iterations rather than making systematic progress.\newline
+Large Language Models (LLMs) have moved from being standalone text generators to being embedded inside increasingly complex software systems. Early progress in large-scale language modelling showed that Transformer-based models could perform a wide range of tasks from natural language prompts alone \cite{vaswani2017attention,brown2020language}, and instruction tuning made these models more useful as general-purpose assistants that follow user intent \cite{ouyang2022training}. More recently, LLMs have been used as agents: systems that plan over multiple steps, call tools, retrieve information, interact with users, and modify external state. Approaches such as ReAct demonstrated the value of combining reasoning with action \cite{yao2023react}, while work such as Toolformer and API-Bank showed the growing importance of external tool use in language model systems \cite{schick2023toolformer,li2023apibank}. This shift has changed the central reliability question. It is no longer sufficient to ask whether a model can produce a plausible final answer; we must ask whether an agent followed the right process, called the right tools, respected domain rules, and left the external system in a correct state.
 
-More fundamentally, this manual workflow places a significant burden on developers. The human is required both to define what constitutes a good output and to perform the optimisation itself. In contrast to standard machine learning, where a loss function provides the training signal and optimisation algorithms handle credit assignment and parameter updates, prompt engineering forces developers to reason implicitly about which parts of a prompt caused an error, how they should be changed, and how those changes may affect behaviour elsewhere. This hidden optimisation complexity makes prompt iteration slow and error prone for developers, particularly in subjective and domain-specific settings.\newline
+This creates a serious evaluation challenge. Traditional LLM benchmarks usually evaluate isolated inputs and final outputs. Benchmarks such as HELM provide broad, multi-metric comparisons across scenarios \cite{liang2022holistic}, and LLM-as-a-judge methods such as G-Eval, MT-Bench, and Chatbot Arena have made it easier to assess open-ended text outputs at scale \cite{liu2023geval,zheng2023judging}. These methods are valuable, but they are not enough for agentic systems. A final answer can look reasonable while the agent has made an incorrect tool call, skipped a required verification step, violated a business rule, or silently changed application state incorrectly. Conversely, a final answer may be terse or imperfect while the underlying tool interactions were safe and correct. Evaluating only the final response therefore hides important failure modes.
 
-DSPy represents an important step toward addressing this gap \cite{khattab2023dspycompilingdeclarativelanguage}. Developers construct declarative ``prompt programs'' and apply optimisers such as MIPROv2 to automatically tune instructions and, optionally, few-shot examples to improve task performance \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}. However, it assumes access to a well-defined evaluation function (e.g.\ accuracy) and is typically demonstrated on structured tasks with known ground-truth answers, such as HotPotQA, which can be scored automatically \cite{yang2018hotpotqadatasetdiverseexplainable}.\newline
+Recent agent benchmarks have begun to address this gap. AgentBench evaluates LLMs across interactive environments and highlights weaknesses in long-horizon decision-making, reasoning, and instruction following \cite{liu2023agentbench}. WebArena and SWE-bench test agents in more realistic web and software engineering environments, where success depends on navigating interfaces or modifying repositories rather than merely answering questions \cite{zhou2023webarena,jimenez2023swebench}. Tool-focused benchmarks such as ToolLLM, StableToolBench, the Berkeley Function Calling Leaderboard, and ToolSandbox examine whether models can select and invoke APIs correctly under more controlled conditions \cite{qin2023toollmm,guo2024stabletoolbench,patil2025bfcl,lu2024toolsandbox}. Most relevantly, $\tau$-bench evaluates tool-agent-user interaction in realistic domains and emphasises final database state and repeated-trial reliability rather than a single response score \cite{yao2024taubench}. AppWorld similarly argues for evaluating interactive agents through executable tasks in a controllable world of applications, where correctness includes both task completion and the absence of collateral state changes \cite{trivedi2024appworld}.
 
-In contrast, many real-world industry tasks lack a single, fixed notion of a ``correct'' answer. For example:
+Although these benchmarks represent important progress, they also reveal a tooling gap for developers building their own domain-specific agents. Benchmarks provide fixed environments and leaderboards, but production agent developers often need a more general way to express their own tasks, rules, checks, and failure conditions. A customer-support agent, for example, may need to authenticate a user before making account changes, avoid offering unsupported policies, call tools in a prescribed order, and produce a user-facing response that is both correct and appropriate. These requirements are not captured by a single accuracy score. They are closer to software tests: executable scenarios with explicit oracles over observable behaviour. This connects agent evaluation to long-standing ideas in software testing, including property-based testing, test oracles, metamorphic testing, and failure simplification \cite{claessen2000quickcheck,barr2015oracle,chen2018metamorphic,zeller2002simplifying}. Work such as CheckList made a similar argument for NLP models by showing that behavioural capabilities should be tested directly rather than inferred from aggregate benchmark accuracy \cite{ribeiro2020checklist}.
+
+The motivation for this project is therefore that LLM agents should be evaluated as software systems, not merely as text generators. Agent evaluation needs to cover multi-turn interaction, tool traces, domain constraints, repeated execution, and stateful outcomes. Existing benchmarks show why these dimensions matter, but developers still need lightweight, reusable infrastructure for defining and running such evaluations on their own agents. This project addresses that need by developing a framework for scenario-driven evaluation of LLM agents, with the goal of making agent failures easier to specify, discover, reproduce, and analyse.
+
+\section{Contributions}
+
+This project makes the following high-level contributions.
+
 \begin{itemize}
-    \item A doctor may want a clinical summary tailored to a specific patient and clinical context.
-    \item A lawyer may need to identify non-standard clauses in a contract, prioritised by risk.
-    \item A financial analyst may want insights personalised to an individual risk profile.
+    \item \textbf{A scenario-driven evaluation framework for LLM agents.} The project provides a way to define agent evaluations as executable scenarios rather than as isolated prompt-output pairs. This supports a style of testing that is closer to software engineering practice: a developer specifies the situation, the expected behaviour, and the checks that determine whether the agent succeeded.
+
+    \item \textbf{Support for evaluating multiple surfaces of agent behaviour.} Instead of treating the final natural-language response as the only evaluation target, the framework supports checks over the user-facing output, intermediate tool interactions, and resulting application state. This reflects the observation from recent agent benchmarks that correctness in tool-using systems depends on trajectories and state changes, not only final answers \cite{yao2024taubench,trivedi2024appworld,lu2024toolsandbox}.
+
+    \item \textbf{A testing-oriented approach to discovering and preserving failures.} The project brings ideas from software testing into LLM agent evaluation, including repeated trials, generative variation of scenarios, simplification of failing cases, and extraction of regression tests. These features are intended to make failures more actionable: rather than only reporting that an agent failed, the framework aims to help identify the smallest useful failing interaction and preserve it as a future test case.
+
+    \item \textbf{A practical evaluation workflow for domain-specific agents.} The framework is designed around the needs of developers evaluating agents in domains with rules, tools, and stateful side effects. The contribution is not a new benchmark alone, but a reusable approach for constructing domain-specific evaluations where success criteria can be expressed explicitly and inspected after execution.
+
+    \item \textbf{An empirical evaluation of the framework on agent tasks.} The project evaluates the framework by applying it to realistic tool-using agent scenarios and analysing the kinds of failures that are found. The evaluation focuses not only on aggregate pass rates, but also on whether the framework helps expose distinct failure modes and turn them into reproducible regression cases.
 \end{itemize}
 
-In these settings, output quality is subjective, contextual, and often determined by a domain expert rather than a universal metric. Generic automated metrics and LLM-as-judge approaches can therefore be brittle or misaligned, particularly in specialised domains \cite{wang2023largelanguagemodelsfair}. The core insight motivating this project is that prompt optimisation in practice should be human-in-the-loop: developers and stakeholders must be able to define what ``good'' looks like, attach feedback directly to system behaviour, and use that feedback to guide prompt updates over time.
+Overall, this project contributes a developer-facing evaluation framework for LLM agents. Its central claim is that reliable agent development requires more than scalar benchmark scores or LLM-judged final answers: it requires executable, inspectable, and repeatable tests over the full behaviour of an agent.
 
-\section{Objectives}
-
-The aim of this project is to design and evaluate a human-in-the-loop prompt optimisation framework that supports:
-\begin{itemize}
-    \item Explicit specification of optimisable prompt regions within complex LLM pipelines or agentic systems.
-    \item Human feedback that can be attached to specific prompt components or execution steps.
-    \item Iterative optimisation methods that learn from human preferences and annotations, rather than requiring a single scalar evaluation metric.
-\end{itemize}
-
-\section{Proposed Contributions}
-
-This project proposes the following contributions.
-
-\subsection*{Prompt Optimisation Framework}
-
-A lightweight Python library for:
-\begin{itemize}
-    \item Defining prompt structures with static and optimisable sections (e.g.\ optimising instruction blocks while keeping retrieved context fixed).
-    \item Integrating with existing LLM pipelines or agents and logging execution traces.
-    \item Attaching human evaluation and feedback to traces and individual prompt components.
-\end{itemize}
-
-\subsection*{Human-Feedback-Driven Optimiser}
-
-An prompt optimiser that:
-\begin{itemize}
-    \item Consumes pairwise preferences (e.g.\ output A vs.\ output B) and/or case-by-case correctness or quality annotations.
-    \item Proposes targeted prompt edits based on the components implicated by human feedback.
-\end{itemize}
-
-It is likely that the design and implementation of this optimiser changes as the project progresses
