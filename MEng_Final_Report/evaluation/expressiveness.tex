@@ -109,12 +109,12 @@ Multi-turn memory & A & D & B & D & D & B \\
 
 \subsection{Illustrative failure messages}
 
-For four trace-shaped specimens (C05, C06, C07, C10), each framework port was run on the same intentional fail trace; Listing~\ref{lst:c05-failures}--\ref{lst:c10-failures} show the captured ASCII failure boxes (agent-spec-kit boxes are rendered from the library \texttt{Counterexample} object; other frameworks use the compact wrapper in the expressiveness harness). The appendix lists the remaining specimens side by side.
+For four trace-shaped specimens (C05, C06, C07, C10), each framework port was run on the same intentional fail trace; Listing~\ref{lst:c05-failures}--\ref{lst:c10-failures} show the captured ASCII failure boxes (all frameworks use the same graded header format; agent-spec-kit boxes are rendered from the library \texttt{Counterexample} object, other frameworks from the compact wrapper in the expressiveness harness). The appendix lists the remaining specimens side by side.
 
 \subsubsection{Ordered tool sequence (C05)}
 
 \begin{lstlisting}[caption={C05 ordered tool sequence: captured failure boxes (agent-spec-kit, pytest, LangSmith).},label=lst:c05-failures]
-+--------------------------- FAIL test_c05_fail [1/1] ---------------------------+
++------------------------ agent_spec_kit (C05)  grade A -------------------------+
 | Check: assert_tool_calls                                                       |
 | Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
 | Path: $[1]                                                                     |
@@ -137,7 +137,7 @@ For four trace-shaped specimens (C05, C06, C07, C10), each framework port was ru
 \subsubsection{Forbidden tool-call (C06)}
 
 \begin{lstlisting}[caption={C06 forbidden tool-call: captured failure boxes.},label=lst:c06-failures]
-+--------------------------- FAIL test_c06_fail [1/1] ---------------------------+
++------------------------ agent_spec_kit (C06)  grade A -------------------------+
 | Check: forbid_tool_calls                                                       |
 | Where: 1st forbid_tool_calls after turn #1 (forbidden tool call patterns)      |
 | Path: $[1]                                                                     |
@@ -159,7 +159,7 @@ For four trace-shaped specimens (C05, C06, C07, C10), each framework port was ru
 \subsubsection{Tool argument matching (C07)}
 
 \begin{lstlisting}[caption={C07 tool argument matching: captured failure boxes.},label=lst:c07-failures]
-+--------------------------- FAIL test_c07_fail [1/1] ---------------------------+
++------------------------ agent_spec_kit (C07)  grade A -------------------------+
 | Check: assert_tool_calls                                                       |
 | Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
 | Path: $[1].args.line_id                                                        |
@@ -185,7 +185,7 @@ For four trace-shaped specimens (C05, C06, C07, C10), each framework port was ru
 \subsubsection{Unordered sibling tools (C10)}
 
 \begin{lstlisting}[caption={C10 unordered sibling tools: captured failure boxes.},label=lst:c10-failures]
-+--------------------------- FAIL test_c10_fail [1/1] ---------------------------+
++------------------------ agent_spec_kit (C10)  grade A -------------------------+
 | Check: assert_tool_calls                                                       |
 | Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
 | Expected: list_too_short: expected >= 2                                        |
