@@ -1,0 +1,32 @@
+\section{Fault detection across oracle lanes}
+\label{sec:fault-detection}
+
+The third study asks whether split oracles (O, S, T, F) detect injected agent faults that a single output grade would miss. Ten fault families (F01--F10) mutate the reference agent or its prompts: premature escalation, wrong line or customer binding, unsupported credit, authentication and privacy leaks, wrong nested specialist child order, conditional structured-output violations, missing clarification before mutation, missing audit notes, failure to act when required, and wrong issue binding after user correction. Each family is run on a fixed set of task--oracle pairs where the initial baseline run had passed (Table~\ref{tab:baseline-initial}), so the denominator measures detection of the injection, not general agent quality.
+
+Detection means the fault scenario fails the eligible oracle. Table~\ref{tab:fault-detection-summary} gives detection rates by fault family and lane. One hundred and fifty-two fault scenarios were parsed from the primary matrix run.
+
+\begin{table}[htbp]
+\centering
+\caption{Fault detection rate (detected / eligible) by fault family and oracle lane.}
+\label{tab:fault-detection-summary}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Fault & O & S & T & F \\
+\midrule
+F01 Premature escalation & 0/4 (0\%) & 0/2 (0\%) & --- & --- \\
+F02 Wrong line / customer & 0/3 (0\%) & 3/3 (100\%) & 2/3 (67\%) & 3/3 (100\%) \\
+F03 Unsupported credit & 0/4 (0\%) & 3/3 (100\%) & 0/3 (0\%) & 2/2 (100\%) \\
+F04 Auth / privacy leak & 1/4 (25\%) & 3/4 (75\%) & 0/4 (0\%) & 3/4 (75\%) \\
+F05 Nested tool order & 0/3 (0\%) & 0/3 (0\%) & 2/2 (100\%) & 1/1 (100\%) \\
+F06 Structured output & 3/4 (75\%) & 2/4 (50\%) & --- & --- \\
+F07 Missing clarification & 2/4 (50\%) & 2/4 (50\%) & 4/4 (100\%) & 4/4 (100\%) \\
+F08 Missing audit note & 0/4 (0\%) & 0/1 (0\%) & 3/4 (75\%) & 1/2 (50\%) \\
+F09 Failure to act & 2/4 (50\%) & 2/4 (50\%) & 2/4 (50\%) & 2/4 (50\%) \\
+F10 Wrong issue binding & 1/4 (25\%) & 0/4 (0\%) & 1/3 (33\%) & 4/4 (100\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Trace and full lanes account for most detections on ordering, binding, and clarification injections; output and state lanes are often near zero on the same families because the reply can stay plausible while tools or the store are wrong. Sparse cells in the summary (dashes) mean no eligible baseline pass for that lane, not a missing injection. The task-by-task grid is in Appendix~\ref{app:fault-detection-grid}.
+
+Together with Section~\ref{sec:diagnostic-quality-faults}, the results treat split oracles as complementary witnesses on the same policy, not redundant grades.

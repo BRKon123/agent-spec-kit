@@ -1,2 +1,219 @@
 \appendix
-\chapter{First Appendix}
+\chapter{Evaluation supplementary tables}
+\label{app:evaluation}
+
+\section{Full task catalogue (T01--T50)}
+\label{app:full-task-catalog}
+
+\begin{longtable}{@{}llp{4.8cm}ccc@{}}
+\caption{Full TelcoSupportBench task catalogue. Sim and fuzz mark inclusion in the generative studies (subsets of fifty tasks). Shrink marks shrink-study candidates.} \\
+\toprule
+Task & Category & Description (abridged) & Sim & Fuzz & Shrink \\
+\midrule
+\endfirsthead
+\multicolumn{6}{l}{\textit{Continued from previous page}} \\
+\toprule
+Task & Category & Description (abridged) & Sim & Fuzz & Shrink \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+T01 & Data & Mobile data disabled on line &  &  &  \\
+T02 & Data & Local outage causes data failure &  &  &  \\
+T03 & Data & Troubleshoot before escalation & Y &  &  \\
+T04 & Data & Diagnostic fail after restart & Y &  &  \\
+T05 & Data & Network specialist for latency & Y &  &  \\
+T06 & Data & Parallel status and heartbeat &  &  &  \\
+T07 & Data & Reference forgets outage-first &  & Y &  \\
+T08 & Data & Ticket with generic reason &  &  &  \\
+T09 & Data & High severity without escalation reason &  &  &  \\
+T10 & Data & Certain root cause, weak evidence &  &  &  \\
+T11 & Roaming & Roaming disabled abroad & Y &  &  \\
+T12 & Roaming & Plan excludes destination &  &  &  \\
+T13 & Roaming & Possible partner fault & Y &  &  \\
+T14 & Roaming & Compensation for unsupported dest. & Y &  &  \\
+T15 & Roaming & Domestic outage logic on roaming &  & Y &  \\
+T16 & Billing & Duplicate charge credit &  &  &  \\
+T17 & Billing & Short outage not eligible & Y & Y & Y \\
+T18 & Billing & Long outage goodwill credit & Y &  &  \\
+T19 & Billing & Billing ticket not immediate credit & Y &  &  \\
+T20 & Billing & Billing details before auth &  &  &  \\
+T21 & Billing & Correct answer, missing audit &  & Y &  \\
+T22 & Billing & Credit when ineligible &  & Y & Y \\
+T23 & Billing & Missing amount when eligible &  &  &  \\
+T24 & Billing & Overpromised compensation &  &  &  \\
+T25 & Billing & Wrong customer id in specialist &  & Y &  \\
+T26 & SIM & Lost SIM replacement &  &  &  \\
+T27 & SIM & eSIM setup failure & Y &  &  \\
+T28 & SIM & Incompatible with eSIM &  &  &  \\
+T29 & SIM & Late line identification & Y & Y &  \\
+T30 & SIM & Address change plus SIM & Y &  &  \\
+T31 & SIM & eSIM on incompatible device &  &  &  \\
+T32 & SIM & Wrong line on multi-line account &  & Y & Y \\
+T33 & SIM & fault\_domain=sim, empty evidence &  &  &  \\
+T34 & SIM & Appointment without diagnostic &  & Y &  \\
+T35 & Escalation & Escalate, do not duplicate ticket & Y &  &  \\
+T36 & Escalation & Severe widespread outage &  &  &  \\
+T37 & Escalation & Diagnostic fail after user action & Y &  &  \\
+T38 & Escalation & Parallel specialist and heartbeat &  &  &  \\
+T39 & Escalation & Duplicate ticket &  & Y & Y \\
+T40 & Escalation & Reversed nested specialist order &  &  &  \\
+T41 & Mixed & Data plus billing complaint & Y & Y &  \\
+T42 & Mixed & Issue shift data to SIM & Y &  &  \\
+T43 & Mixed & Wrong line then correction & Y & Y &  \\
+T44 & Mixed & False restart claim & Y & Y & Y \\
+T45 & Mixed & Delayed authentication & Y &  &  \\
+T46 & Mixed & Stale line after correction &  & Y & Y \\
+T47 & Mixed & Mixed billing and connectivity state &  &  &  \\
+T48 & Adversarial & Refuses troubleshoot, wants escalate & Y & Y &  \\
+T49 & Adversarial & Another customer's details &  &  &  \\
+T50 & Adversarial & Leak before authentication &  &  &  \\
+\end{longtable}
+
+\section{Failure taxonomy per task}
+\label{app:taxonomy-per-task}
+
+Y = new failures on that arm relative to manual (and fuzz, for fuzz-new). Manual-known tasks fail on the canonical script.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Task & Manual & Sim new & Fuzz new \\
+\midrule
+T03 & Pass & Y & Y \\
+T04 & Pass & Y & Y \\
+T17 & Pass & --- & Y \\
+T20 & Pass & Y & Y \\
+T27 & Pass & --- & --- \\
+T29 & Fail & Y & Y \\
+T30 & Pass & --- & Y \\
+T35 & Pass & --- & Y \\
+T38 & Fail & Y & Y \\
+T42 & Pass & Y & Y \\
+T43 & Fail & Y & --- \\
+T44 & Pass & --- & --- \\
+T45 & Pass & Y & Y \\
+T49 & Pass & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Fault-detection detail grid}
+\label{app:fault-detection-grid}
+
+Legend: \textbf{det} = detected; \textbf{miss} = eligible but passed; \textbf{N/A} = initial baseline run did not pass on that slot. From the primary fault matrix (152 scenarios).
+
+\small
+\begin{longtable}{@{}llcccc@{}}
+\caption{Fault detection by task and oracle lane (primary matrix).} \\
+\toprule
+Fault & Task & O & S & T & F \\
+\midrule
+\endfirsthead
+\toprule
+Fault & Task & O & S & T & F \\
+\midrule
+\endhead
+F01 & T03 & miss & miss & N/A & miss \\
+F01 & T37 & miss & N/A & N/A & N/A \\
+F01 & T44 & miss & miss & N/A & det \\
+F01 & T48 & miss & N/A & N/A & N/A \\
+F02 & T29 & miss & det & det & det \\
+F02 & T43 & miss & det & miss & det \\
+F02 & T46 & miss & det & det & det \\
+F03 & T14 & miss & det & miss & N/A \\
+F03 & T17 & miss & det & miss & det \\
+F03 & T22 & miss & N/A & N/A & N/A \\
+F03 & T27 & miss & det & miss & det \\
+F04 & T20 & miss & miss & miss & miss \\
+F04 & T45 & miss & det & miss & det \\
+F04 & T49 & miss & det & miss & det \\
+F04 & T50 & det & det & miss & det \\
+F05 & T05 & miss & miss & det & N/A \\
+F05 & T38 & miss & miss & det & det \\
+F05 & T40 & miss & miss & N/A & N/A \\
+F06 & T09 & miss & miss & N/A & N/A \\
+F06 & T10 & det & miss & N/A & N/A \\
+F06 & T23 & det & det & N/A & N/A \\
+F06 & T33 & det & det & N/A & N/A \\
+F07 & T29 & miss & miss & det & det \\
+F07 & T30 & det & miss & det & det \\
+F07 & T42 & det & det & det & det \\
+F07 & T43 & miss & det & det & det \\
+F08 & T18 & miss & N/A & det & N/A \\
+F08 & T21 & miss & N/A & det & det \\
+F08 & T26 & miss & N/A & det & N/A \\
+F08 & T35 & miss & miss & miss & miss \\
+F09 & T04 & det & det & det & det \\
+F09 & T19 & det & det & det & det \\
+F09 & T35 & miss & miss & miss & miss \\
+F09 & T34 & miss & miss & miss & miss \\
+F10 & T29 & miss & miss & det & det \\
+F10 & T42 & miss & miss & miss & det \\
+F10 & T43 & det & miss & miss & det \\
+F10 & T44 & miss & miss & N/A & det \\
+\bottomrule
+\end{longtable}
+
+\section{Additional failure-message samples (C01--C04, C08--C09, C12)}
+\label{app:failure-samples}
+
+Captured on intentional negative fixtures (see Section~\ref{sec:expressiveness}). Grades per framework: ask / py / ls / pe / pf / bt.
+
+\subsection*{C01 --- Final output rubric (A/B/B/B/D/B)}
+
+\begin{lstlisting}
+# agent_spec_kit
+path=$ code=one_of ... actual="'Your service is active; no billing changes...'"
+# pytest_plain / pydantic_evals: AssertionError
+# langsmith: {'key': 'output_rubric', 'score': 0}
+# promptfoo: assertion returned False
+\end{lstlisting}
+
+\subsection*{C02 --- Structured object shape (A/B/B/B/D/B)}
+
+\begin{lstlisting}
+# agent_spec_kit
+path=$[0] code=missing_element ... specialist result severity mismatch
+# scorer ports: score 0 with key object_shape / c02
+\end{lstlisting}
+
+\subsection*{C03 --- Conditional object (A/B/B/B/D/B)}
+
+\begin{lstlisting}
+# agent_spec_kit
+path=$[0] code=missing_element ... billing specialist eligible/currency
+# imperative ports: AssertionError or score 0
+\end{lstlisting}
+
+\subsection*{C04 --- Numeric constraint (A/B/B/B/D/B)}
+
+\begin{lstlisting}
+# agent_spec_kit
+path=$[0] code=missing_element ... amount 9999.0 out of policy bound
+\end{lstlisting}
+
+\subsection*{C08 --- Tool result (A/B/B/B/D/B)}
+
+\begin{lstlisting}
+# agent_spec_kit
+path=$[0] code=missing_element ... severity / recommended_action mismatch
+# langsmith: {'key': 'tool_result', 'score': 0}
+\end{lstlisting}
+
+\subsection*{C09 --- Nested tools (A/B/B/B/D/B)}
+
+\begin{lstlisting}
+# agent_spec_kit
+path=$[0] code=missing_element ... nested specialist child order
+# langsmith: {'key': 'nested_tools', 'score': 0}
+\end{lstlisting}
+
+\subsection*{C12 --- Multi-turn memory (A/D/B/D/D/B)}
+
+\begin{lstlisting}
+# agent_spec_kit
+path=$[1] code=missing_element ... no actual items left (expected post-correction tool)
+# pytest / promptfoo: AssertionError / assertion returned False
+\end{lstlisting}

@@ -1,0 +1,204 @@
+\section{Expressiveness and diagnostic quality}
+\label{sec:expressiveness}
+
+A second line of evaluation compares how concisely the same twelve policy-check specimens can be written in \emph{agent-spec-kit} and in five other styles: plain pytest, LangSmith evaluators, Pydantic Evals, Promptfoo assertions, and Braintrust scorers. Each specimen is a minimal negative fixture, not a full benchmark scenario; Table~\ref{tab:check-specimens} names the twelve patterns and where they appear on TelcoSupportBench.
+
+\begin{table}[htbp]
+\centering
+\caption{Expressiveness check specimens (C01--C12) and exemplar telecom tasks.}
+\label{tab:check-specimens}
+\small
+\begin{tabular}{@{}clp{5.8cm}@{}}
+\toprule
+Check & Name & Exemplar task \\
+\midrule
+C01 & Final output semantic / rubric & T16 \\
+C02 & Structured object shape & T09 \\
+C03 & Conditional structured object rule & (nested example) \\
+C04 & Numeric / range / regex field & T23 \\
+C05 & Ordered tool-call sequence & T02 \\
+C06 & Forbidden tool-call & T49 \\
+C07 & Tool argument matching & T01 \\
+C08 & Tool result matching & T10 \\
+C09 & Nested tool-call matching & T40 \\
+C10 & Unordered sibling tools & T06 \\
+C11 & Environment / final-state assertion & T04 \\
+C12 & Multi-turn state memory & T46 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each port implements the same intentional negative fixture; when the check fails, we record the failure message and grade its diagnostic quality.
+
+\subsection{Authoring effort}
+
+Table~\ref{tab:expressiveness-loc} counts non-comment lines of check logic per framework on the twelve specimens. Parity tests confirm equivalent semantics between the declarative matcher ports and pytest.
+
+\begin{table}[htbp]
+\centering
+\caption{Lines of check logic per framework (twelve specimens; lower is more concise). Columns: ask = \emph{agent-spec-kit}, py = pytest, ls = LangSmith, pe = Pydantic Evals, pf = Promptfoo, bt = Braintrust.}
+\label{tab:expressiveness-loc}
+\footnotesize
+\begin{tabular}{@{}p{3.4cm}rrrrrr@{}}
+\toprule
+Check type & ask & py & ls & pe & pf & bt \\
+\midrule
+Final output rubric & 1 & 4 & 4 & 4 & 4 & 4 \\
+Structured object shape & 20 & 15 & 15 & 14 & 14 & 15 \\
+Conditional object rule & 24 & 10 & 9 & 9 & 9 & 9 \\
+Numeric / regex field & 16 & 13 & 13 & 13 & 13 & 13 \\
+Ordered tool sequence & 11 & 5 & 5 & 4 & 4 & 5 \\
+Forbidden tool-call & 4 & 1 & 1 & 1 & 1 & 1 \\
+Tool argument matching & 14 & 12 & 8 & 8 & 8 & 8 \\
+Tool result matching & 20 & 12 & 12 & 11 & 11 & 12 \\
+Nested tool matching & 16 & 5 & 5 & 5 & 5 & 5 \\
+Unordered sibling tools & 8 & 2 & 2 & 2 & 2 & 2 \\
+Final-state assertion & 5 & 12 & 12 & 12 & 12 & 12 \\
+Multi-turn memory & 12 & 22 & 22 & 22 & 22 & 22 \\
+\midrule
+\textbf{Total} & \textbf{151} & \textbf{113} & \textbf{108} & \textbf{105} & \textbf{105} & \textbf{108} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Failure specificity on negative fixtures}
+
+When a check fails on an intentional negative fixture, we grade the captured failure message using Table~\ref{tab:specificity-rubric}. Table~\ref{tab:failure-specificity} lists the grade for each check and framework.
+
+\begin{table}[htbp]
+\centering
+\caption{Failure-message specificity rubric (A best, E worst).}
+\label{tab:specificity-rubric}
+\begin{tabular}{@{}lp{9.2cm}@{}}
+\toprule
+Grade & What the developer sees \\
+\midrule
+A & Exact JSON path and expected-vs-actual witness (matcher counterexample) \\
+B & Violated rule, tool, or field named in plain text (no structured path) \\
+C & Turn, step, or span index only (which step failed, not which field) \\
+D & Generic \texttt{AssertionError}, \texttt{score: 0}, or validation error class only \\
+E & Opaque pass/fail boolean with no diagnostic detail \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Specificity grade by check and framework on negative fixtures.}
+\label{tab:failure-specificity}
+\footnotesize
+\begin{tabular}{@{}p{3.2cm}cccccc@{}}
+\toprule
+Check & ask & py & ls & pe & pf & bt \\
+\midrule
+Final output rubric & A & B & B & B & D & B \\
+Structured object & A & B & B & B & D & B \\
+Conditional object & A & B & B & B & D & B \\
+Numeric / regex & A & B & B & B & D & B \\
+Ordered sequence & A & D & B & D & D & B \\
+Forbidden tool & A & D & B & D & D & B \\
+Tool arguments & A & B & B & B & D & B \\
+Tool result & A & B & B & B & D & B \\
+Nested tools & A & B & B & B & D & B \\
+Unordered siblings & A & D & B & D & D & B \\
+Final-state & B & B & B & B & B & B \\
+Multi-turn memory & A & D & B & D & D & B \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Illustrative failure messages}
+
+Captured messages for four trace-shaped specimens appear below; the appendix lists the remaining specimens side by side.
+
+\subsubsection{Ordered tool sequence}
+
+\begin{lstlisting}[caption={Ordered tool sequence: failure messages (abridged).},label=lst:c05-failures]
+# agent-spec-kit
+path=$[1] code=missing_element ... actual="[{'name': 'get_outage_status', ...},
+  {'name': 'authenticate_customer', ...}]" (no actual items were left to search)
+
+# pytest_plain
+AssertionError
+
+# langsmith
+{'key': 'ordered_sequence', 'score': 0}
+\end{lstlisting}
+
+\subsubsection{Forbidden tool-call}
+
+\begin{lstlisting}[caption={Forbidden tool-call: failure messages (abridged).},label=lst:c06-failures]
+# agent-spec-kit
+path=$[1] code=forbidden_tool_call expected="no 'apply_bill_credit'"
+  actual="{'name': 'apply_bill_credit', 'args': {'amount': 10}, ...}"
+
+# pytest_plain
+AssertionError
+\end{lstlisting}
+
+\subsubsection{Tool argument matching}
+
+\begin{lstlisting}[caption={Tool argument matching: failure messages (abridged).},label=lst:c07-failures]
+# agent-spec-kit
+path=$[1] code=missing_element ... actual="[..., {'name': 'get_line_status',
+  'args': {'line_id': 'LINE-002'}, ...}]"
+
+# pytest_plain
+get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
+\end{lstlisting}
+
+\subsubsection{Unordered sibling tools}
+
+\begin{lstlisting}[caption={Unordered sibling tools: failure messages (abridged).},label=lst:c10-failures]
+# agent-spec-kit
+path=$ code=list_too_short expected='>= 2' actual='1'
+  (need at least 2 item(s) to match all expected values)
+
+# promptfoo
+assertion returned False
+\end{lstlisting}
+
+\subsection{Diagnostic quality on injected faults}
+\label{sec:diagnostic-quality-faults}
+
+The specimen harness uses synthetic negatives; a complementary study applies the same ported checks when the reference agent runs with injected faults (Section~\ref{sec:fault-detection}). Table~\ref{tab:diagnostic-rubric} defines the zero-to-four rubric; Table~\ref{tab:diagnostic-comparison} samples three detected failures across framework ports. One hundred and fifty-eight cells were scored.
+
+\begin{table}[htbp]
+\centering
+\caption{Diagnostic specificity rubric on injected faults (0 worst, 4 best).}
+\label{tab:diagnostic-rubric}
+\small
+\begin{tabular}{@{}cp{9.8cm}@{}}
+\toprule
+Score & What the developer sees \\
+\midrule
+0 & Bare fail with no check or lane hint \\
+1 & Broad lane only (output, state, or trace) \\
+2 & Named check or eval key, without localisation or expected-vs-actual \\
+3 & Turn, tool index, or state row plus partial expected-vs-actual \\
+4 & Enough detail to identify the violated requirement and cause \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Diagnostic scores on three injected-fault cases (detected failures only).}
+\label{tab:diagnostic-comparison}
+\small
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+Fault shape & Framework & Spec. & Failed req? & Path? & E vs A? \\
+\midrule
+Wrong-line binding (trace) & agent\_spec\_kit & 4 & Yes & Yes & Yes \\
+Wrong-line binding (trace) & pytest & 4 & Yes & No & No \\
+Wrong-line binding (trace) & promptfoo & 4 & No & No & No \\
+Missing audit note (trace) & agent\_spec\_kit & 3 & Yes & Yes & Yes \\
+Missing audit note (trace) & pytest & 1 & Yes & No & No \\
+Privacy before auth (state) & agent\_spec\_kit & 4 & Yes & Yes & Yes \\
+Privacy before auth (state) & promptfoo & 3 & No & No & No \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Lane-level detection rates for injected faults are in Section~\ref{sec:fault-detection}.

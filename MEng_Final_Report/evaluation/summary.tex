@@ -1,0 +1,12 @@
+\section{Summary and limitations}
+\label{sec:evaluation-summary}
+
+The evaluation treated \emph{agent-spec-kit} as developer-facing infrastructure: express checks, run them on a realistic agent, and read failures that point to a surface (reply, trace, or store) and a concrete mismatch. TelcoSupportBench supplied fifty policy tasks with four oracle lanes each. On the initial reference-agent run, one hundred and forty-six of two hundred oracle slots passed, with failures clustered on trace, state, and full lanes rather than on output alone.
+
+Authoring-effort and failure-specificity tables show that the matcher DSL is competitive on line count and strongest on structured counterexamples when fixtures fail. The injected-fault diagnostic rubric tells the same story on real agent runs: framework oracles usually reach the top scores; ported scorers often stop at a named check without path or expected-vs-actual detail.
+
+Fault-detection and generative tables show complementary roles for oracle lanes and discovery methods. Trace and full lanes catch most ordering and binding injections; output and state alone miss several of them. Manual scripts stay the stable regression backbone; simulated users and mutation operators add many distinct failure signatures beyond the canonical dialogue, and shrinking most often preserves \emph{why} a run failed rather than shortening it much.
+
+Several limitations bound these conclusions. All generative arms used the same small model for judges and users; results may shift with stronger models or lower temperature. A single reference agent and one telecom domain were studied; numbers characterise this harness, not all customer-support agents. LLM criteria appear in output and full lanes, so some failures are judge-dependent. User simulation and shrinking showed flake and non-reproduction (ten flaky and eight non-reproducing failures in the shrink pool), so discovery workflows should treat repeats and signature stability as first-class, as the methodology chapter argues.
+
+Overall, the evaluation supports the introduction's claim that reliable agent work needs executable, multi-surface tests with diagnosable failures. The framework comparison is about evaluation ergonomics---how much code and how clear the message---not about crowning a single library or model. Fixed scripts, split oracles, simulated users, and mutation operators play different roles; the bench is designed so a team can keep canonical paths, widen search, and still explain a failure when something breaks.

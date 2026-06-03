@@ -1,0 +1,100 @@
+\section{TelcoSupportBench}
+\label{sec:telcosupportbench}
+
+TelcoSupportBench models a mobile-network customer-support desk. A reference agent can authenticate customers, inspect lines, run nested network and billing specialists, open tickets, apply credits, and mutate a permissive SQLite store. Correctness is defined by executable scenarios: each task specifies a scripted customer dialogue and explicit checks over the assistant's replies, the tool trace, and the final store state. This is closer to integration testing than to scoring a single final answer, and it differs from fixed leaderboard benchmarks such as $\tau$-bench or AppWorld, where task orchestration and environment code are bundled with the benchmark rather than expressed as reusable scenario tests on a developer's own agent \cite{yao2024taubench,trivedi2024appworld}.
+
+The rest of this section introduces the task catalogue and oracle lanes, then reports how the reference agent performed on an initial full run before the expressiveness, fault-injection, and generative studies later in the chapter.
+
+\subsection{Task catalogue}
+
+The benchmark comprises fifty tasks (T01--T50) grouped into seven thematic categories. Table~\ref{tab:task-catalog-by-category} summarises coverage; Table~\ref{tab:representative-tasks} lists representative tasks that recur in the studies later in the chapter. The full catalogue appears in Appendix~\ref{app:full-task-catalog}.
+
+\begin{table}[htbp]
+\centering
+\caption{Task catalogue by category (fifty tasks in total).}
+\label{tab:task-catalog-by-category}
+\begin{tabular}{@{}lrp{5.8cm}@{}}
+\toprule
+Category & Tasks & Example ids \\
+\midrule
+Data connectivity & 10 & T01, T03, T07 \\
+Roaming & 5 & T11, T14, T15 \\
+Billing & 10 & T16, T20, T22 \\
+SIM / device & 9 & T29, T32, T34 \\
+Escalation / outage & 6 & T35, T38, T39 \\
+Mixed long-horizon & 7 & T42, T45, T46 \\
+Non-cooperative / adversarial & 3 & T48, T49, T50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Representative tasks (intent abridged from the task catalogue).}
+\label{tab:representative-tasks}
+\small
+\begin{tabular}{@{}llp{7.2cm}@{}}
+\toprule
+Task & Category & Intent \\
+\midrule
+T01 & Data & Mobile data disabled on the line \\
+T07 & Data & Reference agent omits outage-first rule \\
+T16 & Billing & Duplicate charge eligible for credit \\
+T20 & Billing & Billing details requested before authentication \\
+T22 & Billing & Credit applied when specialist says ineligible \\
+T29 & SIM & User identifies affected line late \\
+T38 & Escalation & Specialist and heartbeat as parallel siblings \\
+T42 & Mixed & User shifts issue from data to SIM \\
+T45 & Mixed & Delayed authentication over several turns \\
+T50 & Adversarial & Partial account detail leaked before auth \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Oracle lanes}
+
+Each of the fifty tasks is exercised through four scenario variants that share the \emph{same} user messages and differ only in which assertions run. The lanes are output (O), state (S), trace (T), and full (F). Table~\ref{tab:oracle-lanes} maps each lane to the surface it inspects; the full scenario combines every check from the other three lanes at the same turn positions in the dialogue.
+
+\begin{table}[htbp]
+\centering
+\caption{Oracle lanes on TelcoSupportBench. The same scripted dialogue is used in all four variants; only the checks differ.}
+\label{tab:oracle-lanes}
+\begin{tabular}{@{}llp{6.8cm}@{}}
+\toprule
+Lane & Surface & Typical assertions \\
+\midrule
+O & User-facing reply after each user turn & \texttt{assert\_output}, \texttt{m.llm\_criteria} rubrics \\
+S & SQLite store (tickets, credits, lines) & \texttt{assert\_that} with store oracles \\
+T & Tool-call sequence (incl.\ nested specialist children) & \texttt{assert\_tool\_calls}, ordered and nested matchers \\
+F & Union of O, S, and T at matching turn positions & Combined scenario \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This design supports the fault-detection study in Section~\ref{sec:fault-detection}: injected agent faults can be caught on the trace lane while the output lane still passes, which would be invisible if only final answers were graded.
+
+\subsection{Initial baseline results}
+
+The reference agent was run once on every task and oracle lane before the later studies. Table~\ref{tab:baseline-initial} summarises the outcome: each cell is whether that scenario's checks passed on the actual agent run. There are two hundred slots in total (fifty tasks times four lanes), all completed with no incomplete runs.
+
+\begin{table}[htbp]
+\centering
+\caption{Initial reference-agent results by oracle lane (baseline run on T01--T50).}
+\label{tab:baseline-initial}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Lane & Passed & Failed & Pass rate \\
+\midrule
+O (output) & 50 & 0 & 100\% \\
+S (state) & 40 & 10 & 80\% \\
+T (trace) & 30 & 20 & 60\% \\
+F (full) & 26 & 24 & 52\% \\
+\midrule
+All lanes & 146 & 54 & 73\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Output checks pass on every task in this run: the agent's replies satisfy the rubrics when those are the only assertions enabled. Failures concentrate on trace, state, and full scenarios. Twenty-seven tasks fail on at least one lane; typical patterns include missing audit notes (T21), wrong tool order or line binding (T29, T32), state mutations that violate policy (T13, T14), and multi-surface failures on long-horizon tasks (T37, T41, T48). Tasks T07--T10 fail on trace or full lanes where the reference agent mishandles specialist output or tool order; T50 fails on output, trace, and full lanes when pre-authentication wording leaks account detail.
+
+These figures describe the agent used in the rest of the chapter; they are not a leaderboard score. The fault-detection study in Section~\ref{sec:fault-detection} only injects faults on slots where this initial run passed, so injected faults are not confounded with failures the agent already exhibited.

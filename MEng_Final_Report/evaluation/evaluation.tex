@@ -1,52 +1,12 @@
 \chapter{Evaluation}
 \label{chap:evaluation}
 
-% The evaluation of this project is designed to address two complementary questions:
-% \begin{itemize}
-%     \item How sample-efficient human-in-the-loop prompt optimisation can be on tasks with clear, automated evaluation metrics.
-%     \item How prompt optimisation should be evaluated in domain-specific settings where no single correct answer or gold-standard metric exists.
-% \end{itemize}
+This chapter reports an empirical evaluation of \emph{agent-spec-kit} on TelcoSupportBench, a mobile customer-support benchmark built for this project. The evaluation is not a model leaderboard. It asks whether developers can express multi-surface policy checks in one scenario language, whether failure messages are actionable compared with ports to other evaluation libraries, and whether splitting checks across output, state, and tool-trace lanes---together with manual scripts, simulated users, and mutation fuzz---surfaces distinct failure modes on a realistic reference agent.
 
-% The second question is the primary focus of this project and reflects the central motivation for adopting a human-in-the-loop approach. It also poses the most challenging evaluation problem, as it requires moving beyond standard automated metrics.
+The studies below use a single LangGraph reference agent (coordinator plus network and billing specialists), policy text shared across tasks, and scenario oracles written in the framework's scenario DSL. The agent never receives a task identifier in its prompts; seeds and task ids exist only for the harness and logging (Section~\ref{sec:telcosupportbench}). Where LLM judges or simulated users are involved, the model is \texttt{openai:gpt-5-nano}.
 
-% \section{Tasks with Clear Evaluation Metrics}
-
-% For tasks with well-defined ground truth, evaluation will follow a paradigm similar to that used in DSPy, in which prompting is treated as an optimisation problem over fixed pipelines and datasets. Benchmarks such as GSM8K-style reasoning tasks and multi-hop question answering (e.g.\ HotPotQA) are appropriate in this setting, as they provide unambiguous correctness criteria and established evaluation metrics such as exact match and F1 \cite{khattab2023dspycompilingdeclarativelanguage,yang2018hotpotqadatasetdiverseexplainable,cobbe2021trainingverifierssolvemath}.
-% \newline
-
-% The primary objective in these tasks is not absolute performance alone, but also sample efficiency. In particular, the evaluation will test whether human-in-the-loop optimisation can:
-% \begin{itemize}
-%     \item Match or approach the performance achieved by DSPy’s automated optimisers (eg. MIRPOv2),
-%     \item Do so using fewer optimisation iterations, fewer prompt variants, or smaller training sets,
-%     \item Reduce reliance on carefully hand-crafted or expert written prompts.
-% \end{itemize}
-
-% This enables direct comparison against DSPy configurations using different optimisation strategies, isolating the trade-off between human feedback cost and automated search efficiency by directly using a metric.
-% \newline
-
-% Evaluation will follow standard practice by separating development and test sets, analysing optimisation behaviour on development data, and reporting final results on held-out test data. Learning curves will be used to illustrate how quickly performance improves as optimisation proceeds for each type of optimiser.
-% \newline
-
-% This controlled setting provides a baseline for comparing optimisation efficiency across human-in-the-loop and fully automated methods before moving to domain-specific tasks where automated metrics are no longer sufficient and human judgement becomes essential.
-
-
-% \section{Domain-Specific Tasks without Clear Metrics}
-
-% The perhaps more important and challenging part of the evaluation concerns tasks where correctness is subjective, contextual, or highly domain-specific. In these settings, there is often no single correct answer, human annotators may reasonably disagree, and automated metrics provide at best a weak proxy for quality. Yet these are precisely the tasks where LLMs are most commonly deployed in practice, and where prompt design has the greatest influence on system behaviour. Evaluating prompt optimisation in this setting therefore requires moving beyond accuracy-based metrics and confronting the problem of how quality should be defined and measured.
-% \newline
-
-% One class of suitable benchmarks comes from subjective question answering datasets such as SubjQA, which contain review-based questions across domains including electronics, hotels, restaurants, and movies \cite{SubQA_dataset}. Questions such as “Is this hotel quiet?” or “Is the sound quality good?” admit multiple valid answers grounded in the same evidence, but differ in tone, emphasis, and stance. In these tasks, there is no canonical gold output; instead, quality depends on a particular set of preferences, such as favouring boutique hotels over large chains or valuing atmosphere over price. Prompt optimisation can therefore be evaluated by asking whether an optimisation method can align model outputs with such preferences. Traditional automated metrics and optimisation methods are not designed to capture or optimise for these subjective notions of quality.
-% \newline
-
-% In addition to existing datasets, the evaluation may include synthetic, specification-driven tasks, where the objective is not to produce a unique correct answer but to satisfy a set of explicit criteria, such as required elements, structure, or constraints. In such tasks, prompt optimisation can be evaluated by measuring how well outputs adhere to the specification. A simple metric could be the percentage of points in the specification that have been satisfied, and the use of this scalar metric means that a comparison can be made against existing optimisation methods.
-% \newline
-
-% Evaluation in this setting could therefore rely on a combination of approaches, including blind pairwise comparisons or LLM-based judges that check outputs against defined criteria/specifications. This enables prompt optimisation methods to be evaluated in settings where traditional automated metrics fail to capture the nuances of a task, and where improvements in prompt quality are reflected in better adherence to task intent rather than higher accuracy scores.
-
-% \section{Baselines and Comparison}
-
-% Across both evaluation regimes, the proposed framework will be compared against static prompts and existing prompt optimisation methods, including DSPy with MIPROv2 and other fully automated approaches such as APO or OPRO where feasible \cite{pryzant2023automaticpromptoptimizationgradient,yang2024largelanguagemodelsoptimizers}.
-% \newline
-
-% The comparison will consider not only final output quality, but also optimisation stability and the number of iterations required to achieve measurable improvements.
-
+\input{evaluation/benchmark}
+\input{evaluation/expressiveness}
+\input{evaluation/fault_detection}
+\input{evaluation/generative_studies}
+\input{evaluation/summary}
