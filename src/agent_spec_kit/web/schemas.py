@@ -50,6 +50,15 @@ class RunListItem(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class RunListPage(BaseModel):
+    """Paginated runs list for the results browser."""
+
+    items: list[RunListItem]
+    total: int
+    limit: int
+    offset: int
+
+
 class RunDetail(BaseModel):
     run_id: str
     experiment_id: str | None = None

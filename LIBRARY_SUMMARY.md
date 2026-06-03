@@ -1154,7 +1154,7 @@ agent-spec-kit ui --open    # http://127.0.0.1:8765
 |--------|------|-------------|
 | GET | `/health` | `{status: "ok"}` |
 | GET | `/experiments` | All experiments with run counts |
-| GET | `/runs` | Paginated runs (`experiment_id`, `status`, `limit`, `offset`) |
+| GET | `/runs` | Paginated runs (`experiment_id`, `status`, `limit`, `offset`); returns `{items, total, limit, offset}` |
 | GET | `/runs/{run_id}` | Full run detail + metadata + summary |
 | GET | `/runs/{run_id}/scenarios` | Scenario rows with nested repeats |
 | GET | `/runs/{run_id}/fuzz-trials` | All fuzz trials for run |

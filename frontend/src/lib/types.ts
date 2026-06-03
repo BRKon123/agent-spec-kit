@@ -34,6 +34,13 @@ export interface RunListItem {
   metadata: Record<string, unknown>;
 }
 
+export interface RunListPage {
+  items: RunListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface RunDetail {
   run_id: string;
   experiment_id?: string | null;

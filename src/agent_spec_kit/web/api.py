@@ -21,6 +21,7 @@ from agent_spec_kit.web.schemas import (
     RepeatTrace,
     RunDetail,
     RunListItem,
+    RunListPage,
     ScenarioRow,
 )
 
@@ -65,17 +66,19 @@ def list_experiments(
     return store.list_experiments()
 
 
-@router.get("/runs", response_model=list[RunListItem])
+@router.get("/runs", response_model=RunListPage)
 def list_runs(
     store: Annotated[LocalResultStore, Depends(get_store)],
     experiment_id: str | None = Query(default=None),
     status: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
-) -> list[dict[str, Any]]:
-    return store.list_runs(
+) -> dict[str, Any]:
+    items = store.list_runs(
         limit=limit, offset=offset, experiment_id=experiment_id, status=status
     )
+    total = store.count_runs(experiment_id=experiment_id, status=status)
+    return {"items": items, "total": total, "limit": limit, "offset": offset}
 
 
 @router.get(

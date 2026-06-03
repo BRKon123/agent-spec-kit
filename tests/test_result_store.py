@@ -398,3 +398,31 @@ def test_compare_excludes_fuzzed_scenario_rows(tmp_path: Path) -> None:
     assert ("fuzzed", "default") not in keys
     assert ("plain", "default") in keys
 
+
+def test_list_runs_pagination_and_count(tmp_path: Path) -> None:
+    store = LocalResultStore(StorageConfig(root=tmp_path / ".agent_spec_kit"))
+    for i in range(5):
+        store.create_run(
+            RunRecord(
+                run_id=f"run_{i}",
+                experiment_name="default",
+                experiment_id="exp_default",
+                started_at=f"2026-04-28T12:00:0{i}+00:00",
+                status="passed" if i % 2 == 0 else "failed",
+                command="agent-spec-kit run tests",
+                notes=None,
+                metadata={},
+                git_commit=None,
+                git_branch=None,
+                git_dirty=None,
+                python_version="3.12",
+                package_version="0.1.0",
+            )
+        )
+    assert store.count_runs() == 5
+    assert store.count_runs(status="failed") == 2
+    page0 = store.list_runs(limit=2, offset=0)
+    page1 = store.list_runs(limit=2, offset=2)
+    assert [r["run_id"] for r in page0] == ["run_4", "run_3"]
+    assert [r["run_id"] for r in page1] == ["run_2", "run_1"]
+

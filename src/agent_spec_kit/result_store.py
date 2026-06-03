@@ -834,14 +834,12 @@ class LocalResultStore:
             )
             conn.commit()
 
-    def list_runs(
-        self,
+    @staticmethod
+    def _runs_filter_clause(
         *,
-        limit: int = 20,
-        offset: int = 0,
         experiment_id: str | None = None,
         status: str | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[str, list[Any]]:
         clauses: list[str] = []
         params: list[Any] = []
         if experiment_id is not None:
@@ -851,6 +849,38 @@ class LocalResultStore:
             clauses.append("r.status = ?")
             params.append(status)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        return where, params
+
+    def count_runs(
+        self,
+        *,
+        experiment_id: str | None = None,
+        status: str | None = None,
+    ) -> int:
+        where, params = self._runs_filter_clause(
+            experiment_id=experiment_id, status=status
+        )
+        sql = f"""
+            SELECT COUNT(*) AS n
+            FROM runs r
+            JOIN experiments e ON e.experiment_id = r.experiment_id
+            {where}
+        """
+        with self._connect() as conn:
+            row = conn.execute(sql, params).fetchone()
+        return int(row["n"] or 0)
+
+    def list_runs(
+        self,
+        *,
+        limit: int = 20,
+        offset: int = 0,
+        experiment_id: str | None = None,
+        status: str | None = None,
+    ) -> list[dict[str, Any]]:
+        where, params = self._runs_filter_clause(
+            experiment_id=experiment_id, status=status
+        )
         sql = f"""
             SELECT r.run_id, r.experiment_id, e.name AS experiment_name, r.status,
                    r.started_at, r.finished_at, r.summary_json, r.metadata_json
