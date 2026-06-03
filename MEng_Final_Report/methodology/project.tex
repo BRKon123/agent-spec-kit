@@ -1,88 +1,12 @@
 \chapter{Methodology}
+\label{chap:methodology}
 
-% This project has two tightly coupled but conceptually distinct components:
-% \begin{itemize}
-%     \item A lightweight Python framework for defining optimisable prompt regions and attaching human feedback to LLM executions and agent traces.
-%     \item Prompt optimisation algorithms that operate over these optimisable regions using human feedback rather than fixed numeric metrics.
-% \end{itemize}
-
-% The methodology is therefore structured around first designing the framework, and then developing and evaluating optimisation strategies on top of it.
-
-% \section{Human-in-the-Loop Prompt Optimisation Framework}
-
-% The primary goal of the framework is to make human-guided prompt optimisation easier to adopt in real LLM pipelines, without requiring developers to restructure their agents or adopt heavyweight abstractions like those in DSPy \cite{dspydocs,khattab2023dspycompilingdeclarativelanguage}.
-% \newline
-
-% At the core of the framework is a lightweight string wrapper that behaves like a normal Python string in almost all contexts, but can additionally be marked as optimisable, tracked across executions, and passed to an optimiser together with associated human feedback. Outside of optimisation, these wrapped strings behave identically to standard strings, allowing them to be used transparently in existing code.
-% \newline
-
-% Crucially, this object is intentionally minimal. It does not require developers to define any specialised objects or abstractions. Instead, it is designed to drop into existing code with minimal friction. For example, a developer can construct a prompt by concatenating strings as usual, while selectively wrapping specific substrings to indicate that they are eligible for optimisation.
-% \newline
-
-% This design choice is motivated by two considerations:
-% \begin{itemize}
-%     \item \textbf{Practical adoption}: developers are unlikely to refactor production agents around rigid or opinionated prompt abstractions.
-%     \item \textbf{Trace alignment}: optimisable prompt fragments should naturally align with the agent executions in which they are used.
-% \end{itemize}
-
-% \section{Human Feedback Model}
-
-% The framework is explicitly designed around human feedback rather than implicit scalar rewards. Feedback may take several forms:
-% \begin{itemize}
-%     \item Pairwise preferences between two outputs (A vs.\ B),
-%     \item Binary or categorical correctness annotations,
-%     \item Qualitative comments explaining why an output was good or poor.
-% \end{itemize}
-
-% All feedback is associated with both the execution trace and the prompt fragments used in that execution. This enables feedback to be aggregated across runs and attributed back to the optimisable strings most responsible for observed behaviour.
-% \newline
-
-% Importantly, the framework does not assume that feedback must be numeric or immediately comparable across tasks. Instead, feedback is preserved in a structured but flexible form so that different optimisation strategies can interpret and consume it appropriately.
-
-% \section{Prompt Optimisation Algorithms}
-
-% Building on the framework, the second component of the project is the design of prompt optimisation algorithms that learn directly from human feedback.
-% \newline
-
-% The initial optimiser will be deliberately simple:
-% \begin{itemize}
-%     \item It proposes candidate edits to wrapped prompt strings.
-%     \item It evaluates candidates using human preferences or annotations.
-%     \item It updates the prompt by selecting more closely match human preferences.
-% \end{itemize}
-
-% Unlike existing approaches such as MIPROv2, this optimiser does not require a single scalar evaluation function \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}. Instead, human judgement is treated as the primary optimisation signal.
-% \newline
-
-% In later stages, we will explore more advanced strategies, such as evolutionary or population-based search over prompt variants, and LLM-assisted proposal of prompt edits based on previously on accumulated feedback.
-
-% \section{Project Timeline}
-
-% The project has roughly 4 stages which are shown below:
-% \newline
-
-% \textbf{Phase~1 (approx 4 Weeks)} focuses on framework design and implementation, including the optimisable string wrapper, execution collection, and feedback attachment mechanisms, as well as validation on simple LLM calls and agent traces.
-% \newline
-
-% \textbf{Phase~2 (approx 4 Weeks)} centres on implementing a baseline human-in-the-loop optimiser, and running initial experiments on standard benchmarks.
-% \newline
-
-% \textbf{Start of Summer Term:}
-% \newline
-
-% \textbf{Phase~3 (approx 4 Weeks)} extends the optimiser to explore alternative optimisation strategies where time permits, and addresses in the framework revealed by optimisation requirements.
-% \newline
-
-% \textbf{Phase~4 (approx 4 Weeks)} is dedicated to full evaluation and write-up, including benchmark comparisons, analysis of sample efficiency and qualitative improvements, and preparation of the final report.
-% \newline
-
-
-% \section{Fallback considerations}
-
-% Given the exploratory nature of the project, the scope will remain flexible as development progresses. If delivering both a full framework and multiple human-feedback based optimisation strategies proves too ambitious, the work can be narrowed.
-% \newline
-
-% One option is to focus primarily on human feedback-driven optimisation algorithms, comparing them to existing methods such as MIPROv2 and GEPA in terms of sample efficiency and alignment with human judgement \cite{agrawal2025gepareflectivepromptevolution}. Alternatively, emphasis can shift to the framework itself, delivering a lightweight, developer-friendly alternative to DSPy that integrates easily with existing pipelines and agents without requiring substantial refactoring.
-% \newline
-
-% In both cases, the project continues to address the core goal of making prompt optimisation more practical and better aligned with real-world LLM workflows.
+\input{methodology/design_goals}
+\input{methodology/architecture}
+\input{methodology/scenario_language}
+\input{methodology/match_system}
+\input{methodology/counterexamples}
+\input{methodology/integrations}
+\input{methodology/generative}
+\input{methodology/workflow}
+\input{methodology/limitations}

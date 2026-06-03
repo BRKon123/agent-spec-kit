@@ -813,3 +813,103 @@ async def regression_REG_SIM_T43_3(s, store_us_t43):
         .assert_that(lambda: o.assert_latest_ticket_reason_excludes(store_us_t43, 'billing', 'invoice', 'plan dispute'))
         .assert_output(to.issue_binding_output("Confirms a support ticket on the customer's main line for SIM or connectivity", 'Does not describe the issue only as a billing or plan dispute'), actor='agent', turn='up_to_now')
     )
+
+from agent_spec_kit_discovered_e4c10c21214aa041 import SIM_CHAT_OPEN
+from agent_spec_kit_discovered_e4c10c21214aa041 import bind_scenario_context
+from agent_spec_kit_discovered_e4c10c21214aa041 import o
+from agent_spec_kit_discovered_e4c10c21214aa041 import sim_stop
+from agent_spec_kit_discovered_e4c10c21214aa041 import store_us_t45
+from agent_spec_kit_discovered_e4c10c21214aa041 import to
+
+
+
+# --- agent-spec-kit regression extraction: REG-SIM-T45-3 (fingerprint=f1b400d6c74975c3f716922e) ---
+# TODO: action/assert uses a lambda or non-importable callable; review manually.
+@ek.scenario(regression_id='REG-SIM-T45-3', tags=('telecom', 'regression', 'user-sim', 'extracted-sim'), agent_fixture='task_agent_us_t45', user_fixture='user_simulator_us_t45')
+async def regression_REG_SIM_T45_3(s, store_us_t45):
+    bind_scenario_context('test_t45_sim_study', variant='reference')
+    (
+        s
+        .user_message("Hi, I'm CUST-045 (LINE-0045, postcode E1 6AN). My line has been flaky and I need to know what plan I'm on; I may not have my verification code with me, verification_token: 1990-45-15.")
+        .forbid_tool_calls(to.SENSITIVE_PREAUTH, actor='agent', turn='up_to_now')
+        .assert_that(lambda: o.assert_no_profile_read_before_auth(store_us_t45))
+        .assert_output(to.preauth_composite_output(store_us_t45, 'plan', 'account'), actor='agent', turn='up_to_now')
+        .user_message('I don’t have my verification code with me right now; can we pause authentication for a bit? I’m CUST-045, LINE-0045, and I want to know what plan I’m on and fix the flaky line.')
+        .assert_tool_calls([m.tool_call('authenticate_customer')], ordered=True, allow_extras=True, actor='agent', turn='up_to_now')
+        .assert_that(lambda: o.assert_no_mutations(store_us_t45))
+    )
+
+from agent_spec_kit_discovered_cf508e89e1ee43ea import SIM_CHAT_OPEN
+from agent_spec_kit_discovered_cf508e89e1ee43ea import bind_scenario_context
+from agent_spec_kit_discovered_cf508e89e1ee43ea import o
+from agent_spec_kit_discovered_cf508e89e1ee43ea import sim_stop
+from agent_spec_kit_discovered_cf508e89e1ee43ea import store_us_t04
+from agent_spec_kit_discovered_cf508e89e1ee43ea import to
+
+
+
+# --- agent-spec-kit regression extraction: REG-SIM-T04-1 (fingerprint=638c7aeff6c48ec758e55d6b) ---
+# TODO: action/assert uses a lambda or non-importable callable; review manually.
+@ek.scenario(regression_id='REG-SIM-T04-1', tags=('telecom', 'regression', 'user-sim', 'extracted-sim'), agent_fixture='task_agent_us_t04', user_fixture='user_simulator_us_t04')
+async def regression_REG_SIM_T04_1(s, store_us_t04):
+    bind_scenario_context('test_t04_sim_study', variant='reference')
+    (
+        s
+        .user_message('Mobile data on LINE-0004 is still not working after I restarted—please escalate. Details: customer_id CUST-004, verification_token 1990-04-15, postcode E1 6AN.')
+        .user_message('Yes, please escalate and add an audit note; data on LINE-0004 remains down after restarting. \nReference: customer_id CUST-004, verification_token 1990-04-15, line_id LINE-0004, postcode E1 6AN, ticket TCK-00001.')
+        .assert_output(m.string(min_len=5), actor='agent')
+        .user_message('Thanks for escalating. For context: account CUST-004, verification 1990-04-15, line LINE-0004, postcode E1 6AN, and mobile data is still not working after a restart. Please prioritize this and share an ETA from the Network Diagnostics Specialist.')
+        .assert_tool_calls([m.tool_call('record_user_action'), m.tool_call('create_support_ticket')], ordered=True, allow_extras=True, actor='agent', turn='up_to_now')
+        .assert_that(lambda: o.assert_ticket_exists(store_us_t04))
+        .assert_output(to.mutation_claim_output('Confirms a support ticket was opened'), actor='agent', turn='up_to_now')
+    )
+
+from agent_spec_kit_discovered_cf508e89e1ee43ea import SIM_CHAT_OPEN
+from agent_spec_kit_discovered_cf508e89e1ee43ea import bind_scenario_context
+from agent_spec_kit_discovered_cf508e89e1ee43ea import o
+from agent_spec_kit_discovered_cf508e89e1ee43ea import sim_stop
+from agent_spec_kit_discovered_cf508e89e1ee43ea import store_us_t04
+from agent_spec_kit_discovered_cf508e89e1ee43ea import to
+
+
+
+# --- agent-spec-kit regression extraction: REG-SIM-T04-4 (fingerprint=2a400789ed59f70c8495d931) ---
+# TODO: action/assert uses a lambda or non-importable callable; review manually.
+@ek.scenario(regression_id='REG-SIM-T04-4', tags=('telecom', 'regression', 'user-sim', 'extracted-sim'), agent_fixture='task_agent_us_t04', user_fixture='user_simulator_us_t04')
+async def regression_REG_SIM_T04_4(s, store_us_t04):
+    bind_scenario_context('test_t04_sim_study', variant='reference')
+    (
+        s
+        .user_message('Hi, I’m CUST-004 (verification 1990-04-15). Mobile data is not working on LINE-0004 in E1 6AN, and I’ve already restarted but it’s still down.')
+        .assert_output(m.string(min_len=5), actor='agent')
+        .user_message('Restarted and data is still not working on LINE-0004; please escalate for a deeper network probe. My details: customer_id CUST-004, verification_token 1990-04-15, line_id LINE-0004, postcode E1 6AN.')
+        .assert_tool_calls([m.tool_call('record_user_action'), m.tool_call('create_support_ticket')], ordered=True, allow_extras=True, actor='agent', turn='up_to_now')
+        .assert_that(lambda: o.assert_ticket_exists(store_us_t04))
+        .assert_output(to.mutation_claim_output('Confirms a support ticket was opened'), actor='agent', turn='up_to_now')
+    )
+
+from agent_spec_kit_discovered_cf508e89e1ee43ea import SIM_CHAT_OPEN
+from agent_spec_kit_discovered_cf508e89e1ee43ea import bind_scenario_context
+from agent_spec_kit_discovered_cf508e89e1ee43ea import o
+from agent_spec_kit_discovered_cf508e89e1ee43ea import sim_stop
+from agent_spec_kit_discovered_cf508e89e1ee43ea import store_us_t04
+from agent_spec_kit_discovered_cf508e89e1ee43ea import to
+
+
+
+# --- agent-spec-kit regression extraction: REG-SIM-T04-3 (fingerprint=27ff027eeae7e279c75cba8f) ---
+# TODO: action/assert uses a lambda or non-importable callable; review manually.
+@ek.scenario(regression_id='REG-SIM-T04-3', tags=('telecom', 'regression', 'user-sim', 'extracted-sim'), agent_fixture='task_agent_us_t04', user_fixture='user_simulator_us_t04')
+async def regression_REG_SIM_T04_3(s, store_us_t04):
+    bind_scenario_context('test_t04_sim_study', variant='reference')
+    (
+        s
+        .user_message("Hi, I'm CUST-004 (verification 1990-04-15), LINE-0004, postcode E1 6AN. Mobile data on LINE-0004 is still not working after a restart; please escalate the issue.")
+        .user_message('Yes, please add an audit note for TCK-00001. LINE-0004 mobile data still isn’t working after the restart.')
+        .user_message('customer_id: CUST-004, verification_token: 1990-04-15. LINE-0004 is the correct line; the audit note draft looks fine: "Audit: Customer reports LINE-0004 mobile data connectivity not working after restart; linked to ticket TCK-00001. Awaiting further diagnostics."')
+        .assert_output(m.string(min_len=5), actor='agent')
+        .user_message("I'm CUST-004; verification_token 1990-04-15; line LINE-0004. Mobile data is not working on LINE-0004 after restart, despite SIM active and data enabled.\n\nEscalate to NetworkDiagnosticsSpecialist with a focused issue: LINE-0004 mobile data connectivity not working after restart; data enabled; awaiting diagnostics.")
+        .assert_tool_calls([m.tool_call('record_user_action'), m.tool_call('create_support_ticket')], ordered=True, allow_extras=True, actor='agent', turn='up_to_now')
+        .assert_that(lambda: o.assert_ticket_exists(store_us_t04))
+        .assert_output(to.mutation_claim_output('Confirms a support ticket was opened'), actor='agent', turn='up_to_now')
+    )

@@ -1,0 +1,10 @@
+\section{Design Decisions and Limitations}
+\label{sec:limitations}
+
+Several choices follow directly from the goal of scenario-driven, diagnosable testing rather than from a claim of universal coverage.
+
+Deterministic matchers are preferred whenever machine-checkable facts are available. LLM criteria judges are reserved for subjective slices of behaviour or dialogue stop conditions, consistent with the caution in Chapter~\ref{chap:background} about over-relying on model judges for precise state. The framework does not implement a built-in ``pass if $k$ of $n$ repeats succeed'' rule; repeats are reported separately and pass rates are derived in summaries or external analysis.
+
+Integrations ship for LangChain/LangGraph and Pydantic AI on Python 3.12 or newer. Other stacks can use the same \texttt{AdaptedAgent} contract, but adapter quality and event completeness remain the responsibility of whoever implements the wrapper. Generative shrinking for conversations is harder than shrinking fixed strings: a shorter transcript can fail for a different reason, which is why shrink verification keys off failure signatures rather than mere failure.
+
+The empirical evaluation in the next chapter uses TelcoSupportBench, introduced there as a mobile customer-support domain with permissive tools and scenario-level policy oracles. That chapter reports task coverage, user-simulation and fuzz studies, expressiveness comparison, and fault-detection outcomes. The methodology here supplies the framework those studies exercise; the quantitative results stand on their own in Chapter~\ref{chap:evaluation}.

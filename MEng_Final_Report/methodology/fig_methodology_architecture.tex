@@ -1,0 +1,27 @@
+\begin{tikzpicture}[
+  node distance=5mm,
+  arr/.style={-{Stealth[length=2.2mm]}, thick, draw=black!65},
+]
+  \node[flow] (dec) {\texttt{@fixture} /\\\texttt{@scenario}};
+  \node[flow, below=of dec] (cli) {CLI \texttt{run}};
+  \node[flow, below=of cli] (job) {\texttt{run\_scenario\_job}};
+  \node[flow, below=of job] (mat) {\texttt{Scenario.}\\\texttt{materialise}};
+  \node[flow, below=of mat] (agent) {\texttt{AdaptedAgent}\\\texttt{run\_turn}};
+  \node[flow, below=of agent] (match) {\texttt{match.}\\\texttt{async\_check}};
+
+  \node[fail, below left=10mm and 4mm of match] (rec) {\texttt{FailureRecord}};
+  \node[fail, below=of rec] (cx) {\texttt{Counterexample}};
+  \node[fail, below=of cx] (out) {CLI panel /\\SQLite / UI};
+
+  \node[store, below right=10mm and 4mm of match] (store) {\texttt{LocalResultStore}};
+
+  \draw[arr] (dec) -- (cli);
+  \draw[arr] (cli) -- (job);
+  \draw[arr] (job) -- (mat);
+  \draw[arr] (mat) -- (agent);
+  \draw[arr] (agent) -- (match);
+  \draw[arr] (match) -- node[lbl, above, sloped] {fail} (rec);
+  \draw[arr] (rec) -- (cx);
+  \draw[arr] (cx) -- (out);
+  \draw[arr] (match) -- node[lbl, above, sloped] {ok} (store);
+\end{tikzpicture}

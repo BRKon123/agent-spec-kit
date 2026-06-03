@@ -40,6 +40,8 @@ from user_simulation_lib import (
     write_transcript,
 )
 
+_EXTRACTION_LOCK = asyncio.Lock()
+
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 if str(BENCH) not in sys.path:
@@ -442,6 +444,20 @@ async def extract_one_candidate(
     shrink_result: dict[str, Any],
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
+    async with _EXTRACTION_LOCK:
+        return await _extract_one_candidate_locked(
+            scenario_def, candidate, shrink_result, cfg
+        )
+
+
+async def _extract_one_candidate_locked(
+    scenario_def: ScenarioDef,
+    candidate: dict[str, Any],
+    shrink_result: dict[str, Any],
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
+    # Prior extractions reset the global registry for regression imports.
+    discover_user_sim_scenarios()
     task_id = candidate["task_id"]
     seed = int(candidate.get("persona_seed", 0))
     reg_id = regression_id(task_id, seed)

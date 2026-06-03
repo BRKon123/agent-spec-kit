@@ -1,0 +1,94 @@
+\section{Counterexamples and Diagnosability}
+\label{sec:counterexamples}
+
+Section~\ref{sec:design-goals} argued that scalar metrics and raw traces leave a gap when debugging custom agents. This section describes how \emph{agent-spec-kit} closes that gap at the assertion that failed: each failed \texttt{assert\_output}, \texttt{assert\_tool\_calls}, \texttt{forbid\_tool\_calls}, or \texttt{assert\_that} yields a \texttt{Counterexample} intended to support an edit-test loop on prompts, graphs, and policies.
+
+\subsection{Design Principles}
+
+A useful failure report should locate the failing step and turn, pinpoint the field path inside structured data, contrast expected and actual values, provide enough transcript and event context to see what the agent did, and phrase the headline so a developer can infer what to change. Observability tools excel at the third item in isolation; they show latency, tokens, and nested spans (Figure~\ref{fig:langfuse-trace}). Assertion-local counterexamples add the first two items at the check that was written in the scenario, so the developer does not manually correlate spans with test intent.
+
+\subsection{Failure Pipeline}
+
+When a matcher fails, \texttt{match.async\_check} returns a \texttt{MatchResult} with one or more \texttt{MatchError} objects carrying paths, codes, and optional witness JSON. The scenario runner wraps that in a \texttt{FailureRecord}: \texttt{step\_kind} distinguishes output, tool, environment, or runtime failures; \texttt{turn\_index} and \texttt{assertion\_index\_after\_turn} locate the failing check in the script; \texttt{matcher\_errors} and \texttt{actual} preserve machine-readable detail; \texttt{turn\_results} holds the transcript window used for display. \texttt{counterexample\_from\_failure} maps that record into the payload shown to developers. Table~\ref{tab:counterexample-fields} lists the main \texttt{Counterexample} fields and why each exists.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{p{0.28\textwidth}X}
+\toprule
+\textbf{Field} & \textbf{Diagnostic role} \\
+\midrule
+\texttt{headline} &
+One-line summary of the first or deepest mismatch. \\
+\texttt{location\_detail} &
+Human-readable placement (e.g.\ second \texttt{assert\_tool\_calls} after turn 3). \\
+\texttt{path} &
+JSON-pointer into structured actuals (\texttt{\$.args.line\_id}). \\
+\texttt{expected\_summary} / \texttt{actual\_min} &
+Contrast without dumping entire traces twice. \\
+\texttt{notes} &
+Extra context (e.g.\ per-criterion \texttt{llm\_criteria} rationales). \\
+\texttt{events} &
+Bounded Rich/UI tree for the failing turn neighbourhood. \\
+\bottomrule
+\end{tabularx}
+\caption{Counterexample fields and their role in debugging.}
+\label{tab:counterexample-fields}
+\end{table}
+
+The same structure is rendered in the CLI with Rich panels and in the web UI as a failure card beside a collapsible trace tree.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{methodology/tikz_styles}%
+    \input{methodology/fig_failure_pipeline}%
+  }
+  \caption{From scenario assertion through matcher errors to stored and displayed counterexamples.}
+  \label{fig:failure-pipeline}
+\end{figure}
+
+If several matcher errors are present, the headline often uses the first message while the reported path prefers the deepest path, and compound messages combine outer and inner explanations (\texttt{outer; mismatch at \$.foo: inner}). That behaviour matters when an object fails at a nested field: the developer sees both the high-level mismatch and the precise key.
+
+\subsection{Error Message Mechanics}
+
+Table~\ref{tab:failure-hints} relates common failure kinds to what appears in the UI or terminal and to typical remediation. The table is illustrative; the implementation fills in actual tool names and paths from witnesses.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{p{0.24\textwidth}p{0.38\textwidth}X}
+\toprule
+\textbf{Failure kind} & \textbf{What the developer sees} & \textbf{Typical fix} \\
+\midrule
+\texttt{assert\_tool\_calls} length &
+Expected tool sequence vs.\ recorded calls &
+Prompt or policy: call missing tool or stop early. \\
+Path on \texttt{args} &
+Expected vs.\ actual argument field &
+Tool argument construction or retrieval context. \\
+\texttt{forbid\_tool\_calls} &
+Named forbidden tool present &
+Policy violation; remove or gate the tool. \\
+\texttt{assert\_that} &
+Python assert message from oracle &
+Environment side effect or ordering bug. \\
+\texttt{llm\_criteria} &
+Failed criteria with judge rationales &
+Wording or rubric scope on subjective checks. \\
+Agent / tool error &
+Error string in event tree &
+Infrastructure, tool exception, or bad observation. \\
+\bottomrule
+\end{tabularx}
+\caption{Failure kinds and how counterexamples support debugging.}
+\label{tab:failure-hints}
+\end{table}
+
+Tool-call failures often include witness data listing expected and actual tool names in order, which is easier to scan than dumping the entire trace twice. Witness JSON on \texttt{MatchError} can also carry abbreviated actual values for list-length mismatches, so the expected summary in the panel can read ``expected tools in order: \texttt{auth}, \texttt{get\_line\_status}; got 1: \texttt{auth}'' without repeating every argument blob. Environment-only failures may not have a JSON path; the counterexample still records the step kind and human-readable location detail (for example ``second \texttt{assert\_tool\_calls} after turn 3 (agent turn)'').
+
+For display, the trace window keeps the last few agent turns with interleaved user lines so panels stay readable. LangGraph adapters sometimes emit redundant root event shells; the trace builder flattens those so tool nodes appear directly under the relevant user line in the tree.
+
+\subsection{Agent-Update Workflow}
+
+The intended workflow is straightforward. Run the scenario and read the counterexample headline and path. Open the trace drawer in the UI or the Rich tree in the terminal and inspect tool arguments at the failing turn. Change the agent or policy, rerun under a new \texttt{--experiment} name, and open the Compare page (Section~\ref{sec:ui-compare}) to see which scenario keys changed status. Optionally run with \texttt{--extract} to append a minimal scripted regression to a Python file after a generative failure. Section~\ref{sec:execution-workflow} shows the UI surfaces that support these steps.

@@ -1,0 +1,34 @@
+% Shared TikZ styles for methodology flow diagrams
+\tikzset{
+  flow/.style={
+    rectangle,
+    draw=black!70,
+    rounded corners=2pt,
+    fill=blue!4,
+    minimum height=8mm,
+    inner sep=4pt,
+    align=center,
+    font=\small,
+    text width=2.6cm,
+  },
+  flowwide/.style={
+    flow,
+    text width=3.4cm,
+  },
+  flownarrow/.style={
+    flow,
+    text width=2.1cm,
+  },
+  store/.style={
+    flow,
+    fill=green!6,
+    text width=2.8cm,
+  },
+  fail/.style={
+    flow,
+    fill=red!8,
+    text width=2.5cm,
+  },
+  arr/.style={-{Stealth[length=2.2mm]}, thick, draw=black!65},
+  lbl/.style={font=\footnotesize, fill=white, inner sep=1pt},
+}

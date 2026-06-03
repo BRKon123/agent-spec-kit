@@ -1,0 +1,114 @@
+\section{Match System: Composable Oracles}
+\label{sec:match-system}
+
+Scenarios declare \emph{what} should hold; the match system decides whether observed behaviour satisfies those declarations and, when it does not, produces structured errors that feed counterexamples (Section~\ref{sec:counterexamples}). The design goal is expressiveness through composability: one small vocabulary of matchers should cover substring checks, JSON-shaped outputs, ordered or unordered tool lists, nested specialist subgraphs, forbidden tools, and selective LLM rubrics, without bespoke Python per check. That aligns with the oracle types summarised in Table~\ref{tab:agent-oracle-types} in Chapter~\ref{chap:background}.
+
+\subsection{Coercion and Combinators}
+
+Developers pass a \emph{spec} to \texttt{assert\_output} or \texttt{assert\_tool\_calls}. The function \texttt{coerce\_any} turns literals and nested Python collections into matchers: strings become equality checks, dicts become \texttt{m.object}, lists become ordered \texttt{m.list}. Explicit combinators compose further. Listing~\ref{lst:match-combinators} shows a typical pattern for a refund reply.
+
+\begin{lstlisting}[language=Python,caption={Combining substring, negation, and regex constraints on one output.},label=lst:match-combinators]
+m.all_of(
+    m.contains("refund"),
+    m.not_(m.contains("guaranteed")),
+    m.regex(r"within \d+ business days"),
+)
+\end{lstlisting}
+
+Logical structure uses \texttt{all\_of}, \texttt{one\_of}, \texttt{not\_}, and \texttt{optional}. Predicates with a custom message use \texttt{m.match(fn, message=...)} when a fixed matcher is too narrow. Primitives such as \texttt{contains}, \texttt{regex}, \texttt{string} with length bounds, and \texttt{number} with ranges support both final replies and partially specified tool arguments. The report does not document \texttt{m.transform}; specs describe the observed value directly.
+
+Nested specs mirror nested agent outputs; each layer contributes path segments on failure (for example \texttt{\$.itinerary[1].day}), so the counterexample can point inside a large JSON body rather than reporting only that the object did not match. When an outer object fails because an inner field fails, error selection prefers the deepest path so the headline can combine an outer summary with an inner explanation (\texttt{outer; mismatch at \$.foo: inner}).
+
+\subsection{Object Matching and Structured Output}
+
+\texttt{m.object} checks field shapes on dict-like or Pydantic views. The \texttt{extra=} policy controls whether unknown keys are ignored or rejected. Conditional rules from \texttt{m.require} and \texttt{m.forbid} with \texttt{m.field(...).when(...)} express implications such as requiring a pager group only when severity is high. A \texttt{.where(fn, message)} clause can enforce cross-field invariants that do not fit a single field spec.
+
+Listing~\ref{lst:match-object} shows structured ticket metadata with an unordered component list and a conditional rule.
+
+\begin{lstlisting}[language=Python,caption={Object matcher with conditional rules.},label=lst:match-object]
+m.object(
+    {
+        "ticket": m.object(
+            {
+                "severity": m.one_of("high", "medium"),
+                "components": m.list(
+                    ["edge", "core"], mode="unordered", allow_extras=False
+                ),
+            },
+            rules=[
+                m.require("pager_group").when(m.field("severity") == "high"),
+            ],
+        )
+    },
+    extra="forbid",
+)
+\end{lstlisting}
+
+When agents return structured payloads from tools or coordinators, these matchers play the role of the structured-output oracle row in Table~\ref{tab:agent-oracle-types}. The surrounding scenario text should state the intent; the listing carries the field-level detail.
+
+\subsection{List and Tool-Call Matching}
+
+Tool assertions operate on normalised dictionaries with keys such as \texttt{name}, \texttt{args}, \texttt{result}, and nested \texttt{children}. \texttt{m.list} supports ordered or unordered matching and optional extra calls; \texttt{m.list\_of} repeats one inner spec for homogeneous sequences. \texttt{m.tool\_call} matches a single call, including nested \texttt{children} for LangGraph subgraph tools when \texttt{subgraphs=True} on the adapter.
+
+\begin{lstlisting}[language=Python,caption={Nested tool-call spec with child tools.},label=lst:match-tool-nested]
+m.tool_call(
+    "run_forensics_specialist",
+    args={"query": m.contains("latency")},
+    children=[
+        m.tool_call("pull_logs", args=m.object({...}, extra="forbid")),
+        m.tool_call(
+            "score_anomaly",
+            result=m.llm_criteria(
+                criteria=[
+                    "mentions a numeric anomaly score or risk band",
+                    "does not state root cause as certain fact",
+                ],
+                threshold=2,
+                model="openai:gpt-5-nano",
+            ),
+        ),
+    ],
+)
+\end{lstlisting}
+
+\texttt{forbid\_tool\_calls} expresses negative expectations (a credit tool must not appear). Ordered lists require the spec sequence to appear as a subsequence when \texttt{allow\_extras=True}, or as an exact length match when extras are disallowed. Unordered lists treat the spec as a multiset of required calls, which suits parallel specialist tools that may complete in either order. When the list length differs from the spec, witness metadata on the matcher error can name expected versus actual tool sequences, which feeds readable summaries in the failure panel.
+
+Tool-call matching runs on the normalised dictionaries produced by integrations (Section~\ref{sec:integrations}): each call exposes \texttt{name}, \texttt{args}, optional \texttt{result}, and nested \texttt{children} when subgraph streaming is enabled. That normalisation is what allows the same \texttt{m.tool\_call} spec to run against LangGraph and Pydantic AI without scenario changes.
+
+Function-calling benchmarks such as BFCL (Figure~\ref{fig:bfcl-ast-eval} in Chapter~\ref{chap:background}) check argument trees against schemas; the match layer generalises that idea to partial specs and incomplete traces where only some fields matter for policy.
+
+\subsection{LLM Criteria Judges and G-Eval-Style Scoring}
+
+Some properties are awkward to encode deterministically (tone, whether a specialist summary hedges appropriately). For those cases \texttt{m.llm\_criteria} asks a judge model to answer yes/no on each of several narrow criteria and passes the check if at least \texttt{threshold} criteria succeed (by default, all must pass). This differs from G-Eval-style pipelines (Figure~\ref{fig:geval-pipeline} and Figure~\ref{fig:geval-prompt}), which often map rubric text to numeric ratings via token probabilities. Binary criteria with explicit rationales per failure are easier to interpret in a counterexample and tend to be more stable than open-ended scores for small, well-scoped questions.
+
+The matcher is asynchronous and requires provider-prefixed model names. It is used sparingly inside otherwise deterministic scenarios---for example on a tool result, as in Listing~\ref{lst:match-tool-nested}, or as a simulation stop condition---not as the only check that a database row changed or that a tool name was correct. Chapter~\ref{chap:background} cautions that LLM judges should not replace machine-level facts; the framework follows that split.
+
+\subsection{Mapping Assertions to Oracle Surfaces}
+
+Table~\ref{tab:assertion-mapping} links scenario methods to the oracle surfaces discussed in earlier chapters.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{p{0.26\textwidth}p{0.28\textwidth}X}
+\toprule
+\textbf{Scenario mechanism} & \textbf{Oracle surface} & \textbf{Typical use} \\
+\midrule
+\texttt{assert\_output} & Final or cumulative text / JSON &
+User-facing reply, structured coordinator payloads. \\
+\texttt{assert\_tool\_calls} / \texttt{forbid\_tool\_calls} &
+Tool trace &
+Order, arguments, nested specialist tools. \\
+\texttt{assert\_that} & Environment state &
+Database rows, flags, collateral-damage checks. \\
+\texttt{m.llm\_criteria} & Rubric-based quality &
+Subjective tool results, dialogue stop conditions. \\
+\bottomrule
+\end{tabularx}
+\caption{How scenario assertions map to oracle types.}
+\label{tab:assertion-mapping}
+\end{table}
+
+\subsection{Expressiveness Intent}
+
+The expressiveness study in the Evaluation chapter compares how many lines are required to express the same twelve policy checks (C01--C12) in \emph{agent-spec-kit} and in several other evaluation styles. Those checks were chosen because they mix output constraints, structured specialist results, forbidden tools, ordered and unordered tool sequences, and database postconditions. The methodology takeaway is that the matcher vocabulary was designed so those policies compose from \texttt{object}, \texttt{tool\_call}, and list combinators rather than from one-off helper functions per check. Quantitative results and failure-specificity scoring appear in the Evaluation chapter; here the emphasis is on the compositional design choice itself.

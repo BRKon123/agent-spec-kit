@@ -29,6 +29,7 @@ from user_sim_shrink_study_lib import (
     shrink_one_candidate,
     select_for_shrink_from_extraction,
     build_shrink_config,
+    stratified_pick,
     write_transcript,
 )
 

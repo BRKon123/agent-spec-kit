@@ -1,0 +1,61 @@
+\section{System Architecture}
+\label{sec:architecture}
+
+Before describing how the library is wired together, it helps to see what a developer actually writes. Listing~\ref{lst:architecture-motivating} shows a compact scenario: a fixture supplies the agent under test, the scenario declares how many times to run it, and the body chains user lines with expectations on tools and reply text.
+
+\begin{lstlisting}[language=Python,caption={Scenario with fixture, repeats, user line, tool and output checks.},label=lst:architecture-motivating]
+@ek.fixture
+async def adapted_agent():
+    return wrap_langchain_agent(
+        tutor_graph,
+        lambda msg: {"messages": [HumanMessage(content=msg)]},
+    )
+
+@ek.scenario(
+    agent_fixture="adapted_agent",
+    repeats=3,
+    tags=("smoke",),
+    timeout_s=90.0,
+)
+async def test_multiply_dialog_scripted_user_messages(s):
+    (
+        s.user_message(
+            "What is 5 times 6? Use multiply_integers with a=5 and b=6 only, "
+            "then reply briefly and include the digit sequence for the product."
+        )
+        .assert_tool_calls(
+            [m.tool_call("multiply_integers", args={"a": 5, "b": 6})],
+            ordered=True,
+            allow_extras=True,
+        )
+        .assert_output(m.contains("30"))
+    )
+\end{lstlisting}
+
+The fixture injects a LangGraph tutor wrapped as an \texttt{AdaptedAgent} so the scenario body can focus on behaviour rather than wiring. \texttt{repeats=3} schedules three independent executions of the same script, which is useful when the underlying LLM is stochastic and a single lucky pass is not enough evidence. The scenario body is the behavioural contract: after the user asks for $5 \times 6$, the tutor must call \texttt{multiply\_integers} with the right arguments and mention the product in its reply. Failures on either the tool trace or the final text produce a counterexample at that assertion (Section~\ref{sec:counterexamples}). The rest of this section explains how those declarations are discovered, executed, and checked; optional generative extensions (simulated users, fuzzing, shrinking) are described later in Section~\ref{sec:generative}.
+
+\subsection{End-to-End Pipeline}
+
+\emph{agent-spec-kit} is organised as a pipeline from decorated Python test modules through scenario execution to persisted results. The architecture keeps three concerns separate: discovering and running scenarios, normalising agent behaviour into typed events, and checking behaviour with composable matchers that produce structured failures when expectations are not met. Figure~\ref{fig:methodology-architecture} sketches that core path.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.72\textwidth}{!}{%
+    \input{methodology/tikz_styles}%
+    \input{methodology/fig_methodology_architecture}%
+  }
+  \caption{Core execution flow from \texttt{@scenario} registration through matching and result storage. Failed assertions branch to structured counterexamples shown in the CLI and web UI.}
+  \label{fig:methodology-architecture}
+\end{figure}
+
+Developers register fixtures and scenarios with decorators (\texttt{@fixture}, \texttt{@scenario}). The CLI command \texttt{agent-spec-kit run} discovers \texttt{test\_*.py} files, resolves fixture dependencies, and schedules one job per scenario case and repeat index. Each job builds a \texttt{Scenario} instance, runs the scenario function (which queues steps such as \texttt{user\_message} and \texttt{assert\_tool\_calls}), and calls \texttt{materialise()} to execute those steps in order.
+
+For each \texttt{user\_message}, the runner invokes \texttt{AdaptedAgent.run\_turn}, which returns a \texttt{TurnResult} with user-visible output and a tree of \texttt{AgentTurnEvent} and \texttt{ToolCallEvent} nodes. Assertion steps call \texttt{match.async\_check} on outputs, tool-call lists, or environment functions. On success the runner advances to the next queued step and eventually records a pass in the local result store; on failure the pipeline branches before that pass is written.
+
+\subsection{Failure Path and Main Modules}
+
+The failure path is deliberately three-layered so matchers stay reusable and reporting stays stable. Matchers emit \texttt{MatchError} values with JSON-pointer paths and optional witness JSON. The scenario runner wraps those in a \texttt{FailureRecord} that records which step kind failed, which turn and assertion index applied, and a snapshot of the transcript. \texttt{counterexample\_from\_failure} then produces the developer-facing \texttt{Counterexample} consumed identically by the CLI Rich panel and the web FailureCard. Section~\ref{sec:counterexamples} develops that story in full.
+
+The implementation is split across modules so each layer can evolve independently. \texttt{scenario\_core.py} implements the fluent scenario DSL and step dispatch. \texttt{runner.py} orchestrates jobs, fixture teardown, and timeouts. \texttt{match/} implements coercion, object and list matchers, tool-call shapes, and LLM criteria judges. \texttt{failures.py} and \texttt{cli\_reporting.py} turn matcher errors into developer-facing panels. \texttt{integrations/} adapts LangChain and Pydantic AI graphs to the event model. \texttt{cli.py} and \texttt{result\_store.py} persist run metadata, transcripts, and counterexample blobs under \texttt{.agent\_spec\_kit/}.
+
+The next sections unpack the scenario language and matchers introduced in Listing~\ref{lst:architecture-motivating}, then counterexamples, integrations, optional generative features, and the execution workflow.
