@@ -1,15 +1,15 @@
 \section{Generative discovery studies}
 \label{sec:generative-studies}
 
-The fourth part of the evaluation asks whether layered discovery---manual scripts, simulated users, and mutation fuzz---find failures beyond fixed regression dialogues, using the same F-oracles throughout. Fourteen tasks overlap across the user-simulation and fuzz studies (T03, T04, T17, T20, T27, T29, T30, T35, T38, T42, T43, T44, T45, T49).
+The fourth part of the evaluation asks whether layered discovery (manual scripts, simulated users, and mutation fuzz) finds failures beyond fixed regression dialogues, using the same F-oracles throughout. Fourteen tasks overlap across the user-simulation and fuzz studies (T03, T04, T17, T20, T27, T29, T30, T35, T38, T42, T43, T44, T45, T49).
 
 \subsection{User simulation}
 
 \subsubsection{Simulation design}
 
-The user-simulation arm keeps the same F-oracles and reference agent as the manual scripts, but replaces the fixed customer dialogue with an LLM-powered \texttt{simulate\_conversation} loop. For each of the fourteen study tasks, the simulation setup defines a short \emph{task intent} (what the customer is trying to achieve), a block of \emph{situational facts} drawn from the task seed (line id, postcode, beliefs such as a wrong line id on T43), and five \emph{personas}---not five scripts. Each persona is a seed with a name, conversational style, behaviour notes, a disclosure pattern, and a pressure level. The simulator prompt tells the model it is only the customer, must follow the persona, and may volunteer or withhold details according to \texttt{reveal\_upfront} versus \texttt{reveal\_when\_prompted}.
+The user-simulation arm keeps the same F-oracles and reference agent as the manual scripts, but replaces the fixed customer dialogue with an LLM-powered \texttt{simulate\_conversation} loop. For each of the fourteen study tasks, the simulation setup defines a short \emph{task intent} (what the customer is trying to achieve), a block of \emph{situational facts} drawn from the task seed (line id, postcode, beliefs such as a wrong line id on T43), and five \emph{personas}, not five scripts. Each persona is a seed with a name, conversational style, behaviour notes, a disclosure pattern, and a pressure level. The simulator prompt tells the model it is only the customer, must follow the persona, and may volunteer or withhold details according to \texttt{reveal\_upfront} versus \texttt{reveal\_when\_prompted}.
 
-Table~\ref{tab:persona-dimensions} summarises the persona fields. Disclosure upfront means the customer states relevant ids and context in early messages; disclosure when prompted means they lead with the problem and answer when the agent asks. Segments end when an LLM \texttt{sim\_stop} judge (same model as the user) decides the task-specific stopping criteria are met---for example authentication completed and the agent has addressed the stated goal---rather than always exhausting a turn cap.
+Table~\ref{tab:persona-dimensions} summarises the persona fields. Disclosure upfront means the customer states relevant ids and context in early messages; disclosure when prompted means they lead with the problem and answer when the agent asks. Segments end when an LLM \texttt{sim\_stop} judge (same model as the user) decides the task-specific stopping criteria are met (for example authentication completed and the agent has addressed the stated goal) rather than always exhausting a turn cap.
 
 \begin{table}[htbp]
 \centering
@@ -91,7 +91,7 @@ Name & Style & Behaviour (abridged) & Disclosure & Pressure \\
 
 The persona behaviour note is ``mentions multiple issues before prioritizing.'' Combined with situational facts (data broken, SIM possibly in laundry, no replacement shipment), the simulator is steered to surface \emph{both} the laundry/SIM story and the data outage in early turns rather than following the manual script's narrower symptom ordering. The segment stop criteria require the agent to avoid confirming SIM shipment; they do not prevent the agent from opening a ticket in the first segment once the user has authenticated and supplied line context.
 
-In this run the simulated customer states credentials and constraints in one opening message, then agrees to escalation when the agent offers it. Listing~\ref{lst:t42-sim} shows the customer-facing transcript. On the first agent turn (Listing~\ref{lst:t42-sim-failure}, event trace), the agent authenticates, runs an outage check and line diagnostic, sends a troubleshooting step, records user action, and opens \texttt{TCK-00001}---all \emph{before} the mid-conversation issue-shift checkpoint where \texttt{assert\_no\_mutations} requires an empty ticket store. The second agent turn escalates that ticket with notes mentioning ``replacement options,'' although the user declined a replacement shipment.
+In this run the simulated customer states credentials and constraints in one opening message, then agrees to escalation when the agent offers it. Listing~\ref{lst:t42-sim} shows the customer-facing transcript. On the first agent turn (Listing~\ref{lst:t42-sim-failure}, event trace), the agent authenticates, runs an outage check and line diagnostic, sends a troubleshooting step, records user action, and opens \texttt{TCK-00001}, all \emph{before} the mid-conversation issue-shift checkpoint where \texttt{assert\_no\_mutations} requires an empty ticket store. The second agent turn escalates that ticket with notes mentioning ``replacement options,'' although the user declined a replacement shipment.
 
 \begin{lstlisting}[caption={T42 simulated conversation (\texttt{multi\_issue\_user}); manual arm passes.},label=lst:t42-sim]
 USER: Hi, I'm on LINE-0042 and my mobile data isn't working at all. I may have
@@ -179,7 +179,7 @@ The combined fuzz pipeline also reuses the user-simulation personas on the same 
 
 \subsubsection{Study results}
 
-Table~\ref{tab:fuzz-primary} compares manual scripts, user simulation, and mutation fuzz on the fourteen tasks. Fuzz produces thirty-six unique tool paths and eighteen distinct failure signatures with median six turns---longer dialogues because operators stretch or fragment user input.
+Table~\ref{tab:fuzz-primary} compares manual scripts, user simulation, and mutation fuzz on the fourteen tasks. Fuzz produces thirty-six unique tool paths and eighteen distinct failure signatures with median six turns; longer dialogues because operators stretch or fragment user input.
 
 \begin{table}[htbp]
 \centering
@@ -243,7 +243,7 @@ Mutated (\texttt{drop\_required\_fact}) & What plan am I on? My not been working
 \end{tabular}
 \end{table}
 
-The operator strips structured verification/account phrasing from the canonical line while leaving a garbled sentence that still mentions \texttt{CUST-045}. Listing~\ref{lst:t45-fuzz} shows the mutated dialogue. On the first agent turn (Listing~\ref{lst:t45-fuzz-failure}, event trace), the agent replies in prose only---\texttt{(no\_tools)}---but names \texttt{CUST-045} while requesting a \texttt{verification\_token}, which fails the segment-0 \texttt{assert\_output} pre-authentication rubric before any authentication tool runs.
+The operator strips structured verification/account phrasing from the canonical line while leaving a garbled sentence that still mentions \texttt{CUST-045}. Listing~\ref{lst:t45-fuzz} shows the mutated dialogue. On the first agent turn (Listing~\ref{lst:t45-fuzz-failure}, event trace), the agent replies in prose only (\texttt{(no\_tools)}), but names \texttt{CUST-045} while requesting a \texttt{verification\_token}, which fails the segment-0 \texttt{assert\_output} pre-authentication rubric before any authentication tool runs.
 
 \begin{lstlisting}[caption={T45 fuzz: \texttt{drop\_required\_fact} transcript; manual arm passes.},label=lst:t45-fuzz]
 USER (mutated segment 0): What plan am I on? My not been working properly
@@ -295,4 +295,4 @@ These are not discoveries from personas or mutations; they are regressions the c
 
 A shrink study targeted stable simulation failures. Of sixty simulated conversations, thirty-five failed; twelve were classified stable after repeat runs (ten flaky, eight non-reproducing, five capture failed). Fifteen stable cases were selected for shrinking with up to ten verification attempts each. Twelve shrinks succeeded with one hundred per cent same-\texttt{failure\_signature} preservation; three failed verification (including SIM-T42-0 and SIM-T45-1).
 
-Median turn and token reduction were zero per cent: many failures already live on a single user turn. Two T20 seeds did halve turns (fifty per cent reduction) while preserving the signature. Median shrink time was roughly four hundred and seventy seconds with median nine verification attempts. The honest reading is that conversation shrinking did not shorten most transcripts in this domain, but signature-keyed verification still supports turning a flaky sim failure into a pinned regression without changing \emph{why} the oracle failed---consistent with the methodology in Chapter~\ref{chap:methodology}.
+Median turn and token reduction were zero per cent: many failures already live on a single user turn. Two T20 seeds did halve turns (fifty per cent reduction) while preserving the signature. Median shrink time was roughly four hundred and seventy seconds with median nine verification attempts. The honest reading is that conversation shrinking did not shorten most transcripts in this domain, but signature-keyed verification still supports turning a flaky sim failure into a pinned regression without changing \emph{why} the oracle failed, consistent with the methodology in Chapter~\ref{chap:methodology}.

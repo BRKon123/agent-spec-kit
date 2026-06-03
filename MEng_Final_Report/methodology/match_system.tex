@@ -81,7 +81,7 @@ Function-calling benchmarks such as BFCL (Figure~\ref{fig:bfcl-ast-eval} in Chap
 
 Some properties are awkward to encode deterministically (tone, whether a specialist summary hedges appropriately). For those cases \texttt{m.llm\_criteria} asks a judge model to answer yes/no on each of several narrow criteria and passes the check if at least \texttt{threshold} criteria succeed (by default, all must pass). This differs from G-Eval-style pipelines (Figure~\ref{fig:geval-pipeline} and Figure~\ref{fig:geval-prompt}), which often map rubric text to numeric ratings via token probabilities. Binary criteria with explicit rationales per failure are easier to interpret in a counterexample and tend to be more stable than open-ended scores for small, well-scoped questions.
 
-The matcher is asynchronous and requires provider-prefixed model names. It is used sparingly inside otherwise deterministic scenarios---for example on a tool result, as in Listing~\ref{lst:match-tool-nested}, or as a simulation stop condition---not as the only check that a database row changed or that a tool name was correct. Chapter~\ref{chap:background} cautions that LLM judges should not replace machine-level facts; the framework follows that split.
+The matcher is asynchronous and requires provider-prefixed model names. It is used sparingly inside otherwise deterministic scenarios, for example on a tool result, as in Listing~\ref{lst:match-tool-nested}, or as a simulation stop condition, not as the only check that a database row changed or that a tool name was correct. Chapter~\ref{chap:background} cautions that LLM judges should not replace machine-level facts; the framework follows that split.
 
 \subsection{Mapping Assertions to Oracle Surfaces}
 

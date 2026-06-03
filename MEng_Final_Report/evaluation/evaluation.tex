@@ -1,7 +1,7 @@
 \chapter{Evaluation}
 \label{chap:evaluation}
 
-This chapter reports an empirical evaluation of \emph{agent-spec-kit} on TelcoSupportBench, a mobile customer-support benchmark built for this project. The evaluation is not a model leaderboard. It asks whether developers can express multi-surface policy checks in one scenario language, whether failure messages are actionable compared with ports to other evaluation libraries, and whether splitting checks across output, state, and tool-trace lanes---together with manual scripts, simulated users, and mutation fuzz---surfaces distinct failure modes on a realistic reference agent.
+This chapter reports an empirical evaluation of \emph{agent-spec-kit} on TelcoSupportBench, a mobile customer-support benchmark built for this project. The evaluation is not a model leaderboard. It asks whether developers can express multi-surface policy checks in one scenario language, whether failure messages are actionable compared with ports to other evaluation libraries, and whether splitting checks across output, state, and tool-trace lanes (together with manual scripts, simulated users, and mutation fuzz) surfaces distinct failure modes on a realistic reference agent.
 
 The studies below use a single LangGraph reference agent (coordinator plus network and billing specialists), policy text shared across tasks, and scenario oracles written in the framework's scenario DSL. The agent never receives a task identifier in its prompts; seeds and task ids exist only for the harness and logging (Section~\ref{sec:telcosupportbench}). Where LLM judges or simulated users are involved, the model is \texttt{openai:gpt-5-nano}.
 

@@ -83,18 +83,18 @@ Task & Manual & Sim new & Fuzz new \\
 \midrule
 T03 & Pass & Y & Y \\
 T04 & Pass & Y & Y \\
-T17 & Pass & --- & Y \\
+T17 & Pass & -- & Y \\
 T20 & Pass & Y & Y \\
-T27 & Pass & --- & --- \\
+T27 & Pass & -- & -- \\
 T29 & Fail & Y & Y \\
-T30 & Pass & --- & Y \\
-T35 & Pass & --- & Y \\
+T30 & Pass & -- & Y \\
+T35 & Pass & -- & Y \\
 T38 & Fail & Y & Y \\
 T42 & Pass & Y & Y \\
-T43 & Fail & Y & --- \\
-T44 & Pass & --- & --- \\
+T43 & Fail & Y & -- \\
+T44 & Pass & -- & -- \\
 T45 & Pass & Y & Y \\
-T49 & Pass & --- & --- \\
+T49 & Pass & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -161,7 +161,7 @@ F10 & T44 & miss & miss & N/A & det \\
 
 Captured on intentional negative fixtures (see Section~\ref{sec:expressiveness}). Grades per framework: ask / py / ls / pe / pf / bt.
 
-\subsection*{C01 --- Final output rubric (A/B/B/B/D/B)}
+\subsection*{C01: Final output rubric (A/B/B/B/D/B)}
 
 \begin{lstlisting}
 # agent_spec_kit
@@ -171,7 +171,7 @@ path=$ code=one_of ... actual="'Your service is active; no billing changes...'"
 # promptfoo: assertion returned False
 \end{lstlisting}
 
-\subsection*{C02 --- Structured object shape (A/B/B/B/D/B)}
+\subsection*{C02: Structured object shape (A/B/B/B/D/B)}
 
 \begin{lstlisting}
 # agent_spec_kit
@@ -179,7 +179,7 @@ path=$[0] code=missing_element ... specialist result severity mismatch
 # scorer ports: score 0 with key object_shape / c02
 \end{lstlisting}
 
-\subsection*{C03 --- Conditional object (A/B/B/B/D/B)}
+\subsection*{C03: Conditional object (A/B/B/B/D/B)}
 
 \begin{lstlisting}
 # agent_spec_kit
@@ -187,14 +187,14 @@ path=$[0] code=missing_element ... billing specialist eligible/currency
 # imperative ports: AssertionError or score 0
 \end{lstlisting}
 
-\subsection*{C04 --- Numeric constraint (A/B/B/B/D/B)}
+\subsection*{C04: Numeric constraint (A/B/B/B/D/B)}
 
 \begin{lstlisting}
 # agent_spec_kit
 path=$[0] code=missing_element ... amount 9999.0 out of policy bound
 \end{lstlisting}
 
-\subsection*{C08 --- Tool result (A/B/B/B/D/B)}
+\subsection*{C08: Tool result (A/B/B/B/D/B)}
 
 \begin{lstlisting}
 # agent_spec_kit
@@ -202,7 +202,7 @@ path=$[0] code=missing_element ... severity / recommended_action mismatch
 # langsmith: {'key': 'tool_result', 'score': 0}
 \end{lstlisting}
 
-\subsection*{C09 --- Nested tools (A/B/B/B/D/B)}
+\subsection*{C09: Nested tools (A/B/B/B/D/B)}
 
 \begin{lstlisting}
 # agent_spec_kit
@@ -210,7 +210,7 @@ path=$[0] code=missing_element ... nested specialist child order
 # langsmith: {'key': 'nested_tools', 'score': 0}
 \end{lstlisting}
 
-\subsection*{C12 --- Multi-turn memory (A/D/B/D/D/B)}
+\subsection*{C12: Multi-turn memory (A/D/B/D/D/B)}
 
 \begin{lstlisting}
 # agent_spec_kit

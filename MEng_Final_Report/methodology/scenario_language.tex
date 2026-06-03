@@ -53,7 +53,7 @@ Scenarios also describe world state, not only dialogue. Table~\ref{tab:env-step-
 \toprule
 \textbf{Mechanism} & \textbf{When} & \textbf{Pass/fail?} & \textbf{Role} \\
 \midrule
-\texttt{@fixture} & Before scenario body & --- &
+\texttt{@fixture} & Before scenario body & -- &
 Inject isolated stores, agents, flags; \texttt{yield} teardown. \\
 \texttt{s.action(fn)} & Any queued step & No &
 Side effect on environment; receives fixture kwargs. \\

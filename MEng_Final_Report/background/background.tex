@@ -132,13 +132,6 @@ A first wave of tool-use benchmarks focused on whether LLMs could map natural-la
 
 ToolLLM and ToolBench scaled this idea to a much larger API space. Qin et al. collected more than 16,000 real-world APIs and generated instructions involving both single-tool and multi-tool scenarios \cite{qin2023toollm}. This reflects an important reality of deployed agents: they may have access to many tools, and the difficulty is not only calling a tool, but identifying the relevant subset of tools and composing them correctly. ToolLLM also introduced ToolEval as an automatic evaluator, showing that the evaluation problem grows with the tool space. A wrong call may be syntactically valid but semantically inappropriate, and a partially correct call chain may still fail the user's goal.
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\textwidth]{figures/toolbench_construction_pipeline.png}
-  \caption{ToolBench pipeline \cite{qin2023toollm}. \textbf{Build the dataset:} collect real APIs from RapidAPI; use an LLM to write example user tasks (\emph{instructions}) and the correct sequence of API calls for each task (\emph{solution paths}). \textbf{Train:} fine-tune LLaMA on that data to obtain ToolLLaMA, and train a retriever that picks relevant APIs for a given task. \textbf{Test:} for a new instruction, the retriever supplies APIs, ToolLLaMA calls them via RapidAPI, produces a final answer, and ToolEval checks whether the answer solves the task.}
-  \label{fig:toolbench-pipeline}
-\end{figure}
-
 StableToolBench later addressed reproducibility problems in large-scale tool-use evaluation. Guo et al. observed that benchmarks relying on real online APIs can be unstable because API status, outputs, and availability change over time \cite{guo2024stabletoolbench}. Their virtual API server and stable evaluation system illustrate a key engineering principle for agent evaluation: the environment must be controlled enough that differences in results can be attributed to the agent rather than to external noise. This is a recurring challenge in any benchmark or testing framework that exercises tools, because real tools are often stateful, non-deterministic, rate-limited, or unavailable.
 
 \begin{figure}[htbp]
