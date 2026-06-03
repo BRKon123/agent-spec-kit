@@ -95,6 +95,22 @@ All lanes & 146 & 54 & 73\% \\
 \end{tabular}
 \end{table}
 
-Output checks pass on every task in this run: the agent's replies satisfy the rubrics when those are the only assertions enabled. Failures concentrate on trace, state, and full scenarios. Twenty-seven tasks fail on at least one lane; typical patterns include missing audit notes (T21), wrong tool order or line binding (T29, T32), state mutations that violate policy (T13, T14), and multi-surface failures on long-horizon tasks (T37, T41, T48). Tasks T07--T10 fail on trace or full lanes where the reference agent mishandles specialist output or tool order; T50 fails on output, trace, and full lanes when pre-authentication wording leaks account detail.
+Output checks pass on every task in this run: the agent's replies satisfy the rubrics when those are the only assertions enabled. Failures concentrate on trace, state, and full scenarios rather than on output alone. Twenty-seven tasks fail on at least one lane; common patterns are missing audit notes in the store, wrong tool order or line binding in the trace, state mutations that violate policy, and combined failures on long-horizon dialogues. Listing~\ref{lst:baseline-failure-audit} shows the counterexample box for one state-lane failure (task T21): the oracle names the violated rule, and the event trace shows that a credit was applied without the required audit note.
+
+\begin{lstlisting}[caption={Captured failure box: state-oracle check on task T21 (missing audit note).},label=lst:baseline-failure-audit]
++---------------------------- FAIL test_t21_state [1/1] -----------------------------+
+| Check: assert_that                                                                 |
+| Where: 2nd assert_that after turn #2 (agentturn) (environment / fixture check)     |
+| Expected: assert_that failed: expected at least one audit note                     |
+| ----------------------------------------                                         |
+| Event trace                                                                        |
+| +-- UserTurn: We've had a long outage at E1 6AN and I'm already verified on...     |
+| +-- AgentTurn: I understand you're requesting goodwill compensation for the...     |
+|     +-- authenticate_customer                                                      |
+|     +-- check_outage                                                               |
+|     +-- run_billing_policy_specialist                                              |
+|     |     +-- ... (billing specialist child tools omitted) ...                       |
++------------------------------------------------------------------------------------+
+\end{lstlisting}
 
 These figures describe the agent used in the rest of the chapter; they are not a leaderboard score. The fault-detection study in Section~\ref{sec:fault-detection} only injects faults on slots where this initial run passed, so injected faults are not confounded with failures the agent already exhibited.

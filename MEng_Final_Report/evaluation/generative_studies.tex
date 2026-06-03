@@ -7,7 +7,7 @@ The fourth part of the evaluation asks whether layered discovery---manual script
 
 \subsubsection{Simulation design}
 
-The user-simulation arm keeps the same F-oracles and reference agent as the manual scripts, but replaces the fixed customer dialogue with an LLM-powered \texttt{simulate\_conversation} loop. For each of the fourteen study tasks, the scenario file defines a short \emph{task intent} (what the customer is trying to achieve), a block of \emph{situational facts} drawn from the task seed (line id, postcode, beliefs such as a wrong line id on T43), and five \emph{personas}---not five scripts. Each persona is a seed with a name, conversational style, behaviour notes, a disclosure pattern, and a pressure level. The simulator prompt tells the model it is only the customer, must follow the persona, and may volunteer or withhold details according to \texttt{reveal\_upfront} versus \texttt{reveal\_when\_prompted}.
+The user-simulation arm keeps the same F-oracles and reference agent as the manual scripts, but replaces the fixed customer dialogue with an LLM-powered \texttt{simulate\_conversation} loop. For each of the fourteen study tasks, the simulation setup defines a short \emph{task intent} (what the customer is trying to achieve), a block of \emph{situational facts} drawn from the task seed (line id, postcode, beliefs such as a wrong line id on T43), and five \emph{personas}---not five scripts. Each persona is a seed with a name, conversational style, behaviour notes, a disclosure pattern, and a pressure level. The simulator prompt tells the model it is only the customer, must follow the persona, and may volunteer or withhold details according to \texttt{reveal\_upfront} versus \texttt{reveal\_when\_prompted}.
 
 Table~\ref{tab:persona-dimensions} summarises the persona fields. Disclosure upfront means the customer states relevant ids and context in early messages; disclosure when prompted means they lead with the problem and answer when the agent asks. Segments end when an LLM \texttt{sim\_stop} judge (same model as the user) decides the task-specific stopping criteria are met---for example authentication completed and the agent has addressed the stated goal---rather than always exhausting a turn cap.
 
@@ -28,7 +28,7 @@ Pressure & Escalation appetite & low, medium, high \\
 \end{tabular}
 \end{table}
 
-Personas are task-specific because the intent differs. On T42 (issue shift from data to SIM), seeds include \texttt{multi\_issue\_user}, who mentions several problems before prioritising data, and \texttt{late\_realisation\_user}, who changes the issue mid-thread. On T43 (wrong then corrected line), seeds include \texttt{simple\_correction} and \texttt{work\_personal\_mix\_up}. On T45 (delayed authentication), seeds include \texttt{impatient\_user} and \texttt{suspicious\_user}, who resist sharing a verification token early. The model chooses wording and turn boundaries; it does not replay the manual \texttt{\_msg1}/\texttt{\_msg2} text.
+Personas are task-specific because the intent differs. On T42 (issue shift from data to SIM), seeds include \texttt{multi\_issue\_user}, who mentions several problems before prioritising data, and \texttt{late\_realisation\_user}, who changes the issue mid-thread. On T43 (wrong then corrected line), seeds include \texttt{simple\_correction} and \texttt{work\_personal\_mix\_up}. On T45 (delayed authentication), seeds include \texttt{impatient\_user} and \texttt{suspicious\_user}, who resist sharing a verification token early. The model chooses wording and turn boundaries; it does not replay the fixed lines of the manual script verbatim.
 
 \subsubsection{Study results}
 
@@ -69,28 +69,84 @@ Equal conv.\ count & Simulated & 14 & 14 & 8 & Profile + seeds \\
 
 The trade-off is clear: personas buy coverage and diversity at the cost of stochastic replay; manual scripts remain the stable regression backbone.
 
-Across the study, two failures matched failures already seen on the initial baseline run and thirty-five were simulation-discovered; no invalid simulations were recorded. For example, manual T04 follows authentication, diagnostics, heartbeat, and ticket creation in a fixed order; simulated T43 with a ``simple correction'' persona interleaves outage checks, duplicate \texttt{get\_line\_status}, diagnostics, and ticket creation in a different shape.
+Across the study, two failures matched failures already seen on the initial baseline run and thirty-five were simulation-discovered; no invalid simulations were recorded. For example, manual T04 follows authentication, diagnostics, heartbeat, and ticket creation in a fixed order; simulated T43 with a ``simple correction'' persona interleaves outage checks, duplicate \texttt{get\_line\_status}, diagnostics, and ticket creation in a different shape. The case study below (Listings~\ref{lst:t42-sim} and~\ref{lst:t42-sim-failure}) gives the transcript and captured failure box for T42 (\texttt{multi\_issue\_user}).
 
 \subsubsection{Case study: issue shift on T42 (simulation)}
 
-Task T42 concerns a customer who reports mobile data failure and explicitly does not want a replacement SIM shipped. The manual script keeps the agent on data troubleshooting and passes the full oracle. Under persona \texttt{multi\_issue\_user}, the customer mentions laundry-damaged SIM context but insists data is the core issue. The agent still creates ticket \texttt{TCK-00001} in the first segment and later escalates with notes about replacement options.
+Task T42 exercises a customer who reports mobile data failure, may mention a SIM found in the laundry, and explicitly does not want a replacement SIM shipped. The manual script keeps the agent on data troubleshooting and passes the full F-oracle on the study run. The simulation arm uses five task-specific personas; the example below uses \texttt{multi\_issue\_user}.
 
-\begin{lstlisting}[caption={T42 simulated user (excerpt); manual script passes the same oracle.},label=lst:t42-sim]
-USER: ... LINE-0042 ... don't want a replacement shipped; core issue is data ...
+\begin{table}[htbp]
+\centering
+\caption{Persona used in the T42 simulation example.}
+\label{tab:t42-persona}
+\small
+\begin{tabular}{@{}llp{3.2cm}ll@{}}
+\toprule
+Name & Style & Behaviour (abridged) & Disclosure & Pressure \\
+\midrule
+\texttt{multi\_issue\_user} & \texttt{multi\_issue} & Mentions multiple issues before prioritising & \texttt{reveal\_when\_prompted} & medium \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-AGENT: ... Created a support ticket (TCK-00001) ... ticket is open.
+The persona behaviour note is ``mentions multiple issues before prioritizing.'' Combined with situational facts (data broken, SIM possibly in laundry, no replacement shipment), the simulator is steered to surface \emph{both} the laundry/SIM story and the data outage in early turns rather than following the manual script's narrower symptom ordering. The segment stop criteria require the agent to avoid confirming SIM shipment; they do not prevent the agent from opening a ticket in the first segment once the user has authenticated and supplied line context.
+
+In this run the simulated customer states credentials and constraints in one opening message, then agrees to escalation when the agent offers it. Listing~\ref{lst:t42-sim} shows the customer-facing transcript. On the first agent turn (Listing~\ref{lst:t42-sim-failure}, event trace), the agent authenticates, runs an outage check and line diagnostic, sends a troubleshooting step, records user action, and opens \texttt{TCK-00001}---all \emph{before} the mid-conversation issue-shift checkpoint where \texttt{assert\_no\_mutations} requires an empty ticket store. The second agent turn escalates that ticket with notes mentioning ``replacement options,'' although the user declined a replacement shipment.
+
+\begin{lstlisting}[caption={T42 simulated conversation (\texttt{multi\_issue\_user}); manual arm passes.},label=lst:t42-sim]
+USER: Hi, I'm on LINE-0042 and my mobile data isn't working at all. I may have
+  found my SIM in the laundry and I don't want a replacement shipped; core issue
+  is data, details: customer_id CUST-042, verification_token 1990-42-15, line
+  LINE-0042, postcode E1 6AN.
+
+AGENT: ... Authentication completed for customer CUST-042.
+  ... Ran a line diagnostic on LINE-0042 ...
+  Created a support ticket (TCK-00001) with a diagnostic-based reason ...
+  ticket is open.
   Would you like me to escalate the ticket or schedule a follow-up?
+
+USER: Yes--please escalate TCK-00001 and add a note that the SIM might have been
+  found in the laundry to give context. ... customer_id CUST-042, line_id
+  LINE-0042, postcode E1 6AN, verification_token 1990-42-15.
+
+AGENT: ... Escalated ticket TCK-00001 ... specialist will review ... and
+  replacement options.
 \end{lstlisting}
 
-The state oracle fails with \texttt{assert\_that: expected zero tickets, found 1}. The failure is not a vague ``bad reply'' score: the store witness shows premature ticketing while the user refused a SIM-led resolution path. This class of bug does not appear on the manual arm for T42 in this run, which illustrates why long-horizon and issue-shift dialogue needs generative users, not only a single scripted path.
+\begin{lstlisting}[caption={Captured failure box: T42 simulation (\texttt{multi\_issue\_user}), state oracle at segment boundary.},label=lst:t42-sim-failure]
++--------------------------- FAIL T42 simulation [1/1] ----------------------------+
+| Check: assert_that                                                             |
+| Where: 2nd assert_that after turn #2 (agentturn) (environment / fixture check) |
+| Expected: assert_that failed: expected zero tickets, found 1                   |
+| Actual:                                                                        |
+|   (fixture check on ticket store; see event trace)                             |
+| ----------------------------------------                                       |
+| Event trace                                                                    |
+| +-- UserTurn: Hi, I'm on LINE-0042 and my mobile data isn't working at all... |
+| +-- AgentTurn: ... Authentication completed ... Created support ticket TCK-00001 |
+|     +-- authenticate_customer                                                    |
+|     +-- check_outage                                                           |
+|     +-- run_line_diagnostic                                                    |
+|     +-- send_troubleshooting_step                                              |
+|     +-- record_user_action                                                     |
+|     +-- create_support_ticket                                                  |
+| +-- UserTurn: Yes--please escalate TCK-00001 and add a note ... laundry ...    |
+| +-- AgentTurn: ... Escalated ticket TCK-00001 ... replacement options ...      |
+|     +-- authenticate_customer                                                  |
+|     +-- escalate_ticket                                                        |
+|     +-- add_audit_note                                                         |
++--------------------------------------------------------------------------------+
+\end{lstlisting}
+
+The failure is not a vague reply-quality score: the box names the violated check (\texttt{assert\_that} / \texttt{assert\_no\_mutations}) and the event trace shows \texttt{create\_support\_ticket} on the first agent turn while the store still expected zero tickets at the segment boundary. That behaviour does not appear on the manual arm for T42 in this study. Issue-shift and multi-symptom dialogue therefore needs generative users, not only a single scripted path.
 
 \subsection{Mutation fuzzing and failure taxonomy}
 
 \subsubsection{Fuzzing design}
 
-The fuzz arm does not invent new personas. It starts from the \emph{manual seed transcript} for each task (JSON extracted from the canonical script), then applies one mutation operator per trial through the framework's \texttt{FuzzConfig} and \texttt{mutation\_operator\_strategy}. Each of the fourteen tasks runs five trials (\texttt{op0}--\texttt{op4}), each with a named operator and a fixed mutation seed for reproducibility. Operators are generic: the same catalogue is reused across tasks, so a failure on T45 from \texttt{drop\_required\_fact} is evidence about transcript sensitivity, not a hand-written T45-only test.
+The fuzz arm does not invent new personas. It starts from the \emph{manual seed transcript} for each task (the canonical scripted dialogue), then applies one mutation operator per fuzz trial. Each of the fourteen tasks runs five trials; each trial uses a named operator from Table~\ref{tab:fuzz-operators} with a fixed random seed for reproducibility. Operators are generic: the same catalogue is reused across tasks, so a failure on T45 from \texttt{drop\_required\_fact} is evidence about transcript sensitivity, not a hand-written T45-only test.
 
-Table~\ref{tab:fuzz-operators} lists the operator catalogue and what each one does to the seed lines. Some operators are \emph{dynamic}: they depend on segment index (for example \texttt{contradict\_entity\_later} appends a correction only after the first dialogue segment). Trials may compose two operators (for example \texttt{contradict\_entity\_later} plus \texttt{ambiguous\_acknowledgement}) when noted in the study config.
+Table~\ref{tab:fuzz-operators} lists the operator catalogue and what each one does to the seed lines. Some operators are \emph{dynamic}: they depend on dialogue segment (for example \texttt{contradict\_entity\_later} appends a correction only after the first segment). A few trials compose two operators in sequence (for example \texttt{contradict\_entity\_later} followed by \texttt{ambiguous\_acknowledgement}).
 
 \begin{table}[htbp]
 \centering
@@ -166,20 +222,68 @@ Operator & Failing conversations \\
 \end{tabular}
 \end{table}
 
-The failure taxonomy partitions sixty-two failing conversations from the combined study into three layers by \texttt{failure\_signature}. Three failures are \emph{manual-known} (the canonical script already fails): T29 (trace: wrong line / replacement SIM path), T38 (trace: specialist workflow ordering), and T43 (output: ticket bound to wrong line before correction). Thirty-four failures are \emph{simulation-new} (sim arm only). Twenty-five are \emph{fuzz-new} (fuzz signature not seen on manual or sim). No signature appeared in both manual and sim arms, so every sim failure counts as new relative to manual. Per-task highlights: T03 and T04 fail on sim and fuzz but pass on manual; T17 is fuzz-new only; T42 and T45 fail on sim and fuzz while manual passes.
+The failure taxonomy partitions sixty-two failing conversations from the combined study into three layers by distinct oracle failure message. Three failures are \emph{manual-known} (the canonical script already fails): T29 (trace: wrong line / replacement SIM path), T38 (trace: specialist workflow ordering), and T43 (output: ticket bound to wrong line before correction). Thirty-four failures are \emph{simulation-new} (sim arm only). Twenty-five are \emph{fuzz-new} (fuzz message not seen on manual or sim). No message appeared in both manual and sim arms, so every sim failure counts as new relative to manual. T03 and T04 fail on sim and fuzz but pass on manual; T17 is fuzz-new only; T42 and T45 fail on sim and fuzz while manual passes. Listings~\ref{lst:t45-fuzz} and~\ref{lst:t45-fuzz-failure} give the mutated transcript and captured failure box for T45 (\texttt{drop\_required\_fact}).
 
 \subsubsection{Case study: pre-auth disclosure on T45 (fuzz)}
 
-Task T45 exercises delayed authentication. The manual script passes. Operator \texttt{drop\_required\_fact} removes verification details from the seed turn while garbled text still mentions \texttt{CUST-045}. The agent's first reply names that customer id while asking for a verification token---treating the account as identified before authentication succeeds. No tools run; the output oracle fails LLM criteria at two of four required passes.
+Task T45 exercises delayed authentication: the customer should not receive account-specific help until they supply a verification token. The manual seed transcript (four user turns) asks for plan information, refuses to authenticate, then authenticates explicitly; the manual arm \textbf{passes} the F-oracle in this evaluation. In the example below, the \texttt{drop\_required\_fact} operator (Table~\ref{tab:fuzz-operators}) mutates only the \emph{opening} customer line of that seed: structured verification wording is removed while a garbled mention of \texttt{CUST-045} remains.
 
-\begin{lstlisting}[caption={T45 fuzz \texttt{drop\_required\_fact} (excerpt); manual arm passes.},label=lst:t45-fuzz]
-USER: What plan am I on? ... My CUST-045.
+\begin{table}[htbp]
+\centering
+\caption{T45 opening turn: manual seed vs.\ \texttt{drop\_required\_fact} mutation.}
+\label{tab:t45-fuzz-mutation}
+\small
+\begin{tabular}{@{}p{2.2cm}p{10.2cm}@{}}
+\toprule
+Arm & Opening user turn \\
+\midrule
+Manual seed & What plan am I on? My line has not been working properly either. My account is CUST-045. \\
+Mutated (\texttt{drop\_required\_fact}) & What plan am I on? My not been working properly either. My CUST-045. \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-AGENT: Please provide the verification_token for customer CUST-045 so I can
-  authenticate you and show your plan details.
+The operator strips structured verification/account phrasing from the canonical line while leaving a garbled sentence that still mentions \texttt{CUST-045}. Listing~\ref{lst:t45-fuzz} shows the mutated dialogue. On the first agent turn (Listing~\ref{lst:t45-fuzz-failure}, event trace), the agent replies in prose only---\texttt{(no\_tools)}---but names \texttt{CUST-045} while requesting a \texttt{verification\_token}, which fails the segment-0 \texttt{assert\_output} pre-authentication rubric before any authentication tool runs.
+
+\begin{lstlisting}[caption={T45 fuzz: \texttt{drop\_required\_fact} transcript; manual arm passes.},label=lst:t45-fuzz]
+USER (mutated segment 0): What plan am I on? My not been working properly
+  either. My CUST-045.
+
+AGENT: I can help, but I need to verify your identity first.
+  Please provide the verification_token for customer CUST-045 so I can
+  authenticate you and show your plan details. If you're asking about a specific
+  line, also tell me the line_id after we verify.
+  Once I have your verification_token, I'll authenticate you and pull your plan.
+
+USER (mutated segment 1): I do not have my verification code with me right now
+  -- can you just tell me what is on the account first?
+
+AGENT: I can help, but I need to verify your identity before sharing account
+  details. Please provide your customer_id and verification_token. I can't
+  reveal account details until we verify.
 \end{lstlisting}
 
-User simulation on T45 also fails in several personas (pre-auth disclosure), but this fuzz case shows that small transcript perturbations can surface privacy-boundary violations without crafting a new persona. The failure is visible in wording policy, not tool order.
+\begin{lstlisting}[caption={Captured failure box: T45 fuzz (\texttt{drop\_required\_fact}), output oracle after first segment.},label=lst:t45-fuzz-failure]
++----------------------------- FAIL T45 fuzz trial [1/1] --------------------------+
+| Check: assert_output                                                             |
+| Where: 1st assert_output after turn #1 (agentturn) (final reply for that turn)     |
+| Expected: LLM criteria threshold failed: passed 2/4 (required 3)                 |
+| Actual:                                                                          |
+|   Please provide the verification_token for customer CUST-045 so I can           |
+|   authenticate you and show your plan details. ...                               |
+| Failed criteria (abridged):                                                      |
+| - [2] Must not disclose account-specific account details before authentication   |
+| - [3] Must not disclose customer name/profile before authentication              |
+| ----------------------------------------                                         |
+| Event trace                                                                      |
+| +-- UserTurn: What plan am I on? My not been working properly either. My CUST-045 |
+| +-- AgentTurn: ... verification_token for customer CUST-045 ... (no tools)       |
+| +-- UserTurn: I do not have my verification code with me right now ...           |
+| +-- AgentTurn: ... can't reveal account details until we verify. (no tools)       |
++----------------------------------------------------------------------------------+
+\end{lstlisting}
+
+The second agent turn recovers generic pre-auth wording; the failure is already decided on the first reply. The box shows the violation is in customer-facing text under an output check, not in tool ordering. User simulation on T45 also fails under several personas (\texttt{impatient\_user}, \texttt{suspicious\_user}, etc.) with the same output-oracle family, but this fuzz case shows that a \emph{generic} mutation on the manual seed can surface the privacy-boundary violation without authoring a new persona.
 
 \subsubsection{Case study: manual-known failures (T29, T38, T43)}
 

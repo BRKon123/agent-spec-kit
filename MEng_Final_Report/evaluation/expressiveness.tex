@@ -109,53 +109,100 @@ Multi-turn memory & A & D & B & D & D & B \\
 
 \subsection{Illustrative failure messages}
 
-Captured messages for four trace-shaped specimens appear below; the appendix lists the remaining specimens side by side.
+For four trace-shaped specimens (C05, C06, C07, C10), each framework port was run on the same intentional fail trace; Listing~\ref{lst:c05-failures}--\ref{lst:c10-failures} show the captured ASCII failure boxes (agent-spec-kit boxes are rendered from the library \texttt{Counterexample} object; other frameworks use the compact wrapper in the expressiveness harness). The appendix lists the remaining specimens side by side.
 
-\subsubsection{Ordered tool sequence}
+\subsubsection{Ordered tool sequence (C05)}
 
-\begin{lstlisting}[caption={Ordered tool sequence: failure messages (abridged).},label=lst:c05-failures]
-# agent-spec-kit
-path=$[1] code=missing_element ... actual="[{'name': 'get_outage_status', ...},
-  {'name': 'authenticate_customer', ...}]" (no actual items were left to search)
-
-# pytest_plain
-AssertionError
-
-# langsmith
-{'key': 'ordered_sequence', 'score': 0}
+\begin{lstlisting}[caption={C05 ordered tool sequence: captured failure boxes (agent-spec-kit, pytest, LangSmith).},label=lst:c05-failures]
++--------------------------- FAIL test_c05_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1]                                                                     |
+| Expected: missing_element: expected expected value to appear after the previou |
+| s match                                                                        |
+| Actual:                                                                        |
+|   [0] get_outage_status(line_id='LINE-001') -> {active=True}                   |
+|   [1] authenticate_customer() -> ok                                            |
+| could not match expected element at index 1 while preserving order             |
+| no actual items were left to search                                            |
++--------------------------------------------------------------------------------+
++------------------------- pytest_plain (C05)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
++--------------------------- langsmith (C05)  grade B ---------------------------+
+| {'key': 'ordered_sequence', 'score': 0}                                        |
++--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-\subsubsection{Forbidden tool-call}
+\subsubsection{Forbidden tool-call (C06)}
 
-\begin{lstlisting}[caption={Forbidden tool-call: failure messages (abridged).},label=lst:c06-failures]
-# agent-spec-kit
-path=$[1] code=forbidden_tool_call expected="no 'apply_bill_credit'"
-  actual="{'name': 'apply_bill_credit', 'args': {'amount': 10}, ...}"
-
-# pytest_plain
-AssertionError
+\begin{lstlisting}[caption={C06 forbidden tool-call: captured failure boxes.},label=lst:c06-failures]
++--------------------------- FAIL test_c06_fail [1/1] ---------------------------+
+| Check: forbid_tool_calls                                                       |
+| Where: 1st forbid_tool_calls after turn #1 (forbidden tool call patterns)      |
+| Path: $[1]                                                                     |
+| Expected: forbidden_tool_call: expected no 'apply_bill_credit'                 |
+| Actual:                                                                        |
+|   [0] get_customer_profile(customer_id='CUST-OTHER') -> None                   |
+|   [1] apply_bill_credit(amount=10) -> ok                                       |
+| forbidden tool call 'apply_bill_credit' found at index 1 (actual tool 'apply_b |
+| ill_credit')                                                                   |
++--------------------------------------------------------------------------------+
++------------------------- pytest_plain (C06)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
++--------------------------- langsmith (C06)  grade B ---------------------------+
+| {'key': 'forbidden_tools', 'score': 0}                                         |
++--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-\subsubsection{Tool argument matching}
+\subsubsection{Tool argument matching (C07)}
 
-\begin{lstlisting}[caption={Tool argument matching: failure messages (abridged).},label=lst:c07-failures]
-# agent-spec-kit
-path=$[1] code=missing_element ... actual="[..., {'name': 'get_line_status',
-  'args': {'line_id': 'LINE-002'}, ...}]"
-
-# pytest_plain
-get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
+\begin{lstlisting}[caption={C07 tool argument matching: captured failure boxes.},label=lst:c07-failures]
++--------------------------- FAIL test_c07_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1].args.line_id                                                        |
+| Expected: equality: expected 'LINE-001'                                        |
+| Actual:                                                                        |
+|   [0] authenticate_customer() -> ok                                            |
+|   [1] get_line_status(line_id='LINE-002') -> {data_enabled=True}               |
+| could not match expected element at index 1 while preserving order             |
+| searched actual positions 1 through 1                                          |
+| closest underlying mismatch was (at $[1].args.line_id): value does not equal e |
+| xpected                                                                        |
+| value does not equal expected                                                  |
+| (+1 more matcher error(s))                                                     |
++--------------------------------------------------------------------------------+
++------------------------- pytest_plain (C07)  grade B --------------------------+
+| get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'               |
++--------------------------------------------------------------------------------+
++--------------------------- langsmith (C07)  grade B ---------------------------+
+| {'key': 'tool_args', 'score': 0}                                               |
++--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-\subsubsection{Unordered sibling tools}
+\subsubsection{Unordered sibling tools (C10)}
 
-\begin{lstlisting}[caption={Unordered sibling tools: failure messages (abridged).},label=lst:c10-failures]
-# agent-spec-kit
-path=$ code=list_too_short expected='>= 2' actual='1'
-  (need at least 2 item(s) to match all expected values)
-
-# promptfoo
-assertion returned False
+\begin{lstlisting}[caption={C10 unordered sibling tools: captured failure boxes.},label=lst:c10-failures]
++--------------------------- FAIL test_c10_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Expected: list_too_short: expected >= 2                                        |
+| Actual:                                                                        |
+|   [0] heartbeat_ping() -> ok                                                   |
+| list is too short: need at least 2 item(s) to match all expected values (order |
+|  does not matter)                                                              |
++--------------------------------------------------------------------------------+
++------------------------- pytest_plain (C10)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
++--------------------------- langsmith (C10)  grade B ---------------------------+
+| {'key': 'unordered_siblings', 'score': 0}                                      |
++--------------------------------------------------------------------------------+
++--------------------------- promptfoo (C10)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
 \end{lstlisting}
 
 \subsection{Diagnostic quality on injected faults}

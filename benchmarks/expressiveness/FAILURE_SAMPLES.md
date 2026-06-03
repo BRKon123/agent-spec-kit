@@ -18,42 +18,210 @@ Grades from [`MANUAL_FAILURE_CLASSIFICATION.md`](../MANUAL_FAILURE_CLASSIFICATIO
 ### C01
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 
-- **agent_spec_kit**: `path=$ code=one_of expected='one of (PredicateMatcher, PredicateMatcher)' actual="'Your service is active; no billing changes this cycle.'" (value does not match any option) | path=$ code=one_of expected='one of (PredicateMatcher, PredicateMatcher)' actual="'Your service is active; no billing changes this cycle.'" (value does not match any option)`
+- **agent_spec_kit**: `path=$ code=all_of expected='all constraints to pass' actual="'Your service is active; no billing changes this cycle.'" (all_of: not all constraints were satisfied: one_of: value does not match any option: expected value to contain case-insensitive substring 'credit') | path=$ code=one_of expected='one of (PredicateMatcher, PredicateMatcher)' actual="'Your service is active; no billing changes this cycle.'" (one_of: value does not match any option: expected value to contain case-insensitive substring 'credit') | path=$ code=predicate expected="expected value to contain case-insensitive substring 'credit'" actual="'Your service is active; no billing changes this cycle.'" (expected value to contain case-insensitive substring 'credit')`
 - **pytest_plain**: `AssertionError`
 - **langsmith**: `{'key': 'output_rubric', 'score': 0}`
 - **pydantic_evals**: `AssertionError`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c01', 'score': 0}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c01_fail [1/1] ---------------------------+
+| Check: assert_output                                                           |
+| Where: 1st assert_output after turn #1 (final assistant text for that turn)    |
+| Expected: all_of: expected all constraints to pass                             |
+| Actual:                                                                        |
+|   Your service is active; no billing changes this cycle.                       |
+| Your service is active; no billing changes this cycle.                         |
+| all_of: not all constraints were satisfied: one_of: value does not match any o |
+| ption: expected value to contain case-insensitive substring 'credit'           |
+| (+4 more matcher error(s))                                                     |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C01)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C01)  grade B ---------------------------+
+| {'key': 'output_rubric', 'score': 0}                                           |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C01)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C01)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C01)  grade B ---------------------------+
+| {'key': 'c01', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C02
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 
-- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-001'}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'connectivity'}, 'result': {'severity': 'lo..." (could not match expected element at index 0 while preserving order searched actual positions 0...`
+- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-001'}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'connectivity'}, 'result': {'severity': 'lo..." (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].result.severity): one_of: value does not match any option: value does not equal expected) | path=$[1].result.severity code=one_of expected="one of ('high')" actual="'low'" (one_of: value does not match any option: value does not equal expected)`
 - **pytest_plain**: `AssertionError`
 - **langsmith**: `{'key': 'object_shape', 'score': 0}`
 - **pydantic_evals**: `AssertionError`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c02', 'score': 0}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c02_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1].result.severity                                                     |
+| Expected: one_of: expected one of ('high')                                     |
+| Actual:                                                                        |
+|   [0] authenticate_customer(customer_id='CUST-001') -> ok                      |
+|   [1] run_network_diagnostics_specialist(query='connectivity') -> {severity='l |
+| ow', recommended_action='create_t...                                           |
+| could not match expected element at index 0 while preserving order             |
+| searched actual positions 0 through 1                                          |
+| closest underlying mismatch was (at $[1].result.severity): one_of: value does  |
+| not match any option: value does not equal expected                            |
+| one_of: value does not match any option: value does not equal expected         |
+| (+1 more matcher error(s))                                                     |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C02)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C02)  grade B ---------------------------+
+| {'key': 'object_shape', 'score': 0}                                            |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C02)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C02)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C02)  grade B ---------------------------+
+| {'key': 'c02', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C03
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 
-- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_billing_policy_specialist', 'args': {}, 'result': {'eligible': True, 'currency': 'USD'}}]" (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mis...`
+- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_billing_policy_specialist', 'args': {}, 'result': {'eligible': True, 'currency': 'USD'}}]" (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].result.amount): require 'amount' when (field('eligible') == True)) | path=$[1].result.amount code=conditional_rule expected="key 'amount' present" actual='(absent)' (require 'amount' when (field('eligible') == True))`
 - **pytest_plain**: `AssertionError`
 - **langsmith**: `{'key': 'conditional_object', 'score': 0}`
 - **pydantic_evals**: `AssertionError`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c03', 'score': 0}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c03_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1].result.amount                                                       |
+| Expected: conditional_rule: expected key 'amount' present                      |
+| Actual:                                                                        |
+|   [0] authenticate_customer() -> ok                                            |
+|   [1] run_billing_policy_specialist() -> {eligible=True, currency='USD'}       |
+| could not match expected element at index 0 while preserving order             |
+| searched actual positions 0 through 1                                          |
+| closest underlying mismatch was (at $[1].result.amount): require 'amount' when |
+|  (field('eligible') == True)                                                   |
+| require 'amount' when (field('eligible') == True)                              |
+| (+1 more matcher error(s))                                                     |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C03)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C03)  grade B ---------------------------+
+| {'key': 'conditional_object', 'score': 0}                                      |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C03)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C03)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C03)  grade B ---------------------------+
+| {'key': 'c03', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C04
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 
-- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_billing_policy_specialist', 'args': {}, 'result': {'eligible': True, 'amount': 9999.0}}]" (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mism...`
+- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_billing_policy_specialist', 'args': {}, 'result': {'eligible': True, 'amount': 9999.0}}]" (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].result.amount): value above max=500.0) | path=$[1].result.amount code=number expected='<= 500.0' actual='9999.0' (value above max=500.0)`
 - **pytest_plain**: `AssertionError`
 - **langsmith**: `{'key': 'numeric_regex', 'score': 0}`
 - **pydantic_evals**: `AssertionError`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c04', 'score': 0}`
+
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c04_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1].result.amount                                                       |
+| Expected: number: expected <= 500.0                                            |
+| Actual:                                                                        |
+|   [0] authenticate_customer() -> ok                                            |
+|   [1] run_billing_policy_specialist() -> {eligible=True, amount=9999.0}        |
+| could not match expected element at index 0 while preserving order             |
+| searched actual positions 0 through 1                                          |
+| closest underlying mismatch was (at $[1].result.amount): value above max=500.0 |
+| value above max=500.0                                                          |
+| (+1 more matcher error(s))                                                     |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C04)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C04)  grade B ---------------------------+
+| {'key': 'numeric_regex', 'score': 0}                                           |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C04)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C04)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C04)  grade B ---------------------------+
+| {'key': 'c04', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
 
 ### C05
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
@@ -65,6 +233,46 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c05', 'score': 0}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c05_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1]                                                                     |
+| Expected: missing_element: expected expected value to appear after the previou |
+| s match                                                                        |
+| Actual:                                                                        |
+|   [0] get_outage_status(line_id='LINE-001') -> {active=True}                   |
+|   [1] authenticate_customer() -> ok                                            |
+| could not match expected element at index 1 while preserving order             |
+| no actual items were left to search                                            |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C05)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C05)  grade B ---------------------------+
+| {'key': 'ordered_sequence', 'score': 0}                                        |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C05)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C05)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C05)  grade B ---------------------------+
+| {'key': 'c05', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C06
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 
@@ -75,35 +283,205 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c06', 'score': 0}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c06_fail [1/1] ---------------------------+
+| Check: forbid_tool_calls                                                       |
+| Where: 1st forbid_tool_calls after turn #1 (forbidden tool call patterns)      |
+| Path: $[1]                                                                     |
+| Expected: forbidden_tool_call: expected no 'apply_bill_credit'                 |
+| Actual:                                                                        |
+|   [0] get_customer_profile(customer_id='CUST-OTHER') -> None                   |
+|   [1] apply_bill_credit(amount=10) -> ok                                       |
+| forbidden tool call 'apply_bill_credit' found at index 1 (actual tool 'apply_b |
+| ill_credit')                                                                   |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C06)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C06)  grade B ---------------------------+
+| {'key': 'forbidden_tools', 'score': 0}                                         |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C06)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C06)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C06)  grade B ---------------------------+
+| {'key': 'c06', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C07
 Grades (ask/py/ls/pe/pf/bt): `A/B/B/B/D/B`
 
-- **agent_spec_kit**: `path=$[1] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'get_line_status', 'args': {'line_id': 'LINE-002'}, 'result': {'data_enabled': True}}]" (could not match expected element at index 1 while preserving order searched actual positions 1 through 1 closest underlying mismatch wa...`
+- **agent_spec_kit**: `path=$[1] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'get_line_status', 'args': {'line_id': 'LINE-002'}, 'result': {'data_enabled': True}}]" (could not match expected element at index 1 while preserving order searched actual positions 1 through 1 closest underlying mismatch was (at $[1].args.line_id): value does not equal expected) | path=$[1].args.line_id code=equality expected="'LINE-001'" actual="'LINE-002'" (value does not equal expected)`
 - **pytest_plain**: `get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'`
 - **langsmith**: `{'key': 'tool_args', 'score': 0}`
 - **pydantic_evals**: `get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c07', 'score': 0}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c07_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1].args.line_id                                                        |
+| Expected: equality: expected 'LINE-001'                                        |
+| Actual:                                                                        |
+|   [0] authenticate_customer() -> ok                                            |
+|   [1] get_line_status(line_id='LINE-002') -> {data_enabled=True}               |
+| could not match expected element at index 1 while preserving order             |
+| searched actual positions 1 through 1                                          |
+| closest underlying mismatch was (at $[1].args.line_id): value does not equal e |
+| xpected                                                                        |
+| value does not equal expected                                                  |
+| (+1 more matcher error(s))                                                     |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C07)  grade B --------------------------+
+| get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'               |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C07)  grade B ---------------------------+
+| {'key': 'tool_args', 'score': 0}                                               |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C07)  grade B -------------------------+
+| get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'               |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C07)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C07)  grade B ---------------------------+
+| {'key': 'c07', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C08
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 
-- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'signal drops'}, 'result': {'severity': 'medium', 'recommended_actio..." (could not match expected element at index 0 while preserving order searched actual positions 0...`
+- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'signal drops'}, 'result': {'severity': 'medium', 'recommended_actio..." (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].result.summary): string shorter than min_len=10) | path=$[1].result.summary code=string expected='len >= 10' actual='9' (string shorter than min_len=10)`
 - **pytest_plain**: `AssertionError`
 - **langsmith**: `{'key': 'tool_result', 'score': 0}`
 - **pydantic_evals**: `AssertionError`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c08', 'score': 0}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c08_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1].result.summary                                                      |
+| Expected: string: expected len >= 10                                           |
+| Actual:                                                                        |
+|   [0] authenticate_customer() -> ok                                            |
+|   [1] run_network_diagnostics_specialist(query='signal drops') -> {severity='m |
+| edium', recommended_action='monit...                                           |
+| could not match expected element at index 0 while preserving order             |
+| searched actual positions 0 through 1                                          |
+| closest underlying mismatch was (at $[1].result.summary): string shorter than  |
+| min_len=10                                                                     |
+| string shorter than min_len=10                                                 |
+| (+1 more matcher error(s))                                                     |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C08)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C08)  grade B ---------------------------+
+| {'key': 'tool_result', 'score': 0}                                             |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C08)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C08)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C08)  grade B ---------------------------+
+| {'key': 'c08', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C09
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 
-- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'latency'}, 'result': {'severity': 'medium', 'recommended_action': '..." (could not match expected element at index 0 while preserving order searched actual positions 0...`
+- **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'latency'}, 'result': {'severity': 'medium', 'recommended_action': '..." (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].children[0].name): value does not equal expected) | path=$[1].children[0].name code=equality expected="'pull_network_events'" actual="'score_signal_anomaly'" (value does not equal expected)`
 - **pytest_plain**: `AssertionError`
 - **langsmith**: `{'key': 'nested_tools', 'score': 0}`
 - **pydantic_evals**: `AssertionError`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c09', 'score': 0}`
+
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c09_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1].children[0].name                                                    |
+| Expected: equality: expected 'pull_network_events'                             |
+| Actual:                                                                        |
+|   [0] authenticate_customer() -> ok                                            |
+|   [1] run_network_diagnostics_specialist(query='latency') -> {severity='medium |
+| ', recommended_action='monit...                                                |
+| could not match expected element at index 0 while preserving order             |
+| searched actual positions 0 through 1                                          |
+| closest underlying mismatch was (at $[1].children[0].name): value does not equ |
+| al expected                                                                    |
+| value does not equal expected                                                  |
+| (+1 more matcher error(s))                                                     |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C09)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C09)  grade B ---------------------------+
+| {'key': 'nested_tools', 'score': 0}                                            |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C09)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C09)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C09)  grade B ---------------------------+
+| {'key': 'c09', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
 
 ### C10
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
@@ -115,6 +493,43 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c10', 'score': 0}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c10_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Expected: list_too_short: expected >= 2                                        |
+| Actual:                                                                        |
+|   [0] heartbeat_ping() -> ok                                                   |
+| list is too short: need at least 2 item(s) to match all expected values (order |
+|  does not matter)                                                              |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C10)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C10)  grade B ---------------------------+
+| {'key': 'unordered_siblings', 'score': 0}                                      |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C10)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C10)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C10)  grade B ---------------------------+
+| {'key': 'c10', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C11
 Grades (ask/py/ls/pe/pf/bt): `B/B/B/B/B/B`
 
@@ -125,6 +540,37 @@ Grades (ask/py/ls/pe/pf/bt): `B/B/B/B/B/B`
 - **promptfoo**: `expected at least one ticket`
 - **braintrust**: `{'key': 'c11', 'score': 0, 'note': 'expected at least one ticket'}`
 
+<details><summary>ASCII failure boxes</summary>
+
+```
++------------------------ agent_spec_kit (C11)  grade B -------------------------+
+| expected at least one ticket                                                   |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C11)  grade B --------------------------+
+| expected at least one ticket                                                   |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C11)  grade B ---------------------------+
+| expected at least one ticket                                                   |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C11)  grade B -------------------------+
+| expected at least one ticket                                                   |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C11)  grade B ---------------------------+
+| expected at least one ticket                                                   |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C11)  grade B ---------------------------+
+| {'key': 'c11', 'score': 0, 'note': 'expected at least one ticket'}             |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
+
 ### C12
 Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 
@@ -134,4 +580,43 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/D/D/B`
 - **pydantic_evals**: `AssertionError`
 - **promptfoo**: `assertion returned False`
 - **braintrust**: `{'key': 'c12', 'score': 0}`
+
+<details><summary>ASCII failure boxes</summary>
+
+```
++--------------------------- FAIL test_c12_fail [1/1] ---------------------------+
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
+| Path: $[1]                                                                     |
+| Expected: missing_element: expected expected value to appear after the previou |
+| s match                                                                        |
+| Actual:                                                                        |
+|   [0] authenticate_customer() -> ok                                            |
+| could not match expected element at index 1 while preserving order             |
+| no actual items were left to search                                            |
++--------------------------------------------------------------------------------+
+
++------------------------- pytest_plain (C12)  grade D --------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- langsmith (C12)  grade B ---------------------------+
+| {'key': 'multi_turn_memory', 'score': 0}                                       |
++--------------------------------------------------------------------------------+
+
++------------------------ pydantic_evals (C12)  grade D -------------------------+
+| AssertionError                                                                 |
++--------------------------------------------------------------------------------+
+
++--------------------------- promptfoo (C12)  grade D ---------------------------+
+| assertion returned False                                                       |
++--------------------------------------------------------------------------------+
+
++-------------------------- braintrust (C12)  grade B ---------------------------+
+| {'key': 'c12', 'score': 0}                                                     |
++--------------------------------------------------------------------------------+
+
+```
+
+</details>
 

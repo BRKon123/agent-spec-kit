@@ -29,9 +29,15 @@ from catalog import FAILURE_SPECIFICITY, FAILURE_SPECIFICITY_GRADES, SPECIMENS
 from implementations.braintrust.scorers import SCORERS
 from implementations.langsmith.evaluators import EVALUATORS as LS_EVALUATORS
 from implementations.pydantic_evals.evaluators import EVALUATORS as PE_EVALUATORS
+from shared.ask_failure_capture import ask_counterexample_for_check
 from shared.ask_specs import output_spec, tools_spec
 from shared.canonical_checks import CHECK_BY_ID
 from shared.fail_traces import fail_trace_for
+from shared.failure_box_ascii import (
+    counterexample_to_ascii_box,
+    counterexample_to_dict,
+    framework_message_to_ascii_box,
+)
 from shared.trace_helpers import walk_root_tools
 from shared.trace_io import load_trace, save_trace
 
@@ -58,7 +64,7 @@ FRAMEWORKS = [
 FAIL_DIR = _EXPR / "traces_fail"
 
 
-def _truncate(msg: str, limit: int = 400) -> str:
+def _truncate(msg: str, limit: int = 1200) -> str:
     msg = " ".join(msg.split())
     return msg if len(msg) <= limit else msg[: limit - 3] + "..."
 
@@ -239,15 +245,34 @@ def main() -> None:
         if cid != "C11":
             assert not CHECK_BY_ID[cid](fail), f"fail trace should not pass {cid}"
 
-        block: dict[str, str] = {}
+        block: dict[str, Any] = {}
+        boxes: dict[str, str] = {}
+        counterexamples: dict[str, Any] = {}
         for fw, run in runners.items():
             try:
                 msg = run(cid, fail)
             except Exception as exc:
                 msg = _truncate(f"{type(exc).__name__}: {exc}")
             block[fw] = msg
+            grade = FAILURE_SPECIFICITY[cid][fw]
+            if fw == "agent_spec_kit" and cid != "C11":
+                try:
+                    cx = ask_counterexample_for_check(cid)
+                    counterexamples[fw] = counterexample_to_dict(cx)
+                    boxes[fw] = counterexample_to_ascii_box(
+                        cx, title=f"test_{cid.lower()}_fail [1/1]"
+                    )
+                except Exception as exc:
+                    boxes[fw] = framework_message_to_ascii_box(
+                        fw, cid, f"{type(exc).__name__}: {exc}", grade=grade
+                    )
+            else:
+                boxes[fw] = framework_message_to_ascii_box(fw, cid, msg, grade=grade)
         grades = FAILURE_SPECIFICITY[cid]
         block["_grades"] = "/".join(grades[fw] for fw in FRAMEWORKS)
+        block["_boxes"] = boxes
+        if counterexamples:
+            block["_counterexamples"] = counterexamples
         samples[cid] = block
 
     out = _EXPR / "failures_samples.yaml"
@@ -279,6 +304,16 @@ def main() -> None:
         rep_lines.append("")
         for fw in FRAMEWORKS:
             rep_lines.append(f"- **{fw}**: `{samples[cid][fw]}`")
+        rep_lines.append("")
+        rep_lines.append("<details><summary>ASCII failure boxes</summary>")
+        rep_lines.append("")
+        rep_lines.append("```")
+        for fw in FRAMEWORKS:
+            rep_lines.append(samples[cid].get("_boxes", {}).get(fw, ""))
+            rep_lines.append("")
+        rep_lines.append("```")
+        rep_lines.append("")
+        rep_lines.append("</details>")
         rep_lines.append("")
     report.write_text("\n".join(rep_lines) + "\n", encoding="utf-8")
     print(f"wrote {report}")

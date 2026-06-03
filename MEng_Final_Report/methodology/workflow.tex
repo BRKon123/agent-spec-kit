@@ -7,15 +7,12 @@ The framework is meant to be used repeatedly during agent development: run suite
 
 The entry point \texttt{agent-spec-kit run PATH} discovers scenarios, resolves fixtures, executes jobs (optionally in parallel with \texttt{-n}), and writes results under \texttt{.agent\_spec\_kit/}. Runs can be grouped with \texttt{--experiment NAME} so later comparisons treat them as comparable buckets. Commands \texttt{runs} and \texttt{show RUN\_ID} list stored runs and summarise failures without opening the browser.
 
-When an assertion fails, the terminal prints a counterexample panel aligned with the web failure card: headline, location detail, path, expected and actual summaries, and a Rich event tree. Figure~\ref{fig:cli-failure-panel} is a placeholder for a captured CLI failure panel.
+When an assertion fails, the terminal prints a counterexample panel aligned with the web failure card: headline, location detail, path, expected and actual summaries, and a Rich event tree (Figure~\ref{fig:cli-failure-panel}).
 
 \begin{figure}[htbp]
   \centering
-  \fbox{\parbox{0.92\textwidth}{\centering\vspace{2.5cm}
-  \textbf{Placeholder: CLI failure panel}\\
-  \small \texttt{agent-spec-kit run PATH}
-  \vspace{2.5cm}}}
-  \caption{CLI counterexample output (placeholder): same core fields as the web FailureCard.}
+  \includegraphics[width=0.92\textwidth]{figures/rich_console_failure_output.png}
+  \caption{CLI counterexample output for a failing \texttt{assert\_tool\_calls} check: same core fields as the web FailureCard.}
   \label{fig:cli-failure-panel}
 \end{figure}
 
@@ -23,44 +20,27 @@ Each run records git metadata, command line, and gzipped transcript and countere
 
 \subsection{Web Results Browser}
 
-The command \texttt{agent-spec-kit ui} serves a read-only React application over the local store. Figure~\ref{fig:ui-runs-list} shows the runs list with experiment and status filters. Figure~\ref{fig:ui-run-detail} shows the scenario-and-repeat table for one run; clicking a row opens the trace drawer in Figure~\ref{fig:ui-trace-drawer} with a failure card and collapsible event tree. JSON fields on tool nodes can be toggled without leaving the page.
+The command \texttt{agent-spec-kit ui} serves a read-only React application over the local store. Figure~\ref{fig:ui-runs-list} shows the runs list with experiment and status filters. Figure~\ref{fig:ui-run-detail} shows the scenario-and-repeat table on run detail; generative scenarios with multiple fuzz trials can be expanded in place so each trial appears as a sub-row beneath the parent scenario, and clicking a trial row opens the same trace drawer as a normal repeat. Figure~\ref{fig:ui-trace-drawer} shows that drawer with a FailureCard, final output summary, and collapsible event tree; JSON fields on tool nodes can be toggled without leaving the page.
 
 \begin{figure}[htbp]
   \centering
-  \fbox{\parbox{0.88\textwidth}{\centering\vspace{2cm}
-  \textbf{Placeholder: Runs list (\texttt{/})}
-  \vspace{2cm}}}
-  \caption{Runs list page (placeholder).}
+  \includegraphics[width=0.92\textwidth]{figures/runs_page_ui.png}
+  \caption{Runs list with experiment and status filters and a column picker.}
   \label{fig:ui-runs-list}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \fbox{\parbox{0.88\textwidth}{\centering\vspace{2cm}
-  \textbf{Placeholder: Run detail (\texttt{/runs/:runId})}
-  \vspace{2cm}}}
-  \caption{Run detail: scenario and repeat rows (placeholder).}
+  \includegraphics[width=0.88\textwidth]{figures/fuzz_trials_scenario_expansion_view.png}
+  \caption{Run detail with a fuzz scenario expanded to show per-trial sub-rows; each trial can be opened in the trace drawer like a standard repeat.}
   \label{fig:ui-run-detail}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \fbox{\parbox{0.88\textwidth}{\centering\vspace{2cm}
-  \textbf{Placeholder: Trace drawer with FailureCard and TraceTree}
-  \vspace{2cm}}}
-  \caption{Trace drawer for a failing repeat (placeholder).}
+  \includegraphics[width=0.88\textwidth]{figures/agent_trace_and_failure_right_panel.png}
+  \caption{Trace drawer for a failing repeat: FailureCard, final output, and collapsible event tree.}
   \label{fig:ui-trace-drawer}
-\end{figure}
-
-Fuzz-heavy runs also expose a trials panel so individual generated dialogues can be opened with the same trace machinery. Figure~\ref{fig:ui-fuzz-trials} is a placeholder for that view when a run includes \texttt{fuzz\_conversation} steps.
-
-\begin{figure}[htbp]
-  \centering
-  \fbox{\parbox{0.88\textwidth}{\centering\vspace{2cm}
-  \textbf{Placeholder: Fuzz trials panel on run detail}
-  \vspace{2cm}}}
-  \caption{Fuzz trials table with per-trial trace links (placeholder).}
-  \label{fig:ui-fuzz-trials}
 \end{figure}
 
 The UI is read-only over the local SQLite store started by \texttt{agent-spec-kit ui --open}. It complements Langfuse-style production tracing (Chapter~\ref{chap:related-work}) but stays assertion-first: the FailureCard mirrors the CLI counterexample fields rather than asking the developer to infer expectations from spans alone.
@@ -68,15 +48,12 @@ The UI is read-only over the local SQLite store started by \texttt{agent-spec-ki
 \subsection{Compare Page and Regression Workflow}
 \label{sec:ui-compare}
 
-After changing an agent, rerunning the same scenarios under a new experiment name and opening the Compare page answers a practical question: which cases flipped between pass and fail? The route \texttt{/compare?experiments=baseline\_v1,baseline\_v2} syncs experiment slots to the query string so a comparison view can be bookmarked or shared within a team. Rows align on scenario keys; columns show the latest repeat status per experiment; cells with differing pass/fail are highlighted so regressions stand out without opening every trace. Clicking a cell opens the trace drawer for that experiment's repeat on the scenario, reusing the same FailureCard and TraceTree components as run detail.
+After changing an agent, rerunning the same scenarios under a new experiment name and opening the Compare page answers a practical question: which cases flipped between pass and fail? The route \texttt{/compare?experiments=v1,v3} syncs experiment slots to the query string so a comparison view can be bookmarked or shared within a team. Rows align on scenario keys; columns show the latest repeat status per experiment; rows with differing pass/fail are highlighted so regressions stand out without opening every trace. Clicking a cell opens the trace drawer for that experiment's repeat on the scenario, reusing the same FailureCard and TraceTree components as run detail.
 
 \begin{figure}[htbp]
   \centering
-  \fbox{\parbox{0.92\textwidth}{\centering\vspace{2.8cm}
-  \textbf{Placeholder: Compare page}\\
-  \small Two experiments; mismatched cells highlighted
-  \vspace{2.8cm}}}
-  \caption{Compare view across experiments (placeholder).}
+  \includegraphics[width=0.92\textwidth]{figures/compare_page_ui.png}
+  \caption{Compare view across two experiments; rows with mismatched status are highlighted.}
   \label{fig:ui-compare}
 \end{figure}
 
