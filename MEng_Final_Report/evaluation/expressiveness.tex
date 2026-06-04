@@ -28,7 +28,7 @@ C12 & Multi-turn state memory & T46 \\
 \end{tabular}
 \end{table}
 
-Each port implements the same intentional negative fixture; when the check fails, we record the failure message and grade its diagnostic quality.
+Each port implements the same intentional negative fixture. Golden behaviour is frozen in \texttt{traces/}; intentional violations are built in \texttt{fail\_traces.py} (one policy break per specimen). Failure messages are captured by running each framework's native check code on those JSON traces in-process---no live agent loop---so diagnostics reflect evaluator/scorer output, not a full LangSmith/Promptfoo production run.
 
 \subsection{Authoring effort}
 
@@ -43,23 +43,146 @@ Table~\ref{tab:expressiveness-loc} counts non-comment lines of check logic per f
 \toprule
 Check type & ask & py & ls & pe & pf & bt \\
 \midrule
-Final output rubric & 1 & 4 & 4 & 4 & 4 & 4 \\
-Structured object shape & 20 & 15 & 15 & 14 & 14 & 15 \\
-Conditional object rule & 24 & 10 & 9 & 9 & 9 & 9 \\
-Numeric / regex field & 16 & 13 & 13 & 13 & 13 & 13 \\
-Ordered tool sequence & 11 & 5 & 5 & 4 & 4 & 5 \\
-Forbidden tool-call & 4 & 1 & 1 & 1 & 1 & 1 \\
-Tool argument matching & 14 & 12 & 8 & 8 & 8 & 8 \\
-Tool result matching & 20 & 12 & 12 & 11 & 11 & 12 \\
-Nested tool matching & 16 & 5 & 5 & 5 & 5 & 5 \\
-Unordered sibling tools & 8 & 2 & 2 & 2 & 2 & 2 \\
-Final-state assertion & 5 & 12 & 12 & 12 & 12 & 12 \\
-Multi-turn memory & 12 & 22 & 22 & 22 & 22 & 22 \\
+Final output rubric & 8 & 4 & 4 & 7 & 4 & 4 \\
+Structured object shape & 20 & 15 & 18 & 23 & 9 & 17 \\
+Conditional object rule & 24 & 10 & 11 & 30 & 9 & 8 \\
+Numeric / regex field & 16 & 13 & 16 & 9 & 8 & 15 \\
+Ordered tool sequence & 11 & 5 & 17 & 12 & 6 & 7 \\
+Forbidden tool-call & 4 & 1 & 2 & 2 & 2 & 2 \\
+Tool argument matching & 14 & 12 & 12 & 15 & 12 & 12 \\
+Tool result matching & 20 & 12 & 18 & 10 & 9 & 17 \\
+Nested tool matching & 16 & 5 & 5 & 13 & 7 & 9 \\
+Unordered sibling tools & 8 & 2 & 11 & 7 & 4 & 3 \\
+Final-state assertion & 5 & 12 & 12 & 12 & 12 & 13 \\
+Multi-turn memory & 14 & 22 & 23 & 29 & 18 & 21 \\
 \midrule
-\textbf{Total} & \textbf{151} & \textbf{113} & \textbf{108} & \textbf{105} & \textbf{105} & \textbf{108} \\
+\textbf{Total} & \textbf{160} & \textbf{113} & \textbf{149} & \textbf{169} & \textbf{100} & \textbf{128} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Authoring clarity (LLM-judged)}
+
+The LOC table measures authoring size; a complementary study asks how clear the \emph{same} inlined check ports are to a maintainer: test intent, the flow of user messages and checks in the scenario, and how easy the code is to follow (tools, properties, and objects under assertion). We extract the non-comment lines between \texttt{CHECK\_START} and \texttt{CHECK\_END} in each framework port (seventy-two cells: twelve specimens $\times$ six frameworks) and assign one combined A--D grade per cell with \texttt{openai:gpt-5-mini} under a strict intent-based rubric (Table~\ref{tab:authoring-clarity-rubric}, Table~\ref{tab:expressiveness-authoring-clarity}). Letter grades are \textbf{A best, D worst}; \textbf{A} is reserved for specification-like excerpts with visible scenario shape, not trace-only validators. This is orthogonal to Table~\ref{tab:expressiveness-loc} and to failure-specificity grading (Table~\ref{tab:specificity-rubric}), which rates \emph{failure messages}, not authoring code.
+
+\begin{table}[htbp]
+\centering
+\caption{Authoring-clarity rubric (A best, D worst). One combined grade from the inlined snippet and canonical policy; reflects reading cost, not post-hoc reconstruction.}
+\label{tab:authoring-clarity-rubric}
+\small
+\begin{tabular}{@{}lp{8.8cm}@{}}
+\toprule
+Lens & Question \\
+\midrule
+Immediate grasp & On first read, is the policy under test apparent without simulating long control-flow paths? \\
+Scenario shape & Is it visible what is sent to the agent and how checks attach (vs.\ trace-only post-processing)? \\
+Surface form & Are constraints stated directly, or spread across lookups, guards, and type reshaping? \\
+\midrule
+Grade & Combined clarity \\
+\midrule
+A & Policy and scenario structure apparent at a glance; checks read as specifications \\
+B & Mostly clear; one modest procedural or contextual layer before the policy clicks \\
+C & Policy only after several mechanical steps; weak stimulus or flow in the excerpt \\
+D & Excerpt does not convey what is tested, what the agent saw, or which properties matter \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Authoring-clarity grade by check and framework (LLM-judged, A--D).}
+\label{tab:expressiveness-authoring-clarity}
+\footnotesize
+\begin{tabular}{@{}p{3.2cm}cccccc@{}}
+\toprule
+Check & ask & py & ls & pe & pf & bt \\
+\midrule
+Final output rubric & A & B & B & B & B & B \\
+Structured object & A & B & B & B & B & B \\
+Conditional object & A & B & B & B & B & B \\
+Numeric / regex & A & B & B & B & B & B \\
+Ordered sequence & A & C & B & B & B & B \\
+Forbidden tool & A & B & B & B & C & B \\
+Tool arguments & A & B & B & B & B & B \\
+Tool result & A & B & B & B & B & B \\
+Nested tools & A & B & B & B & B & B \\
+Unordered siblings & A & C & B & B & B & B \\
+Final-state & A & A & B & A & A & B \\
+Multi-turn memory & A & B & B & B & B & B \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Listing~\ref{lst:c02-clarity-contrast} contrasts three \emph{ways} of stating the same C02 policy (structured specialist result): a scenario specification, imperative trace inspection, and declarative eval-config assertions. The rubric rewards how quickly a maintainer grasps policy and scenario shape when \emph{reading} the excerpt---not whether the logic is equivalent after working through transforms or helpers.
+
+\subsubsection{Illustrative contrast: structured object shape (C02)}
+
+Specimen C02 requires \texttt{run\_network\_diagnostics\_specialist.result} to contain exactly \texttt{severity}, \texttt{recommended\_action}, and \texttt{escalation\_reason}, with values \texttt{high}, \texttt{create\_ticket}, and a non-empty reason. The same constraint can be expressed as (i)~a scenario block that ties a user turn to an expected tool \texttt{result} object, (ii)~Python that locates the tool in a frozen trace and asserts field-wise, or (iii)~Promptfoo YAML that \emph{transforms} provider output to the specialist JSON slice and applies an \texttt{is-json} schema. LangSmith and Pydantic Evals use the same underlying idea as (ii) or schema validation in code. Promptfoo is attractive when a built-in assert type fits exactly; the downside is that anything custom---finding the right tool in a trace, conditional field rules, nested children---must be written as JavaScript embedded inside YAML strings (\texttt{transform} blocks or \texttt{assert: javascript}), which is awkward to author and review compared with keeping assertions in one language and file.
+
+\begin{lstlisting}[caption={C02 structured object: scenario DSL, imperative pytest, and Promptfoo config (grades in Table~\ref{tab:expressiveness-authoring-clarity}).},label=lst:c02-clarity-contrast]
++------------------------ agent_spec_kit (C02)  grade A -------------------------+
+| (
+|     s.user_message("check")
+|     .assert_tool_calls(
+|         [
+|             m.tool_call(
+|                 "run_network_diagnostics_specialist",
+|                 result=m.object(
+|                     {
+|                         "severity": m.one_of("high"),
+|                         "recommended_action": m.one_of("create_ticket"),
+|                         "escalation_reason": m.string(min_len=1),
+|                     },
+|                     extra="forbid",
+|                 ),
+|             ),
+|         ],
+|         ordered=True,
+|         allow_extras=True,
+|     )
+| )
++--------------------------------------------------------------------------------+
++------------------------- pytest_plain (C02)  grade B --------------------------+
+| tool = find_tool(walk_root_tools(trace), "run_network_diagnostics_specialist")
+| if tool is None:
+|     assert False
+| r = tool.get("result")
+| if not isinstance(r, dict):
+|     assert False
+| keys = set(r.keys())
+| if keys != _C02_REQUIRED_KEYS:
+|     assert False
+| ok = (
+|     r.get("severity") == "high"
+|     and r.get("recommended_action") == "create_ticket"
+|     and len(str(r.get("escalation_reason", ""))) >= 1
+| )
+| assert ok
++--------------------------------------------------------------------------------+
++--------------------------- promptfoo (C02)  grade B ---------------------------+
+|   - vars: {check_id: C02}                                                      |
+|     options:                                                                   |
+|       transform: |                                                             |
+|         (() => {                                                               |
+|           const trace = JSON.parse(output);                                    |
+|           const t = (trace.tools || []).find(                                  |
+|             (x) => x.name === 'run_network_diagnostics_specialist');          |
+|           return JSON.stringify(t?.result ?? null);                            |
+|         })()                                                                   |
+|     assert:                                                                    |
+|       - type: is-json                                                          |
+|         value:                                                                 |
+|           type: object                                                         |
+|           additionalProperties: false                                          |
+|           required: [severity, recommended_action, escalation_reason]        |
+|           properties:                                                          |
+|             severity: { const: high }                                          |
+|             recommended_action: { const: create_ticket }                       |
+|             escalation_reason: { type: string, minLength: 1 }                  |
++--------------------------------------------------------------------------------+
+\end{lstlisting}
+
+In Table~\ref{tab:expressiveness-authoring-clarity}, only the \emph{agent-spec-kit} port scores \textbf{A} on C02: the user turn and every field constraint appear in one declarative matcher block. Pytest and Promptfoo both score \textbf{B}: pytest spells the policy as imperative guards on a trace dict; Promptfoo splits \emph{where to read} (JavaScript \texttt{transform} on provider output) from \emph{what must hold} (\texttt{is-json} schema)---concise for this specimen, but still without agent stimulus in the graded lines and already relying on inline JS for the tool lookup. On other specimens in the same port (e.g.\ C03 conditional billing, C09 nested children), the CHECK region is entirely \texttt{javascript} asserts because YAML has no matching primitive---readable LOC counts understate how unpleasant that authoring style is. Pydantic Evals, LangSmith, and Braintrust also score \textbf{B} on C02. Promptfoo has the lowest check LOC here (nine non-comment lines in the YAML \texttt{CHECK} region) when the policy maps cleanly to \texttt{is-json}; that brevity does not carry over to checks that force custom script in config.
 
 \subsection{Failure specificity on negative fixtures}
 
@@ -75,8 +198,8 @@ Grade & What the developer sees \\
 \midrule
 A & Exact JSON path and expected-vs-actual witness (matcher counterexample) \\
 B & Violated rule, tool, or field named in plain text (no structured path) \\
-C & Turn, step, or span index only (which step failed, not which field) \\
-D & Generic \texttt{AssertionError}, \texttt{score: 0}, or validation error class only \\
+C & Named evaluator/scorer key or check category only (\texttt{score: 0} dict), no tool/field witness \\
+D & Generic \texttt{AssertionError}, empty assert, or class-only validation with no field witness \\
 E & Opaque pass/fail boolean with no diagnostic detail \\
 \bottomrule
 \end{tabular}
@@ -91,29 +214,29 @@ E & Opaque pass/fail boolean with no diagnostic detail \\
 \toprule
 Check & ask & py & ls & pe & pf & bt \\
 \midrule
-Final output rubric & A & B & B & B & D & B \\
-Structured object & A & B & B & B & D & B \\
-Conditional object & A & B & B & B & D & B \\
-Numeric / regex & A & B & B & B & D & B \\
-Ordered sequence & A & D & B & D & D & B \\
-Forbidden tool & A & D & B & D & D & B \\
-Tool arguments & A & B & B & B & D & B \\
-Tool result & A & B & B & B & D & B \\
-Nested tools & A & B & B & B & D & B \\
-Unordered siblings & A & D & B & D & D & B \\
+Final output rubric & A & D & B & B & B & B \\
+Structured object & A & D & B & B & B & B \\
+Conditional object & A & D & B & B & B & B \\
+Numeric / regex & A & D & B & B & B & B \\
+Ordered sequence & A & D & B & B & B & B \\
+Forbidden tool & A & D & C & B & B & C \\
+Tool arguments & A & B & B & B & B & B \\
+Tool result & A & D & B & B & B & B \\
+Nested tools & A & D & B & B & B & B \\
+Unordered siblings & A & D & B & B & B & B \\
 Final-state & B & B & B & B & B & B \\
-Multi-turn memory & A & D & B & D & D & B \\
+Multi-turn memory & A & D & B & B & B & B \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Illustrative failure messages}
 
-For four trace-shaped specimens (C05, C06, C07, C10), each framework port was run on the same intentional fail trace; Listing~\ref{lst:c05-failures}--\ref{lst:c10-failures} show the captured ASCII failure boxes (all frameworks use the same graded header format; agent-spec-kit boxes are rendered from the library \texttt{Counterexample} object, other frameworks from the compact wrapper in the expressiveness harness). The appendix lists the remaining specimens side by side.
+For four trace-shaped specimens (C05, C06, C07, C10), each framework port was run on the same intentional fail trace; Listing~\ref{lst:c05-failures}--\ref{lst:c10-failures} show representative captured messages (agent-spec-kit from \texttt{Counterexample}; LangSmith/Braintrust from scorer dicts; Pydantic Evals and Promptfoo from native evaluator/assert output on the frozen trace). The appendix lists the remaining specimens side by side.
 
 \subsubsection{Ordered tool sequence (C05)}
 
-\begin{lstlisting}[caption={C05 ordered tool sequence: captured failure boxes (agent-spec-kit, pytest, LangSmith).},label=lst:c05-failures]
+\begin{lstlisting}[caption={C05 ordered tool sequence: captured failure messages (selected frameworks).},label=lst:c05-failures]
 +------------------------ agent_spec_kit (C05)  grade A -------------------------+
 | Check: assert_tool_calls                                                       |
 | Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
@@ -131,6 +254,12 @@ For four trace-shaped specimens (C05, C06, C07, C10), each framework port was ru
 +--------------------------------------------------------------------------------+
 +--------------------------- langsmith (C05)  grade B ---------------------------+
 | {'key': 'ordered_sequence', 'score': 0}                                        |
++--------------------------------------------------------------------------------+
++------------------------ pydantic_evals (C05)  grade B -------------------------+
+| tool sequence expected ['authenticate_customer', 'get_outage_status'], ...     |
++--------------------------------------------------------------------------------+
++--------------------------- promptfoo (C05)  grade B ---------------------------+
+| trajectory:tool-sequence in_order failed for steps [...]                       |
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
@@ -151,8 +280,17 @@ For four trace-shaped specimens (C05, C06, C07, C10), each framework port was ru
 +------------------------- pytest_plain (C06)  grade D --------------------------+
 | AssertionError                                                                 |
 +--------------------------------------------------------------------------------+
-+--------------------------- langsmith (C06)  grade B ---------------------------+
++--------------------------- langsmith (C06)  grade C ---------------------------+
 | {'key': 'forbidden_tools', 'score': 0}                                         |
++--------------------------------------------------------------------------------+
++------------------------ pydantic_evals (C06)  grade B -------------------------+
+| forbidden span apply_bill_credit present                                       |
++--------------------------------------------------------------------------------+
++--------------------------- promptfoo (C06)  grade B ---------------------------+
+| not-trajectory:tool-used: forbidden tool apply_bill_credit present              |
++--------------------------------------------------------------------------------+
++--------------------------- braintrust (C06)  grade C ---------------------------+
+| {'key': 'C06', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
@@ -180,6 +318,12 @@ For four trace-shaped specimens (C05, C06, C07, C10), each framework port was ru
 +--------------------------- langsmith (C07)  grade B ---------------------------+
 | {'key': 'tool_args', 'score': 0}                                               |
 +--------------------------------------------------------------------------------+
++------------------------ pydantic_evals (C07)  grade B -------------------------+
+| get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'               |
++--------------------------------------------------------------------------------+
++--------------------------- promptfoo (C07)  grade B ---------------------------+
+| trajectory:tool-args-match get_line_status.line_id expected 'LINE-001', ...  |
++--------------------------------------------------------------------------------+
 \end{lstlisting}
 
 \subsubsection{Unordered sibling tools (C10)}
@@ -200,8 +344,11 @@ For four trace-shaped specimens (C05, C06, C07, C10), each framework port was ru
 +--------------------------- langsmith (C10)  grade B ---------------------------+
 | {'key': 'unordered_siblings', 'score': 0}                                      |
 +--------------------------------------------------------------------------------+
-+--------------------------- promptfoo (C10)  grade D ---------------------------+
-| assertion returned False                                                       |
++------------------------ pydantic_evals (C10)  grade B -------------------------+
+| tool sequence expected ['heartbeat_ping', 'get_line_status'], ...              |
++--------------------------------------------------------------------------------+
++--------------------------- promptfoo (C10)  grade B ---------------------------+
+| trajectory:tool-used: missing tools ['get_line_status']                        |
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 

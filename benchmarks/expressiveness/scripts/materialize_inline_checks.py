@@ -433,22 +433,11 @@ def emit_promptfoo_yaml() -> str:
 
 
 def main() -> None:
-    impl = _EXPR / "implementations"
-    (impl / "pytest_plain" / "test_canonical_checks.py").write_text(emit_pytest(), encoding="utf-8")
-    (impl / "langsmith" / "evaluators.py").write_text(emit_langsmith(), encoding="utf-8")
-    (impl / "pydantic_evals" / "evaluators.py").write_text(emit_pydantic(), encoding="utf-8")
-    (impl / "braintrust" / "scorers.py").write_text(emit_braintrust(), encoding="utf-8")
-
-    pf = impl / "promptfoo"
-    for old in pf.glob("assert_*.py"):
-        old.unlink()
-    for cid, slug, fn in CHECK_FUNCS:
-        (pf / f"assert_{slug}.py").write_text(emit_promptfoo_assert(cid, fn), encoding="utf-8")
-    (pf / "promptfooconfig.yaml").write_text(emit_promptfoo_yaml(), encoding="utf-8")
-    if (pf / "assert_canonical.py").is_file():
-        (pf / "assert_canonical.py").unlink()
-
-    print("materialized inline checks for pytest, langsmith, pydantic_evals, braintrust, promptfoo")
+    """All framework ports are hand-maintained native implementations (see NATIVE_PORT_POLICY.md)."""
+    print(
+        "materialize_inline_checks.py no longer overwrites ports. "
+        "Edit implementations/*/ directly; canonical_checks.py is parity oracle only."
+    )
 
 
 if __name__ == "__main__":

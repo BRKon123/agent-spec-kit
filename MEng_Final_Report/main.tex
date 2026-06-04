@@ -12,6 +12,9 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{needspace}
+\usepackage{mdframed}
+\usepackage{etoolbox}
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{array}
@@ -28,7 +31,24 @@
   frame=single,
   columns=fullflexible,
   keepspaces=true,
+  aboveskip=\baselineskip,
+  belowskip=\baselineskip,
 }
+%% Keep each listing block on one page (no split across page breaks).
+\surroundwithmdframed[
+  nobreak=true,
+  linewidth=0pt,
+  innerleftmargin=0pt,
+  innerrightmargin=0pt,
+  innertopmargin=0pt,
+  innerbottommargin=0pt,
+  leftmargin=0pt,
+  rightmargin=0pt,
+  skipabove=\baselineskip,
+  skipbelow=\baselineskip,
+]{lstlisting}
+%% If less than ~45\% of the page remains, start the listing on a fresh page.
+\BeforeBeginEnvironment{lstlisting}{\Needspace{0.45\textheight}}
 %% For bibliography
 \setcounter{secnumdepth}{3}
 

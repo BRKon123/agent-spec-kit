@@ -1,0 +1,9 @@
+{
+  "generated_utc": "2026-06-04T11:13:07.588940+00:00",
+  "model": "openai:gpt-5-mini",
+  "cell_count": 72,
+  "scored_ok": 72,
+  "cached": 0,
+  "llm_errors": 0,
+  "force_rescore": true
+}

@@ -1,7 +1,6 @@
 # Canonical oracle semantics (C01–C12)
 
-All frameworks must enforce the same policy with the full check logic inlined
-inside `# CHECK_START` / `# CHECK_END` in each port file. [`shared/canonical_checks.py`](shared/canonical_checks.py) is the reference copy used by uniformity tests; run `scripts/materialize_inline_checks.py` to sync imperative ports from it.
+All frameworks must enforce the same policy with check logic inlined inside `# CHECK_START` / `# CHECK_END` in each port file, written with **that framework’s native tools** (see [`NATIVE_PORT_POLICY.md`](NATIVE_PORT_POLICY.md)). [`shared/canonical_checks.py`](shared/canonical_checks.py) is the semantic oracle for golden-trace parity tests. `scripts/materialize_inline_checks.py` regenerates **pytest** only.
 
 | ID | Policy (what every framework checks) |
 |----|--------------------------------------|

@@ -9,9 +9,9 @@ Framework order in rows: **ask / py / ls / pe / pf / bt**.
 | Grade | When we assign it |
 | --- | --- |
 | **A** | Stable location in the trace/value **plus** expected vs actual (or equivalent path witness). |
-| **B** | Plain-language rule or field violation **or** named evaluator/scorer key — but **no** path-level witness. |
-| **C** | Only position/step/index without field-level expected/actual. *(No pure C in these captures.)* |
-| **D** | Generic shell: bare `AssertionError`, `assertion returned False`, or `score: 0` with no useful detail. |
+| **B** | Plain-language rule, tool, field, or value slice in the message (e.g. forbidden tool name, `line_id` expected/got, validation path) — **no** structured JSON path witness. |
+| **C** | Only which check/scorer failed (evaluator `key` + `score: 0`, assert type label) **without** naming the violating tool, field, or expected/actual values. |
+| **D** | Generic shell: bare `AssertionError`, empty assert, or class-only validation with no field witness. |
 | **E** | Opaque boolean only. *(None observed.)* |
 
 ---
@@ -97,12 +97,12 @@ Framework order in rows: **ask / py / ls / pe / pf / bt**.
 | --- | --- | ---: | --- |
 | ask | `path=$[1]` `forbidden_tool_call` — expected no `apply_bill_credit`, actual credit tool at index 1 | **A** | Path + forbidden tool name + index + actual call. |
 | pytest | `AssertionError` (empty) | **D** | Forbidden tool hit but not named in exception. |
-| langsmith | `forbidden_tools`, score 0 | **B** | Policy category only; no tool name/index. |
-| pydantic | `AssertionError` (empty) | **D** | Same as pytest. |
-| promptfoo | `assertion returned False` | **D** | Generic assertion failure. |
-| braintrust | `c06`, score 0 | **B** | Named scorer only. |
+| langsmith | `forbidden_tools`, score 0 | **C** | Evaluator key only; no forbidden tool name or index in message. |
+| pydantic | `forbidden span apply_bill_credit present` | **B** | Names the forbidden tool in plain text. |
+| promptfoo | `not-trajectory:tool-used: forbidden tool apply_bill_credit present` | **B** | Names forbidden tool and assert kind. |
+| braintrust | `C06`, score 0 | **C** | Scorer id + score only; no tool witness. |
 
-**Row:** `A/D/B/D/D/B`
+**Row:** `A/D/C/B/B/C`
 
 ---
 

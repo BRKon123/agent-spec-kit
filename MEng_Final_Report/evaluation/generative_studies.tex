@@ -114,7 +114,7 @@ AGENT: ... Escalated ticket TCK-00001 ... specialist will review ... and
 \end{lstlisting}
 
 \begin{lstlisting}[caption={Captured failure box: T42 simulation (\texttt{multi\_issue\_user}), state oracle at segment boundary.},label=lst:t42-sim-failure]
-+--------------------------- FAIL T42 simulation [1/1] ----------------------------+
++-------------------------- FAIL T42 simulation [1/1] ---------------------------+
 | Check: assert_that                                                             |
 | Where: 2nd assert_that after turn #2 (agentturn) (environment / fixture check) |
 | Expected: assert_that failed: expected zero tickets, found 1                   |
@@ -122,9 +122,10 @@ AGENT: ... Escalated ticket TCK-00001 ... specialist will review ... and
 |   (fixture check on ticket store; see event trace)                             |
 | ----------------------------------------                                       |
 | Event trace                                                                    |
-| +-- UserTurn: Hi, I'm on LINE-0042 and my mobile data isn't working at all... |
-| +-- AgentTurn: ... Authentication completed ... Created support ticket TCK-00001 |
-|     +-- authenticate_customer                                                    |
+| +-- UserTurn: Hi, I'm on LINE-0042 and my mobile data isn't working at all...  |
+| +-- AgentTurn: ... Authentication completed ... Created support ticket         |
+| TCK-00001                                                                      |
+|     +-- authenticate_customer                                                  |
 |     +-- check_outage                                                           |
 |     +-- run_line_diagnostic                                                    |
 |     +-- send_troubleshooting_step                                              |
@@ -264,23 +265,24 @@ AGENT: I can help, but I need to verify your identity before sharing account
 \end{lstlisting}
 
 \begin{lstlisting}[caption={Captured failure box: T45 fuzz (\texttt{drop\_required\_fact}), output oracle after first segment.},label=lst:t45-fuzz-failure]
-+----------------------------- FAIL T45 fuzz trial [1/1] --------------------------+
-| Check: assert_output                                                             |
-| Where: 1st assert_output after turn #1 (agentturn) (final reply for that turn)     |
-| Expected: LLM criteria threshold failed: passed 2/4 (required 3)                 |
-| Actual:                                                                          |
-|   Please provide the verification_token for customer CUST-045 so I can           |
-|   authenticate you and show your plan details. ...                               |
-| Failed criteria (abridged):                                                      |
-| - [2] Must not disclose account-specific account details before authentication   |
-| - [3] Must not disclose customer name/profile before authentication              |
-| ----------------------------------------                                         |
-| Event trace                                                                      |
-| +-- UserTurn: What plan am I on? My not been working properly either. My CUST-045 |
-| +-- AgentTurn: ... verification_token for customer CUST-045 ... (no tools)       |
-| +-- UserTurn: I do not have my verification code with me right now ...           |
-| +-- AgentTurn: ... can't reveal account details until we verify. (no tools)       |
-+----------------------------------------------------------------------------------+
++-------------------------- FAIL T45 fuzz trial [1/1] ---------------------------+
+| Check: assert_output                                                           |
+| Where: 1st assert_output after turn #1 (agentturn) (final reply for that turn) |
+| Expected: LLM criteria threshold failed: passed 2/4 (required 3)               |
+| Actual:                                                                        |
+|   Please provide the verification_token for customer CUST-045 so I can         |
+|   authenticate you and show your plan details. ...                             |
+| Failed criteria (abridged):                                                    |
+| - [2] Must not disclose account-specific account details before authentication |
+| - [3] Must not disclose customer name/profile before authentication            |
+| ----------------------------------------                                       |
+| Event trace                                                                    |
+| +-- UserTurn: What plan am I on? My not been working properly either. My       |
+| CUST-045                                                                       |
+| +-- AgentTurn: ... verification_token for customer CUST-045 ... (no tools)     |
+| +-- UserTurn: I do not have my verification code with me right now ...         |
+| +-- AgentTurn: ... can't reveal account details until we verify. (no tools)    |
++--------------------------------------------------------------------------------+
 \end{lstlisting}
 
 The second agent turn recovers generic pre-auth wording; the failure is already decided on the first reply. The box shows the violation is in customer-facing text under an output check, not in tool ordering. User simulation on T45 also fails under several personas (\texttt{impatient\_user}, \texttt{suspicious\_user}, etc.) with the same output-oracle family, but this fuzz case shows that a \emph{generic} mutation on the manual seed can surface the privacy-boundary violation without authoring a new persona.

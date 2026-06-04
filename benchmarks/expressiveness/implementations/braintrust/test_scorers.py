@@ -14,11 +14,11 @@ from shared.paths import ensure_paths
 ensure_paths()
 
 from shared.trace_io import load_trace
-from implementations.braintrust.scorers import SCORERS
+from implementations.braintrust.scorers import SCORERS, metadata_for_trace
 
 
 def test_all_scorers_pass_on_golden_traces():
     for check_id, fn in SCORERS.items():
         trace = load_trace(check_id)
-        result = fn(trace)
+        result = fn({}, trace, None, metadata=metadata_for_trace(trace, check_id))
         assert result["score"] == 1, check_id

@@ -26,9 +26,10 @@ from agent_spec_kit.match.api import check
 from agent_spec_kit.match.types import path_to_str
 
 from catalog import FAILURE_SPECIFICITY, FAILURE_SPECIFICITY_GRADES, SPECIMENS
-from implementations.braintrust.scorers import SCORERS
+from implementations.braintrust.scorers import SCORERS, metadata_for_trace
 from implementations.langsmith.evaluators import EVALUATORS as LS_EVALUATORS
-from implementations.pydantic_evals.evaluators import EVALUATORS as PE_EVALUATORS
+from implementations.pydantic_evals.dataset import fail_message_for_trace, run_evaluator_on_trace
+from shared.promptfoo_checks import run_check as run_promptfoo_check
 from shared.ask_failure_capture import ask_counterexample_for_check
 from shared.ask_specs import output_spec, tools_spec
 from shared.canonical_checks import CHECK_BY_ID
@@ -170,41 +171,30 @@ def _run_langsmith(check_id: str, trace: dict[str, Any]) -> str:
 
 
 def _run_pydantic(check_id: str, trace: dict[str, Any]) -> str:
-    return _run_pytest_check(check_id, trace)
+    if check_id == "C11" or trace.get("_fail_mode") == "c11_no_ticket":
+        return _truncate(fail_message_for_trace("C11", trace))
+    if run_evaluator_on_trace(check_id, trace):
+        return "unexpected pass"
+    return _truncate(fail_message_for_trace(check_id, trace))
 
 
 def _run_braintrust(check_id: str, trace: dict[str, Any]) -> str:
-    if check_id == "C11":
-        return _truncate(str({"key": "c11", "score": 0, "note": _c11_oracle_fail_message()}))
-    r = SCORERS[check_id](trace)
+    if check_id == "C11" or trace.get("_fail_mode") == "c11_no_ticket":
+        return _truncate(_c11_oracle_fail_message())
+    r = SCORERS[check_id]({}, trace, None, metadata=metadata_for_trace(trace, check_id))
     if r.get("score") == 1:
         return "unexpected pass"
     return _truncate(str(r))
 
 
 def _run_promptfoo(check_id: str, trace: dict[str, Any]) -> str:
-    if check_id == "C11":
-        try:
-            msg = _c11_oracle_fail_message()
-            return msg if msg != "unexpected pass" else "unexpected pass"
-        except Exception as exc:
-            return _truncate(f"{type(exc).__name__}: {exc}")
-
-    mod_name = f"assert_{check_id.lower()}"
-    path = _EXPR / "implementations" / "promptfoo" / f"{mod_name}.py"
-    import importlib.util
-
-    spec = importlib.util.spec_from_file_location(mod_name, path)
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    out = json.dumps(trace)
-    result = mod.get_assert(out, {"vars": {"check_id": check_id}})
-    if result is True or result == 1:
+    if check_id == "C11" or trace.get("_fail_mode") == "c11_no_ticket":
+        ok, msg = run_promptfoo_check("C11", trace)
+        return _truncate(msg if not ok else "unexpected pass")
+    ok, msg = run_promptfoo_check(check_id, trace)
+    if ok:
         return "unexpected pass"
-    if isinstance(result, dict):
-        return _truncate(str(result))
-    return f"assertion returned {result!r}"
+    return _truncate(msg or "assertion failed")
 
 
 # Fixed exemplar strings (from MANUAL_FAILURE_CLASSIFICATION.md captures).
@@ -225,7 +215,7 @@ def main() -> None:
             "grade_rubric": "A=path+expected/actual B=rule/tool slice C=step index D=generic E=opaque",
         },
         "grade_exemplars": dict(GRADE_EXEMPLARS),
-        "classification_source": "MANUAL_FAILURE_CLASSIFICATION.md (not auto-classified)",
+        "classification_source": "MANUAL_FAILURE_CLASSIFICATION.md (grades); messages from native evaluators",
     }
 
     runners = {

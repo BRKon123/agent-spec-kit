@@ -25,16 +25,18 @@ if str(_TELECOM) not in sys.path:
 
 from tasks.specs import oracles as o  # noqa: E402
 
-_C01_OUTPUT = m.all_of(
-    m.one_of(m.contains("credit"), m.contains("refund")),
-    m.one_of(m.contains("$"), m.contains("dollar")),
-)
-
 
 @ek.scenario(agent_fixture="agent_c01", tags=("expressiveness", "C01"), timeout_s=60.0)
 async def test_c01_output_rubric(s):
     # CHECK_START
-    (s.user_message("check").assert_output(_C01_OUTPUT))
+    (
+        s.user_message("check").assert_output(
+            m.all_of(
+                m.one_of(m.contains("credit"), m.contains("refund")),
+                m.one_of(m.contains("$"), m.contains("dollar")),
+            )
+        )
+    )
     # CHECK_END
     await s.materialise()
 
@@ -151,7 +153,6 @@ async def test_c06_forbidden_tools(s):
 
 @ek.scenario(agent_fixture="agent_c07", tags=("expressiveness", "C07"), timeout_s=60.0)
 async def test_c07_tool_args(s):
-    mmeta = meta()
     # CHECK_START
     (
         s.user_message("check")
@@ -160,7 +161,7 @@ async def test_c07_tool_args(s):
                 m.tool_call("authenticate_customer"),
                 m.tool_call(
                     "get_line_status",
-                    args=m.object({"line_id": mmeta["line_id"]}, extra="forbid"),
+                    args=m.object({"line_id": meta()["line_id"]}, extra="forbid"),
                 ),
             ],
             ordered=True,
@@ -238,13 +239,10 @@ async def test_c10_unordered_siblings(s):
 
 @ek.scenario(agent_fixture="agent_c11", tags=("expressiveness", "C11"), timeout_s=60.0)
 async def test_c11_db_state(s, store_c11):
-    def _apply_state() -> None:
-        insert_ticket(store_c11, line_id=meta()["line_id"])
-
     # CHECK_START
     (
         s.user_message("check")
-        .action(_apply_state)
+        .action(lambda: insert_ticket(store_c11, line_id=meta()["line_id"]))
         .assert_that(lambda: o.assert_ticket_exists(store_c11))
     )
     # CHECK_END
@@ -253,13 +251,9 @@ async def test_c11_db_state(s, store_c11):
 
 @ek.scenario(agent_fixture="agent_c12", tags=("expressiveness", "C12"), timeout_s=60.0)
 async def test_c12_multi_turn_memory(s, store_c12):
-    mmeta = meta()
-    t1, t2, t3 = msg_c12_turns()
-
-    def _apply_state() -> None:
-        insert_ticket(store_c12, line_id=mmeta["line_id"], ticket_id="INC-9046")
-
     # CHECK_START
+    t1, t2, t3 = msg_c12_turns()
+    line_id = meta()["line_id"]
     (
         s.user_message(t1)
         .user_message(t2)
@@ -269,8 +263,8 @@ async def test_c12_multi_turn_memory(s, store_c12):
             ordered=True,
             allow_extras=True,
         )
-        .action(_apply_state)
-        .assert_that(lambda: o.assert_ticket_for_line(store_c12, mmeta["line_id"]))
+        .action(lambda: insert_ticket(store_c12, line_id=line_id, ticket_id="INC-9046"))
+        .assert_that(lambda: o.assert_ticket_for_line(store_c12, line_id))
     )
     # CHECK_END
     await s.materialise()

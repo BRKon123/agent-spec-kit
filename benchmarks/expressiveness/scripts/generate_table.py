@@ -129,6 +129,7 @@ def main() -> None:
             "",
             "- Regenerate imperative ports: `uv run python scripts/materialize_inline_checks.py`",
             "- Re-count LOC: `uv run python scripts/count_check_loc.py`",
+            "- Authoring clarity (LLM A–D, combined): [`READABILITY_TABLE.md`](READABILITY_TABLE.md)",
             "- Oracle reference: [`CANONICAL_SPEC.md`](CANONICAL_SPEC.md); **C01** uses a deterministic keyword rubric in every framework.",
             "- **agent_spec_kit** matchers are equivalent to imperative ports (`tests/test_ask_matcher_parity.py`); higher ask LOC is declarative DSL, not a different policy.",
         ]
