@@ -182,7 +182,7 @@ The combined fuzz pipeline also reuses the user-simulation personas on the same 
 
 \subsubsection{Study results}
 
-Table~\ref{tab:fuzz-primary} compares manual scripts, user simulation, and mutation fuzz on the fourteen tasks. Fuzz produces forty unique tool paths and eighteen distinct failure signatures at median four turns---the same median length as manual and simulation arms because many mutations vary phrasing in place rather than always stretching the dialogue.
+Table~\ref{tab:fuzz-primary} compares manual scripts, user simulation, and mutation fuzz on the fourteen tasks. Fuzz produces forty unique tool paths and eighteen distinct failure signatures at median four turns, the same median length as manual and simulation arms because many mutations vary phrasing in place rather than always stretching the dialogue.
 
 \begin{table}[htbp]
 \centering
@@ -245,7 +245,7 @@ Fuzz & 18 & 25 & 18 & -- & 18 \\
 
 At the strict string level used in Table~\ref{tab:failure-taxonomy}, simulation and fuzz share \emph{no} failure messages: all twenty-six simulation signatures are new relative to fuzz, and all eighteen fuzz signatures are new relative to simulation. That identity is deliberate but coarse-grained comparisons should treat it with care. The study records \texttt{failure\_signature} as the full oracle headline plus matcher detail (\texttt{failure\_kind} + \texttt{detail} in the pipeline), and counterexample headlines embed the scenario name (\texttt{test\_t29\_sim\_fuzz\_study} vs.\ \texttt{test\_t29\_fuzz\_fuzz\_study}), which alone prevents a text match across arms even when the same assertion breaks. Output-oracle failures also include LLM-judge rationales, and tool-trace failures include index-specific mismatch text, so two runs of the same underlying bug often receive different strings. Re-counting after stripping scenario names and comparing only the first headline line shows three shared signature families and overlap on six tasks (T03, T04, T29, T38, T42, T43); twenty-two of twenty-five failing fuzz conversations then match a simulation failure at that relaxed grain. Zero overlap in the table therefore understates shared \emph{failure families} (check kind and task) while still correctly reporting that no two runs produced byte-identical oracle text.
 
-Despite that measurement caveat, the arms remain complementary at the transcript level. Personas explore alternative customer \emph{styles}---tone, disclosure timing, pressure---that rewrite the dialogue around a task intent, whereas mutation operators perturb the fixed initial manual messages along named axes such as missing facts, entity swaps, or vague acknowledgements. A failure on T42 from a multi-issue persona (state oracle: ticket opened too early) does not recur under \texttt{interleave\_secondary\_intent} on those messages; conversely, T45 \texttt{drop\_required\_fact} surfaces tool non-invocation when credentials are stripped from the script, a path simulation personas hit through different output-oracle wording. The implication for evaluation design is that neither arm subsumes the other: simulation widens \emph{who} the customer might be, fuzz widens \emph{how} a plausible script might be corrupted, and keeping both layers in the suite catches complementary regressions---including ones that share an oracle family but arise from different customer wordings.
+Despite that measurement caveat, the arms remain complementary at the transcript level. Personas explore alternative customer \emph{styles} (tone, disclosure timing, pressure) that rewrite the dialogue around a task intent, whereas mutation operators perturb the fixed initial manual messages along named axes such as missing facts, entity swaps, or vague acknowledgements. A failure on T42 from a multi-issue persona (state oracle: ticket opened too early) does not recur under \texttt{interleave\_secondary\_intent} on those messages; conversely, T45 \texttt{drop\_required\_fact} surfaces tool non-invocation when credentials are stripped from the script, a path simulation personas hit through different output-oracle wording. The implication for evaluation design is that neither arm subsumes the other: simulation widens \emph{who} the customer might be, fuzz widens \emph{how} a plausible script might be corrupted, and keeping both layers in the suite catches complementary regressions, including ones that share an oracle family but arise from different customer wordings.
 
 \subsubsection{Case study: credential stripping on T45 (fuzz)}
 
@@ -262,13 +262,13 @@ Turn & Manual seed vs.\ mutated \\
 \midrule
 Opening & \textbf{Seed:} What plan am I on? My line has not been working properly either. My account is CUST-045. \\
         & \textbf{Mutated:} What plan am I on? My line has not been working properly either. \\
-Auth turn & \textbf{Seed:} Fine --- authenticate me: customer CUST-045, verification 1990-45-15, line LINE-0045. \\
-          & \textbf{Mutated:} Fine --- authenticate me. \\
+Auth turn & \textbf{Seed:} Fine, authenticate me: customer CUST-045, verification 1990-45-15, line LINE-0045. \\
+          & \textbf{Mutated:} Fine, authenticate me. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The mutation omits \texttt{CUST-045} from the opening turn and later drops the explicit \texttt{customer\_id}, \texttt{verification\_token}, and \texttt{line\_id} from the authentication line. Listing~\ref{lst:t45-fuzz} shows the full mutated dialogue. The agent stays in prose-only pre-auth mode on the first two turns---requesting credentials without naming an account id---so segment~0 passes its output rubric. The failure appears in segment~1 (Listing~\ref{lst:t45-fuzz-failure}): after the user says ``Fine --- authenticate me'' without supplying credentials, the agent again asks for \texttt{customer\_id} and \texttt{verification\_token} in text but never calls \texttt{authenticate\_customer}, which violates the segment's \texttt{assert\_tool\_calls} expectation.
+The mutation omits \texttt{CUST-045} from the opening turn and later drops the explicit \texttt{customer\_id}, \texttt{verification\_token}, and \texttt{line\_id} from the authentication line. Listing~\ref{lst:t45-fuzz} shows the full mutated dialogue. The agent stays in prose-only pre-auth mode on the first two turns (requesting credentials without naming an account id), so segment~0 passes its output rubric. The failure appears in segment~1 (Listing~\ref{lst:t45-fuzz-failure}): after the user says ``Fine, authenticate me'' without supplying credentials, the agent again asks for \texttt{customer\_id} and \texttt{verification\_token} in text but never calls \texttt{authenticate\_customer}, which violates the segment's \texttt{assert\_tool\_calls} expectation.
 
 \begin{lstlisting}[caption={T45 fuzz: \texttt{drop\_required\_fact} transcript; manual arm passes.},label=lst:t45-fuzz]
 USER: What plan am I on? My line has not been working properly either.
@@ -310,7 +310,7 @@ AGENT: Sure--please provide your customer_id and verification_token ... so I can
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-The box names a trace-level violation rather than a reply-quality score: the agent never authenticates even after the user signals willingness, because the mutated transcript never re-supplies the structured credentials the tools require. User simulation on T45 still fails under several personas with output-oracle pre-auth violations; this fuzz case shows a complementary failure mode---tool non-invocation when facts are paraphrased away---without authoring a new persona.
+The box names a trace-level violation rather than a reply-quality score: the agent never authenticates even after the user signals willingness, because the mutated transcript never re-supplies the structured credentials the tools require. User simulation on T45 still fails under several personas with output-oracle pre-auth violations; this fuzz case shows a complementary failure mode (tool non-invocation when facts are paraphrased away) without authoring a new persona.
 
 \subsubsection{Case study: manual-known failures (T29, T38, T43)}
 

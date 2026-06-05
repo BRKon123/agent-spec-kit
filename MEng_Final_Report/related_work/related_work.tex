@@ -50,15 +50,60 @@ Observability tools are therefore highly complementary to evaluation libraries. 
 
 \subsection{Gaps in Existing Libraries}
 
-Existing libraries cover many important parts of the evaluation workflow, but they leave a gap for scenario-driven agent testing. Some tools are strong at scoring final outputs. Others provide RAG or tool-use metrics. Others provide trace observability and production monitoring. What is still missing is a developer-friendly way to define a complete agent scenario and attach explicit checks over the different surfaces of behaviour.
+Existing libraries cover scoring, metrics, traces, and monitoring, but leave gaps for teams building domain-specific agents. The subsections above illustrate those limitations tool by tool; the gaps below summarise what is still missing.
 
-In particular, current tooling does not make it easy enough to combine output assertions, tool-call assertions, and state assertions in one coherent test. A developer should be able to express checks such as: the final response contains a required phrase, a particular tool was called with an argument satisfying a property, a forbidden tool was not called, and the resulting state matches the intended outcome. These checks should be easy to read, easy to modify, and should produce useful diagnostic output explaining which part of the scenario failed.
+\begin{itemize}
+    \item \textbf{Final-output evaluation hides agent failures.}
+    Benchmarks and LLM judges compare isolated inputs and replies \cite{liang2022holistic,liu2023geval,zheng2023judging}, but that is not enough for tool-using agents.
+    \begin{itemize}
+        \item A plausible final answer can hide wrong tools, skipped steps, or invalid state; a terse reply may still reflect a correct trajectory.
+        \item Failures often collapse to a single score, leaving the developer to reconstruct \emph{where} the trace went wrong.
+    \end{itemize}
 
-This is especially important for LLM agents because failures are often not visible in the final response alone. An agent may answer politely while calling the wrong tool, using the wrong argument, skipping a required step, or leaving the system in an invalid state. Conversely, a generic score may indicate failure without showing whether the problem was in the output, the tool trajectory, or the state transition. The main gap is therefore not simply the absence of metrics, but the absence of concise scenario-style evaluation tooling that treats the full agent trace as the object being tested.
+    \item \textbf{Benchmarks show the problem but do not supply reusable test infrastructure.}
+    Agent benchmarks have made trace- and state-aware evaluation visible \cite{liu2023agentbench,zhou2023webarena,yao2024taubench,trivedi2024appworld}.
+    \begin{itemize}
+        \item They are fixed leaderboards, not behavioural contracts a domain team can rerun on every change.
+        \item Developers need executable scenarios with explicit oracles, not only scores on benchmark-chosen tasks.
+    \end{itemize}
+
+    \item \textbf{Expectations are fragmented across files and hard for a team to read.}
+    Eval setup often spans datasets, graders, trace assertions, and runner config in separate places.
+    \begin{itemize}
+        \item Teammates must jump between files to see what is actually being tested.
+        \item For multi-turn agents, the natural unit is the conversation: message, agent turn, checks, then the next turn.
+        \item What is missing is one declarative script with dialogue and oracles after each turn, repeats included.
+    \end{itemize}
+
+    \item \textbf{Multi-surface checks are awkward to express as one coherent scenario.}
+    A single test may need output, tool, and state assertions together.
+    \begin{itemize}
+        \item A reply phrase, a tool argument, a forbidden call, and a final state check may all matter at once.
+        \item Most tooling supports each check in isolation, not the full episode as one readable test object.
+    \end{itemize}
+
+    \item \textbf{Failure reports lack the precision needed for fast iteration.}
+    Trace viewers show what happened; metrics show pass or fail. Neither alone answers which expectation broke, on which turn, at which field. \emph{agent-spec-kit} keeps both the failing assertion and the episode trace in one view (Section~\ref{sec:execution-workflow}).
+    \begin{itemize}
+        \item The bug may sit in tool args, a missing tool, or state while the reply still sounds fine.
+        \item Without assertion-local reports (path, expected vs.\ actual, transcript context), debugging becomes trace archaeology.
+    \end{itemize}
+
+    \item \textbf{Exploratory coverage and regression preservation are not first-class.}
+    Scripted scenarios only cover paths the author anticipated; dependable agents must survive dialogue they did not write by hand.
+    \begin{itemize}
+        \item Users vary in tone, disclosure, and pressure; scripting every phrasing and persona does not scale.
+        \item Fuzzing and user simulation can surface failures on altered scripts or new customer styles, but most libraries treat those runs separately or leave them as hard-to-rerun traces.
+        \item When exploration finds a failure, teams still need to turn it into a version-controlled regression the suite runs on every change.
+        \item What is missing is the same output, tool, and state oracles on scripted and generative runs, plus extraction of a minimal failing script so discoveries persist in the suite.
+    \end{itemize}
+\end{itemize}
+
+Taken together, what is missing is concise, scenario-style tooling: declare behaviour in one place, explore beyond fixed scripts, debug precisely when it fails, and preserve new failures as regressions.
 
 \section{Motivation for Agent-Spec-Kit}
 \label{sec:agent-spec-kit-motivation}
 
-Chapter~\ref{chap:background} argues that agent evaluation must cover traces, tools, state, and repeated runs, not only final answers. Benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why \cite{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}; software-testing work shows how to find, simplify, and preserve failures \cite{claessen2000quickcheck,zeller2002simplifying,yu2023gptfuzzer,yao2023fuzzllm}. The preceding section shows that existing libraries and observability tools still do not make it easy to express those checks together in one scenario.
+Chapter~\ref{chap:background} argues that agent evaluation must cover traces, tools, state, and repeated runs, not only final answers. Benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why \cite{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}; software-testing work shows how to find, simplify, and preserve failures \cite{claessen2000quickcheck,zeller2002simplifying,yu2023gptfuzzer,yao2023fuzzllm}. Section~\ref{sec:existing_eval_libraries} shows that existing libraries and observability tools still fall short on declarative behavioural specs, co-located scenario authoring, multi-surface oracles, assertion-local diagnostics, and integrated exploration with regression preservation.
 
-The remaining gap is developer-facing: a way to specify, run, inspect, and rerun behavioural tests for a custom agent without adopting a fixed benchmark or writing large amounts of custom glue code. Agent-Spec-Kit targets that gap. It treats an agent episode as a testable scenario with explicit checks over the final output, tool calls, and environment state, and it supports workflows such as repeated trials, generative variation, failure shrinking, and regression extraction described in the methodology chapter.
+Agent-Spec-Kit targets that combined gap. It treats an agent episode as a testable scenario with explicit checks over the final output, tool calls, and environment state, attaches structured counterexamples to failed assertions, and supports workflows such as user simulation, mutation fuzzing, failure shrinking, and regression extraction described in the methodology chapter.
