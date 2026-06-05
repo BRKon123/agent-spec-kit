@@ -19,10 +19,7 @@ async def adapted_agent():
 )
 async def test_multiply_dialog_scripted_user_messages(s):
     (
-        s.user_message(
-            "What is 5 times 6? Use multiply_integers with a=5 and b=6 only, "
-            "then reply briefly and include the digit sequence for the product."
-        )
+        s.user_message("What is 5 x 6?")
         .assert_tool_calls(
             [m.tool_call("multiply_integers", args={"a": 5, "b": 6})],
             ordered=True,

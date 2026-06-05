@@ -15,20 +15,14 @@ Listing~\ref{lst:multiply-dialog-scripted} shows a minimal two-turn script. Afte
 
 \begin{lstlisting}[language=Python,caption={Two-turn scripted scenario with per-turn tool and output checks.},label=lst:multiply-dialog-scripted]
 (
-    s.user_message(
-        "What is 5 times 6? Use multiply_integers with a=5 and b=6 only, "
-        "then reply briefly and include the digit sequence for the product."
-    )
+    s.user_message("What is 5 x 6?")
     .assert_tool_calls(
         [m.tool_call("multiply_integers", args={"a": 5, "b": 6})],
         ordered=True,
         allow_extras=True,
     )
     .assert_output(m.contains("30"))
-    .user_message(
-        "What is 9 times 8? Use multiply_integers with a=9 and b=8 only, "
-        "then reply briefly and include the digit sequence for the product."
-    )
+    .user_message("What is 9 x 8?")
     .assert_tool_calls(
         [m.tool_call("multiply_integers", args={"a": 9, "b": 8})],
         ordered=True,

@@ -21,7 +21,7 @@ Nested specs mirror nested agent outputs; each layer contributes path segments o
 
 \subsection{Object Matching and Structured Output}
 
-\texttt{m.object} checks field shapes on dict-like or Pydantic views. The \texttt{extra=} policy controls whether unknown keys are ignored or rejected. Conditional rules from \texttt{m.require} and \texttt{m.forbid} with \texttt{m.field(...).when(...)} express implications such as requiring a pager group only when severity is high. A \texttt{.where(fn, message)} clause can enforce cross-field invariants that do not fit a single field spec.
+\texttt{m.object} checks field shapes on dict-like or Pydantic views. The \texttt{extra=} policy controls whether unknown keys are ignored or rejected. Conditional rules from \texttt{m.require} and \texttt{m.forbid} with \texttt{m.field(...).when(...)} express implications such as requiring a pager group only when severity is high.
 
 Listing~\ref{lst:match-object} shows structured ticket metadata with an unordered component list and a conditional rule.
 
