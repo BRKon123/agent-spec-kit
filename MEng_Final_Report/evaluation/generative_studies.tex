@@ -310,8 +310,59 @@ Three tasks already fail on the manual arm in the combined fuzz run (three faili
 
 These are not discoveries from personas or mutations; they are regressions the canonical script already exposes. They remain valuable as fixed failing paths. Simulation and fuzz still add new signatures on the same tasks (T29 and T38 appear in all three layers in the per-task matrix; T43 gains simulation-new failures while manual-known output binding already fails). Appendix~\ref{app:taxonomy-per-task} lists which arms found new failures per task. The point for evaluation design is that a red manual script does not mean generative search has nothing left to find.
 
-\subsection{Shrinking simulated failures}
+\subsection{Regression extraction from simulated failures}
 
-A shrink study targeted stable simulation failures. Of sixty simulated conversations, thirty-five failed; twelve were classified stable after repeat runs (ten flaky, eight non-reproducing, five capture failed). Fifteen stable cases were selected for shrinking with up to ten verification attempts each. Twelve shrinks succeeded with one hundred per cent same-\texttt{failure\_signature} preservation; three failed verification (including SIM-T42-0 and SIM-T45-1).
+\subsubsection{Extraction design}
 
-Median turn and token reduction were zero per cent: many failures already live on a single user turn. Two T20 seeds did halve turns (fifty per cent reduction) while preserving the signature. Median shrink time was roughly four hundred and seventy seconds with median nine verification attempts. The honest reading is that conversation shrinking did not shorten most transcripts in this domain, but signature-keyed verification still supports turning a flaky sim failure into a pinned regression without changing \emph{why} the oracle failed, consistent with the methodology in Chapter~\ref{chap:methodology}.
+Discovery is only useful if a surprising sim failure can be pinned as a permanent script. The regression-extraction arm takes failing user-simulation runs from twelve study tasks (T04, T17, T20, T27, T29, T30, T35, T38, T42, T43, T45, T49) with five persona seeds each, captures the realised customer transcript per generative step, and materialises it into a new \texttt{@scenario} in a regression module. The AST pass keeps the original F-oracle assertions and replaces \texttt{simulate\_conversation} with concrete \texttt{user\_message} lines from the captured run (Section~\ref{sec:generative}, Listing~\ref{lst:extracted-regression}). Each extracted test is tagged with a \texttt{regression\_id} (for example \texttt{REG-SIM-T29-1}) and keyed to the source \texttt{failure\_signature} so a rerun can be checked for the same assertion failure, not merely any failure.
+
+\subsubsection{Study results}
+
+Of sixty simulated conversations in this arm, twenty-nine failed and twenty-eight had transcripts captured successfully (one capture failed). All twenty-eight were written to \texttt{all\_regressions.py} with valid Python syntax and discoverable scenario functions (one hundred per cent import and collection success). Table~\ref{tab:regression-extraction} summarises the pipeline.
+
+\begin{table}[htbp]
+\centering
+\caption{Regression extraction from user-simulation failures (twelve tasks, five seeds each).}
+\label{tab:regression-extraction}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Metric & Value \\
+\midrule
+Simulated conversations & 60 \\
+Failing conversations & 29 \\
+Transcripts captured (eligible) & 28 \\
+Regressions extracted & 28 \\
+Import / collection success & 100\% \\
+Median user turns in extracted test & 2.0 \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\emph{Rerun outcomes (28 extracted)}} \\
+Same \texttt{failure\_signature} & 13 (46.4\%) \\
+Passed on rerun & 3 (10.7\%) \\
+Failed, different check kind & 9 (32.1\%) \\
+Failed, same check, different path & 3 (10.7\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On immediate rerun, thirteen extracted scenarios failed again on the same check and JSON path as the original sim run (Table~\ref{tab:regression-extraction}). Only three passed outright (all on T04), giving a regression pass rate of 10.7\%; for tests extracted \emph{from} failures, a low pass rate is desirable because it means the pinned script still exercises the oracle rather than letting the agent slip through. The other twenty-five reruns failed: nine on a different \emph{check kind} (for example an original \texttt{forbid\_tool\_calls} violation surfacing instead as an \texttt{assert\_output} judge failure), and three more on the same check type but at a different trace path after a slightly different tool ordering. The honest reading is mixed: extraction reliably turns a stochastic dialogue into a readable, version-controlled script with the full F-oracle attached, but under half of extracted cases immediately reproduce the \emph{same} failure signature without further stabilisation. That gap is expected because the agent remains stochastic even when user lines are fixed, and because each extracted scenario still carries the full multi-oracle F-check: small differences in tool ordering or reply wording can shift which assertion breaks first even when the underlying policy stress is similar. Even when rerun behaviour drifts, the extracted file still documents the customer lines and policy checks that triggered the original discovery and can be edited or repeated like any other manual script.
+
+\subsubsection{Illustrative extracted regression (T29)}
+
+Listing~\ref{lst:t29-regression} shows an extracted regression for T29 (replacement SIM on the wrong line). The simulator produced one customer turn naming both \texttt{LINE-0029} and \texttt{LINE-WRONG}; extraction materialises that line verbatim and keeps the trace and output oracles from the sim scenario. On rerun this case failed on the same forbidden early \texttt{order\_replacement\_sim} call as \texttt{SIM-T29-1}, an example of the stable trace-level failures that reproduce reliably.
+
+\begin{lstlisting}[caption={Extracted regression \texttt{REG-SIM-T29-1}: concrete user line plus original F-oracle.},label=lst:t29-regression]
+@ek.scenario(regression_id='REG-SIM-T29-1', tags=('telecom', 'regression', 'user-sim'), ...)
+async def regression_REG_SIM_T29_1(s, store_us_t29):
+    (
+        s
+        .user_message("Hi, I'm customer CUST-029 with verification token 1990-29-15. "
+                       "The line I need fixed is LINE-0029 (not LINE-WRONG); I need a "
+                       "replacement SIM sent to my default address at E1 6AN.")
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN, actor='agent', turn='up_to_now')
+        .assert_tool_calls([m.tool_call('authenticate_customer'),
+                            to.order_sim_on_line(seed_line)], ...)
+        .assert_output(to.premature_action_output('LINE-WRONG', action='order'), ...)
+    )
+\end{lstlisting}
+
+The regression study closes the generative loop described in Chapter~\ref{chap:methodology}: simulated users widen search, counterexamples explain what broke, and extraction preserves the dialogue as a script the team can keep in the suite without re-running the user simulator.
