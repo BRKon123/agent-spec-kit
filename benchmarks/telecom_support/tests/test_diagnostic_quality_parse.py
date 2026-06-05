@@ -116,7 +116,7 @@ def test_assess_specificity_llm_mock(sample_panels):
     w = sample_panels["test_f02_t29_full"]
 
     async def mock_judge(**kwargs):
-        return SpecificityScore(specificity_score=4, rationale="path and tools shown")
+        return SpecificityScore(specificity_grade="A", rationale="path and tools shown")
 
     scored = asyncio.run(
         assess_specificity_llm(
@@ -129,13 +129,14 @@ def test_assess_specificity_llm_mock(sample_panels):
             judge_fn=mock_judge,
         )
     )
+    assert scored.specificity_grade == "A"
     assert scored.specificity_score == 4
 
 
-def test_rubric_scores_named_eval_keys_above_bare_assertion():
-    assert "f10_output_rubric" in DIAGNOSTIC_SPECIFICITY_RUBRIC
-    assert "assertion returned False" in DIAGNOSTIC_SPECIFICITY_RUBRIC
-    assert "Score 2" in DIAGNOSTIC_SPECIFICITY_RUBRIC
+def test_rubric_uses_letter_grades_aligned_with_expressiveness():
+    assert "Grade" in DIAGNOSTIC_SPECIFICITY_RUBRIC
+    assert "score: 0" in DIAGNOSTIC_SPECIFICITY_RUBRIC
+    assert "AssertionError" in DIAGNOSTIC_SPECIFICITY_RUBRIC
 
 
 def test_f_detected_count_in_committed_results():

@@ -283,7 +283,7 @@
     "snippet_text": "    (\n        s.user_message(\"check\")\n        .assert_tool_calls(\n            [\n                m.tool_call(\n                    \"run_billing_policy_specialist\",\n                    result=m.object(\n                        {\n                            \"eligible\": m.one_of(True, False),\n                            \"amount\": m.optional(m.number(min=0.01)),\n                            \"currency\": m.optional(m.string()),\n                        },\n                        extra=\"forbid\",\n                        rules=[\n                            m.require(\"amount\").when(m.field(\"eligible\") == True),\n                            m.forbid(\"amount\").when(m.field(\"eligible\") == False),\n                        ],\n                    ),\n                ),\n            ],\n            ordered=True,\n            allow_extras=True,\n        )\n    )",
     "source_path": "implementations/agent_spec_kit/test_checks.py",
     "status": "ok",
-    "telecom_task": "nested_example"
+    "telecom_task": "T23"
   },
   "C03|braintrust": {
     "canonical_policy": "`run_billing_policy_specialist.result`: if `eligible` then `amount` > 0; if not eligible then `amount` absent.",
@@ -305,7 +305,7 @@
     "snippet_text": "    result = _tool_result(trace, \"run_billing_policy_specialist\")\n    if not isinstance(result, dict) or \"eligible\" not in result:\n        ok = False\n    elif result.get(\"eligible\"):\n        ok = \"amount\" in result and float(result[\"amount\"]) > 0\n    else:\n        ok = \"amount\" not in result\n    return _as_dict(Score(name=\"C03\", score=1.0 if ok else 0.0))",
     "source_path": "implementations/braintrust/experiment.py",
     "status": "ok",
-    "telecom_task": "nested_example"
+    "telecom_task": "T23"
   },
   "C03|langsmith": {
     "canonical_policy": "`run_billing_policy_specialist.result`: if `eligible` then `amount` > 0; if not eligible then `amount` absent.",
@@ -327,7 +327,7 @@
     "snippet_text": "    specialist = _tool(trace, \"run_billing_policy_specialist\")\n    if specialist is None:\n        return _score(False, \"conditional_object\")\n    r = specialist.get(\"result\")\n    if not isinstance(r, dict) or \"eligible\" not in r:\n        return _score(False, \"conditional_object\")\n    if r.get(\"eligible\"):\n        ok = \"amount\" in r and float(r[\"amount\"]) > 0\n    else:\n        ok = \"amount\" not in r\n    return _score(ok, \"conditional_object\")",
     "source_path": "implementations/langsmith/experiment.py",
     "status": "ok",
-    "telecom_task": "nested_example"
+    "telecom_task": "T23"
   },
   "C03|promptfoo": {
     "canonical_policy": "`run_billing_policy_specialist.result`: if `eligible` then `amount` > 0; if not eligible then `amount` absent.",
@@ -349,7 +349,7 @@
     "snippet_text": "      - type: javascript\n        value: |\n          const trace = JSON.parse(output);\n          const t = (trace.tools || []).find((x) => x.name === 'run_billing_policy_specialist');\n          if (!t || typeof t.result !== 'object' || t.result === null) return false;\n          const r = t.result;\n          if (!('eligible' in r)) return false;\n          if (r.eligible) return typeof r.amount === 'number' && r.amount > 0;\n          return !('amount' in r);",
     "source_path": "implementations/promptfoo",
     "status": "ok",
-    "telecom_task": "nested_example"
+    "telecom_task": "T23"
   },
   "C03|pydantic_evals": {
     "canonical_policy": "`run_billing_policy_specialist.result`: if `eligible` then `amount` > 0; if not eligible then `amount` absent.",
@@ -371,7 +371,7 @@
     "snippet_text": "    rctx = EvaluatorContext(\n        name=check_id,\n        inputs={},\n        metadata=None,\n        expected_output=None,\n        output=result,\n        duration=0.0,\n        _span_tree=trace_to_span_tree(trace),\n        attributes={},\n        metrics={},\n    )\n    if not _ok(IsInstance(type_name=\"dict\").evaluate(rctx)):\n        return False\n\n    class BillingResult(BaseModel):\n        model_config = ConfigDict(extra=\"ignore\")\n        eligible: bool\n        amount: float | None = None\n\n        @model_validator(mode=\"after\")\n        def amount_rule(self) -> BillingResult:\n            if self.eligible:\n                if self.amount is None or self.amount <= 0:\n                    raise ValueError(\"eligible requires positive amount\")\n            elif self.amount is not None:\n                raise ValueError(\"ineligible must omit amount\")\n            return self\n\n    try:\n        BillingResult.model_validate(result)\n        return True\n    except Exception:\n        return False",
     "source_path": "implementations/pydantic_evals/dataset.py",
     "status": "ok",
-    "telecom_task": "nested_example"
+    "telecom_task": "T23"
   },
   "C03|pytest_plain": {
     "canonical_policy": "`run_billing_policy_specialist.result`: if `eligible` then `amount` > 0; if not eligible then `amount` absent.",
@@ -393,7 +393,7 @@
     "snippet_text": "    tool = find_tool(walk_root_tools(trace), \"run_billing_policy_specialist\")\n    if tool is None:\n        assert False\n    r = tool.get(\"result\")\n    if not isinstance(r, dict) or \"eligible\" not in r:\n        assert False\n    if r.get(\"eligible\"):\n        assert \"amount\" in r and float(r[\"amount\"]) > 0\n    else:\n        assert \"amount\" not in r",
     "source_path": "implementations/pytest_plain/test_canonical_checks.py",
     "status": "ok",
-    "telecom_task": "nested_example"
+    "telecom_task": "T23"
   },
   "C04|agent_spec_kit": {
     "canonical_policy": "Billing result: `eligible is True` and `0.01 <= amount <= 500`.",

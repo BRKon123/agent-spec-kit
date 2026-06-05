@@ -36,7 +36,7 @@ def test_pipeline_from_fixture_panel(tmp_path: Path):
     assert len(cells) == 6
 
     async def mock_judge(**kwargs):
-        return SpecificityScore(specificity_score=4, rationale="fixture ok")
+        return SpecificityScore(specificity_grade="A", rationale="fixture ok")
 
     from scripts.diagnostic_quality_lib import score_cells
 

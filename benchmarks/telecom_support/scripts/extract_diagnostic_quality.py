@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge panels + framework messages; LLM-score specificity (0-4) per cell."""
+"""Merge panels + framework messages; LLM-score specificity (A--E) per cell."""
 
 from __future__ import annotations
 

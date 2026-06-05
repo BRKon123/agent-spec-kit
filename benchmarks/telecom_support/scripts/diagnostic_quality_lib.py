@@ -28,6 +28,7 @@ FAILURES_DIR = FAULT_DIR / "diagnostic_failures"
 RECORDS_PATH = FAULT_DIR / "diagnostic_records.json"
 META_PATH = FAULT_DIR / "diagnostic_extract_meta.json"
 MESSAGES_PATH = DIAG_DIR / "failure_messages.yaml"
+MANUAL_BURDEN_PATH = FAULT_DIR / "inspection_burden_manual.json"
 
 FRAMEWORKS = [
     "agent_spec_kit",
@@ -46,24 +47,47 @@ _PANEL_FIELD_NAMES = frozenset(
     {"Check", "Where", "Path", "Expected", "Actual", "Agent errors"}
 )
 
+# Same letter scale as expressiveness failure specificity (catalog.FAILURE_SPECIFICITY_GRADES).
+NUMERIC_TO_GRADE: dict[int, str] = {4: "A", 3: "B", 2: "C", 1: "D", 0: "E"}
+GRADE_TO_NUMERIC: dict[str, int] = {v: k for k, v in NUMERIC_TO_GRADE.items()}
+
 DIAGNOSTIC_SPECIFICITY_RUBRIC = """\
-| Score | Meaning |
-|------:|---------|
-| 0 | Only says the run/eval failed with no check or lane hint. Examples: `assertion returned False`, bare PASS/FAIL, or a numeric score with no named check. |
-| 1 | Identifies a broad category/lane only (output vs state vs trace/tooling) without naming which rule or eval failed. |
-| 2 | Identifies *which* check/eval failed by name, but without enough detail to pinpoint the exact issue/cause. Examples: `assert_tool_calls`, `assert_output`, “expected zero credits”, `{'key': 'f10_output_rubric', 'score': 0}`, `{'key': 'f07_forbidden_tools', 'score': 0}`. |
-| 3 | Adds meaningful localisation/precision: where it failed (turn/node/tool index/state row) and/or explicit expected vs actual evidence, but may still miss full cause (especially for structured objects). |
-| 4 | Top score. Easy to diagnose to the exact issue and cause from the message alone. |
-|   | - *Structured-object mismatches* (tool args, forbidden tools, JSON/state diffs): exact field/path plus expected vs actual (missing/extra key, wrong value/order). |
-|   | - *Text/criterion mismatches* (`assert_output`, LLM rubrics): failed criterion, expected vs actual (or pass/fail counts), and why the requirement was not satisfied; exact field/path not required. |
+| Grade | Meaning (failure message only; A best, E worst) |
+| --- | --- |
+| **A** | Exact location in the trace or store plus expected vs actual (e.g. matcher counterexample with path and values). |
+| **B** | Names the broken rule, tool, or field in plain text without a structured path witness. |
+| **C** | Says which check or scorer failed (evaluator key and `score: 0`) but not which tool, field, or values. |
+| **D** | Generic failure shell: bare `AssertionError`, empty assert, or validation class only. |
+| **E** | Opaque pass/fail with almost no diagnostic detail. |
 
-Framework-port calibration (minimal messages are not all score 0):
-- **Score 0**: `assertion returned False` — no check name, no lane, no expected/actual.
-- **Score 1**: `{'key': 'tool_sequence', 'score': 0}` or `{'key': 'state_oracle', 'score': 0}` — the key implies trace vs state lane only.
-- **Score 2**: `{'key': 'f10_output_rubric', 'score': 0}` or `{'key': 'f02_tool_sequence', 'score': 0}` — the key names the specific eval that failed (output rubric, tool sequence, forbidden tools, etc.), even though location and expected/actual are absent. This is better than score 0/1 but not a strong diagnostic.
-
-Maximum score is 4. Do not award higher scores for extraction hooks, replay IDs, or signature stability.
+Do not award higher grades for extraction hooks, replay IDs, or signature stability. A scorer dict with only `key` and `score: 0` is typically **C**, not **D**.
 """
+
+
+def specificity_grade(cell: dict[str, Any]) -> str:
+    """Letter grade for a scored cell (from LLM or legacy 0--4 score)."""
+    la = cell.get("llm_assessment") or {}
+    g = str(la.get("specificity_grade", "")).strip().upper()
+    if g in GRADE_TO_NUMERIC:
+        return g
+    score = la.get("specificity_score")
+    if score is not None:
+        return NUMERIC_TO_GRADE.get(int(score), "D")
+    return "—"
+
+
+def backfill_specificity_grades(cells: dict[str, dict[str, Any]]) -> int:
+    """Set llm_assessment.specificity_grade from legacy specificity_score where missing."""
+    n = 0
+    for cell in cells.values():
+        la = cell.get("llm_assessment")
+        if not la or la.get("specificity_score") is None:
+            continue
+        if la.get("specificity_grade"):
+            continue
+        la["specificity_grade"] = NUMERIC_TO_GRADE.get(int(la["specificity_score"]), "D")
+        n += 1
+    return n
 
 _PANEL_TITLE_RE = re.compile(
     r"FAIL\s+test_f(\d+)_t(\d+)_(full|trace|state|output)\s+\[(\d+)/(\d+)\]",
@@ -101,8 +125,21 @@ class FailureWitness:
 
 
 class SpecificityScore(BaseModel):
-    specificity_score: int = Field(ge=0, le=4)
+    specificity_grade: str = ""
+    specificity_score: int | None = Field(default=None, ge=0, le=4)
     rationale: str = ""
+
+    def model_post_init(self, __context: object) -> None:
+        if self.specificity_grade:
+            g = self.specificity_grade.strip().upper()
+            if g in GRADE_TO_NUMERIC:
+                object.__setattr__(self, "specificity_score", GRADE_TO_NUMERIC[g])
+        elif self.specificity_score is not None:
+            object.__setattr__(
+                self,
+                "specificity_grade",
+                NUMERIC_TO_GRADE.get(int(self.specificity_score), "D"),
+            )
 
 
 class DiagnosticColumns(BaseModel):
@@ -115,13 +152,10 @@ class DiagnosticColumns(BaseModel):
 
 DIAGNOSTIC_JUDGE_SYSTEM = (
     "You evaluate how well an automated test failure message helps a developer "
-    "diagnose the exact issue and cause. Use the rubric levels 0-4. "
-    "Do not penalize messages for verbosity/noise if they still clearly contain "
-    "the required diagnostic evidence; score based on the best evidence present. "
-    "Minimal framework ports that name the failing eval via a `key` field "
-    "(e.g. f10_output_rubric, tool_sequence, forbidden_tools) are typically "
-    "score 1-2, not 0. Bare 'assertion returned False' with no check name is score 0. "
-    "Score 4 is the maximum."
+    "diagnose the exact issue and cause. Return one letter A through E using the "
+    "rubric (A best, E worst). Do not penalize verbosity if the message still "
+    "contains the required evidence. Named scorer keys without field witnesses are "
+    "typically C. Bare assertion returned False is D or E."
 )
 
 DIAGNOSTIC_COLUMNS_SYSTEM = (
@@ -361,6 +395,203 @@ def deterministic_metrics(witness: FailureWitness) -> dict[str, Any]:
     }
 
 
+_PATH_LEAF_RE = re.compile(r"\$\[\d+\]\.(?:args|result|children)\.(\w+)")
+_PATH_TOOL_ONLY_RE = re.compile(r"^\$\[\d+\](?:\.children)?$")
+_KEYS_LIST_RE = re.compile(r"keys=\[([^\]]+)\]")
+_FORBIDDEN_AT_INDEX_RE = re.compile(
+    r"forbidden tool .+ at index \d+",
+    re.IGNORECASE,
+)
+_LIST_LENGTH_RE = re.compile(
+    r"expected (?:exactly )?(\d+) (?:tool|value)",
+    re.IGNORECASE,
+)
+
+
+def path_pinpoints_single_field(path: str) -> bool:
+    """True when JSON path names a specific field (not just a tool index)."""
+    return bool(_PATH_LEAF_RE.search(path or ""))
+
+
+def _count_keys_list_in_text(text: str) -> int | None:
+    m = _KEYS_LIST_RE.search(text)
+    if not m:
+        return None
+    parts = [p.strip().strip("'\"") for p in m.group(1).split(",")]
+    return len([p for p in parts if p])
+
+
+def _count_args_keys_from_witness(witness: dict[str, Any] | None) -> int | None:
+    if not witness:
+        return None
+    actual = witness.get("actual") or ""
+    m = re.search(
+        r'"args"\s*:\s*\{([^}]+)\}',
+        actual.replace("\n", " "),
+    )
+    if not m:
+        return None
+    inner = m.group(1)
+    keys = re.findall(r'"([A-Za-z_][\w]*)"\s*:', inner)
+    return len(keys) if keys else None
+
+
+def _count_event_trace_tools(witness: dict[str, Any] | None) -> int | None:
+    if not witness:
+        return None
+    trace = witness.get("event_trace_text") or ""
+    tools = _TOOL_LINE_RE.findall(trace)
+    return len(tools) if tools else None
+
+
+def inspection_units_agent_spec_kit(witness: dict[str, Any] | None) -> int:
+    """How many fields/trace loci the built-in panel narrows to (baseline = 1)."""
+    if not witness:
+        return 1
+    path = (witness.get("path") or "").strip()
+    if path_pinpoints_single_field(path):
+        return 1
+    if _PATH_TOOL_ONLY_RE.match(path):
+        return 1
+    if witness.get("check") == "assert_that":
+        return 1
+    expected = witness.get("expected") or ""
+    for text in (expected, witness.get("actual") or "", witness.get("panel_text") or ""):
+        m = _LIST_LENGTH_RE.search(text)
+        if m:
+            return max(1, int(m.group(1)))
+    return 1
+
+
+def inspection_units_ported(
+    failure_box_text: str,
+    witness: dict[str, Any] | None = None,
+) -> int:
+    """Heuristic count of fields/tools a developer must inspect from the ported message."""
+    box = (failure_box_text or "").strip()
+    if not box:
+        return 1
+
+    keys_n = _count_keys_list_in_text(box)
+    if keys_n is not None:
+        return max(1, keys_n)
+
+    if _FORBIDDEN_AT_INDEX_RE.search(box):
+        return 1
+
+    if re.search(r"must not include \w+", box, re.I) and "keys=" not in box:
+        return 1
+
+    if re.search(r"at index \d+", box, re.I) and re.search(
+        r"(forbidden tool|tool call|tool_sequence)",
+        box,
+        re.I,
+    ):
+        return 1
+
+    lower = box.lower()
+    if lower in {"assertion returned false", "assertionerror"} or (
+        box.startswith("AssertionError:") and len(box) < 80
+    ):
+        n = _count_args_keys_from_witness(witness)
+        if n:
+            return n
+        trace_n = _count_event_trace_tools(witness)
+        if trace_n:
+            return trace_n
+        return 5
+
+    if re.match(r"^\s*\{['\"]key['\"]", box) and "score" in lower:
+        comment = ""
+        cm = re.search(r"['\"]comment['\"]\s*:\s*['\"]([^'\"]+)", box)
+        if cm:
+            comment = cm.group(1)
+            keys_n = _count_keys_list_in_text(comment)
+            if keys_n is not None:
+                return max(1, keys_n)
+        if witness and path_pinpoints_single_field(witness.get("path") or ""):
+            return 1
+        n = _count_args_keys_from_witness(witness)
+        if n:
+            return n
+        return 1
+
+    if witness and path_pinpoints_single_field(witness.get("path") or ""):
+        return 1
+
+    n = _count_args_keys_from_witness(witness)
+    if n:
+        return n
+
+    if re.search(r"object|schema|properties|is-json|is_json", lower):
+        n = _count_args_keys_from_witness(witness)
+        return max(1, n or 4)
+
+    trace_n = _count_event_trace_tools(witness)
+    if trace_n and not path_pinpoints_single_field((witness or {}).get("path") or ""):
+        return max(1, trace_n)
+
+    return 1
+
+
+def inspection_units_for_cell(cell: dict[str, Any]) -> int:
+    witness = cell.get("witness")
+    if cell.get("framework") == "agent_spec_kit":
+        return inspection_units_agent_spec_kit(witness)
+    return inspection_units_ported(cell.get("failure_box_text") or "", witness)
+
+
+def inspection_ratio_display(units: int, baseline: int) -> str:
+    """Multiple of agent_spec_kit inspection burden for the same fault slot."""
+    b = max(1, baseline)
+    multiple = max(1, -(-units // b))  # ceil division
+    return f"{multiple}×"
+
+
+def load_manual_inspection_burden(path: Path | None = None) -> dict[str, dict[str, Any]]:
+    p = path or MANUAL_BURDEN_PATH
+    if not p.is_file():
+        return {}
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def annotate_inspection_burden(
+    cells: dict[str, dict[str, Any]],
+    *,
+    manual: dict[str, dict[str, Any]] | None = None,
+) -> None:
+    """Set inspection_units and inspection_ratio_vs_ask from hand-reviewed manual file."""
+    manual = manual if manual is not None else load_manual_inspection_burden()
+    if not manual:
+        raise FileNotFoundError(
+            f"Missing hand-reviewed inspection counts: {MANUAL_BURDEN_PATH}. "
+            "Run: uv run python scripts/build_inspection_burden_manual.py"
+        )
+    for key, cell in cells.items():
+        if cell.get("oracle") != "F" or not cell.get("detected"):
+            continue
+        if cell.get("framework") not in FRAMEWORKS:
+            continue
+        entry = manual.get(key)
+        if not entry:
+            continue
+        cell["inspection_units"] = int(entry["units"])
+        if entry.get("baseline_units") is not None:
+            cell["inspection_baseline_units"] = int(entry["baseline_units"])
+        if entry.get("ratio"):
+            cell["inspection_ratio_vs_ask"] = str(entry["ratio"])
+        elif cell.get("framework") == "agent_spec_kit":
+            cell["inspection_baseline_units"] = int(entry["units"])
+            cell["inspection_ratio_vs_ask"] = "1×"
+        else:
+            ask_key = f"{cell['family']}|{cell['task']}|agent_spec_kit|F"
+            baseline = int(manual.get(ask_key, {}).get("units", 1))
+            cell["inspection_baseline_units"] = baseline
+            cell["inspection_ratio_vs_ask"] = inspection_ratio_display(
+                int(entry["units"]), baseline
+            )
+
+
 def _lines_to_useful_detail(witness: FailureWitness) -> int:
     if not witness.panel_text:
         return 0
@@ -437,7 +668,7 @@ def _build_judge_user_prompt(
         f"Ideal diagnostic target for this fault family:\n{diagnostic_target}\n\n"
         "Failure message (full box):\n"
         f"{failure_box_text[:10000]}\n\n"
-        "Return specificity_score 0-4 and a short rationale citing evidence from the failure message."
+        "Return specificity_grade (A, B, C, D, or E) and a short rationale citing evidence from the failure message."
     )
 
 
@@ -558,7 +789,7 @@ async def score_cells(
         if (
             not refresh_llm
             and cell.get("llm_assessment")
-            and cell["llm_assessment"].get("specificity_score") is not None
+            and cell["llm_assessment"].get("specificity_grade")
             and cell.get("llm_columns")
         ):
             return cell
@@ -587,6 +818,7 @@ async def score_cells(
                 )
                 cell["llm_assessment"] = {
                     "model": model,
+                    "specificity_grade": scored.specificity_grade,
                     "specificity_score": scored.specificity_score,
                     "rationale": scored.rationale,
                     "assessed_utc": datetime.now(UTC).isoformat(),

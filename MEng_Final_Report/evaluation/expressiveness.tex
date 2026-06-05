@@ -1,7 +1,7 @@
-\section{Expressiveness and diagnostic quality}
+\section{Expressiveness}
 \label{sec:expressiveness}
 
-A second line of evaluation compares how concisely the same twelve policy-check specimens can be written in \emph{agent-spec-kit} and in five other styles: plain pytest, LangSmith evaluators, Pydantic Evals, Promptfoo assertions, and Braintrust scorers. Each specimen is a minimal negative fixture, not a full benchmark scenario; Table~\ref{tab:check-specimens} names the twelve patterns and where they appear on TelcoSupportBench.
+A second line of evaluation compares how concisely the same twelve policy checks can be written in \emph{agent-spec-kit} and in implementations using five other evaluation libraries: plain pytest, LangSmith, Pydantic Evals, Promptfoo, and Braintrust. Each item is a small, self-contained check pattern rather than a full benchmark task; Table~\ref{tab:check-specimens} lists the twelve patterns and related telecom tasks.
 
 \begin{table}[htbp]
 \centering
@@ -14,7 +14,7 @@ Check & Name & Exemplar task \\
 \midrule
 C01 & Final output semantic / rubric & T16 \\
 C02 & Structured object shape & T09 \\
-C03 & Conditional structured object rule & (nested example) \\
+C03 & Conditional structured object rule & T23 \\
 C04 & Numeric / range / regex field & T23 \\
 C05 & Ordered tool-call sequence & T02 \\
 C06 & Forbidden tool-call & T49 \\
@@ -28,11 +28,11 @@ C12 & Multi-turn state memory & T46 \\
 \end{tabular}
 \end{table}
 
-Each port implements the same intentional negative fixture. Golden behaviour is frozen in \texttt{traces/}; intentional violations are built in \texttt{fail\_traces.py} (one policy break per specimen). Failure messages are captured by running each framework's native check code on those JSON traces in-process---no live agent loop---so diagnostics reflect evaluator/scorer output, not a full LangSmith/Promptfoo production run.
+When a check fails, we record what each framework prints. We use fixed example agent runs with one deliberate mistake per specimen (not a fresh live evaluation each time), so the comparison is about the quality of failure text, not about re-running full production eval pipelines.
 
 \subsection{Authoring effort}
 
-Table~\ref{tab:expressiveness-loc} counts non-comment lines of check logic per framework on the twelve specimens. Parity tests confirm equivalent semantics between the declarative matcher ports and pytest.
+Table~\ref{tab:expressiveness-loc} counts lines of check logic per framework on the twelve specimens (comment lines excluded). Each implementation was written to enforce the same policy; automated tests confirm that \emph{agent-spec-kit} matchers and the pytest versions agree on pass and fail.
 
 \begin{table}[htbp]
 \centering
@@ -61,13 +61,17 @@ Multi-turn memory & 14 & 22 & 23 & 29 & 18 & 21 \\
 \end{tabular}
 \end{table}
 
+Promptfoo is the most concise overall (100 lines): checks are mostly declarative \texttt{assert} entries in a shared \texttt{promptfooconfig.yaml}, with trajectory rules expressed as compact assertion types rather than imperative loops. That compactness comes with indirection: policy for a specimen may sit in the YAML block, a \texttt{transform} that extracts the right tool result, and a Python provider that materialises the trace, so a maintainer often hops between files to see the full check. Several trace-heavy specimens (C02--C04, C08) are shortest under Promptfoo for that reason.
+
+Plain pytest is also lean (113 lines total) on simple tool rules, but grows on structured-object and multi-turn specimens where authors spell out trace walking and field guards explicitly. Pydantic Evals totals the most lines (169), concentrated in conditional and multi-turn cases. \emph{agent-spec-kit} sits in the same band (160): more verbose than pytest or Promptfoo on many rows because matchers and scenario structure are written out in the DSL, yet not so much longer that authoring is dominated by boilerplate; for example, forbidden-tool and unordered-sibling checks remain single-digit or low double-digit counts. Line count alone therefore understates how easy checks are to maintain. The clarity study below judges readability directly: \emph{agent-spec-kit} is graded A on eleven of twelve specimens, so the higher LOC is not, in practice, offset by proportionally harder reading; the scenario and matcher forms are closer to stating policy than to wiring evaluation plumbing, which is what the following tables and listings examine.
+
 \subsection{Authoring clarity (LLM-judged)}
 
-The LOC table measures authoring size; a complementary study asks how clear the \emph{same} inlined check ports are to a maintainer: test intent, the flow of user messages and checks in the scenario, and how easy the code is to follow (tools, properties, and objects under assertion). We extract the non-comment lines between \texttt{CHECK\_START} and \texttt{CHECK\_END} in each framework port (seventy-two cells: twelve specimens $\times$ six frameworks) and assign one combined A--D grade per cell with \texttt{openai:gpt-5-mini} under a strict intent-based rubric (Table~\ref{tab:authoring-clarity-rubric}, Table~\ref{tab:expressiveness-authoring-clarity}). Letter grades are \textbf{A best, D worst}; \textbf{A} is reserved for specification-like excerpts with visible scenario shape, not trace-only validators. This is orthogonal to Table~\ref{tab:expressiveness-loc} and to failure-specificity grading (Table~\ref{tab:specificity-rubric}), which rates \emph{failure messages}, not authoring code.
+A complementary study asks how easy that same check logic is to read: whether the test intent is obvious, whether you can see what the agent was told, and whether tools and fields under test are clear. For LOC and for clarity we use only the body of each check (the lines between marked start and end points in each implementation file), so helper code and imports are not counted. An LLM (\texttt{openai:gpt-5-mini}) assigns one combined A--D clarity grade per check and framework (Table~\ref{tab:authoring-clarity-rubric}, Table~\ref{tab:expressiveness-authoring-clarity}). Letter grades are \textbf{A best, D worst}. Clarity is separate from LOC and from failure-specificity (Table~\ref{tab:specificity-rubric}), which judges \emph{failure messages} only.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Authoring-clarity rubric (A best, D worst). One combined grade from the inlined snippet and canonical policy; reflects reading cost, not post-hoc reconstruction.}
+\caption{Authoring-clarity rubric (A best, D worst). One combined grade from the check excerpt and the policy it enforces.}
 \label{tab:authoring-clarity-rubric}
 \small
 \begin{tabular}{@{}lp{8.8cm}@{}}
@@ -75,8 +79,8 @@ The LOC table measures authoring size; a complementary study asks how clear the 
 Lens & Question \\
 \midrule
 Immediate grasp & On first read, is the policy under test apparent without simulating long control-flow paths? \\
-Scenario shape & Is it visible what is sent to the agent and how checks attach (vs.\ trace-only post-processing)? \\
-Surface form & Are constraints stated directly, or spread across lookups, guards, and type reshaping? \\
+Scenario shape & Can you see what is sent to the agent and how the check attaches to the conversation? \\
+Surface form & Are requirements stated plainly, or buried in lookups and step-by-step guards? \\
 \midrule
 Grade & Combined clarity \\
 \midrule
@@ -88,7 +92,7 @@ D & Excerpt does not convey what is tested, what the agent saw, or which propert
 \end{tabular}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Authoring-clarity grade by check and framework (LLM-judged, A--D).}
 \label{tab:expressiveness-authoring-clarity}
@@ -113,11 +117,11 @@ Multi-turn memory & A & B & B & B & B & B \\
 \end{tabular}
 \end{table}
 
-Listing~\ref{lst:c02-clarity-contrast} contrasts three \emph{ways} of stating the same C02 policy (structured specialist result): a scenario specification, imperative trace inspection, and declarative eval-config assertions. The rubric rewards how quickly a maintainer grasps policy and scenario shape when \emph{reading} the excerpt---not whether the logic is equivalent after working through transforms or helpers.
-
 \subsubsection{Illustrative contrast: structured object shape (C02)}
 
-Specimen C02 requires \texttt{run\_network\_diagnostics\_specialist.result} to contain exactly \texttt{severity}, \texttt{recommended\_action}, and \texttt{escalation\_reason}, with values \texttt{high}, \texttt{create\_ticket}, and a non-empty reason. The same constraint can be expressed as (i)~a scenario block that ties a user turn to an expected tool \texttt{result} object, (ii)~Python that locates the tool in a frozen trace and asserts field-wise, or (iii)~Promptfoo YAML that \emph{transforms} provider output to the specialist JSON slice and applies an \texttt{is-json} schema. LangSmith and Pydantic Evals use the same underlying idea as (ii) or schema validation in code. Promptfoo is attractive when a built-in assert type fits exactly; the downside is that anything custom---finding the right tool in a trace, conditional field rules, nested children---must be written as JavaScript embedded inside YAML strings (\texttt{transform} blocks or \texttt{assert: javascript}), which is awkward to author and review compared with keeping assertions in one language and file.
+Listing~\ref{lst:c02-clarity-contrast} contrasts three \emph{ways} of stating the same C02 policy across different libraries (structured specialist result): a scenario specification, imperative trace inspection, and declarative eval-config assertions. The clarity study rewards how quickly a maintainer understands the policy when \emph{reading} the check, not whether the logic is equivalent after working through every step.
+
+Specimen C02 requires \texttt{run\_network\_diagnostics\_specialist.result} to contain exactly \texttt{severity}, \texttt{recommended\_action}, and \texttt{escalation\_reason}, with values \texttt{high}, \texttt{create\_ticket}, and a non-empty reason. The same rule can be written as (i)~a scenario block that ties a user turn to an expected tool \texttt{result} object, (ii)~Python that finds the tool in a saved trace and checks each field, or (iii)~Promptfoo YAML that picks out the specialist result and applies an \texttt{is-json} schema. LangSmith and Pydantic Evals follow the same idea in code. Promptfoo works well when a built-in assert type fits; otherwise custom logic (finding the right tool, conditional fields, nested children) has to live in JavaScript inside the YAML, which is harder to write and review than keeping checks in one place.
 
 \begin{lstlisting}[caption={C02 structured object: scenario DSL, imperative pytest, and Promptfoo config (grades in Table~\ref{tab:expressiveness-authoring-clarity}).},label=lst:c02-clarity-contrast]
 +------------------------ agent_spec_kit (C02)  grade A -------------------------+
@@ -182,11 +186,11 @@ Specimen C02 requires \texttt{run\_network\_diagnostics\_specialist.result} to c
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-In Table~\ref{tab:expressiveness-authoring-clarity}, only the \emph{agent-spec-kit} port scores \textbf{A} on C02: the user turn and every field constraint appear in one declarative matcher block. Pytest and Promptfoo both score \textbf{B}: pytest spells the policy as imperative guards on a trace dict; Promptfoo splits \emph{where to read} (JavaScript \texttt{transform} on provider output) from \emph{what must hold} (\texttt{is-json} schema)---concise for this specimen, but still without agent stimulus in the graded lines and already relying on inline JS for the tool lookup. On other specimens in the same port (e.g.\ C03 conditional billing, C09 nested children), the CHECK region is entirely \texttt{javascript} asserts because YAML has no matching primitive---readable LOC counts understate how unpleasant that authoring style is. Pydantic Evals, LangSmith, and Braintrust also score \textbf{B} on C02. Promptfoo has the lowest check LOC here (nine non-comment lines in the YAML \texttt{CHECK} region) when the policy maps cleanly to \texttt{is-json}; that brevity does not carry over to checks that force custom script in config.
+In Table~\ref{tab:expressiveness-authoring-clarity}, only the \emph{agent-spec-kit} implementation scores \textbf{A} on C02: the user turn and every field constraint appear in one declarative matcher block. Pytest and Promptfoo both score \textbf{B}: pytest spells the policy as step-by-step guards on a trace; Promptfoo separates \emph{where to read} the result (a short script in the config) from \emph{what must hold} (the schema); compact here, but the graded lines still do not show what the agent was told, and the tool lookup already needs embedded JavaScript. On other specimens (e.g.\ C03 conditional billing, C09 nested children), the whole check is a \texttt{javascript} block because YAML has no ready-made assert; low LOC can hide how awkward that is. Pydantic Evals, LangSmith, and Braintrust also score \textbf{B} on C02. Promptfoo has the fewest lines for this check when \texttt{is-json} suffices; that advantage disappears when policy must be scripted by hand.
 
-\subsection{Failure specificity on negative fixtures}
+\subsection{Failure specificity on deliberate wrong examples}
 
-When a check fails on an intentional negative fixture, we grade the captured failure message using Table~\ref{tab:specificity-rubric}. Table~\ref{tab:failure-specificity} lists the grade for each check and framework.
+When a check fails on a deliberate wrong example, we grade how helpful the failure message is (Table~\ref{tab:specificity-rubric}). Table~\ref{tab:failure-specificity} lists the grade for each check and framework.
 
 \begin{table}[htbp]
 \centering
@@ -196,10 +200,10 @@ When a check fails on an intentional negative fixture, we grade the captured fai
 \toprule
 Grade & What the developer sees \\
 \midrule
-A & Exact JSON path and expected-vs-actual witness (matcher counterexample) \\
-B & Violated rule, tool, or field named in plain text (no structured path) \\
-C & Named evaluator/scorer key or check category only (\texttt{score: 0} dict), no tool/field witness \\
-D & Generic \texttt{AssertionError}, empty assert, or class-only validation with no field witness \\
+A & Exact location in the trace plus expected vs actual (e.g.\ matcher counterexample) \\
+B & Names the broken rule, tool, or field in plain text \\
+C & Says which check failed (e.g.\ a scorer name and ``score 0'') but not which tool or field \\
+D & Generic \texttt{AssertionError} or other message with almost no detail \\
 E & Opaque pass/fail boolean with no diagnostic detail \\
 \bottomrule
 \end{tabular}
@@ -207,7 +211,7 @@ E & Opaque pass/fail boolean with no diagnostic detail \\
 
 \begin{table}[htbp]
 \centering
-\caption{Specificity grade by check and framework on negative fixtures.}
+\caption{Specificity grade by check and framework when the example is meant to fail.}
 \label{tab:failure-specificity}
 \footnotesize
 \begin{tabular}{@{}p{3.2cm}cccccc@{}}
@@ -230,38 +234,10 @@ Multi-turn memory & A & D & B & B & B & B \\
 \end{tabular}
 \end{table}
 
+\emph{agent-spec-kit} scores \textbf{A} on eleven of twelve specimens and \textbf{B} on final-state only: failures routinely name the check, where it ran in the dialogue, a JSON path, and expected-vs-actual witnesses. Plain pytest is almost always \textbf{D} on trace-heavy checks (bare \texttt{AssertionError}) and only reaches \textbf{B} when authors hand-write a field-level message (C07). LangSmith, Pydantic Evals, Promptfoo, and Braintrust cluster at \textbf{B} or \textbf{C}: they identify the rule or scorer but rarely expose structured counterexamples. The listings below demonstrate this.
+
 \subsection{Illustrative failure messages}
 
-For four trace-shaped specimens (C05, C06, C07, C10), each framework port was run on the same intentional fail trace; Listing~\ref{lst:c05-failures}--\ref{lst:c10-failures} show representative captured messages (agent-spec-kit from \texttt{Counterexample}; LangSmith/Braintrust from scorer dicts; Pydantic Evals and Promptfoo from native evaluator/assert output on the frozen trace). The appendix lists the remaining specimens side by side.
-
-\subsubsection{Ordered tool sequence (C05)}
-
-\begin{lstlisting}[caption={C05 ordered tool sequence: captured failure messages (selected frameworks).},label=lst:c05-failures]
-+------------------------ agent_spec_kit (C05)  grade A -------------------------+
-| Check: assert_tool_calls                                                       |
-| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
-| Path: $[1]                                                                     |
-| Expected: missing_element: expected expected value to appear after the previou |
-| s match                                                                        |
-| Actual:                                                                        |
-|   [0] get_outage_status(line_id='LINE-001') -> {active=True}                   |
-|   [1] authenticate_customer() -> ok                                            |
-| could not match expected element at index 1 while preserving order             |
-| no actual items were left to search                                            |
-+--------------------------------------------------------------------------------+
-+------------------------- pytest_plain (C05)  grade D --------------------------+
-| AssertionError                                                                 |
-+--------------------------------------------------------------------------------+
-+--------------------------- langsmith (C05)  grade B ---------------------------+
-| {'key': 'ordered_sequence', 'score': 0}                                        |
-+--------------------------------------------------------------------------------+
-+------------------------ pydantic_evals (C05)  grade B -------------------------+
-| tool sequence expected ['authenticate_customer', 'get_outage_status'], ...     |
-+--------------------------------------------------------------------------------+
-+--------------------------- promptfoo (C05)  grade B ---------------------------+
-| trajectory:tool-sequence in_order failed for steps [...]                       |
-+--------------------------------------------------------------------------------+
-\end{lstlisting}
 
 \subsubsection{Forbidden tool-call (C06)}
 
@@ -352,47 +328,4 @@ For four trace-shaped specimens (C05, C06, C07, C10), each framework port was ru
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-\subsection{Diagnostic quality on injected faults}
-\label{sec:diagnostic-quality-faults}
-
-The specimen harness uses synthetic negatives; a complementary study applies the same ported checks when the reference agent runs with injected faults (Section~\ref{sec:fault-detection}). Table~\ref{tab:diagnostic-rubric} defines the zero-to-four rubric; Table~\ref{tab:diagnostic-comparison} samples three detected failures across framework ports. One hundred and fifty-eight cells were scored.
-
-\begin{table}[htbp]
-\centering
-\caption{Diagnostic specificity rubric on injected faults (0 worst, 4 best).}
-\label{tab:diagnostic-rubric}
-\small
-\begin{tabular}{@{}cp{9.8cm}@{}}
-\toprule
-Score & What the developer sees \\
-\midrule
-0 & Bare fail with no check or lane hint \\
-1 & Broad lane only (output, state, or trace) \\
-2 & Named check or eval key, without localisation or expected-vs-actual \\
-3 & Turn, tool index, or state row plus partial expected-vs-actual \\
-4 & Enough detail to identify the violated requirement and cause \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[htbp]
-\centering
-\caption{Diagnostic scores on three injected-fault cases (detected failures only).}
-\label{tab:diagnostic-comparison}
-\small
-\begin{tabular}{@{}llcccc@{}}
-\toprule
-Fault shape & Framework & Spec. & Failed req? & Path? & E vs A? \\
-\midrule
-Wrong-line binding (trace) & agent\_spec\_kit & 4 & Yes & Yes & Yes \\
-Wrong-line binding (trace) & pytest & 4 & Yes & No & No \\
-Wrong-line binding (trace) & promptfoo & 4 & No & No & No \\
-Missing audit note (trace) & agent\_spec\_kit & 3 & Yes & Yes & Yes \\
-Missing audit note (trace) & pytest & 1 & Yes & No & No \\
-Privacy before auth (state) & agent\_spec\_kit & 4 & Yes & Yes & Yes \\
-Privacy before auth (state) & promptfoo & 3 & No & No & No \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Lane-level detection rates for injected faults are in Section~\ref{sec:fault-detection}.
+The same A--E rubric is applied to captured failures after injected faults in Section~\ref{sec:diagnostic-quality-faults}.

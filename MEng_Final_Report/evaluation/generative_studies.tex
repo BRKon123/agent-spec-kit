@@ -223,7 +223,24 @@ Operator & Failing conversations \\
 \end{tabular}
 \end{table}
 
-The failure taxonomy partitions sixty-two failing conversations from the combined study into three layers by distinct oracle failure message. Three failures are \emph{manual-known} (the canonical script already fails): T29 (trace: wrong line / replacement SIM path), T38 (trace: specialist workflow ordering), and T43 (output: ticket bound to wrong line before correction). Thirty-four failures are \emph{simulation-new} (sim arm only). Twenty-five are \emph{fuzz-new} (fuzz message not seen on manual or sim). No message appeared in both manual and sim arms, so every sim failure counts as new relative to manual. T03 and T04 fail on sim and fuzz but pass on manual; T17 is fuzz-new only; T42 and T45 fail on sim and fuzz while manual passes. Listings~\ref{lst:t45-fuzz} and~\ref{lst:t45-fuzz-failure} give the mutated transcript and captured failure box for T45 (\texttt{drop\_required\_fact}).
+Table~\ref{tab:failure-taxonomy} partitions the sixty-two failing conversations from the combined study into three layers by distinct oracle failure message. No failure message appeared in both the manual and simulation arms, so every simulation failure counts as new relative to manual. Appendix~\ref{app:taxonomy-per-task} gives the per-task breakdown.
+
+\begin{table}[htbp]
+\centering
+\caption{Failure taxonomy by distinct oracle message (combined fuzz study).}
+\label{tab:failure-taxonomy}
+\begin{tabular}{@{}lrp{7.8cm}@{}}
+\toprule
+Layer & Count & Meaning \\
+\midrule
+Manual-known & 3 & Canonical script already fails with this message \\
+Simulation-new & 34 & Message seen on the simulation arm only \\
+Fuzz-new & 25 & Message seen on fuzz but not on manual or simulation \\
+\midrule
+\textbf{Total} & \textbf{62} & Failing conversations in the combined study \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsubsection{Case study: pre-auth disclosure on T45 (fuzz)}
 
@@ -234,17 +251,17 @@ Task T45 exercises delayed authentication: the customer should not receive accou
 \caption{T45 opening turn: manual seed vs.\ \texttt{drop\_required\_fact} mutation.}
 \label{tab:t45-fuzz-mutation}
 \small
-\begin{tabular}{@{}p{2.2cm}p{10.2cm}@{}}
+\begin{tabular}{@{}lp{10.5cm}@{}}
 \toprule
 Arm & Opening user turn \\
 \midrule
 Manual seed & What plan am I on? My line has not been working properly either. My account is CUST-045. \\
-Mutated (\texttt{drop\_required\_fact}) & What plan am I on? My not been working properly either. My CUST-045. \\
+Mutated & What plan am I on? My not been working properly either. My CUST-045. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The operator strips structured verification/account phrasing from the canonical line while leaving a garbled sentence that still mentions \texttt{CUST-045}. Listing~\ref{lst:t45-fuzz} shows the mutated dialogue. On the first agent turn (Listing~\ref{lst:t45-fuzz-failure}, event trace), the agent replies in prose only (\texttt{(no\_tools)}), but names \texttt{CUST-045} while requesting a \texttt{verification\_token}, which fails the segment-0 \texttt{assert\_output} pre-authentication rubric before any authentication tool runs.
+The mutated line is verbatim from the fuzz run, not a paraphrase. \texttt{drop\_required\_fact} deletes substrings that look like account, line, or verification facts via regular expressions; on this seed that removes \texttt{line has} and \texttt{account is}, which leaves ungrammatical text but still exposes \texttt{CUST-045}. Listing~\ref{lst:t45-fuzz} shows the mutated dialogue. On the first agent turn (Listing~\ref{lst:t45-fuzz-failure}, event trace), the agent replies in prose only (\texttt{(no\_tools)}), but names \texttt{CUST-045} while requesting a \texttt{verification\_token}, which fails the segment-0 \texttt{assert\_output} pre-authentication rubric before any authentication tool runs.
 
 \begin{lstlisting}[caption={T45 fuzz: \texttt{drop\_required\_fact} transcript; manual arm passes.},label=lst:t45-fuzz]
 USER (mutated segment 0): What plan am I on? My not been working properly

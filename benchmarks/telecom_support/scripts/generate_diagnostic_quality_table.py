@@ -18,21 +18,34 @@ EXEMPLARS_PATH = BENCH / "tasks" / "fault_detection" / "diagnostic_exemplars.yam
 if str(BENCH) not in sys.path:
     sys.path.insert(0, str(BENCH))
 
-from scripts.diagnostic_quality_lib import DIAGNOSTIC_SPECIFICITY_RUBRIC, FRAMEWORKS
+from scripts.diagnostic_quality_lib import (
+    DIAGNOSTIC_SPECIFICITY_RUBRIC,
+    FRAMEWORKS,
+    backfill_specificity_grades,
+    specificity_grade,
+)
+
+FW_ABBREV = {
+    "agent_spec_kit": "ask",
+    "pytest_plain": "py",
+    "langsmith": "ls",
+    "pydantic_evals": "pe",
+    "promptfoo": "pf",
+    "braintrust": "bt",
+}
 
 
 def _yn(val: object) -> str:
     return "Yes" if val else "No"
 
 
-def _spec(cell: dict) -> str:
-    la = cell.get("llm_assessment") or {}
+def _grade(cell: dict) -> str:
     if cell.get("status") == "llm_error":
         return "ERR"
     if cell.get("status") == "no_failure_box":
         return "—"
-    score = la.get("specificity_score")
-    return str(score) if score is not None else "—"
+    g = specificity_grade(cell)
+    return g if g != "—" else "—"
 
 
 def _rows(cells: dict[str, dict], *, section: str | None = None) -> list[dict]:
@@ -63,9 +76,10 @@ def generate_table(cells: dict[str, dict], meta: dict) -> str:
         "uv run python scripts/collect_diagnostic_failures.py",
         "OPENAI_API_KEY=... uv run python scripts/extract_diagnostic_quality.py",
         "uv run python scripts/generate_diagnostic_quality_table.py",
+        "uv run python scripts/generate_diagnostic_latex.py",
         "```",
         "",
-        "## Specificity rubric (0–4)",
+        "## Specificity rubric (A–E)",
         "",
         DIAGNOSTIC_SPECIFICITY_RUBRIC,
         "",
@@ -73,15 +87,15 @@ def generate_table(cells: dict[str, dict], meta: dict) -> str:
         "",
         "For F-detected tasks, failures under O/S/T/F oracles.",
         "",
-        "| Case | Oracle | Specificity | Failed req? | Trace/state? | Path? | E vs A? | Nodes | LOC |",
-        "|------|--------|------------:|:-----------:|:------------:|:-----:|:-------:|------:|----:|",
+        "| Case | Oracle | Grade | Failed req? | Where? | Path? | E vs A? | LOC |",
+        "|------|--------|:-----:|:-----------:|:------:|:-----:|:-------:|----:|",
     ]
     for cell in _rows(cells, section="oracle_ceiling"):
         case = f"{cell['family']}/{cell['task']}"
         lines.append(
-            f"| {case} | {cell['oracle']} | {_spec(cell)} | {_yn(cell.get('failed_requirement_named'))} | "
+            f"| {case} | {cell['oracle']} | {_grade(cell)} | {_yn(cell.get('failed_requirement_named'))} | "
             f"{_yn(cell.get('trace_node_identified'))} | {_yn(cell.get('field_path_shown'))} | "
-            f"{_yn(cell.get('expected_vs_actual_shown'))} | {cell.get('nodes_to_inspect', '—')} | "
+            f"{_yn(cell.get('expected_vs_actual_shown'))} | "
             f"{cell.get('custom_diagnostic_loc', 0)} |"
         )
 
@@ -90,8 +104,8 @@ def generate_table(cells: dict[str, dict], meta: dict) -> str:
             "",
             "## Section B — Main table (detected, full oracle, six frameworks)",
             "",
-            "| Case | Framework | Specificity | Failed req? | Trace/state? | Path? | E vs A? | Nodes | LOC |",
-            "|------|-----------|------------:|:-----------:|:------------:|:-----:|:-------:|------:|----:|",
+            "| Case | Framework | Grade | Failed req? | Where? | Path? | E vs A? | LOC |",
+            "|------|-----------|:-----:|:-----------:|:------:|:-----:|:-------:|----:|",
         ]
     )
     for cell in _rows(cells):
@@ -100,10 +114,11 @@ def generate_table(cells: dict[str, dict], meta: dict) -> str:
         if cell.get("oracle") != "F" or not cell.get("detected"):
             continue
         case = f"{cell['family']}/{cell['task']}"
+        fw = FW_ABBREV.get(cell["framework"], cell["framework"])
         lines.append(
-            f"| {case} | {cell['framework']} | {_spec(cell)} | {_yn(cell.get('failed_requirement_named'))} | "
+            f"| {case} | {fw} | {_grade(cell)} | {_yn(cell.get('failed_requirement_named'))} | "
             f"{_yn(cell.get('trace_node_identified'))} | {_yn(cell.get('field_path_shown'))} | "
-            f"{_yn(cell.get('expected_vs_actual_shown'))} | {cell.get('nodes_to_inspect', '—')} | "
+            f"{_yn(cell.get('expected_vs_actual_shown'))} | "
             f"{cell.get('custom_diagnostic_loc', 0)} |"
         )
 
@@ -118,7 +133,7 @@ def generate_table(cells: dict[str, dict], meta: dict) -> str:
             "",
             "Richer oracles and frameworks that surface trace, state, and matcher witnesses "
             "produce more localised failure messages. Output-only or generic assertion shells "
-            "tend toward lower specificity scores on the same underlying faults.",
+            "tend toward lower specificity grades on the same underlying faults.",
             "",
         ]
     )
@@ -128,11 +143,23 @@ def generate_table(cells: dict[str, dict], meta: dict) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--records", type=Path, default=RECORDS_PATH)
+    ap.add_argument(
+        "--write-back-grades",
+        action="store_true",
+        help="Persist specificity_grade in diagnostic_records.json from legacy 0-4 scores.",
+    )
     args = ap.parse_args()
     if not args.records.is_file():
         print(f"Missing {args.records}", file=sys.stderr)
         return 1
     cells = json.loads(args.records.read_text(encoding="utf-8"))
+    n = backfill_specificity_grades(cells)
+    if args.write_back_grades and n:
+        args.records.write_text(
+            json.dumps(cells, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        print(f"Backfilled specificity_grade on {n} cells in {args.records}")
     meta = {}
     if META_PATH.is_file():
         meta = json.loads(META_PATH.read_text(encoding="utf-8"))

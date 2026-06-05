@@ -156,64 +156,9 @@ F10 & T44 & miss & miss & N/A & det \\
 \bottomrule
 \end{longtable}
 
-\section{Additional failure-message samples (C01--C04, C08--C09, C12)}
-\label{app:failure-samples}
+\section{Diagnostic specificity on injected faults}
+\label{app:diagnostic-grid}
 
-Captured on intentional negative fixtures (see Section~\ref{sec:expressiveness}). Grades per framework: ask / py / ls / pe / pf / bt.
+Full-cell grid for detected injections on the full oracle (F lane); summary in Table~\ref{tab:diagnostic-comparison} (Section~\ref{sec:diagnostic-quality-faults}).
 
-\subsection*{C01: Final output rubric (A/B/B/B/D/B)}
-
-\begin{lstlisting}
-# agent_spec_kit
-path=$ code=one_of ... actual="'Your service is active; no billing changes...'"
-# pytest_plain / pydantic_evals: AssertionError
-# langsmith: {'key': 'output_rubric', 'score': 0}
-# promptfoo: assertion returned False
-\end{lstlisting}
-
-\subsection*{C02: Structured object shape (A/B/B/B/D/B)}
-
-\begin{lstlisting}
-# agent_spec_kit
-path=$[0] code=missing_element ... specialist result severity mismatch
-# scorer ports: score 0 with key object_shape / c02
-\end{lstlisting}
-
-\subsection*{C03: Conditional object (A/B/B/B/D/B)}
-
-\begin{lstlisting}
-# agent_spec_kit
-path=$[0] code=missing_element ... billing specialist eligible/currency
-# imperative ports: AssertionError or score 0
-\end{lstlisting}
-
-\subsection*{C04: Numeric constraint (A/B/B/B/D/B)}
-
-\begin{lstlisting}
-# agent_spec_kit
-path=$[0] code=missing_element ... amount 9999.0 out of policy bound
-\end{lstlisting}
-
-\subsection*{C08: Tool result (A/B/B/B/D/B)}
-
-\begin{lstlisting}
-# agent_spec_kit
-path=$[0] code=missing_element ... severity / recommended_action mismatch
-# langsmith: {'key': 'tool_result', 'score': 0}
-\end{lstlisting}
-
-\subsection*{C09: Nested tools (A/B/B/B/D/B)}
-
-\begin{lstlisting}
-# agent_spec_kit
-path=$[0] code=missing_element ... nested specialist child order
-# langsmith: {'key': 'nested_tools', 'score': 0}
-\end{lstlisting}
-
-\subsection*{C12: Multi-turn memory (A/D/B/D/D/B)}
-
-\begin{lstlisting}
-# agent_spec_kit
-path=$[1] code=missing_element ... no actual items left (expected post-correction tool)
-# pytest / promptfoo: AssertionError / assertion returned False
-\end{lstlisting}
+\input{appendix/diagnostic_grid}

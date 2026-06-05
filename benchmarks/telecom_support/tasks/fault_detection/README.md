@@ -27,6 +27,7 @@ uv run python scripts/collect_diagnostic_failures.py
 OPENAI_API_KEY=... uv run python scripts/extract_diagnostic_quality.py
 
 uv run python scripts/generate_diagnostic_quality_table.py
+uv run python scripts/generate_diagnostic_latex.py
 ```
 
 ## Commands
