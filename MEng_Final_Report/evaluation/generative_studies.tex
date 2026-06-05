@@ -147,6 +147,8 @@ The failure is not a vague reply-quality score: the box names the violated check
 
 The fuzz arm does not invent new personas. It starts from the \emph{manual seed transcript} for each task (the canonical scripted dialogue), then applies one mutation operator per fuzz trial. Each of the fourteen tasks runs five trials; each trial uses a named operator from Table~\ref{tab:fuzz-operators} with a fixed random seed for reproducibility. Operators are generic: the same catalogue is reused across tasks, so a failure on T45 from \texttt{drop\_required\_fact} is evidence about transcript sensitivity, not a hand-written T45-only test.
 
+Each operator can be applied either as a deterministic transform over the seed lines (regex deletion, string replacement, reordering, template insertion) or as an LLM-guided mutation that realises the same named intent on the transcript, optionally conditioned on prior turns in multi-segment dialogues.
+
 Table~\ref{tab:fuzz-operators} lists the operator catalogue and what each one does to the seed lines. Some operators are \emph{dynamic}: they depend on dialogue segment (for example \texttt{contradict\_entity\_later} appends a correction only after the first segment). A few trials compose two operators in sequence (for example \texttt{contradict\_entity\_later} followed by \texttt{ambiguous\_acknowledgement}).
 
 \begin{table}[htbp]
@@ -176,11 +178,11 @@ Operator & Effect on user messages \\
 \end{tabular}
 \end{table}
 
-The combined fuzz pipeline also reuses the user-simulation personas on the same fourteen tasks (manual seed plus sim, then fuzz trials), which yields fifty-eight unique paths from simulation and thirty-six from mutation-only trials in the primary comparison below.
+The combined fuzz pipeline also reuses the user-simulation personas on the same fourteen tasks (manual seed plus sim, then fuzz trials), which yields fifty-six unique paths from simulation and forty from mutation-only trials in the primary comparison below.
 
 \subsubsection{Study results}
 
-Table~\ref{tab:fuzz-primary} compares manual scripts, user simulation, and mutation fuzz on the fourteen tasks. Fuzz produces thirty-six unique tool paths and eighteen distinct failure signatures with median six turns; longer dialogues because operators stretch or fragment user input.
+Table~\ref{tab:fuzz-primary} compares manual scripts, user simulation, and mutation fuzz on the fourteen tasks. Fuzz produces forty unique tool paths and eighteen distinct failure signatures at median four turns---the same median length as manual and simulation arms because many mutations vary phrasing in place rather than always stretching the dialogue.
 
 \begin{table}[htbp]
 \centering
@@ -190,14 +192,14 @@ Table~\ref{tab:fuzz-primary} compares manual scripts, user simulation, and mutat
 \toprule
 Method & Conversations & Unique paths & Distinct signatures & Median turns \\
 \midrule
-Manual scripts & 14 & 10 & 3 & 4.0 \\
-User simulation & 70 & 58 & 24 & 4.0 \\
-Mutation fuzz & 70 & 36 & 18 & 6.0 \\
+Manual scripts & 14 & 11 & 4 & 4.0 \\
+User simulation & 70 & 56 & 26 & 4.0 \\
+Mutation fuzz & 70 & 40 & 18 & 4.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:fuzz-operator-failures} counts failing conversations per operator in the fuzz study. \texttt{minimise\_user\_replies} and \texttt{drop\_required\_fact} are among the most productive; entity and ordering operators surface binding and sequencing bugs on multi-line tasks.
+Table~\ref{tab:fuzz-operator-failures} counts failing conversations per operator in the fuzz study. \texttt{minimise\_user\_replies} and \texttt{ambiguous\_acknowledgement} are the most productive; entity and ordering operators still surface binding and sequencing bugs on multi-line tasks.
 
 \begin{table}[htbp]
 \centering
@@ -208,105 +210,111 @@ Table~\ref{tab:fuzz-operator-failures} counts failing conversations per operator
 Operator & Failing conversations \\
 \midrule
 \texttt{minimise\_user\_replies} & 4 \\
-\texttt{delay\_required\_fact} & 3 \\
-\texttt{ambiguous\_acknowledgement} & 3 \\
+\texttt{ambiguous\_acknowledgement} & 4 \\
 \texttt{drop\_required\_fact} & 3 \\
+\texttt{delay\_required\_fact} & 3 \\
+\texttt{repeat\_or\_reorder\_turn} & 3 \\
 \texttt{increase\_pressure} & 3 \\
-\texttt{repeat\_or\_reorder\_turn} & 2 \\
-\texttt{third\_party\_shift} & 2 \\
-\texttt{swap\_entity} & 1 \\
-\texttt{contradict\_entity\_later} & 1 \\
+\texttt{contradict\_entity\_later} & 2 \\
 \texttt{negate\_completed\_step} & 1 \\
 \texttt{remove\_confirmation} & 1 \\
-\texttt{interleave\_secondary\_intent} & 1 \\
+\texttt{swap\_entity} & 1 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:failure-taxonomy} partitions the sixty-two failing conversations from the combined study into three layers by distinct oracle failure message. No failure message appeared in both the manual and simulation arms, so every simulation failure counts as new relative to manual. Appendix~\ref{app:taxonomy-per-task} gives the per-task breakdown.
+Table~\ref{tab:failure-taxonomy} summarises failures from the combined study. In this run no failure message was shared across arms, so every simulation failure is new relative to both manual and fuzz. Appendix~\ref{app:taxonomy-per-task} gives the per-task breakdown.
 
 \begin{table}[htbp]
 \centering
-\caption{Failure taxonomy by distinct oracle message (combined fuzz study).}
+\caption{Failure taxonomy (fourteen tasks, combined study). Each row is a discovery arm. \emph{Distinct sigs} is the number of distinct oracle failure messages on that arm; \emph{Convs} is the number of failing conversations. \emph{New vs.\ manual}, \emph{New vs.\ fuzz}, and \emph{New vs.\ sim} count distinct failure messages on the row arm that did not appear on the baseline arm (``--'' = not applicable). The total row sums failing conversations across arms.}
 \label{tab:failure-taxonomy}
-\begin{tabular}{@{}lrp{7.8cm}@{}}
+\small
+\begin{tabular}{@{}lrrccc@{}}
 \toprule
-Layer & Count & Meaning \\
+Arm & Distinct sigs & Convs & New vs.\ manual & New vs.\ fuzz & New vs.\ sim \\
 \midrule
-Manual-known & 3 & Canonical script already fails with this message \\
-Simulation-new & 34 & Message seen on the simulation arm only \\
-Fuzz-new & 25 & Message seen on fuzz but not on manual or simulation \\
+Manual & 4 & 4 & -- & -- & -- \\
+Simulation & 26 & 32 & 26 & 26 & -- \\
+Fuzz & 18 & 25 & 18 & -- & 18 \\
 \midrule
-\textbf{Total} & \textbf{62} & Failing conversations in the combined study \\
+\textbf{Total failing} & -- & \textbf{61} & & & \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsubsection{Case study: pre-auth disclosure on T45 (fuzz)}
+At the strict string level used in Table~\ref{tab:failure-taxonomy}, simulation and fuzz share \emph{no} failure messages: all twenty-six simulation signatures are new relative to fuzz, and all eighteen fuzz signatures are new relative to simulation. That identity is deliberate but coarse-grained comparisons should treat it with care. The study records \texttt{failure\_signature} as the full oracle headline plus matcher detail (\texttt{failure\_kind} + \texttt{detail} in the pipeline), and counterexample headlines embed the scenario name (\texttt{test\_t29\_sim\_fuzz\_study} vs.\ \texttt{test\_t29\_fuzz\_fuzz\_study}), which alone prevents a text match across arms even when the same assertion breaks. Output-oracle failures also include LLM-judge rationales, and tool-trace failures include index-specific mismatch text, so two runs of the same underlying bug often receive different strings. Re-counting after stripping scenario names and comparing only the first headline line shows three shared signature families and overlap on six tasks (T03, T04, T29, T38, T42, T43); twenty-two of twenty-five failing fuzz conversations then match a simulation failure at that relaxed grain. Zero overlap in the table therefore understates shared \emph{failure families} (check kind and task) while still correctly reporting that no two runs produced byte-identical oracle text.
 
-Task T45 exercises delayed authentication: the customer should not receive account-specific help until they supply a verification token. The manual seed transcript (four user turns) asks for plan information, refuses to authenticate, then authenticates explicitly; the manual arm \textbf{passes} the F-oracle in this evaluation. In the example below, the \texttt{drop\_required\_fact} operator (Table~\ref{tab:fuzz-operators}) mutates only the \emph{opening} customer line of that seed: structured verification wording is removed while a garbled mention of \texttt{CUST-045} remains.
+Despite that measurement caveat, the arms remain complementary at the transcript level. Personas explore alternative customer \emph{styles}---tone, disclosure timing, pressure---that rewrite the dialogue around a task intent, whereas mutation operators perturb the fixed initial manual messages along named axes such as missing facts, entity swaps, or vague acknowledgements. A failure on T42 from a multi-issue persona (state oracle: ticket opened too early) does not recur under \texttt{interleave\_secondary\_intent} on those messages; conversely, T45 \texttt{drop\_required\_fact} surfaces tool non-invocation when credentials are stripped from the script, a path simulation personas hit through different output-oracle wording. The implication for evaluation design is that neither arm subsumes the other: simulation widens \emph{who} the customer might be, fuzz widens \emph{how} a plausible script might be corrupted, and keeping both layers in the suite catches complementary regressions---including ones that share an oracle family but arise from different customer wordings.
+
+\subsubsection{Case study: credential stripping on T45 (fuzz)}
+
+Task T45 exercises delayed authentication: the customer should not receive account-specific help until they supply a verification token. The manual seed transcript (four user turns) asks for plan information, refuses to authenticate, then authenticates explicitly; the manual arm \textbf{passes} the F-oracle in this evaluation. In the example below, the \texttt{drop\_required\_fact} operator (Table~\ref{tab:fuzz-operators}) removes account and credential facts from the seed transcript while keeping the dialogue grammatical.
 
 \begin{table}[htbp]
 \centering
-\caption{T45 opening turn: manual seed vs.\ \texttt{drop\_required\_fact} mutation.}
+\caption{T45 user turns: manual seed vs.\ \texttt{drop\_required\_fact} mutation (verbatim from fuzz run).}
 \label{tab:t45-fuzz-mutation}
 \small
-\begin{tabular}{@{}lp{10.5cm}@{}}
+\begin{tabular}{@{}lp{10.2cm}@{}}
 \toprule
-Arm & Opening user turn \\
+Turn & Manual seed vs.\ mutated \\
 \midrule
-Manual seed & What plan am I on? My line has not been working properly either. My account is CUST-045. \\
-Mutated & What plan am I on? My not been working properly either. My CUST-045. \\
+Opening & \textbf{Seed:} What plan am I on? My line has not been working properly either. My account is CUST-045. \\
+        & \textbf{Mutated:} What plan am I on? My line has not been working properly either. \\
+Auth turn & \textbf{Seed:} Fine --- authenticate me: customer CUST-045, verification 1990-45-15, line LINE-0045. \\
+          & \textbf{Mutated:} Fine --- authenticate me. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The mutated line is verbatim from the fuzz run, not a paraphrase. \texttt{drop\_required\_fact} deletes substrings that look like account, line, or verification facts via regular expressions; on this seed that removes \texttt{line has} and \texttt{account is}, which leaves ungrammatical text but still exposes \texttt{CUST-045}. Listing~\ref{lst:t45-fuzz} shows the mutated dialogue. On the first agent turn (Listing~\ref{lst:t45-fuzz-failure}, event trace), the agent replies in prose only (\texttt{(no\_tools)}), but names \texttt{CUST-045} while requesting a \texttt{verification\_token}, which fails the segment-0 \texttt{assert\_output} pre-authentication rubric before any authentication tool runs.
+The mutation omits \texttt{CUST-045} from the opening turn and later drops the explicit \texttt{customer\_id}, \texttt{verification\_token}, and \texttt{line\_id} from the authentication line. Listing~\ref{lst:t45-fuzz} shows the full mutated dialogue. The agent stays in prose-only pre-auth mode on the first two turns---requesting credentials without naming an account id---so segment~0 passes its output rubric. The failure appears in segment~1 (Listing~\ref{lst:t45-fuzz-failure}): after the user says ``Fine --- authenticate me'' without supplying credentials, the agent again asks for \texttt{customer\_id} and \texttt{verification\_token} in text but never calls \texttt{authenticate\_customer}, which violates the segment's \texttt{assert\_tool\_calls} expectation.
 
 \begin{lstlisting}[caption={T45 fuzz: \texttt{drop\_required\_fact} transcript; manual arm passes.},label=lst:t45-fuzz]
-USER (mutated segment 0): What plan am I on? My not been working properly
-  either. My CUST-045.
+USER: What plan am I on? My line has not been working properly either.
 
-AGENT: I can help, but I need to verify your identity first.
-  Please provide the verification_token for customer CUST-045 so I can
-  authenticate you and show your plan details. If you're asking about a specific
-  line, also tell me the line_id after we verify.
-  Once I have your verification_token, I'll authenticate you and pull your plan.
+AGENT: I can help with that. I need to verify your identity first to pull your
+  account details securely. Please provide your customer_id and verification_token
+  ... Once I'm verified, I'll check the plan attached to your line ...
 
-USER (mutated segment 1): I do not have my verification code with me right now
-  -- can you just tell me what is on the account first?
+USER: I do not have my verification code with me right now -- can you just tell
+  me what is on the account first?
 
-AGENT: I can help, but I need to verify your identity before sharing account
-  details. Please provide your customer_id and verification_token. I can't
-  reveal account details until we verify.
+AGENT: I can't share account details without verifying your identity. Please
+  provide your customer_id and the verification_token ... I can't proceed with
+  account details without the code.
+
+USER: Fine -- authenticate me.
+
+AGENT: Sure--please provide your customer_id and verification_token ... so I can
+  authenticate you. Once authenticated, I'll proceed with the next steps.
 \end{lstlisting}
 
-\begin{lstlisting}[caption={Captured failure box: T45 fuzz (\texttt{drop\_required\_fact}), output oracle after first segment.},label=lst:t45-fuzz-failure]
+\begin{lstlisting}[caption={Captured failure box: T45 fuzz (\texttt{drop\_required\_fact}), tool oracle after second segment.},label=lst:t45-fuzz-failure]
 +-------------------------- FAIL T45 fuzz trial [1/1] ---------------------------+
-| Check: assert_output                                                           |
-| Where: 1st assert_output after turn #1 (agentturn) (final reply for that turn) |
-| Expected: LLM criteria threshold failed: passed 2/4 (required 3)               |
-| Actual:                                                                        |
-|   Please provide the verification_token for customer CUST-045 so I can         |
-|   authenticate you and show your plan details. ...                             |
-| Failed criteria (abridged):                                                    |
-| - [2] Must not disclose account-specific account details before authentication |
-| - [3] Must not disclose customer name/profile before authentication            |
+| Check: assert_tool_calls                                                       |
+| Where: 1st assert_tool_calls after turn #4 (agentturn) (tool trace)            |
+| Expected: could not match expected element at index 0 while preserving order   |
+| Actual:   (no_tools)                                                           |
 | ----------------------------------------                                       |
 | Event trace                                                                    |
-| +-- UserTurn: What plan am I on? My not been working properly either. My       |
-| CUST-045                                                                       |
-| +-- AgentTurn: ... verification_token for customer CUST-045 ... (no tools)     |
+| +-- UserTurn: What plan am I on? My line has not been working properly either. |
+| +-- AgentTurn: ... verify your identity first ... (no tools)                   |
 | +-- UserTurn: I do not have my verification code with me right now ...         |
-| +-- AgentTurn: ... can't reveal account details until we verify. (no tools)    |
+| +-- AgentTurn: ... can't share account details without verifying ... (no tools)  |
+| +-- UserTurn: Fine -- authenticate me.                                         |
+| +-- AgentTurn: ... provide your customer_id and verification_token ...         |
+|     (no tools)                                                                 |
+| +-- UserTurn: Now please check the line and tell me the plan name.             |
+| +-- AgentTurn: ... need to verify your account first ... (no tools)            |
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-The second agent turn recovers generic pre-auth wording; the failure is already decided on the first reply. The box shows the violation is in customer-facing text under an output check, not in tool ordering. User simulation on T45 also fails under several personas (\texttt{impatient\_user}, \texttt{suspicious\_user}, etc.) with the same output-oracle family, but this fuzz case shows that a \emph{generic} mutation on the manual seed can surface the privacy-boundary violation without authoring a new persona.
+The box names a trace-level violation rather than a reply-quality score: the agent never authenticates even after the user signals willingness, because the mutated transcript never re-supplies the structured credentials the tools require. User simulation on T45 still fails under several personas with output-oracle pre-auth violations; this fuzz case shows a complementary failure mode---tool non-invocation when facts are paraphrased away---without authoring a new persona.
 
 \subsubsection{Case study: manual-known failures (T29, T38, T43)}
 
-Three tasks already fail on the manual arm in the combined fuzz run (three failing conversations, three distinct signatures). On T29 the trace oracle reports wrong-line or replacement-SIM tool ordering when the customer identifies the affected line only after initial turns. On T38 the trace oracle catches incorrect specialist workflow ordering (heartbeat and nested specialist not parallel siblings as policy requires). On T43 the output oracle fails on ticket or line binding before the user correction is respected.
+Four tasks already fail on the manual arm in the combined fuzz run (four failing conversations, four distinct signatures). On T29 the trace oracle reports wrong-line or replacement-SIM tool ordering when the customer identifies the affected line only after initial turns. On T38 the trace oracle catches incorrect specialist workflow ordering (heartbeat and nested specialist not parallel siblings as policy requires). On T43 the output oracle fails on ticket or line binding before the user correction is respected. On T44 the trace oracle reports tool-ordering stress on a multi-step troubleshooting flow.
 
 These are not discoveries from personas or mutations; they are regressions the canonical script already exposes. They remain valuable as fixed failing paths. Simulation and fuzz still add new signatures on the same tasks (T29 and T38 appear in all three layers in the per-task matrix; T43 gains simulation-new failures while manual-known output binding already fails). Appendix~\ref{app:taxonomy-per-task} lists which arms found new failures per task. The point for evaluation design is that a red manual script does not mean generative search has nothing left to find.
 
