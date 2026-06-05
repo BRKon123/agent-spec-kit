@@ -84,10 +84,29 @@ def _records_from_job(
     return out
 
 
+def _parse_methods(raw: str) -> set[str]:
+    methods = {part.strip() for part in raw.split(",") if part.strip()}
+    allowed = {"manual", "sim", "fuzz"}
+    unknown = methods - allowed
+    if unknown:
+        raise SystemExit(f"Unknown methods: {sorted(unknown)} (allowed: manual, sim, fuzz)")
+    if not methods:
+        raise SystemExit("At least one method is required.")
+    return methods
+
+
+def _load_baseline_records(path: Path, *, methods: set[str]) -> list[dict[str, Any]]:
+    if not path.is_file():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return [r for r in payload.get("records", []) if r.get("method") in methods]
+
+
 async def _run(args: argparse.Namespace) -> int:
     cfg = load_study_config()
     selected_tasks = list(cfg["primary_tasks"])
     selected_set = set(selected_tasks)
+    methods = _parse_methods(args.methods)
 
     scenarios = discover_fuzz_study_scenarios()
     manual_defs: list[tuple[str, Any]] = []
@@ -97,14 +116,24 @@ async def _run(args: argparse.Namespace) -> int:
         task = _task_from_tags(sdef.tags)
         if task not in selected_set:
             continue
-        if _is_method(sdef.tags, "manual"):
+        if _is_method(sdef.tags, "manual") and "manual" in methods:
             manual_defs.append((task, sdef))
-        elif _is_method(sdef.tags, "sim"):
+        elif _is_method(sdef.tags, "sim") and "sim" in methods:
             sim_defs.append((task, sdef))
-        elif _is_method(sdef.tags, "fuzz"):
+        elif _is_method(sdef.tags, "fuzz") and "fuzz" in methods:
             fuzz_defs.append((task, sdef))
 
-    records: list[dict[str, Any]] = []
+    baseline_path = BENCH / str(
+        (cfg.get("outputs") or {}).get(
+            "deterministic_baseline_json",
+            "tasks/fuzzing/fuzzing_runs_deterministic.json",
+        )
+    )
+    baseline_methods = {"manual", "sim"} - methods
+    records: list[dict[str, Any]] = _load_baseline_records(
+        baseline_path,
+        methods=baseline_methods,
+    )
     ui_run_id: str | None = None
     out_dir = BENCH / "tasks" / "fuzzing"
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
@@ -136,9 +165,16 @@ async def _run(args: argparse.Namespace) -> int:
             "run_id": run_id,
             "workers": args.workers,
             "selected_tasks": selected_tasks,
+            "methods": sorted(methods),
+            "mutation_backend": "llm" if "fuzz" in methods else None,
             "calibration_steering": False,
         },
     )
+    if baseline_methods and records:
+        _log(
+            f"[fuzz-study] merged {len(records)} baseline records from "
+            f"{baseline_path.relative_to(BENCH)} ({', '.join(sorted(baseline_methods))})",
+        )
 
     async def _run_one(task: str, method: str, sdef, case_index: int):
         case_total = len(scenario_case_runs(sdef))
@@ -241,6 +277,9 @@ async def _run(args: argparse.Namespace) -> int:
         "run_dir": str(run_dir.relative_to(BENCH)),
         "calibration_steering": False,
         "selected_tasks": selected_tasks,
+        "methods": sorted(methods),
+        "mutation_backend": "llm" if "fuzz" in methods else "deterministic",
+        "baseline_json": str(baseline_path.relative_to(BENCH)) if baseline_path.is_file() else None,
         "records": records,
         "summary": {
             "manual": _aggregate([r for r in records if r["method"] == "manual"]),
@@ -284,6 +323,12 @@ def main() -> int:
     )
     ap.add_argument("--notes", default=None, help="Optional notes on the UI run record.")
     ap.add_argument("--no-ui", action="store_true", help="Skip .agent_spec_kit/ UI logging.")
+    ap.add_argument(
+        "--methods",
+        default="manual,sim,fuzz",
+        help="Comma-separated arms to run (default: manual,sim,fuzz). "
+        "When a subset is used, missing manual/sim rows are merged from the deterministic baseline JSON.",
+    )
     args = ap.parse_args()
     return asyncio.run(_run(args))
 

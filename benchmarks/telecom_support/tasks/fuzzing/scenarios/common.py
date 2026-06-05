@@ -10,7 +10,11 @@ from typing import Any
 import agent_spec_kit as ek
 import yaml  # type: ignore[import-untyped]
 
-from fuzz.mutations import mutation_operator_strategy
+from fuzz.llm_mutation_strategy import (
+    DEFAULT_FUZZ_MUTATION_MODEL,
+    ensure_openai_api_key,
+    llm_mutation_operator_strategy,
+)
 from store.store import TelcoStore
 from tasks.user_simulation.scenarios.common import (
     Persona,
@@ -95,6 +99,11 @@ def fuzz_trial_cases(task_id: str, cfg: dict[str, Any] | None = None) -> tuple[e
     return tuple(cases)
 
 
+def fuzz_mutation_settings(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
+    data = cfg or load_fuzz_study_config()
+    return dict(data.get("fuzz_mutation") or {})
+
+
 def fuzz_config_for_segment(
     *,
     task_id: str,
@@ -103,11 +112,17 @@ def fuzz_config_for_segment(
     segment_index: int,
     cfg: dict[str, Any] | None = None,
 ) -> ek.FuzzConfig:
-    seeds = segment_seed_messages(task_id, segment_index, cfg)
-    strategy = mutation_operator_strategy(
+    ensure_openai_api_key()
+    data = cfg or load_fuzz_study_config()
+    seeds = segment_seed_messages(task_id, segment_index, data)
+    mutation_cfg = fuzz_mutation_settings(data)
+    strategy = llm_mutation_operator_strategy(
         operator_id=fuzz_trial.operator,
         seed_meta=dict(store.seed_meta),
         composition=fuzz_trial.composition,
+        model=str(mutation_cfg.get("model") or DEFAULT_FUZZ_MUTATION_MODEL),
+        temperature=mutation_cfg.get("temperature"),
+        timeout_s=mutation_cfg.get("timeout_s"),
     )
     return ek.FuzzConfig(
         strategy=strategy,

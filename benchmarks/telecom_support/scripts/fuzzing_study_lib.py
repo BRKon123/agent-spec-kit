@@ -162,12 +162,17 @@ def record_from_fuzz_job(
         last = job.fuzz_trials[-1]
         per_step = [tuple(str(x) for x in seg) for seg in (last.get("per_step_user_turns") or ())]
 
+    mutation_backend = None
+    if method == "fuzz":
+        mutation_backend = str((cfg.get("fuzz_mutation") or {}).get("backend") or "llm")
+
     return {
         "task_id": task_id,
         "method": method,
         "seed": seed,
         "mutation_operator": mutation_operator,
         "mutation_seed": mutation_seed,
+        "mutation_backend": mutation_backend,
         "framework_trials": framework_trials if method == "fuzz" else 1,
         "trial_index": mutation_seed,
         "turn_count": len(turns),

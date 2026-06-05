@@ -17,11 +17,13 @@ if str(BENCH_SCR) not in sys.path:
 from fuzzing_study_lib import BENCH
 
 
-def _authoring_effort(method: str) -> str:
+def _authoring_effort(method: str, *, mutation_backend: str | None = None) -> str:
     if method == "manual":
         return "Manual script (canonical seed)"
     if method == "sim":
         return "Task profile + persona seed"
+    if mutation_backend == "llm":
+        return "Manual seed + LLM mutation intents"
     return "Manual seed + mutation operator"
 
 
@@ -31,12 +33,14 @@ def generate_markdown(study: dict[str, Any]) -> str:
     manual = study["summary"]["manual"]
     sim = study["summary"]["sim"]
     fuzz = study["summary"]["fuzz"]
+    mutation_backend = study.get("mutation_backend")
     lines = [
         "# Fuzzing Study",
         "",
         f"- Generated: {study['generated_utc']}",
         f"- Run id: {study.get('run_id', 'n/a')}",
         f"- Tasks: {', '.join(study['selected_tasks'])}",
+        f"- Mutation backend: {mutation_backend or 'deterministic'}",
         f"- Calibration steering: {study.get('calibration_steering', False)}",
         "",
         "## Primary comparison",
@@ -52,7 +56,8 @@ def generate_markdown(study: dict[str, Any]) -> str:
         s = study["summary"][key]
         lines.append(
             f"| {label} | {tasks} | {s['conversations']} | {s['unique_tool_paths']} | "
-            f"{s['distinct_failure_signatures']} | {s['median_turns']} | {_authoring_effort(key)} |"
+            f"{s['distinct_failure_signatures']} | {s['median_turns']} | "
+            f"{_authoring_effort(key, mutation_backend=mutation_backend if key == 'fuzz' else None)} |"
         )
     lines.extend(
         [
@@ -72,9 +77,15 @@ def generate_markdown(study: dict[str, Any]) -> str:
             "",
             "## Claim",
             "",
-            "Fuzzing applies generic mutation operators over valid manual-script user turns and reuses the "
-            "same F-oracle as user simulation. It tests whether small transcript perturbations surface "
-            "tool-path and failure-signature diversity beyond manual scripts and persona-based simulation.",
+            (
+                "Fuzzing applies mutation intents over valid manual-script user turns and reuses the "
+                "same F-oracle as user simulation. In this run, mutations are produced by an LLM rather "
+                "than deterministic regex/string operators."
+                if mutation_backend == "llm"
+                else "Fuzzing applies generic mutation operators over valid manual-script user turns and reuses the "
+                "same F-oracle as user simulation. It tests whether small transcript perturbations surface "
+                "tool-path and failure-signature diversity beyond manual scripts and persona-based simulation."
+            ),
             "",
         ]
     )
