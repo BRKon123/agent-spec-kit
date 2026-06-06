@@ -5,9 +5,9 @@ Scenarios and matchers are agnostic to how the agent is built; integrations are 
 
 \subsection{AdaptedAgent and Shipped Adapters}
 
-Every integration implements \texttt{AdaptedAgent.run\_turn(user\_message)}, returning a \texttt{TurnResult} with user-visible \texttt{output}, a list of typed events, and optional error metadata. Events are instances of \texttt{AgentTurnEvent} and \texttt{ToolCallEvent} (and related types in \texttt{events.py}), not opaque dictionaries. Tool nodes carry normalised argument dicts and optional nested \texttt{children} when a specialist runs as a subgraph. That choice lets \texttt{assert\_tool\_calls} and the trace renderer share one structure regardless of whether the underlying stack is LangGraph or Pydantic AI, and it is what makes path-qualified matcher errors meaningful in the counterexample panel.
+Every integration implements \texttt{AdaptedAgent.run\_turn(user\_message)}, returning a \texttt{TurnResult} with user-visible \texttt{output}, a list of typed events, and optional error metadata. Events are instances of \texttt{AgentTurnEvent} and \texttt{ToolCallEvent} (and related types in \texttt{events.py}), not opaque dictionaries. Tool nodes carry normalised argument dicts and optional nested \texttt{children} when a specialist agent delegates further tool calls. That choice lets \texttt{assert\_tool\_calls} and the trace renderer share one structure regardless of whether the underlying stack is LangGraph or Pydantic AI, and it is what makes path-qualified matcher errors meaningful in the counterexample panel.
 
-For LangChain and LangGraph, \texttt{wrap\_langchain\_agent} streams graph updates and normalises each chunk into events. Listing~\ref{lst:wrap-langchain} shows the typical setup; \texttt{subgraphs=True} is important when specialists run as nested graphs and scenarios assert on \texttt{children=[...]} under a parent tool call.
+For LangChain and LangGraph, \texttt{wrap\_langchain\_agent} streams graph updates and normalises each chunk into events. Listing~\ref{lst:wrap-langchain} shows the typical setup; \texttt{subgraphs=True} is important when scenarios assert on \texttt{children=[...]} under a parent tool call from a specialist agent.
 
 \begin{lstlisting}[language=Python,caption={Wrapping a LangGraph agent for scenario execution.},label=lst:wrap-langchain]
 adapted = wrap_langchain_agent(

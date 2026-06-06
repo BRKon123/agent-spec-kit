@@ -1,7 +1,7 @@
 \section{Counterexamples and Diagnosability}
 \label{sec:counterexamples}
 
-Section~\ref{sec:design-goals} argued that scalar metrics and raw traces leave a gap when debugging custom agents. This section describes how \emph{agent-spec-kit} closes that gap at the assertion that failed: each failed \texttt{assert\_output}, \texttt{assert\_tool\_calls}, \texttt{forbid\_tool\_calls}, or \texttt{assert\_that} yields a \texttt{Counterexample} intended to support an edit-test loop on prompts, graphs, and policies.
+Section~\ref{sec:design-goals} argued that scalar metrics and raw traces leave a gap when debugging custom agents. This section describes how \emph{agent-spec-kit} closes that gap at the assertion that failed. A \emph{counterexample} is a structured failure report attached to one scenario assertion: each failed \texttt{assert\_output}, \texttt{assert\_tool\_calls}, \texttt{forbid\_tool\_calls}, or \texttt{assert\_that} yields a \texttt{Counterexample} with headline, location, path, expected versus actual, notes, and a bounded event trace, intended to support an edit-test loop on prompts, graphs, and policies.
 
 \subsection{Design Principles}
 
@@ -9,7 +9,7 @@ A useful failure report should locate the failing step and turn, pinpoint the fi
 
 \subsection{Failure Pipeline}
 
-When a matcher fails, \texttt{match.async\_check} returns a \texttt{MatchResult} with one or more \texttt{MatchError} objects carrying paths, codes, and optional witness JSON. The scenario runner wraps that in a \texttt{FailureRecord}: \texttt{step\_kind} distinguishes output, tool, environment, or runtime failures; \texttt{turn\_index} and \texttt{assertion\_index\_after\_turn} locate the failing check in the script; \texttt{matcher\_errors} and \texttt{actual} preserve machine-readable detail; \texttt{turn\_results} holds the transcript window used for display. \texttt{counterexample\_from\_failure} maps that record into the payload shown to developers. Table~\ref{tab:counterexample-fields} lists the main \texttt{Counterexample} fields and why each exists.
+When a scenario assertion fails, the framework first captures the precise mismatch: a JSON path to the offending field where one applies, a short explanation of what rule broke, and witness data such as expected versus actual tool names when that helps. It then records where in the script the failure occurred (an output, tool, environment, or runtime check; which dialogue turn; which assertion after that turn) and keeps a bounded snapshot of what the agent actually produced. Those pieces are assembled into the counterexample rendered in the CLI and web UI. Table~\ref{tab:counterexample-fields} lists the main fields in that report and why each exists.
 
 \begin{table}[htbp]
 \centering
@@ -119,4 +119,4 @@ Actual:
 
 \subsection{Agent-Update Workflow}
 
-The intended workflow is straightforward. Run the scenario and read the counterexample headline and path. Open the trace drawer in the UI or the Rich tree in the terminal and inspect tool arguments at the failing turn. Change the agent or policy, rerun under a new \texttt{--experiment} name, and open the Compare page (Section~\ref{sec:ui-compare}) to see which scenario keys changed status. Optionally run with \texttt{--extract} to append a minimal scripted regression to a Python file after a generative failure. Section~\ref{sec:execution-workflow} shows the UI surfaces that support these steps.
+The intended workflow is straightforward. Run the scenario and read the counterexample headline and path. Open the trace drawer in the UI or the Rich tree in the terminal and inspect tool arguments at the failing turn. Change the agent or policy and rerun to see whether more scenarios pass. To compare runs side by side, rerun under a new \texttt{--experiment} name and open the Compare page (Section~\ref{sec:ui-compare}) to see which scenarios changed status between experiments. Section~\ref{sec:execution-workflow} shows the UI surfaces that support these steps.

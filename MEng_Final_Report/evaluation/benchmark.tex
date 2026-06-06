@@ -69,7 +69,7 @@ Lane & Surface & Typical assertions \\
 \midrule
 O & User-facing reply after each user turn & \texttt{assert\_output}, \texttt{m.llm\_criteria} rubrics \\
 S & SQLite store (tickets, credits, lines) & \texttt{assert\_that} with store oracles \\
-T & Tool-call sequence (incl.\ nested specialist children) & \texttt{assert\_tool\_calls}, ordered and nested matchers \\
+T & Tool-call sequence (incl.\ nested calls from specialist agents) & \texttt{assert\_tool\_calls}, ordered and nested matchers \\
 F & Union of O, S, and T at matching turn positions & Combined scenario \\
 \bottomrule
 \end{tabular}
