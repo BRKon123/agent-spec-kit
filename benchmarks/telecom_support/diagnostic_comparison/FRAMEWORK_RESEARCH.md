@@ -50,14 +50,33 @@ How each baseline library reports evaluation failures, and how this benchmark ru
 
 **Our port:** scorer functions on artifact dict; fail message `str({"key": "fXX_<lane>", "score": 0, ...})` with optional `comment` from check logic.
 
+## Ragas
+
+**Docs:** [Agent metrics](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/agents/), [custom metrics](https://docs.ragas.io/en/v0.4.1/howtos/customizations/metrics/_write_your_own_metric/)
+
+**Failure shape (programmatic):** `MetricResult(value=0.0)` with optional `reason` string; built-in tool metrics may return scalar score only.
+
+**Our port:** expressiveness checks in `implementations/ragas/metrics.py`; diagnostic slots via `SlotAssertMetric.score()` in `shared/ragas_bridge.py`.
+
+## DeepEval
+
+**Docs:** [Tool Correctness](https://deepeval.com/docs/metrics-tool-correctness), [Json Correctness](https://deepeval.com/docs/metrics-json-correctness), [BaseMetric](https://deepeval.com/guides/guides-building-custom-metrics)
+
+**Failure shape (programmatic):** `metric.reason`, `metric.error`, or `score=0` after `metric.measure(test_case)`.
+
+**Our port:** expressiveness checks in `implementations/deepeval/experiment.py`; diagnostic slots via `SlotAssertMetric.measure()` in `shared/deepeval_bridge.py`.
+
 ## Dependencies
 
 | Package | In root `pyproject.toml` | Notes |
 |---------|--------------------------|--------|
 | `langsmith` | yes | evaluator-style functions |
 | `braintrust` | yes | scorer-style functions |
+| `ragas` | yes (`expressiveness` group) | collections metrics + custom BaseMetric |
+| `deepeval` | yes (`expressiveness` group) | ToolCorrectnessMetric, JsonCorrectnessMetric, BaseMetric |
+| `mistralai>=1.5,<2` | yes | Ragas/instructor import compatibility |
 | `promptfoo` | no | use programmatic `get_assert` pattern (no Node CLI required) |
-| `pydantic-evals` | no | pytest-style inlined evaluators for parity with expressiveness |
+| `pydantic-evals` | yes | pytest-style inlined evaluators for parity with expressiveness |
 
 ## Artifact schema
 

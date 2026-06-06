@@ -29,8 +29,8 @@ from tasks.specs import oracles as o  # noqa: E402
 
 
 def get_assert(output: str, context: dict) -> bool:
-    _ = json.loads(output)
     # CHECK_START
+    _ = json.loads(output)
     base = Path(tempfile.mkdtemp(prefix="pf_c11_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")

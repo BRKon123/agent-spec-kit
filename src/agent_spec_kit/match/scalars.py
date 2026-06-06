@@ -378,9 +378,9 @@ class NotMatcher(BaseMatcher):
 
 
 def _matcher_summary(m: BaseMatcher) -> str:
-    if isinstance(m, EqualityMatcher):
-        return _short_repr(m.expected)
-    return type(m).__name__
+    from agent_spec_kit.match.spec_repr import matcher_summary
+
+    return matcher_summary(m)
 
 
 @dataclass(frozen=True, slots=True)

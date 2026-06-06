@@ -137,7 +137,9 @@ def emit_failure_detail(r: "JobResult", *, file: TextIO | None = None) -> None:
         lines.append("[bold]Agent errors:[/bold]")
         for err in agent_errs:
             lines.append(escape(err))
-    lines.append(f"[bold]Expected:[/bold] {escape(str(cx.expected_summary))}")
+    lines.append("[bold]Expected:[/bold]")
+    for line in str(cx.expected_summary).splitlines():
+        lines.append(escape(line))
     lines.append("[bold]Actual:[/bold]")
     body = format_actual_for_console(cx.actual_min)
     panel_inner = "\n".join(lines) + "\n\n" + escape(body)

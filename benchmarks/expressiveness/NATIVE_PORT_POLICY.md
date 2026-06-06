@@ -36,7 +36,8 @@ Each framework port must express checks with **that library’s own evaluation t
 | Pydantic Evals | **`Contains`**, **`IsInstance`**, **`HasMatchingSpan`** + **`SpanQuery`** on harness-built **`SpanTree`**; custom **`Evaluator`** + **`metadata["tool_calls"]`**; **`BaseModel`** validation |
 | Braintrust | **`Score`** scorers; **`metadata["tool_calls"]`** (hooks pattern); **`jsonschema`** for structured results |
 | Promptfoo | YAML **`icontains-*`**, **`is-json`**, **`trajectory:tool-*`**, **`javascript`**; **`python`** only for store oracles (C11, C12 state) |
-| agent_spec_kit | Scenario DSL + **`m.*`** matchers (reference port — already native) |
+| Ragas | **`collections.ToolCallAccuracy`** / custom **`BaseMetric`** subclasses; **`MetricResult.reason`** on failure |
+| DeepEval | **`ToolCorrectnessMetric`**, **`JsonCorrectnessMetric`**, custom **`BaseMetric`**; **`metric.reason`** on failure |
 
 ## LangSmith / agentevals notes
 
@@ -71,6 +72,20 @@ Each framework port must express checks with **that library’s own evaluation t
 - **C12:** `trajectory:tool-sequence` in YAML + **`python`** for store oracle only.
 - **C11:** **`python`** only (no DB assert type).
 - **C03/C09:** **`javascript`** (conditional / nested children — no matching YAML primitive).
+
+## Ragas notes
+
+- Tool checks use **`ragas.metrics.collections.ToolCallAccuracy`** where argument matching applies (**C07**).
+- **C05/C10/C12 (tool parts):** custom **`BaseMetric`** subclasses when built-in metrics penalize allowed extras or omit `reason`.
+- Structured JSON (**C02–C04, C08**): custom metrics with **`jsonschema.validate`** and **`MetricResult.reason`**.
+- Diagnostic slots: **`SlotAssertMetric`** wraps slot checks via **`metric.score()`**.
+
+## DeepEval notes
+
+- Tool checks use **`ToolCorrectnessMetric`** (**C05, C07, C10**); structured JSON uses **`JsonCorrectnessMetric`** (**C02, C04, C08**).
+- Conditional / forbidden / nested / store checks use custom **`BaseMetric`** subclasses.
+- **`include_reason=True`** where the metric supports it; capture **`metric.reason`** in failure harness.
+- Diagnostic slots: **`SlotAssertMetric.measure()`** on **`LLMTestCase`**.
 
 ## agent_spec_kit notes
 

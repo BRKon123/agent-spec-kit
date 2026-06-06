@@ -15,7 +15,7 @@ if str(_BENCH) not in sys.path:
 from scripts.diagnostic_quality_lib import FailureWitness
 
 _TRUNC = 4000
-_FRAMEWORK_DIRS = ("pytest_plain", "langsmith", "pydantic_evals", "promptfoo", "braintrust")
+_FRAMEWORK_DIRS = ("pytest_plain", "langsmith", "pydantic_evals", "promptfoo", "braintrust", "deepeval", "ragas")
 
 
 class EvalFailed(Exception):
@@ -102,6 +102,34 @@ def _capture_braintrust(mod: Any, artifact: dict[str, Any], witness: FailureWitn
     return _truncate(str(result))
 
 
+def _capture_deepeval(mod: Any, artifact: dict[str, Any], witness: FailureWitness) -> str:
+    try:
+        result = mod.evaluate(artifact, witness)
+    except EvalFailed as exc:
+        return _truncate(exc.message)
+    if isinstance(result, dict) and result.get("score") == 1:
+        return "unexpected pass"
+    if isinstance(result, dict):
+        comment = result.get("comment") or result.get("message")
+        if comment:
+            return _truncate(str(comment))
+    return _truncate(str(result))
+
+
+def _capture_ragas(mod: Any, artifact: dict[str, Any], witness: FailureWitness) -> str:
+    try:
+        result = mod.evaluate(artifact, witness)
+    except EvalFailed as exc:
+        return _truncate(exc.message)
+    if isinstance(result, dict) and result.get("score") == 1:
+        return "unexpected pass"
+    if isinstance(result, dict):
+        comment = result.get("comment") or result.get("message")
+        if comment:
+            return _truncate(str(comment))
+    return _truncate(str(result))
+
+
 def run_native_check(
     framework: str,
     artifact: dict[str, Any],
@@ -118,6 +146,10 @@ def run_native_check(
         return _capture_promptfoo(mod, artifact, witness)
     if framework == "braintrust":
         return _capture_braintrust(mod, artifact, witness)
+    if framework == "deepeval":
+        return _capture_deepeval(mod, artifact, witness)
+    if framework == "ragas":
+        return _capture_ragas(mod, artifact, witness)
     raise KeyError(f"unknown framework: {framework}")
 
 

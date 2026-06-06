@@ -1,4 +1,4 @@
-"""Pydantic Evals ports — Contains, IsInstance, HasMatchingSpan, Evaluator, BaseModel."""
+"""Pydantic Evals ports — inlined evaluators in CHECK regions."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import sys
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Literal
 
@@ -22,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_evals import Case, Dataset
 from pydantic_evals.evaluators import Contains, Evaluator, EvaluatorContext, HasMatchingSpan, IsInstance
 from pydantic_evals.evaluators.evaluator import EvaluationReason
-from pydantic_evals.otel.span_tree import SpanQuery
+from pydantic_evals.otel.span_tree import SpanNode, SpanQuery, SpanTree
 
 from implementations.pydantic_evals.span_tree_bridge import trace_to_span_tree
 from specimens.messages import meta
@@ -38,8 +39,11 @@ from store.store import TelcoStore  # noqa: E402
 from tasks.specs import oracles as o  # noqa: E402
 
 
-def _ok(result: bool | EvaluationReason) -> bool:
-    return result if isinstance(result, bool) else bool(result.value)
+def _tool(trace: dict[str, Any], name: str) -> dict[str, Any] | None:
+    for t in trace.get("tools") or []:
+        if t.get("name") == name:
+            return t
+    return None
 
 
 def _text_ctx(text: str, check_id: str) -> EvaluatorContext[str, str, None]:
@@ -50,7 +54,7 @@ def _text_ctx(text: str, check_id: str) -> EvaluatorContext[str, str, None]:
         expected_output=None,
         output=text,
         duration=0.0,
-        _span_tree=trace_to_span_tree({"tools": []}),
+        _span_tree=SpanTree(),
         attributes={},
         metrics={},
     )
@@ -70,19 +74,26 @@ def _trace_ctx(trace: dict[str, Any], check_id: str, *, turn: str | None = None)
     )
 
 
-def _tool(trace: dict[str, Any], name: str) -> dict[str, Any] | None:
-    for t in trace.get("tools") or []:
-        if t.get("name") == name:
-            return t
-    return None
-
-
 # check: C01
 def eval_c01_output_rubric(check_id: str = "C01") -> bool:
+    # CHECK_START
     trace = load_trace(check_id)
     text = str(trace.get("output", ""))
-    tctx = _text_ctx(text, check_id)
-    # CHECK_START
+    tctx = EvaluatorContext(
+        name=check_id,
+        inputs={},
+        metadata=None,
+        expected_output=None,
+        output=text,
+        duration=0.0,
+        _span_tree=SpanTree(),
+        attributes={},
+        metrics={},
+    )
+
+    def _ok(result: bool | EvaluationReason) -> bool:
+        return result if isinstance(result, bool) else bool(result.value)
+
     topic = _ok(Contains("credit", case_sensitive=False).evaluate(tctx)) or _ok(
         Contains("refund", case_sensitive=False).evaluate(tctx)
     )
@@ -95,12 +106,43 @@ def eval_c01_output_rubric(check_id: str = "C01") -> bool:
 
 # check: C02
 def eval_c02_validate_shape(check_id: str = "C02") -> bool:
+    # CHECK_START
     trace = load_trace(check_id)
-    specialist = _tool(trace, "run_network_diagnostics_specialist")
+    specialist = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_network_diagnostics_specialist":
+            specialist = t
+            break
     if specialist is None:
         return False
     result = specialist.get("result")
-    # CHECK_START
+    _T0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    tools = list(trace.get("tools") or [])
+    spans: list[SpanNode] = [
+        SpanNode(
+            name="agent_run",
+            trace_id=1,
+            span_id=1,
+            parent_span_id=None,
+            start_timestamp=_T0,
+            end_timestamp=_T0 + timedelta(seconds=60),
+            attributes={},
+        )
+    ]
+    for i, tool in enumerate(tools):
+        spans.append(
+            SpanNode(
+                name=str(tool.get("name", "")),
+                trace_id=1,
+                span_id=100 + i,
+                parent_span_id=1,
+                start_timestamp=_T0 + timedelta(seconds=i),
+                end_timestamp=_T0 + timedelta(seconds=i + 1),
+                attributes={"tool.args": str(tool.get("args") or {})},
+            )
+        )
+    tree = SpanTree()
+    tree.add_spans(spans)
     rctx = EvaluatorContext(
         name=check_id,
         inputs={},
@@ -108,11 +150,14 @@ def eval_c02_validate_shape(check_id: str = "C02") -> bool:
         expected_output=None,
         output=result,
         duration=0.0,
-        _span_tree=trace_to_span_tree(trace),
+        _span_tree=tree,
         attributes={},
         metrics={},
     )
-    if not _ok(IsInstance(type_name="dict").evaluate(rctx)):
+    inst = IsInstance(type_name="dict").evaluate(rctx)
+    if isinstance(inst, EvaluationReason) and not inst.value:
+        return False
+    if isinstance(inst, bool) and not inst:
         return False
 
     class NetworkDiagResult(BaseModel):
@@ -131,12 +176,43 @@ def eval_c02_validate_shape(check_id: str = "C02") -> bool:
 
 # check: C03
 def eval_c03_conditional(check_id: str = "C03") -> bool:
+    # CHECK_START
     trace = load_trace(check_id)
-    specialist = _tool(trace, "run_billing_policy_specialist")
+    specialist = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_billing_policy_specialist":
+            specialist = t
+            break
     if specialist is None:
         return False
     result = specialist.get("result")
-    # CHECK_START
+    _T0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    tools = list(trace.get("tools") or [])
+    spans: list[SpanNode] = [
+        SpanNode(
+            name="agent_run",
+            trace_id=1,
+            span_id=1,
+            parent_span_id=None,
+            start_timestamp=_T0,
+            end_timestamp=_T0 + timedelta(seconds=60),
+            attributes={},
+        )
+    ]
+    for i, tool in enumerate(tools):
+        spans.append(
+            SpanNode(
+                name=str(tool.get("name", "")),
+                trace_id=1,
+                span_id=100 + i,
+                parent_span_id=1,
+                start_timestamp=_T0 + timedelta(seconds=i),
+                end_timestamp=_T0 + timedelta(seconds=i + 1),
+                attributes={"tool.args": str(tool.get("args") or {})},
+            )
+        )
+    tree = SpanTree()
+    tree.add_spans(spans)
     rctx = EvaluatorContext(
         name=check_id,
         inputs={},
@@ -144,11 +220,14 @@ def eval_c03_conditional(check_id: str = "C03") -> bool:
         expected_output=None,
         output=result,
         duration=0.0,
-        _span_tree=trace_to_span_tree(trace),
+        _span_tree=tree,
         attributes={},
         metrics={},
     )
-    if not _ok(IsInstance(type_name="dict").evaluate(rctx)):
+    inst = IsInstance(type_name="dict").evaluate(rctx)
+    if isinstance(inst, EvaluationReason) and not inst.value:
+        return False
+    if isinstance(inst, bool) and not inst:
         return False
 
     class BillingResult(BaseModel):
@@ -175,12 +254,17 @@ def eval_c03_conditional(check_id: str = "C03") -> bool:
 
 # check: C04
 def eval_c04_numeric(check_id: str = "C04") -> bool:
+    # CHECK_START
     trace = load_trace(check_id)
-    specialist = _tool(trace, "run_billing_policy_specialist")
+    specialist = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_billing_policy_specialist":
+            specialist = t
+            break
     if specialist is None:
         return False
     result = specialist.get("result")
-    # CHECK_START
+
     class BillingAmount(BaseModel):
         model_config = ConfigDict(extra="forbid")
         eligible: Literal[True]
@@ -196,13 +280,49 @@ def eval_c04_numeric(check_id: str = "C04") -> bool:
 
 # check: C05
 def eval_c05_span_sequence(check_id: str = "C05") -> bool:
-    trace = load_trace(check_id)
-    ctx = _trace_ctx(trace, check_id)
     # CHECK_START
+    trace = load_trace(check_id)
+    tools = list(trace.get("tools") or [])
+    _T0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    spans: list[SpanNode] = [
+        SpanNode(
+            name="agent_run",
+            trace_id=1,
+            span_id=1,
+            parent_span_id=None,
+            start_timestamp=_T0,
+            end_timestamp=_T0 + timedelta(seconds=60),
+            attributes={},
+        )
+    ]
+    for i, tool in enumerate(tools):
+        spans.append(
+            SpanNode(
+                name=str(tool.get("name", "")),
+                trace_id=1,
+                span_id=100 + i,
+                parent_span_id=1,
+                start_timestamp=_T0 + timedelta(seconds=i),
+                end_timestamp=_T0 + timedelta(seconds=i + 1),
+                attributes={"tool.args": str(tool.get("args") or {})},
+            )
+        )
+    tree = SpanTree()
+    tree.add_spans(spans)
+    ctx = EvaluatorContext(
+        name=check_id,
+        inputs={},
+        metadata={"tool_calls": tools},
+        expected_output=None,
+        output=trace,
+        duration=0.0,
+        _span_tree=tree,
+        attributes={},
+        metrics={},
+    )
+
     @dataclass(repr=False)
     class OrderedToolCalls(Evaluator[dict, dict, None]):
-        """Custom Evaluator over ctx.metadata['tool_calls'] (Pydantic Evals pattern)."""
-
         def evaluate(self, inner: EvaluatorContext[dict, dict, None]) -> bool:
             names = [str(c.get("name", "")) for c in (inner.metadata or {}).get("tool_calls") or []]
             exp = ["authenticate_customer", "get_outage_status"]
@@ -218,9 +338,46 @@ def eval_c05_span_sequence(check_id: str = "C05") -> bool:
 
 # check: C06
 def eval_c06_forbid_span(check_id: str = "C06") -> bool:
-    trace = load_trace(check_id)
-    ctx = _trace_ctx(trace, check_id)
     # CHECK_START
+    trace = load_trace(check_id)
+    tools = list(trace.get("tools") or [])
+    _T0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    spans: list[SpanNode] = [
+        SpanNode(
+            name="agent_run",
+            trace_id=1,
+            span_id=1,
+            parent_span_id=None,
+            start_timestamp=_T0,
+            end_timestamp=_T0 + timedelta(seconds=60),
+            attributes={},
+        )
+    ]
+    for i, tool in enumerate(tools):
+        spans.append(
+            SpanNode(
+                name=str(tool.get("name", "")),
+                trace_id=1,
+                span_id=100 + i,
+                parent_span_id=1,
+                start_timestamp=_T0 + timedelta(seconds=i),
+                end_timestamp=_T0 + timedelta(seconds=i + 1),
+                attributes={"tool.args": str(tool.get("args") or {})},
+            )
+        )
+    tree = SpanTree()
+    tree.add_spans(spans)
+    ctx = EvaluatorContext(
+        name=check_id,
+        inputs={},
+        metadata={"tool_calls": tools},
+        expected_output=None,
+        output=trace,
+        duration=0.0,
+        _span_tree=tree,
+        attributes={},
+        metrics={},
+    )
     forbidden = HasMatchingSpan(query=SpanQuery(name_equals="apply_bill_credit"))
     return not bool(forbidden.evaluate(ctx))
     # CHECK_END
@@ -228,10 +385,48 @@ def eval_c06_forbid_span(check_id: str = "C06") -> bool:
 
 # check: C07
 def eval_c07_tool_args(check_id: str = "C07") -> bool:
-    trace = load_trace(check_id)
-    ctx = _trace_ctx(trace, check_id)
-    line_id = meta()["line_id"]
     # CHECK_START
+    trace = load_trace(check_id)
+    line_id = meta()["line_id"]
+    tools = list(trace.get("tools") or [])
+    _T0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    spans: list[SpanNode] = [
+        SpanNode(
+            name="agent_run",
+            trace_id=1,
+            span_id=1,
+            parent_span_id=None,
+            start_timestamp=_T0,
+            end_timestamp=_T0 + timedelta(seconds=60),
+            attributes={},
+        )
+    ]
+    for i, tool in enumerate(tools):
+        spans.append(
+            SpanNode(
+                name=str(tool.get("name", "")),
+                trace_id=1,
+                span_id=100 + i,
+                parent_span_id=1,
+                start_timestamp=_T0 + timedelta(seconds=i),
+                end_timestamp=_T0 + timedelta(seconds=i + 1),
+                attributes={"tool.args": str(tool.get("args") or {})},
+            )
+        )
+    tree = SpanTree()
+    tree.add_spans(spans)
+    ctx = EvaluatorContext(
+        name=check_id,
+        inputs={},
+        metadata={"tool_calls": tools},
+        expected_output=None,
+        output=trace,
+        duration=0.0,
+        _span_tree=tree,
+        attributes={},
+        metrics={},
+    )
+
     @dataclass(repr=False)
     class LineStatusArgs(Evaluator[dict, dict, None]):
         def evaluate(self, inner: EvaluatorContext[dict, dict, None]) -> bool:
@@ -253,12 +448,17 @@ def eval_c07_tool_args(check_id: str = "C07") -> bool:
 
 # check: C08
 def eval_c08_tool_result(check_id: str = "C08") -> bool:
+    # CHECK_START
     trace = load_trace(check_id)
-    specialist = _tool(trace, "run_network_diagnostics_specialist")
+    specialist = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_network_diagnostics_specialist":
+            specialist = t
+            break
     if specialist is None:
         return False
     result = specialist.get("result")
-    # CHECK_START
+
     class SpecialistSummary(BaseModel):
         model_config = ConfigDict(extra="forbid")
         severity: Literal["medium", "high"]
@@ -275,9 +475,59 @@ def eval_c08_tool_result(check_id: str = "C08") -> bool:
 
 # check: C09
 def eval_c09_nested(check_id: str = "C09") -> bool:
-    trace = load_trace(check_id)
-    ctx = _trace_ctx(trace, check_id)
     # CHECK_START
+    trace = load_trace(check_id)
+    tools = list(trace.get("tools") or [])
+    _T0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    spans: list[SpanNode] = [
+        SpanNode(
+            name="agent_run",
+            trace_id=1,
+            span_id=1,
+            parent_span_id=None,
+            start_timestamp=_T0,
+            end_timestamp=_T0 + timedelta(seconds=60),
+            attributes={},
+        )
+    ]
+    for i, tool in enumerate(tools):
+        spans.append(
+            SpanNode(
+                name=str(tool.get("name", "")),
+                trace_id=1,
+                span_id=100 + i,
+                parent_span_id=1,
+                start_timestamp=_T0 + timedelta(seconds=i),
+                end_timestamp=_T0 + timedelta(seconds=i + 1),
+                attributes={"tool.args": str(tool.get("args") or {})},
+            )
+        )
+        for j, child in enumerate(tool.get("children") or []):
+            spans.append(
+                SpanNode(
+                    name=str(child.get("name", "")),
+                    trace_id=1,
+                    span_id=200 + i * 10 + j,
+                    parent_span_id=100 + i,
+                    start_timestamp=_T0 + timedelta(seconds=i, milliseconds=100 * (j + 1)),
+                    end_timestamp=_T0 + timedelta(seconds=i, milliseconds=100 * (j + 2)),
+                    attributes={},
+                )
+            )
+    tree = SpanTree()
+    tree.add_spans(spans)
+    ctx = EvaluatorContext(
+        name=check_id,
+        inputs={},
+        metadata={"tool_calls": tools},
+        expected_output=None,
+        output=trace,
+        duration=0.0,
+        _span_tree=tree,
+        attributes={},
+        metrics={},
+    )
+
     @dataclass(repr=False)
     class NestedChildOrder(Evaluator[dict, dict, None]):
         def evaluate(self, inner: EvaluatorContext[dict, dict, None]) -> bool:
@@ -285,7 +535,11 @@ def eval_c09_nested(check_id: str = "C09") -> bool:
                 query=SpanQuery(name_equals="run_network_diagnostics_specialist")
             ).evaluate(inner):
                 return False
-            parent = _tool(inner.output, "run_network_diagnostics_specialist")
+            parent = None
+            for t in inner.output.get("tools") or []:
+                if t.get("name") == "run_network_diagnostics_specialist":
+                    parent = t
+                    break
             if parent is None:
                 return False
             names = [str(c.get("name", "")) for c in parent.get("children") or []]
@@ -297,9 +551,46 @@ def eval_c09_nested(check_id: str = "C09") -> bool:
 
 # check: C10
 def eval_c10_unordered(check_id: str = "C10") -> bool:
-    trace = load_trace(check_id)
-    ctx = _trace_ctx(trace, check_id)
     # CHECK_START
+    trace = load_trace(check_id)
+    tools = list(trace.get("tools") or [])
+    _T0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    spans: list[SpanNode] = [
+        SpanNode(
+            name="agent_run",
+            trace_id=1,
+            span_id=1,
+            parent_span_id=None,
+            start_timestamp=_T0,
+            end_timestamp=_T0 + timedelta(seconds=60),
+            attributes={},
+        )
+    ]
+    for i, tool in enumerate(tools):
+        spans.append(
+            SpanNode(
+                name=str(tool.get("name", "")),
+                trace_id=1,
+                span_id=100 + i,
+                parent_span_id=1,
+                start_timestamp=_T0 + timedelta(seconds=i),
+                end_timestamp=_T0 + timedelta(seconds=i + 1),
+                attributes={"tool.args": str(tool.get("args") or {})},
+            )
+        )
+    tree = SpanTree()
+    tree.add_spans(spans)
+    ctx = EvaluatorContext(
+        name=check_id,
+        inputs={},
+        metadata={"tool_calls": tools},
+        expected_output=None,
+        output=trace,
+        duration=0.0,
+        _span_tree=tree,
+        attributes={},
+        metrics={},
+    )
     query: SpanQuery = {
         "and_": [
             {"some_descendant_has": {"name_equals": "heartbeat_ping"}},
@@ -312,8 +603,8 @@ def eval_c10_unordered(check_id: str = "C10") -> bool:
 
 # check: C11
 def eval_c11_db_state(check_id: str = "C11") -> bool:
-    _ = load_trace(check_id)
     # CHECK_START
+    _ = load_trace(check_id)
     base = Path(tempfile.mkdtemp(prefix="pe_c11_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -331,17 +622,56 @@ def eval_c11_db_state(check_id: str = "C11") -> bool:
 
 # check: C12
 def eval_c12_multi_turn(check_id: str = "C12") -> bool:
-    trace = load_trace(check_id)
-    ctx = _trace_ctx(trace, check_id, turn="last")
     # CHECK_START
+    trace = load_trace(check_id)
+    turns = trace.get("turns") or []
+    last_tools = list((turns[-1].get("tools") or []) if turns else [])
+    _T0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    spans: list[SpanNode] = [
+        SpanNode(
+            name="agent_run",
+            trace_id=1,
+            span_id=1,
+            parent_span_id=None,
+            start_timestamp=_T0,
+            end_timestamp=_T0 + timedelta(seconds=60),
+            attributes={},
+        )
+    ]
+    for i, tool in enumerate(last_tools):
+        spans.append(
+            SpanNode(
+                name=str(tool.get("name", "")),
+                trace_id=1,
+                span_id=100 + i,
+                parent_span_id=1,
+                start_timestamp=_T0 + timedelta(seconds=i),
+                end_timestamp=_T0 + timedelta(seconds=i + 1),
+                attributes={"tool.args": str(tool.get("args") or {})},
+            )
+        )
+    tree = SpanTree()
+    tree.add_spans(spans)
+    ctx = EvaluatorContext(
+        name=check_id,
+        inputs={},
+        metadata={"tool_calls": last_tools},
+        expected_output=None,
+        output=trace,
+        duration=0.0,
+        _span_tree=tree,
+        attributes={},
+        metrics={},
+    )
+
     @dataclass(repr=False)
     class LastTurnToolSequence(Evaluator[dict, dict, None]):
         def evaluate(self, inner: EvaluatorContext[dict, dict, None]) -> bool:
-            turns = inner.output.get("turns") or []
-            if not turns:
+            inner_turns = inner.output.get("turns") or []
+            if not inner_turns:
                 return False
-            last_tools = turns[-1].get("tools") or []
-            names = [str(t.get("name", "")) for t in last_tools]
+            tools = inner_turns[-1].get("tools") or []
+            names = [str(t.get("name", "")) for t in tools]
             exp = ["authenticate_customer", "create_support_ticket"]
             ei = 0
             for name in names:
@@ -351,14 +681,14 @@ def eval_c12_multi_turn(check_id: str = "C12") -> bool:
 
     if not LastTurnToolSequence().evaluate(ctx):
         return False
-    mmeta = meta()
+    line_id = meta()["line_id"]
     base = Path(tempfile.mkdtemp(prefix="pe_c12_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
         apply_seed(telco, "task_T46")
-        insert_ticket(telco, line_id=mmeta["line_id"], ticket_id="INC-9046")
+        insert_ticket(telco, line_id=line_id, ticket_id="INC-9046")
         try:
-            o.assert_ticket_for_line(telco, mmeta["line_id"])
+            o.assert_ticket_for_line(telco, line_id)
             return True
         except AssertionError:
             return False
@@ -391,8 +721,6 @@ def _evaluator_for(check_id: str) -> _CaseRunner:
 
 @dataclass(repr=False)
 class _CaseRunner(Evaluator[dict, dict, None]):
-    """Wraps per-check logic so each Case uses native evaluator tuples."""
-
     check_id: str
     run: Callable[[str], bool]
 
@@ -401,7 +729,6 @@ class _CaseRunner(Evaluator[dict, dict, None]):
 
 
 def build_cases() -> list[Case]:
-    """Native Pydantic Evals layout: one Dataset, one Case per specimen."""
     return [
         Case(
             name=cid,
@@ -420,7 +747,6 @@ def run_case(check_id: str) -> bool:
 
 
 def run_evaluator_on_trace(check_id: str, trace: dict[str, Any]) -> bool:
-    """Run a port against an explicit trace (fail-sample harness)."""
     from unittest.mock import patch
 
     with patch(
@@ -431,7 +757,6 @@ def run_evaluator_on_trace(check_id: str, trace: dict[str, Any]) -> bool:
 
 
 def fail_message_for_trace(check_id: str, trace: dict[str, Any]) -> str:
-    """Native Pydantic Evals diagnostic text for a failing trace."""
     if run_evaluator_on_trace(check_id, trace):
         return "unexpected pass"
 
@@ -554,7 +879,14 @@ def fail_message_for_trace(check_id: str, trace: dict[str, Any]) -> str:
             exp = ["authenticate_customer", "get_outage_status"]
         elif check_id == "C07":
             exp = ["authenticate_customer", "get_line_status"]
-            gls = next((c for c in (ctx.metadata or {}).get("tool_calls") or [] if c.get("name") == "get_line_status"), None)
+            gls = next(
+                (
+                    c
+                    for c in (ctx.metadata or {}).get("tool_calls") or []
+                    if c.get("name") == "get_line_status"
+                ),
+                None,
+            )
             if gls and gls.get("args", {}).get("line_id") != meta()["line_id"]:
                 return (
                     f"get_line_status.args.line_id expected {meta()['line_id']!r}, "
@@ -571,7 +903,10 @@ def fail_message_for_trace(check_id: str, trace: dict[str, Any]) -> str:
             if ei < len(exp) and name == exp[ei]:
                 ei += 1
         if ei != len(exp):
-            return f"tool sequence expected {exp!r}, got ordered subsequence match {ei}/{len(exp)} in {names!r}"
+            return (
+                f"tool sequence expected {exp!r}, got ordered subsequence match "
+                f"{ei}/{len(exp)} in {names!r}"
+            )
         if check_id == "C12":
             line_id = meta()["line_id"]
             base = Path(tempfile.mkdtemp(prefix="pe_c12_fail_"))

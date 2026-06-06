@@ -16,7 +16,7 @@ Grades from [`MANUAL_FAILURE_CLASSIFICATION.md`](../MANUAL_FAILURE_CLASSIFICATIO
 ## Per-check captures
 
 ### C01
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$ code=all_of expected='all constraints to pass' actual="'Your service is active; no billing changes this cycle.'" (all_of: not all constraints were satisfied: one_of: value does not match any option: expected value to contain case-insensitive substring 'credit') | path=$ code=one_of expected='one of (PredicateMatcher, PredicateMatcher)' actual="'Your service is active; no billing changes this cycle.'" (one_of: value does not match any option: expected value to contain case-insensitive substring 'credit') | path=$ code=predicate expected="expected value to contain case-insensitive substring 'credit'" actual="'Your service is active; no billing changes this cycle.'" (expected value to contain case-insensitive substring 'credit')`
 - **pytest_plain**: `AssertionError`
@@ -24,6 +24,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `Output string 'your service is active; no billing changes this cycle.' does not contain expected string 'credit'`
 - **promptfoo**: `icontains-any: output missing credit/refund or $/dollar`
 - **braintrust**: `{'key': 'C01', 'score': 0.0}`
+- **ragas**: `output rubric failed: missing credit/refund topic, monetary amount ($/dollar)`
+- **deepeval**: `output rubric failed: missing credit/refund topic, monetary amount ($/dollar)`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -61,12 +63,20 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 | {'key': 'C01', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C01)  grade B -----------------------------+
+| output rubric failed: missing credit/refund topic, monetary amount ($/dollar)  |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C01)  grade B ----------------------------+
+| output rubric failed: missing credit/refund topic, monetary amount ($/dollar)  |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C02
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-001'}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'connectivity'}, 'result': {'severity': 'lo..." (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].result.severity): one_of: value does not match any option: value does not equal expected) | path=$[1].result.severity code=one_of expected="one of ('high')" actual="'low'" (one_of: value does not match any option: value does not equal expected)`
 - **pytest_plain**: `AssertionError`
@@ -74,6 +84,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `1 validation error for NetworkDiagResult severity Input should be 'high' [type=literal_error, input_value='low', input_type=str] For further information visit https://errors.pydantic.dev/2.13/v/literal_error`
 - **promptfoo**: `is-json: 'high' was expected`
 - **braintrust**: `{'key': 'C02', 'score': 0.0}`
+- **ragas**: `run_network_diagnostics_specialist: 'high' was expected`
+- **deepeval**: `The generated Json is not valid because it does not match the expected schema: `severity` must be the constant value `"high"`, but the Generated Json has `"low"`. The other required fields are present and correctly typed.`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -117,12 +129,22 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 | {'key': 'C02', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C02)  grade B -----------------------------+
+| run_network_diagnostics_specialist: 'high' was expected                        |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C02)  grade B ----------------------------+
+| The generated Json is not valid because it does not match the expected schema: |
+|  `severity` must be the constant value `"high"`, but the Generated Json has `" |
+| low"`. The other required fields are present and correctly typed.              |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C03
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_billing_policy_specialist', 'args': {}, 'result': {'eligible': True, 'currency': 'USD'}}]" (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].result.amount): require 'amount' when (field('eligible') == True)) | path=$[1].result.amount code=conditional_rule expected="key 'amount' present" actual='(absent)' (require 'amount' when (field('eligible') == True))`
 - **pytest_plain**: `AssertionError`
@@ -130,6 +152,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `1 validation error for BillingResult Value error, eligible requires positive amount [type=value_error, input_value={'eligible': True, 'currency': 'USD'}, input_type=dict] For further information visit https://errors.pydantic.dev/2.13/v/value_error`
 - **promptfoo**: `javascript: eligible=True requires amount > 0`
 - **braintrust**: `{'key': 'C03', 'score': 0.0}`
+- **ragas**: `eligible=True requires positive amount`
+- **deepeval**: `eligible=True requires positive amount`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -173,12 +197,20 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 | {'key': 'C03', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C03)  grade B -----------------------------+
+| eligible=True requires positive amount                                         |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C03)  grade B ----------------------------+
+| eligible=True requires positive amount                                         |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C04
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_billing_policy_specialist', 'args': {}, 'result': {'eligible': True, 'amount': 9999.0}}]" (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].result.amount): value above max=500.0) | path=$[1].result.amount code=number expected='<= 500.0' actual='9999.0' (value above max=500.0)`
 - **pytest_plain**: `AssertionError`
@@ -186,6 +218,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `1 validation error for BillingAmount amount Input should be less than or equal to 500 [type=less_than_equal, input_value=9999.0, input_type=float] For further information visit https://errors.pydantic.dev/2.13/v/less_than_equal`
 - **promptfoo**: `is-json: 9999.0 is greater than the maximum of 500`
 - **braintrust**: `{'key': 'C04', 'score': 0.0}`
+- **ragas**: `run_billing_policy_specialist: 9999.0 is greater than the maximum of 500`
+- **deepeval**: `The generated JSON is not valid because it violates the Expected Json Schema: `amount` is `9999.0`, but the schema requires a number between `0.01` and `500.0`. The `eligible` field is valid and required fields are present.`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -227,12 +261,22 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 | {'key': 'C04', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C04)  grade B -----------------------------+
+| run_billing_policy_specialist: 9999.0 is greater than the maximum of 500       |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C04)  grade B ----------------------------+
+| The generated JSON is not valid because it violates the Expected Json Schema:  |
+| `amount` is `9999.0`, but the schema requires a number between `0.01` and `500 |
+| .0`. The `eligible` field is valid and required fields are present.            |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C05
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$[1] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'get_outage_status', 'args': {'line_id': 'LINE-001'}, 'result': {'active': True}}, {'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}]" (could not match expected element at index 1 while preserving order no actual items were left to search)`
 - **pytest_plain**: `AssertionError`
@@ -240,6 +284,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `tool sequence expected ['authenticate_customer', 'get_outage_status'], got ordered subsequence match 1/2 in ['get_outage_status', 'authenticate_customer']`
 - **promptfoo**: `trajectory:tool-sequence in_order failed for steps ['authenticate_customer', 'get_outage_status'] (agentevals score=True)`
 - **braintrust**: `{'key': 'C05', 'score': 0.0}`
+- **ragas**: `tool sequence expected ['authenticate_customer', 'get_outage_status'], got ordered match 1/2 in ['get_outage_status', 'authenticate_customer']`
+- **deepeval**: `[ Tool Calling Reason: Incorrect tool usage: out-of-order tools ['get_outage_status']; expected ['authenticate_customer', 'get_outage_status'], called ['get_outage_status', 'authenticate_customer']. See more details above. Tool Selection Reason: No available tools were provided to assess tool selection criteria ]`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -279,12 +325,25 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 | {'key': 'C05', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C05)  grade B -----------------------------+
+| tool sequence expected ['authenticate_customer', 'get_outage_status'], got ord |
+| ered match 1/2 in ['get_outage_status', 'authenticate_customer']               |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C05)  grade B ----------------------------+
+| [ Tool Calling Reason: Incorrect tool usage: out-of-order tools ['get_outage_s |
+| tatus']; expected ['authenticate_customer', 'get_outage_status'], called ['get |
+| _outage_status', 'authenticate_customer']. See more details above. Tool Select |
+| ion Reason: No available tools were provided to assess tool selection criteria |
+|  ]                                                                             |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C06
-Grades (ask/py/ls/pe/pf/bt): `A/D/C/B/B/C`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/C/B/B/C/B/B`
 
 - **agent_spec_kit**: `path=$[1] code=forbidden_tool_call expected="no 'apply_bill_credit'" actual="{'name': 'apply_bill_credit', 'args': {'amount': 10}, 'result': 'ok'}" (forbidden tool call 'apply_bill_credit' found at index 1 (actual tool 'apply_bill_credit'))`
 - **pytest_plain**: `AssertionError`
@@ -292,6 +351,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/C/B/B/C`
 - **pydantic_evals**: `forbidden span apply_bill_credit present`
 - **promptfoo**: `not-trajectory:tool-used: forbidden tool apply_bill_credit present`
 - **braintrust**: `{'key': 'C06', 'score': 0.0}`
+- **ragas**: `forbidden tool 'apply_bill_credit' present in ['get_customer_profile', 'apply_bill_credit']`
+- **deepeval**: `forbidden tool 'apply_bill_credit' present in ['get_customer_profile', 'apply_bill_credit']`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -328,12 +389,22 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/C/B/B/C`
 | {'key': 'C06', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C06)  grade B -----------------------------+
+| forbidden tool 'apply_bill_credit' present in ['get_customer_profile', 'apply_ |
+| bill_credit']                                                                  |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C06)  grade B ----------------------------+
+| forbidden tool 'apply_bill_credit' present in ['get_customer_profile', 'apply_ |
+| bill_credit']                                                                  |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C07
-Grades (ask/py/ls/pe/pf/bt): `A/B/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/B/B/B/B/B/C/B`
 
 - **agent_spec_kit**: `path=$[1] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'get_line_status', 'args': {'line_id': 'LINE-002'}, 'result': {'data_enabled': True}}]" (could not match expected element at index 1 while preserving order searched actual positions 1 through 1 closest underlying mismatch was (at $[1].args.line_id): value does not equal expected) | path=$[1].args.line_id code=equality expected="'LINE-001'" actual="'LINE-002'" (value does not equal expected)`
 - **pytest_plain**: `get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'`
@@ -341,6 +412,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/B/B/B/B/B`
 - **pydantic_evals**: `get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'`
 - **promptfoo**: `trajectory:tool-args-match get_line_status.line_id expected 'LINE-001', got 'LINE-002'`
 - **braintrust**: `{'key': 'C07', 'score': 0.0}`
+- **ragas**: `0.5`
+- **deepeval**: `[ Tool Calling Reason: Incorrect tool usage: out-of-order tools ['get_line_status']; expected ['authenticate_customer', 'get_line_status'], called ['authenticate_customer', 'get_line_status']. See more details above. Tool Selection Reason: No available tools were provided to assess tool selection criteria ]`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -382,12 +455,23 @@ Grades (ask/py/ls/pe/pf/bt): `A/B/B/B/B/B`
 | {'key': 'C07', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C07)  grade C -----------------------------+
+| 0.5                                                                            |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C07)  grade B ----------------------------+
+| [ Tool Calling Reason: Incorrect tool usage: out-of-order tools ['get_line_sta |
+| tus']; expected ['authenticate_customer', 'get_line_status'], called ['authent |
+| icate_customer', 'get_line_status']. See more details above. Tool Selection Re |
+| ason: No available tools were provided to assess tool selection criteria ]     |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C08
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'signal drops'}, 'result': {'severity': 'medium', 'recommended_actio..." (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].result.summary): string shorter than min_len=10) | path=$[1].result.summary code=string expected='len >= 10' actual='9' (string shorter than min_len=10)`
 - **pytest_plain**: `AssertionError`
@@ -395,6 +479,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `1 validation error for SpecialistSummary summary String should have at least 10 characters [type=string_too_short, input_value='too short', input_type=str] For further information visit https://errors.pydantic.dev/2.13/v/string_too_short`
 - **promptfoo**: `is-json: 'too short' is too short`
 - **braintrust**: `{'key': 'C08', 'score': 0.0}`
+- **ragas**: `run_network_diagnostics_specialist: 'too short' is too short`
+- **deepeval**: `The generated Json is not valid because it violates the Expected Json Schema: `summary` must be a string with `minLength` 10, but the Generated Json has `summary: "too short"`, which is only 9 characters. All other required fields are present and valid.`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -439,12 +525,23 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 | {'key': 'C08', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C08)  grade B -----------------------------+
+| run_network_diagnostics_specialist: 'too short' is too short                   |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C08)  grade B ----------------------------+
+| The generated Json is not valid because it violates the Expected Json Schema:  |
+| `summary` must be a string with `minLength` 10, but the Generated Json has `su |
+| mmary: "too short"`, which is only 9 characters. All other required fields are |
+|  present and valid.                                                            |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C09
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$[0] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}, {'name': 'run_network_diagnostics_specialist', 'args': {'query': 'latency'}, 'result': {'severity': 'medium', 'recommended_action': '..." (could not match expected element at index 0 while preserving order searched actual positions 0 through 1 closest underlying mismatch was (at $[1].children[0].name): value does not equal expected) | path=$[1].children[0].name code=equality expected="'pull_network_events'" actual="'score_signal_anomaly'" (value does not equal expected)`
 - **pytest_plain**: `AssertionError`
@@ -452,6 +549,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `nested children expected ['pull_network_events', 'score_signal_anomaly'], got ['score_signal_anomaly', 'pull_network_events']`
 - **promptfoo**: `javascript: nested children expected ['pull_network_events', 'score_signal_anomaly'], got ['score_signal_anomaly', 'pull_network_events']`
 - **braintrust**: `{'key': 'C09', 'score': 0.0}`
+- **ragas**: `nested children expected ['pull_network_events', 'score_signal_anomaly'], got ['score_signal_anomaly', 'pull_network_events']`
+- **deepeval**: `nested children expected ['pull_network_events', 'score_signal_anomaly'], got ['score_signal_anomaly', 'pull_network_events']`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -495,12 +594,22 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 | {'key': 'C09', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C09)  grade B -----------------------------+
+| nested children expected ['pull_network_events', 'score_signal_anomaly'], got  |
+| ['score_signal_anomaly', 'pull_network_events']                                |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C09)  grade B ----------------------------+
+| nested children expected ['pull_network_events', 'score_signal_anomaly'], got  |
+| ['score_signal_anomaly', 'pull_network_events']                                |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C10
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$ code=list_too_short expected='>= 2' actual='1' (list is too short: need at least 2 item(s) to match all expected values (order does not matter))`
 - **pytest_plain**: `AssertionError`
@@ -508,6 +617,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `tool sequence expected ['heartbeat_ping', 'get_line_status'], got ordered subsequence match 1/2 in ['heartbeat_ping']`
 - **promptfoo**: `trajectory:tool-used: missing tools ['get_line_status']`
 - **braintrust**: `{'key': 'C10', 'score': 0.0}`
+- **ragas**: `missing required tools ['get_line_status'] in ['heartbeat_ping']`
+- **deepeval**: `[ Tool Calling Reason: Incomplete tool usage: missing tools [ToolCall( name="get_line_status" )]; expected ['heartbeat_ping', 'get_line_status'], called ['heartbeat_ping']. See more details above. Tool Selection Reason: No available tools were provided to assess tool selection criteria ]`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -543,12 +654,23 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 | {'key': 'C10', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C10)  grade B -----------------------------+
+| missing required tools ['get_line_status'] in ['heartbeat_ping']               |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C10)  grade B ----------------------------+
+| [ Tool Calling Reason: Incomplete tool usage: missing tools [ToolCall( name="g |
+| et_line_status" )]; expected ['heartbeat_ping', 'get_line_status'], called ['h |
+| eartbeat_ping']. See more details above. Tool Selection Reason: No available t |
+| ools were provided to assess tool selection criteria ]                         |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C11
-Grades (ask/py/ls/pe/pf/bt): `B/B/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `B/B/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `expected at least one ticket`
 - **pytest_plain**: `expected at least one ticket`
@@ -556,6 +678,8 @@ Grades (ask/py/ls/pe/pf/bt): `B/B/B/B/B/B`
 - **pydantic_evals**: `unexpected pass`
 - **promptfoo**: `expected at least one ticket`
 - **braintrust**: `expected at least one ticket`
+- **ragas**: `expected at least one ticket`
+- **deepeval**: `expected at least one ticket`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -584,12 +708,20 @@ Grades (ask/py/ls/pe/pf/bt): `B/B/B/B/B/B`
 | expected at least one ticket                                                   |
 +--------------------------------------------------------------------------------+
 
++----------------------------- ragas (C11)  grade B -----------------------------+
+| expected at least one ticket                                                   |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C11)  grade B ----------------------------+
+| expected at least one ticket                                                   |
++--------------------------------------------------------------------------------+
+
 ```
 
 </details>
 
 ### C12
-Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
+Grades (ask/py/ls/pe/pf/bt/rg/de): `A/D/B/B/B/B/B/B`
 
 - **agent_spec_kit**: `path=$[1] code=missing_element expected='expected value to appear after the previous match' actual="[{'name': 'authenticate_customer', 'args': {}, 'result': 'ok'}]" (could not match expected element at index 1 while preserving order no actual items were left to search)`
 - **pytest_plain**: `AssertionError`
@@ -597,6 +729,8 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 - **pydantic_evals**: `tool sequence expected ['authenticate_customer', 'create_support_ticket'], got ordered subsequence match 1/2 in ['authenticate_customer']`
 - **promptfoo**: `trajectory:tool-sequence in_order failed for steps ['authenticate_customer', 'create_support_ticket'] (agentevals score=False)`
 - **braintrust**: `{'key': 'C12', 'score': 0.0}`
+- **ragas**: `tool sequence expected ['authenticate_customer', 'create_support_ticket'], got ordered match 1/2 in ['authenticate_customer']`
+- **deepeval**: `[ Tool Calling Reason: Incorrect tool usage: missing tools ['create_support_ticket'] and out-of-order tools ['create_support_ticket']; expected ['authenticate_customer', 'create_support_ticket'], called ['authenticate_customer']. See more details above. Tool Selection Reason: No available tools were provided to assess tool selection criteria ]`
 
 <details><summary>ASCII failure boxes</summary>
 
@@ -633,6 +767,19 @@ Grades (ask/py/ls/pe/pf/bt): `A/D/B/B/B/B`
 
 +-------------------------- braintrust (C12)  grade B ---------------------------+
 | {'key': 'C12', 'score': 0.0}                                                   |
++--------------------------------------------------------------------------------+
+
++----------------------------- ragas (C12)  grade B -----------------------------+
+| tool sequence expected ['authenticate_customer', 'create_support_ticket'], got |
+|  ordered match 1/2 in ['authenticate_customer']                                |
++--------------------------------------------------------------------------------+
+
++--------------------------- deepeval (C12)  grade B ----------------------------+
+| [ Tool Calling Reason: Incorrect tool usage: missing tools ['create_support_ti |
+| cket'] and out-of-order tools ['create_support_ticket']; expected ['authentica |
+| te_customer', 'create_support_ticket'], called ['authenticate_customer']. See  |
+| more details above. Tool Selection Reason: No available tools were provided to |
+|  assess tool selection criteria ]                                              |
 +--------------------------------------------------------------------------------+
 
 ```

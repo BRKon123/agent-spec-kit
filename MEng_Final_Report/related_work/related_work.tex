@@ -46,7 +46,7 @@ A related group of tools focuses on observability rather than evaluation alone. 
 
 These tools are important because agent failures are often hard to understand without seeing the full execution trace: the prompts, model responses, tool calls, tool outputs, intermediate steps, latency, and cost.
 
-Observability tools are therefore highly complementary to evaluation libraries. They help developers inspect what happened during a run. However, observability does not by itself define what should have happened. A trace viewer can show that a tool was called, but the developer still needs a concise way to specify that the tool should only have been called after another condition, that its arguments should satisfy particular properties, that the final output should mention a required concept, and that the external state should end in a valid configuration.
+Observability tools are therefore highly complementary to evaluation libraries. They help developers inspect what happened during a run. However, observability does not by itself define what should have happened. A trace viewer can show that a tool was called, but the developer still needs a concise way to state what should have happened: for instance, argument constraints on a tool call or a required postcondition on external state.
 
 \subsection{Gaps in Existing Libraries}
 
@@ -104,6 +104,6 @@ Taken together, what is missing is concise, scenario-style tooling: declare beha
 \section{Motivation for Agent-Spec-Kit}
 \label{sec:agent-spec-kit-motivation}
 
-Chapter~\ref{chap:background} argues that agent evaluation must cover traces, tools, state, and repeated runs, not only final answers. Benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why \cite{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}; software-testing work shows how to find, simplify, and preserve failures \cite{claessen2000quickcheck,zeller2002simplifying,yu2023gptfuzzer,yao2023fuzzllm}. Section~\ref{sec:existing_eval_libraries} shows that existing libraries and observability tools still fall short on declarative behavioural specs, co-located scenario authoring, multi-surface oracles, assertion-local diagnostics, and integrated exploration with regression preservation.
+Chapter~\ref{chap:background} argues that agent evaluation must cover traces, tools, state, and repeated runs, not only final answers. Benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why \cite{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}; software-testing work shows how to find failures, simplify them, and preserve the result as regression tests \cite{claessen2000quickcheck,zeller2002simplifying,yu2023gptfuzzer,yao2023fuzzllm}. Section~\ref{sec:existing_eval_libraries} shows that existing libraries and observability tools still fall short on declarative behavioural specs, co-located scenario authoring, multi-surface oracles, assertion-local diagnostics, and integrated exploration with regression preservation.
 
 Agent-Spec-Kit targets that combined gap. It treats an agent episode as a testable scenario with explicit checks over the final output, tool calls, and environment state, attaches structured counterexamples to failed assertions, and supports workflows such as user simulation, mutation fuzzing, failure shrinking, and regression extraction described in the methodology chapter.

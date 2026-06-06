@@ -17,6 +17,10 @@ _EXPR = Path(__file__).resolve().parents[1]
 if str(_EXPR) not in sys.path:
     sys.path.insert(0, str(_EXPR))
 
+from dotenv import load_dotenv
+
+load_dotenv(_EXPR.parents[1] / ".env")
+
 from shared.paths import ensure_paths
 
 ensure_paths()
@@ -26,6 +30,8 @@ from agent_spec_kit.match.api import check
 from agent_spec_kit.match.types import path_to_str
 
 from catalog import FAILURE_SPECIFICITY, FAILURE_SPECIFICITY_GRADES, SPECIMENS
+from implementations.deepeval.evaluators import fail_message_for_trace as de_fail_message
+from implementations.ragas.metrics import fail_message_for_trace as rg_fail_message
 from implementations.braintrust.scorers import SCORERS, metadata_for_trace
 from implementations.langsmith.evaluators import EVALUATORS as LS_EVALUATORS
 from implementations.pydantic_evals.dataset import fail_message_for_trace, run_evaluator_on_trace
@@ -60,6 +66,8 @@ FRAMEWORKS = [
     "pydantic_evals",
     "promptfoo",
     "braintrust",
+    "ragas",
+    "deepeval",
 ]
 
 FAIL_DIR = _EXPR / "traces_fail"
@@ -197,6 +205,18 @@ def _run_promptfoo(check_id: str, trace: dict[str, Any]) -> str:
     return _truncate(msg or "assertion failed")
 
 
+def _run_ragas(check_id: str, trace: dict[str, Any]) -> str:
+    if check_id == "C11" or trace.get("_fail_mode") == "c11_no_ticket":
+        return _truncate(_c11_oracle_fail_message())
+    return _truncate(rg_fail_message(check_id, trace))
+
+
+def _run_deepeval(check_id: str, trace: dict[str, Any]) -> str:
+    if check_id == "C11" or trace.get("_fail_mode") == "c11_no_ticket":
+        return _truncate(_c11_oracle_fail_message())
+    return _truncate(de_fail_message(check_id, trace))
+
+
 # Fixed exemplar strings (from MANUAL_FAILURE_CLASSIFICATION.md captures).
 GRADE_EXEMPLARS: dict[str, str] = {
     "A": "path=$[1] code=missing_element expected=... actual=... (tool/field witness)",
@@ -225,6 +245,8 @@ def main() -> None:
         "pydantic_evals": _run_pydantic,
         "promptfoo": _run_promptfoo,
         "braintrust": _run_braintrust,
+        "ragas": _run_ragas,
+        "deepeval": _run_deepeval,
     }
 
     for cid in CHECK_IDS:
@@ -290,7 +312,7 @@ def main() -> None:
     rep_lines.extend(["", "## Per-check captures", ""])
     for cid in CHECK_IDS:
         rep_lines.append(f"### {cid}")
-        rep_lines.append(f"Grades (ask/py/ls/pe/pf/bt): `{samples[cid]['_grades']}`")
+        rep_lines.append(f"Grades (ask/py/ls/pe/pf/bt/rg/de): `{samples[cid]['_grades']}`")
         rep_lines.append("")
         for fw in FRAMEWORKS:
             rep_lines.append(f"- **{fw}**: `{samples[cid][fw]}`")

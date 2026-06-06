@@ -68,11 +68,11 @@ The failure states the policy directly: a ticket must exist on the corrected lin
 \subsection{Diagnostic quality when faults are detected}
 \label{sec:diagnostic-quality-faults}
 
-Detection alone does not tell a developer how to fix a run. For injections that \emph{were} caught on the full oracle (F lane), we replay the same policy checks in six evaluation-library implementations and grade the captured failure panels with the specimen rubric (Table~\ref{tab:specificity-rubric}, Section~\ref{sec:expressiveness}). Grades come from \texttt{openai:gpt-5-mini}; the Req/Where/E-vs-A columns are deterministic parity flags against the built-in oracle witness.
+Detection alone does not tell a developer how to fix a run. For injections that \emph{were} caught on the full oracle (F lane), we replay the same policy checks in eight evaluation-library implementations and grade the captured failure panels with the specimen rubric (Table~\ref{tab:specificity-rubric}, Section~\ref{sec:expressiveness}). Grades come from \texttt{openai:gpt-5-mini}; the Req/Where/E-vs-A columns are deterministic parity flags against the built-in oracle witness.
 
 \begin{table}[H]
 \centering
-\caption{Injected-fault diagnostic specificity (detected, full oracle; A--E as Table~\ref{tab:specificity-rubric}). Columns: ask = \emph{agent-spec-kit}, py = pytest, ls = LangSmith, pe = Pydantic Evals, pf = Promptfoo, bt = Braintrust. Full grid: Appendix~\ref{tab:diagnostic-injected-grid}.}
+\caption{Injected-fault diagnostic specificity (detected, full oracle; A--E as Table~\ref{tab:specificity-rubric}). Columns: ask = \emph{agent-spec-kit}, py = pytest, ls = LangSmith, pe = Pydantic Evals, pf = Promptfoo, bt = Braintrust, rg = Ragas, de = DeepEval. Full grid: Appendix~\ref{tab:diagnostic-injected-grid}.}
 \label{tab:diagnostic-comparison}
 \footnotesize
 \begin{tabular}{@{}llcccc@{}}
@@ -80,31 +80,37 @@ Detection alone does not tell a developer how to fix a run. For injections that 
 Fault shape & FW & Grade & Failed req? & Where? & E vs A? \\
 \midrule
 Wrong-line binding (F02/T29) & ask & A & Yes & Yes & Yes \\
- & py & A & Yes & No & Yes \\
- & ls & B & No & No & Yes \\
+ & py & B & Yes & No & Yes \\
+ & ls & A & Yes & No & Yes \\
  & pe & A & Yes & No & Yes \\
- & pf & A & No & No & No \\
- & bt & A & Yes & No & Yes \\
+ & pf & B & No & No & Yes \\
+ & bt & B & Yes & No & Yes \\
+ & rg & B & Yes & No & Yes \\
+ & de & A & Yes & No & Yes \\
 \addlinespace
-Missing audit note (F08/T21) & ask & A & Yes & Yes & Yes \\
- & py & D & Yes & No & No \\
- & ls & B & Yes & No & No \\
+Missing audit note (F08/T21) & ask & B & Yes & Yes & Yes \\
+ & py & B & Yes & No & No \\
+ & ls & C & Yes & No & No \\
  & pe & B & Yes & No & No \\
  & pf & C & No & No & No \\
- & bt & B & Yes & No & No \\
+ & bt & C & Yes & No & No \\
+ & rg & B & Yes & No & No \\
+ & de & B & Yes & No & No \\
 \addlinespace
 Privacy before auth (F04/T45) & ask & A & Yes & Yes & Yes \\
- & py & A & Yes & Yes & No \\
- & ls & B & Yes & No & No \\
+ & py & B & Yes & No & No \\
+ & ls & C & Yes & No & No \\
  & pe & A & Yes & No & Yes \\
- & pf & A & No & No & Yes \\
- & bt & B & Yes & No & No \\
+ & pf & B & No & No & Yes \\
+ & bt & B & Yes & No & Yes \\
+ & rg & A & Yes & No & No \\
+ & de & B & Yes & No & No \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-On wrong-line binding (F02/T29), \emph{agent-spec-kit} reaches \textbf{A} with turn, JSON path (\texttt{\$[1].args.sim\_type}), and matcher witnesses; pytest, Pydantic Evals, and Braintrust also grade \textbf{A} but omit structured expected-vs-actual in the excerpt; LangSmith drops to \textbf{B} (scorer key only); Promptfoo grades \textbf{A} on message text but fails the deterministic E-vs-A parity flags.
-On missing audit note (F08/T21), the \emph{agent-spec-kit} implementation stays \textbf{A}; pytest collapses to a bare \texttt{AssertionError} (\textbf{D}); LangSmith, Pydantic Evals, and Braintrust reach only \textbf{B}; Promptfoo is \textbf{C} (policy named, no witness).
-Privacy-before-auth (F04/T45) stays \textbf{A} on the built-in state oracle and on pytest/Pydantic Evals/Promptfoo; LangSmith and Braintrust grade \textbf{B} (requirement named, weak where-in-trace signal).
+On wrong-line binding (F02/T29), \emph{agent-spec-kit} reaches \textbf{A} with turn, JSON path (\texttt{\$[1].args.sim\_type}), and matcher witnesses; DeepEval also grades \textbf{A} on requirement naming though without structured path witnesses; LangSmith and Pydantic Evals reach \textbf{A} with scorer-level detail; Ragas and Braintrust grade \textbf{B} (policy named, weak counterexample); pytest and Promptfoo sit at \textbf{B} with partial parity flags.
+On missing audit note (F08/T21), the \emph{agent-spec-kit} implementation stays \textbf{B} with turn-level where-in-trace signal; Ragas and DeepEval also reach \textbf{B} (requirement named, no path witness); pytest and Pydantic Evals match at \textbf{B}; LangSmith, Braintrust, and Promptfoo grade \textbf{C} (check or scorer named only).
+Privacy-before-auth (F04/T45) stays \textbf{A} on the built-in state oracle and on Ragas; Pydantic Evals grades \textbf{A} without path witnesses; DeepEval, pytest, and Braintrust reach \textbf{B}; LangSmith and Promptfoo grade \textbf{C} or \textbf{B} with weak where-in-trace signal.
 
 Together, lane detection rates and these diagnostic grades treat split oracles as complementary witnesses on the same policy, not redundant pass/fail signals.

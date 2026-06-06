@@ -12,9 +12,9 @@ prompts:
 tests:
   - vars: {check_id: C01}
     options:
+      # // CHECK_START
       transform: JSON.parse(output).output
     assert:
-      # // CHECK_START
       - type: icontains-any
         value: [credit, refund]
       - type: icontains-any
@@ -23,6 +23,7 @@ tests:
 
   - vars: {check_id: C02}
     options:
+      # // CHECK_START
       transform: |
         (() => {
           const trace = JSON.parse(output);
@@ -30,7 +31,6 @@ tests:
           return JSON.stringify(t?.result ?? null);
         })()
     assert:
-      # // CHECK_START
       - type: is-json
         value:
           type: object
@@ -58,6 +58,7 @@ tests:
 
   - vars: {check_id: C04}
     options:
+      # // CHECK_START
       transform: |
         (() => {
           const trace = JSON.parse(output);
@@ -65,7 +66,6 @@ tests:
           return JSON.stringify(t?.result ?? null);
         })()
     assert:
-      # // CHECK_START
       - type: is-json
         value:
           type: object
@@ -113,6 +113,7 @@ tests:
 
   - vars: {check_id: C08}
     options:
+      # // CHECK_START
       transform: |
         (() => {
           const trace = JSON.parse(output);
@@ -120,7 +121,6 @@ tests:
           return JSON.stringify(t?.result ?? null);
         })()
     assert:
-      # // CHECK_START
       - type: is-json
         value:
           type: object

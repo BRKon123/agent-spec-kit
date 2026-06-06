@@ -37,6 +37,8 @@ FRAMEWORKS = [
     "pydantic_evals",
     "promptfoo",
     "braintrust",
+    "ragas",
+    "deepeval",
 ]
 
 KNOWN_CHECKS = frozenset(

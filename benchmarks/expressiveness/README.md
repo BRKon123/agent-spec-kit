@@ -10,6 +10,8 @@ Twelve check-type specimens (`C01`–`C12`) implemented in parallel across:
 | Pydantic Evals-style | `implementations/pydantic_evals/dataset.py` (`Dataset` / `Case`; `evaluators.py` re-exports) |
 | Promptfoo | `implementations/promptfoo/promptfooconfig.yaml` |
 | Braintrust | `implementations/braintrust/experiment.py` (`Score` scorers; `scorers.py` re-exports) |
+| Ragas | `implementations/ragas/metrics.py` (`collections` metrics + custom `BaseMetric`) |
+| DeepEval | `implementations/deepeval/experiment.py` (`ToolCorrectnessMetric`, `JsonCorrectnessMetric`, `BaseMetric`) |
 
 Frozen traces live in `traces/` for deterministic checks (no API key in CI).
 
@@ -26,7 +28,7 @@ Skips `C01` LLM rubric unless `OPENAI_API_KEY` is set (or run with `--tags C02` 
 ## Run plain pytest
 
 ```bash
-cd benchmarks/expressiveness && uv run pytest tests/ implementations/langsmith/ implementations/pydantic_evals/ implementations/braintrust/ implementations/pytest_plain/ -q
+cd benchmarks/expressiveness && uv run pytest tests/ implementations/langsmith/ implementations/pydantic_evals/ implementations/braintrust/ implementations/pytest_plain/ implementations/ragas/ implementations/deepeval/ -q
 ```
 
 ## Record live traces (optional)
@@ -41,7 +43,7 @@ OPENAI_API_KEY=... uv run python benchmarks/expressiveness/scripts/record_traces
 uv run python benchmarks/expressiveness/scripts/generate_table.py
 ```
 
-Output: [EXPRESSIVENESS_TABLE.md](EXPRESSIVENESS_TABLE.md) — includes **LOC** (`ask/py/ls/pe/pf/bt`) and **failure specificity** (`A`–`E`) rubrics below the main table.
+Output: [EXPRESSIVENESS_TABLE.md](EXPRESSIVENESS_TABLE.md) — includes **LOC** (`ask/py/ls/pe/pf/bt/rg/de`) and **failure specificity** (`A`–`E`) rubrics below the main table.
 
 LOC uses `# CHECK_START` / `# CHECK_END` in each port file.
 
@@ -56,7 +58,7 @@ See [`FAILURE_SAMPLES.md`](FAILURE_SAMPLES.md) and [`failures_samples.yaml`](fai
 
 ## Authoring clarity (LLM-judged, A–D)
 
-Same 72 cells as LOC (12 checks × 6 frameworks): non-comment lines between `CHECK_START`/`CHECK_END`. One combined letter grade per cell (**A best, D worst**): test intent, scenario message/check flow, and how easy the code is to understand. Distinct from failure-message specificity (**A**–**E** on diagnostic messages).
+Same 96 cells as LOC (12 checks × 8 frameworks): non-comment lines between `CHECK_START`/`CHECK_END`. One combined letter grade per cell (**A best, D worst**): test intent, scenario message/check flow, and how easy the code is to understand. Distinct from failure-message specificity (**A**–**E** on diagnostic messages).
 
 ```bash
 cd benchmarks/expressiveness

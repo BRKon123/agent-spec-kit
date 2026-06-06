@@ -38,28 +38,30 @@ Grade on reading cost relative to the canonical policy—not line count, not fra
 | C | Policy only after multiple mechanical steps; trace-only or plumbing-heavy |
 | D | Does not convey what is tested, what the agent saw, or which properties matter |
 
-## Authoring clarity by check (`ask/py/ls/pe/pf/bt`)
+## Authoring clarity by check (`ask/py/ls/pe/pf/bt/rg/de`)
 
-| Check type | ask | py | ls | pe | pf | bt |
-| --- | --- | --- | --- | --- | --- | --- |
-| Final output semantic/rubric | A | B | B | B | B | B |
-| Structured object shape | A | B | B | B | B | B |
-| Conditional structured object rule | A | B | B | B | B | B |
-| Numeric/range/regex field constraint | A | B | B | B | B | B |
-| Ordered tool-call sequence | A | C | B | B | B | B |
-| Forbidden tool-call | A | B | B | B | C | B |
-| Tool argument matching | A | B | B | B | B | B |
-| Tool result matching | A | B | B | B | B | B |
-| Nested tool-call matching | A | B | B | B | B | B |
-| Unordered sibling tool matching | A | C | B | B | B | B |
-| Environment/final-state assertion | A | A | B | A | A | B |
-| Multi-turn conversation/state-memory | A | B | B | B | B | B |
+| Check type | ask | py | ls | pe | pf | bt | rg | de |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Final output semantic/rubric | A | B | B | B | B | B | B | B |
+| Structured object shape | A | B | B | B | B | B | B | B |
+| Conditional structured object rule | A | B | B | B | B | B | C | B |
+| Numeric/range/regex field constraint | A | B | B | B | B | C | B | B |
+| Ordered tool-call sequence | A | B | A | B | B | B | B | B |
+| Forbidden tool-call | A | B | B | C | C | B | B | B |
+| Tool argument matching | A | B | B | B | B | C | B | B |
+| Tool result matching | A | B | B | B | C | B | B | B |
+| Nested tool-call matching | A | B | B | C | B | B | B | B |
+| Unordered sibling tool matching | A | B | B | B | B | B | B | C |
+| Environment/final-state assertion | A | B | A | A | B | A | B | B |
+| Multi-turn conversation/state-memory | A | B | B | B | C | B | B | C |
 
 ## Per-framework grade counts
 
 - **ask**: A=12 (mean ordinal 4.00)
-- **py**: A=1, B=9, C=2 (mean ordinal 2.92)
-- **ls**: B=12 (mean ordinal 3.00)
-- **pe**: A=1, B=11 (mean ordinal 3.08)
-- **pf**: A=1, B=10, C=1 (mean ordinal 3.00)
-- **bt**: B=12 (mean ordinal 3.00)
+- **py**: B=12 (mean ordinal 3.00)
+- **ls**: A=2, B=10 (mean ordinal 3.17)
+- **pe**: A=1, B=9, C=2 (mean ordinal 2.92)
+- **pf**: B=9, C=3 (mean ordinal 2.75)
+- **bt**: A=1, B=9, C=2 (mean ordinal 2.92)
+- **rg**: B=11, C=1 (mean ordinal 2.92)
+- **de**: B=10, C=2 (mean ordinal 2.83)

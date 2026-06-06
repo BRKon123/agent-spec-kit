@@ -220,6 +220,34 @@ FRAMEWORK_RATINGS: dict[str, dict[CheckId, str]] = {
         "C11": "Code scorer",
         "C12": "Code scorer",
     },
+    "ragas": {
+        "C01": "Custom metric",
+        "C02": "Custom metric",
+        "C03": "Custom metric",
+        "C04": "Custom metric",
+        "C05": "Custom metric",
+        "C06": "Custom metric",
+        "C07": "ToolCallAccuracy",
+        "C08": "Custom metric",
+        "C09": "Custom metric",
+        "C10": "Custom metric",
+        "C11": "Custom metric",
+        "C12": "Custom metric",
+    },
+    "deepeval": {
+        "C01": "BaseMetric",
+        "C02": "JsonCorrectnessMetric",
+        "C03": "BaseMetric",
+        "C04": "JsonCorrectnessMetric",
+        "C05": "ToolCorrectnessMetric",
+        "C06": "BaseMetric",
+        "C07": "ToolCorrectnessMetric",
+        "C08": "JsonCorrectnessMetric",
+        "C09": "BaseMetric",
+        "C10": "ToolCorrectnessMetric",
+        "C11": "BaseMetric",
+        "C12": "BaseMetric",
+    },
 }
 
 # Qualitative grade when a check fails on an intentional negative fixture (see failures_samples.yaml).
@@ -239,6 +267,8 @@ FRAMEWORK_LOC_ABBREVS: tuple[tuple[str, str], ...] = (
     ("pydantic_evals", "pe"),
     ("promptfoo", "pf"),
     ("braintrust", "bt"),
+    ("ragas", "rg"),
+    ("deepeval", "de"),
 )
 
 # Manually graded from captured messages — see MANUAL_FAILURE_CLASSIFICATION.md.
@@ -251,6 +281,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C02": {
         "agent_spec_kit": "A",
@@ -259,6 +291,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C03": {
         "agent_spec_kit": "A",
@@ -267,6 +301,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C04": {
         "agent_spec_kit": "A",
@@ -275,6 +311,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C05": {
         "agent_spec_kit": "A",
@@ -283,6 +321,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C06": {
         "agent_spec_kit": "A",
@@ -291,6 +331,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "C",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C07": {
         "agent_spec_kit": "A",
@@ -299,6 +341,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "C",
+        "deepeval": "B",
     },
     "C08": {
         "agent_spec_kit": "A",
@@ -307,6 +351,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C09": {
         "agent_spec_kit": "A",
@@ -315,6 +361,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C10": {
         "agent_spec_kit": "A",
@@ -323,6 +371,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C11": {
         "agent_spec_kit": "B",
@@ -331,6 +381,8 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
     "C12": {
         "agent_spec_kit": "A",
@@ -339,5 +391,7 @@ FAILURE_SPECIFICITY: dict[CheckId, dict[str, str]] = {
         "pydantic_evals": "B",
         "promptfoo": "B",
         "braintrust": "B",
+        "ragas": "B",
+        "deepeval": "B",
     },
 }

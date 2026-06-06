@@ -32,6 +32,8 @@ FW_ABBREV = {
     "pydantic_evals": "pe",
     "promptfoo": "pf",
     "braintrust": "bt",
+    "ragas": "rg",
+    "deepeval": "de",
 }
 
 
@@ -102,7 +104,7 @@ def generate_table(cells: dict[str, dict], meta: dict) -> str:
     lines.extend(
         [
             "",
-            "## Section B — Main table (detected, full oracle, six frameworks)",
+            "## Section B — Main table (detected, full oracle, eight frameworks)",
             "",
             "| Case | Framework | Grade | Failed req? | Where? | Path? | E vs A? | LOC |",
             "|------|-----------|:-----:|:-----------:|:------:|:-----:|:-------:|----:|",

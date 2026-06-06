@@ -16,7 +16,7 @@ ensure_paths()
 import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
-from specimens.messages import meta, msg_c10, msg_c11_turn1, msg_c12_turns
+from specimens.messages import meta
 from shared.store_sim import insert_ticket
 
 _TELECOM = _EXPR.parent / "telecom_support"
@@ -252,8 +252,13 @@ async def test_c11_db_state(s, store_c11):
 @ek.scenario(agent_fixture="agent_c12", tags=("expressiveness", "C12"), timeout_s=60.0)
 async def test_c12_multi_turn_memory(s, store_c12):
     # CHECK_START
-    t1, t2, t3 = msg_c12_turns()
+    t1 = "Please open a ticket on LINE-WRONG — my work phone keeps dropping calls."
+    t2 = "Sorry, that is my old line — I meant my current work phone instead."
     line_id = meta()["line_id"]
+    t3 = (
+        f"Yes use {line_id}. Account {meta()['customer_id']}, verification "
+        f"{meta()['verification_token']} — go ahead with the ticket on that line."
+    )
     (
         s.user_message(t1)
         .user_message(t2)

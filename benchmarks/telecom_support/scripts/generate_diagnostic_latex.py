@@ -23,7 +23,16 @@ from scripts.generate_diagnostic_quality_table import (  # noqa: E402
     _yn,
 )
 
-FW_ORDER = ["agent_spec_kit", "pytest_plain", "langsmith", "pydantic_evals", "promptfoo", "braintrust"]
+FW_ORDER = [
+    "agent_spec_kit",
+    "pytest_plain",
+    "langsmith",
+    "pydantic_evals",
+    "promptfoo",
+    "braintrust",
+    "ragas",
+    "deepeval",
+]
 
 
 def _latex_row(case: str, fw: str, cell: dict) -> str:
@@ -65,7 +74,7 @@ def generate_latex(cells: dict[str, dict]) -> str:
         "",
         "\\footnotesize",
         "\\begin{longtable}{@{}llcccccr@{}}",
-        "\\caption{Diagnostic specificity on injected faults (detected, full oracle; six evaluation-library implementations). "
+        "\\caption{Diagnostic specificity on injected faults (detected, full oracle; eight evaluation-library implementations). "
         "Grade uses the same A--E scale as Table~\\ref{tab:specificity-rubric}.} "
         "\\label{tab:diagnostic-injected-grid} \\\\",
         "\\toprule",

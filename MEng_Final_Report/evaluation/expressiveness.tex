@@ -1,7 +1,7 @@
 \section{Expressiveness}
 \label{sec:expressiveness}
 
-A second line of evaluation compares how concisely the same twelve policy checks can be written in \emph{agent-spec-kit} and in implementations using five other evaluation libraries: plain pytest, LangSmith, Pydantic Evals, Promptfoo, and Braintrust. Each item is a small, self-contained check pattern rather than a full benchmark task; Table~\ref{tab:check-specimens} lists the twelve patterns and related telecom tasks.
+A second line of evaluation compares how concisely the same twelve policy checks can be written in \emph{agent-spec-kit} and in implementations using seven other evaluation libraries: plain pytest, LangSmith, Pydantic Evals, Promptfoo, Braintrust, Ragas, and DeepEval. Each item is a small, self-contained check pattern rather than a full benchmark task; Table~\ref{tab:check-specimens} lists the twelve patterns and related telecom tasks.
 
 \begin{table}[htbp]
 \centering
@@ -36,34 +36,34 @@ Table~\ref{tab:expressiveness-loc} counts lines of check logic per framework on 
 
 \begin{table}[htbp]
 \centering
-\caption{Lines of check logic per framework (twelve specimens; lower is more concise). Columns: ask = \emph{agent-spec-kit}, py = pytest, ls = LangSmith, pe = Pydantic Evals, pf = Promptfoo, bt = Braintrust.}
+\caption{Lines of check logic per framework (twelve specimens; lower is more concise). Columns: ask = \emph{agent-spec-kit}, py = pytest, ls = LangSmith, pe = Pydantic Evals, pf = Promptfoo, bt = Braintrust, rg = Ragas, de = DeepEval.}
 \label{tab:expressiveness-loc}
-\footnotesize
-\begin{tabular}{@{}p{3.4cm}rrrrrr@{}}
+\scriptsize
+\begin{tabular}{@{}p{2.8cm}rrrrrrrr@{}}
 \toprule
-Check type & ask & py & ls & pe & pf & bt \\
+Check type & ask & py & ls & pe & pf & bt & rg & de \\
 \midrule
-Final output rubric & 8 & 4 & 4 & 7 & 4 & 4 \\
-Structured object shape & 20 & 15 & 18 & 23 & 9 & 17 \\
-Conditional object rule & 24 & 10 & 11 & 30 & 9 & 8 \\
-Numeric / regex field & 16 & 13 & 16 & 9 & 8 & 15 \\
-Ordered tool sequence & 11 & 5 & 17 & 12 & 6 & 7 \\
-Forbidden tool-call & 4 & 1 & 2 & 2 & 2 & 2 \\
-Tool argument matching & 14 & 12 & 12 & 15 & 12 & 12 \\
-Tool result matching & 20 & 12 & 18 & 10 & 9 & 17 \\
-Nested tool matching & 16 & 5 & 5 & 13 & 7 & 9 \\
-Unordered sibling tools & 8 & 2 & 11 & 7 & 4 & 3 \\
-Final-state assertion & 5 & 12 & 12 & 12 & 12 & 13 \\
-Multi-turn memory & 14 & 22 & 23 & 29 & 18 & 21 \\
+Final output rubric & 8 & 5 & 5 & 22 & 6 & 6 & 22 & 46 \\
+Structured object shape & 20 & 22 & 23 & 62 & 16 & 22 & 31 & 31 \\
+Conditional object rule & 24 & 16 & 15 & 69 & 9 & 13 & 25 & 57 \\
+Numeric / regex field & 16 & 19 & 21 & 18 & 15 & 20 & 29 & 30 \\
+Ordered tool sequence & 11 & 8 & 48 & 50 & 6 & 10 & 23 & 32 \\
+Forbidden tool-call & 4 & 3 & 3 & 41 & 2 & 5 & 16 & 40 \\
+Tool argument matching & 14 & 20 & 45 & 55 & 12 & 18 & 24 & 32 \\
+Tool result matching & 20 & 19 & 23 & 19 & 16 & 22 & 31 & 31 \\
+Nested tool matching & 16 & 11 & 10 & 68 & 7 & 12 & 23 & 45 \\
+Unordered sibling tools & 8 & 4 & 42 & 46 & 4 & 6 & 18 & 32 \\
+Final-state assertion & 5 & 14 & 13 & 13 & 13 & 14 & 19 & 41 \\
+Multi-turn memory & 19 & 26 & 55 & 69 & 20 & 24 & 42 & 79 \\
 \midrule
-\textbf{Total} & \textbf{160} & \textbf{113} & \textbf{149} & \textbf{169} & \textbf{100} & \textbf{128} \\
+\textbf{Total} & \textbf{165} & \textbf{167} & \textbf{303} & \textbf{532} & \textbf{126} & \textbf{172} & \textbf{303} & \textbf{496} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Promptfoo is the most concise overall (100 lines): checks are mostly declarative \texttt{assert} entries in a shared \texttt{promptfooconfig.yaml}, with trajectory rules expressed as compact assertion types rather than imperative loops. That compactness comes with indirection: policy for a specimen may sit in the YAML block, a \texttt{transform} that extracts the right tool result, and a Python provider that materialises the trace, so a maintainer often hops between files to see the full check. Several trace-heavy specimens (C02--C04, C08) are shortest under Promptfoo for that reason.
+Promptfoo remains among the more concise ports (126 lines): checks are mostly declarative \texttt{assert} entries in \texttt{promptfooconfig.yaml}, with trajectory rules expressed as compact assertion types. The LOC measure counts only the body of each check---trace extraction, evaluator or metric configuration, and result capture---and excludes harness code outside the marked region. Libraries that repeat evaluator boilerplate in every specimen therefore total higher: DeepEval (496), Pydantic Evals (532), LangSmith and Ragas (303 each), then Braintrust (172) and plain pytest (167). \emph{agent-spec-kit} totals 165 and remains competitive because the scenario DSL expresses whole checks in one block; the gap to metric-oriented libraries reflects wiring that must be duplicated when a library offers no compact declarative check form.
 
-Plain pytest is also lean (113 lines total) on simple tool rules, but grows on structured-object and multi-turn specimens where authors spell out trace walking and field guards explicitly. Pydantic Evals totals the most lines (169), concentrated in conditional and multi-turn cases. \emph{agent-spec-kit} totals 160 and sits in the same band as LangSmith and Braintrust, only modestly above pytest and Promptfoo. That gap is smaller than it looks because each \emph{agent-spec-kit} specimen counts the whole scenario in one block, from customer turns through tool, output, and state checks, whereas the other implementations usually count only the assertion or scorer body and leave the surrounding harness in helpers or separate files. The higher \emph{agent-spec-kit} total is therefore mostly consolidation into one readable specification, not a large increase in policy per specimen; many individual checks are still only a few lines, including simple rules such as forbidding a tool call. Line count alone therefore understates how easy checks are to maintain when much of the apparent difference is where the code lives, not how much logic each check requires. The clarity study below judges readability directly: on a first read, is the \emph{intent} of each check obvious, or do you have to trace through helper code and framework wiring before you see what is being tested? Table~\ref{tab:expressiveness-authoring-clarity} and the listings that follow compare frameworks on that question specimen by specimen.
+Plain pytest totals 167 lines because trace walking and field guards appear in each check body. \emph{agent-spec-kit} totals 165 and sits below every metric-oriented library while remaining in the same band as pytest. Line count alone therefore understates how easy checks are to maintain when much of the apparent difference is where the code lives, not how much logic each check requires. The clarity study below judges readability directly: on a first read, is the \emph{intent} of each check obvious, or do you have to trace through helper code and framework wiring before you see what is being tested? Table~\ref{tab:expressiveness-authoring-clarity} and the listings that follow compare frameworks on that question specimen by specimen.
 
 \subsection{Authoring clarity (LLM-judged)}
 
@@ -97,22 +97,22 @@ D & Excerpt does not convey what is tested, what the agent saw, or which propert
 \caption{Authoring-clarity grade by check and framework (LLM-judged, A--D).}
 \label{tab:expressiveness-authoring-clarity}
 \footnotesize
-\begin{tabular}{@{}p{3.2cm}cccccc@{}}
+\begin{tabular}{@{}p{2.8cm}cccccccc@{}}
 \toprule
-Check & ask & py & ls & pe & pf & bt \\
+Check & ask & py & ls & pe & pf & bt & rg & de \\
 \midrule
-Final output rubric & A & B & B & B & B & B \\
-Structured object & A & B & B & B & B & B \\
-Conditional object & A & B & B & B & B & B \\
-Numeric / regex & A & B & B & B & B & B \\
-Ordered sequence & A & C & B & B & B & B \\
-Forbidden tool & A & B & B & B & C & B \\
-Tool arguments & A & B & B & B & B & B \\
-Tool result & A & B & B & B & B & B \\
-Nested tools & A & B & B & B & B & B \\
-Unordered siblings & A & C & B & B & B & B \\
-Final-state & A & A & B & A & A & B \\
-Multi-turn memory & A & B & B & B & B & B \\
+Final output rubric & A & B & B & B & B & B & B & B \\
+Structured object & A & B & B & B & B & B & B & B \\
+Conditional object & A & B & B & B & B & B & C & B \\
+Numeric / regex & A & B & B & B & B & C & B & B \\
+Ordered sequence & A & B & A & B & B & B & B & B \\
+Forbidden tool & A & B & B & C & C & B & B & B \\
+Tool arguments & A & B & B & B & B & C & B & B \\
+Tool result & A & B & B & B & C & B & B & B \\
+Nested tools & A & B & B & C & B & B & B & B \\
+Unordered siblings & A & B & B & B & B & B & B & C \\
+Final-state & A & B & A & A & B & A & B & B \\
+Multi-turn memory & A & B & B & B & C & B & B & C \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -188,7 +188,7 @@ Specimen C02 requires \texttt{run\_network\_diagnostics\_specialist.result} to c
 
 Notice how the \emph{agent-spec-kit} excerpt reads like a short script: the opening \texttt{user\_message} and the tool-result check follow one another in the same block, so you can read the specimen top to bottom as a coherent story of what the customer says and what must hold in the trace. Pytest and Promptfoo split that story across trace-walking code, transforms, and schema assertions in separate places, so a reader has to jump between files and code paths before seeing what is being tested.
 
-In Table~\ref{tab:expressiveness-authoring-clarity}, only the \emph{agent-spec-kit} implementation scores \textbf{A} on C02: the user turn and every field constraint appear in one declarative matcher block. Pytest and Promptfoo both score \textbf{B}: pytest spells the policy as step-by-step guards on a trace; Promptfoo separates \emph{where to read} the result (a short script in the config) from \emph{what must hold} (the schema); compact here, but the graded lines still do not show what the agent was told, and the tool lookup already needs embedded JavaScript. On other specimens (e.g.\ C03 conditional billing, C09 nested children), the whole check is a \texttt{javascript} block because YAML has no ready-made assert; low LOC can hide how awkward that is. Pydantic Evals, LangSmith, and Braintrust also score \textbf{B} on C02. Promptfoo has the fewest lines for this check when \texttt{is-json} suffices; that advantage disappears when policy must be scripted by hand.
+In Table~\ref{tab:expressiveness-authoring-clarity}, only the \emph{agent-spec-kit} implementation scores \textbf{A} on every specimen: the user turn and every field constraint appear in one declarative matcher block. Pytest and the metric-oriented libraries score mostly \textbf{B}: trace parsing and evaluator wiring are visible in the graded excerpt. Pydantic Evals, Promptfoo, and Braintrust drop to \textbf{C} on a few trace-heavy specimens where span queries or YAML transforms obscure the policy; Ragas and DeepEval reach \textbf{B} on several checks when custom metric bodies name the violated rule in plain text.
 
 \subsection{Failure specificity on deliberate wrong examples}
 
@@ -216,27 +216,27 @@ E & Opaque pass/fail boolean with no diagnostic detail \\
 \caption{Specificity grade by check and framework when the example is meant to fail.}
 \label{tab:failure-specificity}
 \footnotesize
-\begin{tabular}{@{}p{3.2cm}cccccc@{}}
+\begin{tabular}{@{}p{2.8cm}cccccccc@{}}
 \toprule
-Check & ask & py & ls & pe & pf & bt \\
+Check & ask & py & ls & pe & pf & bt & rg & de \\
 \midrule
-Final output rubric & A & D & B & B & B & B \\
-Structured object & A & D & B & B & B & B \\
-Conditional object & A & D & B & B & B & B \\
-Numeric / regex & A & D & B & B & B & B \\
-Ordered sequence & A & D & B & B & B & B \\
-Forbidden tool & A & D & C & B & B & C \\
-Tool arguments & A & B & B & B & B & B \\
-Tool result & A & D & B & B & B & B \\
-Nested tools & A & D & B & B & B & B \\
-Unordered siblings & A & D & B & B & B & B \\
-Final-state & B & B & B & B & B & B \\
-Multi-turn memory & A & D & B & B & B & B \\
+Final output rubric & A & D & B & B & B & B & B & B \\
+Structured object & A & D & B & B & B & B & B & B \\
+Conditional object & A & D & B & B & B & B & B & B \\
+Numeric / regex & A & D & B & B & B & B & B & B \\
+Ordered sequence & A & D & B & B & B & B & B & B \\
+Forbidden tool & A & D & C & B & B & C & B & B \\
+Tool arguments & A & B & B & B & B & B & C & B \\
+Tool result & A & D & B & B & B & B & B & B \\
+Nested tools & A & D & B & B & B & B & B & B \\
+Unordered siblings & A & D & B & B & B & B & B & B \\
+Final-state & B & B & B & B & B & B & B & B \\
+Multi-turn memory & A & D & B & B & B & B & B & B \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\emph{agent-spec-kit} scores \textbf{A} on eleven of twelve specimens and \textbf{B} on final-state only: failures routinely name the check, where it ran in the dialogue, a JSON path, and expected-vs-actual witnesses. Plain pytest is almost always \textbf{D} on trace-heavy checks (bare \texttt{AssertionError}) and only reaches \textbf{B} when authors hand-write a field-level message (C07). LangSmith, Pydantic Evals, Promptfoo, and Braintrust cluster at \textbf{B} or \textbf{C}: they identify the rule or scorer but rarely expose structured counterexamples. The listings below demonstrate this.
+\emph{agent-spec-kit} scores \textbf{A} on eleven of twelve specimens and \textbf{B} on final-state only: failures routinely name the check, where it ran in the dialogue, a JSON path, and expected-vs-actual witnesses. Plain pytest is almost always \textbf{D} on trace-heavy checks (bare \texttt{AssertionError}) and only reaches \textbf{B} when authors hand-write a field-level message (C07). LangSmith, Pydantic Evals, Promptfoo, Braintrust, Ragas, and DeepEval cluster at \textbf{B} or \textbf{C}: they identify the rule, field, or metric but rarely expose structured counterexamples; Ragas \texttt{ToolCallAccuracy} on C07 returns only a scalar score (\textbf{C}). DeepEval \texttt{ToolCorrectnessMetric} and \texttt{JsonCorrectnessMetric} surface longer natural-language reasons (\textbf{B}) when checks fail. The listings below demonstrate this.
 
 \subsection{Illustrative failure messages}
 
@@ -270,6 +270,14 @@ Multi-turn memory & A & D & B & B & B & B \\
 +--------------------------- braintrust (C06)  grade C ---------------------------+
 | {'key': 'C06', 'score': 0.0}                                                   |
 +--------------------------------------------------------------------------------+
++----------------------------- ragas (C06)  grade B -----------------------------+
+| forbidden tool 'apply_bill_credit' present in ['get_customer_profile',         |
+| 'apply_bill_credit']                                                           |
++--------------------------------------------------------------------------------+
++--------------------------- deepeval (C06)  grade B ----------------------------+
+| forbidden tool 'apply_bill_credit' present in ['get_customer_profile',         |
+| 'apply_bill_credit']                                                           |
++--------------------------------------------------------------------------------+
 \end{lstlisting}
 
 \subsubsection{Tool argument matching (C07)}
@@ -302,6 +310,14 @@ Multi-turn memory & A & D & B & B & B & B \\
 +--------------------------- promptfoo (C07)  grade B ---------------------------+
 | trajectory:tool-args-match get_line_status.line_id expected 'LINE-001', ...  |
 +--------------------------------------------------------------------------------+
++----------------------------- ragas (C07)  grade C -----------------------------+
+| 0.5                                                                            |
++--------------------------------------------------------------------------------+
++--------------------------- deepeval (C07)  grade B ----------------------------+
+| [ Tool Calling Reason: Incorrect tool usage: out-of-order tools                |
+| ['get_line_status']; expected ['authenticate_customer', 'get_line_status'],    |
+| called ['authenticate_customer', 'get_line_status']. ... ]                     |
++--------------------------------------------------------------------------------+
 \end{lstlisting}
 
 \subsubsection{Unordered sibling tools (C10)}
@@ -327,6 +343,14 @@ Multi-turn memory & A & D & B & B & B & B \\
 +--------------------------------------------------------------------------------+
 +--------------------------- promptfoo (C10)  grade B ---------------------------+
 | trajectory:tool-used: missing tools ['get_line_status']                        |
++--------------------------------------------------------------------------------+
++----------------------------- ragas (C10)  grade B -----------------------------+
+| missing required tools ['get_line_status'] in ['heartbeat_ping']               |
++--------------------------------------------------------------------------------+
++--------------------------- deepeval (C10)  grade B ----------------------------+
+| [ Tool Calling Reason: Incomplete tool usage: missing tools                    |
+| [ToolCall( name="get_line_status" )]; expected ['heartbeat_ping',              |
+| 'get_line_status'], called ['heartbeat_ping']. ... ]                             |
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 

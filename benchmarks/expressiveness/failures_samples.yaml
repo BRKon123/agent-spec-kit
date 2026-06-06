@@ -22,7 +22,9 @@ C01:
     'credit'
   promptfoo: 'icontains-any: output missing credit/refund or $/dollar'
   braintrust: '{''key'': ''C01'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: 'output rubric failed: missing credit/refund topic, monetary amount ($/dollar)'
+  deepeval: 'output rubric failed: missing credit/refund topic, monetary amount ($/dollar)'
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c01_fail [1/1] ---------------------------+
 
@@ -72,6 +74,16 @@ C01:
       | {''key'': ''C01'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C01)  grade B -----------------------------+
+
+      | output rubric failed: missing credit/refund topic, monetary amount ($/dollar)  |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C01)  grade B ----------------------------+
+
+      | output rubric failed: missing credit/refund topic, monetary amount ($/dollar)  |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c01_fail: all_of: not all constraints were satisfied: one_of: value does not match any option: expected
@@ -101,7 +113,10 @@ C02:
     input_type=str] For further information visit https://errors.pydantic.dev/2.13/v/literal_error
   promptfoo: 'is-json: ''high'' was expected'
   braintrust: '{''key'': ''C02'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: 'run_network_diagnostics_specialist: ''high'' was expected'
+  deepeval: 'The generated Json is not valid because it does not match the expected schema: `severity` must be the constant
+    value `"high"`, but the Generated Json has `"low"`. The other required fields are present and correctly typed.'
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c02_fail [1/1] ---------------------------+
 
@@ -163,6 +178,20 @@ C02:
       | {''key'': ''C02'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C02)  grade B -----------------------------+
+
+      | run_network_diagnostics_specialist: ''high'' was expected                        |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C02)  grade B ----------------------------+
+
+      | The generated Json is not valid because it does not match the expected schema: |
+
+      |  `severity` must be the constant value `"high"`, but the Generated Json has `" |
+
+      | low"`. The other required fields are present and correctly typed.              |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c02_fail: could not match expected element at index 0 while preserving order
@@ -219,7 +248,9 @@ C03:
     input_value={''eligible'': True, ''currency'': ''USD''}, input_type=dict] For further information visit https://errors.pydantic.dev/2.13/v/value_error'
   promptfoo: 'javascript: eligible=True requires amount > 0'
   braintrust: '{''key'': ''C03'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: eligible=True requires positive amount
+  deepeval: eligible=True requires positive amount
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c03_fail [1/1] ---------------------------+
 
@@ -281,6 +312,16 @@ C03:
       | {''key'': ''C03'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C03)  grade B -----------------------------+
+
+      | eligible=True requires positive amount                                         |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C03)  grade B ----------------------------+
+
+      | eligible=True requires positive amount                                         |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c03_fail: could not match expected element at index 0 while preserving order
@@ -324,7 +365,10 @@ C04:
     input_value=9999.0, input_type=float] For further information visit https://errors.pydantic.dev/2.13/v/less_than_equal
   promptfoo: 'is-json: 9999.0 is greater than the maximum of 500'
   braintrust: '{''key'': ''C04'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: 'run_billing_policy_specialist: 9999.0 is greater than the maximum of 500'
+  deepeval: 'The generated JSON is not valid because it violates the Expected Json Schema: `amount` is `9999.0`, but the schema
+    requires a number between `0.01` and `500.0`. The `eligible` field is valid and required fields are present.'
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c04_fail [1/1] ---------------------------+
 
@@ -382,6 +426,20 @@ C04:
       | {''key'': ''C04'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C04)  grade B -----------------------------+
+
+      | run_billing_policy_specialist: 9999.0 is greater than the maximum of 500       |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C04)  grade B ----------------------------+
+
+      | The generated JSON is not valid because it violates the Expected Json Schema:  |
+
+      | `amount` is `9999.0`, but the schema requires a number between `0.01` and `500 |
+
+      | .0`. The `eligible` field is valid and required fields are present.            |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c04_fail: could not match expected element at index 0 while preserving order
@@ -425,7 +483,12 @@ C05:
   promptfoo: trajectory:tool-sequence in_order failed for steps ['authenticate_customer', 'get_outage_status'] (agentevals
     score=True)
   braintrust: '{''key'': ''C05'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: tool sequence expected ['authenticate_customer', 'get_outage_status'], got ordered match 1/2 in ['get_outage_status',
+    'authenticate_customer']
+  deepeval: '[ Tool Calling Reason: Incorrect tool usage: out-of-order tools [''get_outage_status'']; expected [''authenticate_customer'',
+    ''get_outage_status''], called [''get_outage_status'', ''authenticate_customer'']. See more details above. Tool Selection
+    Reason: No available tools were provided to assess tool selection criteria ]'
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c05_fail [1/1] ---------------------------+
 
@@ -479,6 +542,26 @@ C05:
       | {''key'': ''C05'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C05)  grade B -----------------------------+
+
+      | tool sequence expected [''authenticate_customer'', ''get_outage_status''], got ord |
+
+      | ered match 1/2 in [''get_outage_status'', ''authenticate_customer'']               |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C05)  grade B ----------------------------+
+
+      | [ Tool Calling Reason: Incorrect tool usage: out-of-order tools [''get_outage_s |
+
+      | tatus'']; expected [''authenticate_customer'', ''get_outage_status''], called [''get |
+
+      | _outage_status'', ''authenticate_customer'']. See more details above. Tool Select |
+
+      | ion Reason: No available tools were provided to assess tool selection criteria |
+
+      |  ]                                                                             |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c05_fail: could not match expected element at index 1 while preserving order
@@ -512,7 +595,9 @@ C06:
   pydantic_evals: forbidden span apply_bill_credit present
   promptfoo: 'not-trajectory:tool-used: forbidden tool apply_bill_credit present'
   braintrust: '{''key'': ''C06'', ''score'': 0.0}'
-  _grades: A/D/C/B/B/C
+  ragas: forbidden tool 'apply_bill_credit' present in ['get_customer_profile', 'apply_bill_credit']
+  deepeval: forbidden tool 'apply_bill_credit' present in ['get_customer_profile', 'apply_bill_credit']
+  _grades: A/D/C/B/B/C/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c06_fail [1/1] ---------------------------+
 
@@ -560,6 +645,20 @@ C06:
       | {''key'': ''C06'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C06)  grade B -----------------------------+
+
+      | forbidden tool ''apply_bill_credit'' present in [''get_customer_profile'', ''apply_ |
+
+      | bill_credit'']                                                                  |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C06)  grade B ----------------------------+
+
+      | forbidden tool ''apply_bill_credit'' present in [''get_customer_profile'', ''apply_ |
+
+      | bill_credit'']                                                                  |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c06_fail: forbidden tool call ''apply_bill_credit'' found at index 1 (actual tool ''apply_bill_credit'')'
@@ -594,7 +693,11 @@ C07:
   pydantic_evals: get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
   promptfoo: trajectory:tool-args-match get_line_status.line_id expected 'LINE-001', got 'LINE-002'
   braintrust: '{''key'': ''C07'', ''score'': 0.0}'
-  _grades: A/B/B/B/B/B
+  ragas: '0.5'
+  deepeval: '[ Tool Calling Reason: Incorrect tool usage: out-of-order tools [''get_line_status'']; expected [''authenticate_customer'',
+    ''get_line_status''], called [''authenticate_customer'', ''get_line_status'']. See more details above. Tool Selection
+    Reason: No available tools were provided to assess tool selection criteria ]'
+  _grades: A/B/B/B/B/B/C/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c07_fail [1/1] ---------------------------+
 
@@ -652,6 +755,22 @@ C07:
       | {''key'': ''C07'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C07)  grade C -----------------------------+
+
+      | 0.5                                                                            |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C07)  grade B ----------------------------+
+
+      | [ Tool Calling Reason: Incorrect tool usage: out-of-order tools [''get_line_sta |
+
+      | tus'']; expected [''authenticate_customer'', ''get_line_status''], called [''authent |
+
+      | icate_customer'', ''get_line_status'']. See more details above. Tool Selection Re |
+
+      | ason: No available tools were provided to assess tool selection criteria ]     |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c07_fail: could not match expected element at index 1 while preserving order
@@ -696,7 +815,11 @@ C08:
     input_value='too short', input_type=str] For further information visit https://errors.pydantic.dev/2.13/v/string_too_short
   promptfoo: 'is-json: ''too short'' is too short'
   braintrust: '{''key'': ''C08'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: 'run_network_diagnostics_specialist: ''too short'' is too short'
+  deepeval: 'The generated Json is not valid because it violates the Expected Json Schema: `summary` must be a string with
+    `minLength` 10, but the Generated Json has `summary: "too short"`, which is only 9 characters. All other required fields
+    are present and valid.'
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c08_fail [1/1] ---------------------------+
 
@@ -760,6 +883,22 @@ C08:
       | {''key'': ''C08'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C08)  grade B -----------------------------+
+
+      | run_network_diagnostics_specialist: ''too short'' is too short                   |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C08)  grade B ----------------------------+
+
+      | The generated Json is not valid because it violates the Expected Json Schema:  |
+
+      | `summary` must be a string with `minLength` 10, but the Generated Json has `su |
+
+      | mmary: "too short"`, which is only 9 characters. All other required fields are |
+
+      |  present and valid.                                                            |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c08_fail: could not match expected element at index 0 while preserving order
@@ -814,7 +953,9 @@ C09:
   promptfoo: 'javascript: nested children expected [''pull_network_events'', ''score_signal_anomaly''], got [''score_signal_anomaly'',
     ''pull_network_events'']'
   braintrust: '{''key'': ''C09'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: nested children expected ['pull_network_events', 'score_signal_anomaly'], got ['score_signal_anomaly', 'pull_network_events']
+  deepeval: nested children expected ['pull_network_events', 'score_signal_anomaly'], got ['score_signal_anomaly', 'pull_network_events']
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c09_fail [1/1] ---------------------------+
 
@@ -876,6 +1017,20 @@ C09:
       | {''key'': ''C09'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C09)  grade B -----------------------------+
+
+      | nested children expected [''pull_network_events'', ''score_signal_anomaly''], got  |
+
+      | [''score_signal_anomaly'', ''pull_network_events'']                                |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C09)  grade B ----------------------------+
+
+      | nested children expected [''pull_network_events'', ''score_signal_anomaly''], got  |
+
+      | [''score_signal_anomaly'', ''pull_network_events'']                                |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c09_fail: could not match expected element at index 0 while preserving order
@@ -924,7 +1079,11 @@ C10:
   pydantic_evals: tool sequence expected ['heartbeat_ping', 'get_line_status'], got ordered subsequence match 1/2 in ['heartbeat_ping']
   promptfoo: 'trajectory:tool-used: missing tools [''get_line_status'']'
   braintrust: '{''key'': ''C10'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: missing required tools ['get_line_status'] in ['heartbeat_ping']
+  deepeval: '[ Tool Calling Reason: Incomplete tool usage: missing tools [ToolCall( name="get_line_status" )]; expected [''heartbeat_ping'',
+    ''get_line_status''], called [''heartbeat_ping'']. See more details above. Tool Selection Reason: No available tools were
+    provided to assess tool selection criteria ]'
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c10_fail [1/1] ---------------------------+
 
@@ -970,6 +1129,22 @@ C10:
       | {''key'': ''C10'', ''score'': 0.0}                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C10)  grade B -----------------------------+
+
+      | missing required tools [''get_line_status''] in [''heartbeat_ping'']               |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C10)  grade B ----------------------------+
+
+      | [ Tool Calling Reason: Incomplete tool usage: missing tools [ToolCall( name="g |
+
+      | et_line_status" )]; expected [''heartbeat_ping'', ''get_line_status''], called [''h |
+
+      | eartbeat_ping'']. See more details above. Tool Selection Reason: No available t |
+
+      | ools were provided to assess tool selection criteria ]                         |
+
+      +--------------------------------------------------------------------------------+'
   _counterexamples:
     agent_spec_kit:
       headline: 'test_c10_fail: list is too short: need at least 2 item(s) to match all expected values (order does not matter)'
@@ -992,7 +1167,9 @@ C11:
   pydantic_evals: unexpected pass
   promptfoo: expected at least one ticket
   braintrust: expected at least one ticket
-  _grades: B/B/B/B/B/B
+  ragas: expected at least one ticket
+  deepeval: expected at least one ticket
+  _grades: B/B/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+------------------------ agent_spec_kit (C11)  grade B -------------------------+
 
@@ -1024,6 +1201,16 @@ C11:
       | expected at least one ticket                                                   |
 
       +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C11)  grade B -----------------------------+
+
+      | expected at least one ticket                                                   |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C11)  grade B ----------------------------+
+
+      | expected at least one ticket                                                   |
+
+      +--------------------------------------------------------------------------------+'
 C12:
   agent_spec_kit: 'path=$[1] code=missing_element expected=''expected value to appear after the previous match'' actual="[{''name'':
     ''authenticate_customer'', ''args'': {}, ''result'': ''ok''}]" (could not match expected element at index 1 while preserving
@@ -1035,7 +1222,11 @@ C12:
   promptfoo: trajectory:tool-sequence in_order failed for steps ['authenticate_customer', 'create_support_ticket'] (agentevals
     score=False)
   braintrust: '{''key'': ''C12'', ''score'': 0.0}'
-  _grades: A/D/B/B/B/B
+  ragas: tool sequence expected ['authenticate_customer', 'create_support_ticket'], got ordered match 1/2 in ['authenticate_customer']
+  deepeval: '[ Tool Calling Reason: Incorrect tool usage: missing tools [''create_support_ticket''] and out-of-order tools
+    [''create_support_ticket'']; expected [''authenticate_customer'', ''create_support_ticket''], called [''authenticate_customer''].
+    See more details above. Tool Selection Reason: No available tools were provided to assess tool selection criteria ]'
+  _grades: A/D/B/B/B/B/B/B
   _boxes:
     agent_spec_kit: '+--------------------------- FAIL test_c12_fail [1/1] ---------------------------+
 
@@ -1085,6 +1276,26 @@ C12:
     braintrust: '+-------------------------- braintrust (C12)  grade B ---------------------------+
 
       | {''key'': ''C12'', ''score'': 0.0}                                                   |
+
+      +--------------------------------------------------------------------------------+'
+    ragas: '+----------------------------- ragas (C12)  grade B -----------------------------+
+
+      | tool sequence expected [''authenticate_customer'', ''create_support_ticket''], got |
+
+      |  ordered match 1/2 in [''authenticate_customer'']                                |
+
+      +--------------------------------------------------------------------------------+'
+    deepeval: '+--------------------------- deepeval (C12)  grade B ----------------------------+
+
+      | [ Tool Calling Reason: Incorrect tool usage: missing tools [''create_support_ti |
+
+      | cket''] and out-of-order tools [''create_support_ticket'']; expected [''authentica |
+
+      | te_customer'', ''create_support_ticket''], called [''authenticate_customer'']. See  |
+
+      | more details above. Tool Selection Reason: No available tools were provided to |
+
+      |  assess tool selection criteria ]                                              |
 
       +--------------------------------------------------------------------------------+'
   _counterexamples:

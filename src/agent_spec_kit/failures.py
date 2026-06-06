@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from agent_spec_kit.match.types import MatchError, MatchResult, _short_repr, path_to_str
+from agent_spec_kit.match.spec_repr import format_forbidden_spec, format_spec_at_path
 from agent_spec_kit.run import ConversationTurn
 
 _MISSING = object()
@@ -350,17 +351,37 @@ def _summarize_list_length_mismatch(
 def _summarize_matcher_counterexample(record: FailureRecord, err: MatchError, wit: dict[str, Any]) -> tuple[str, str, list[str]]:
     notes: list[str] = []
     if err.code == "list_length_mismatch":
-        return _summarize_list_length_mismatch(err, wit, record)
+        exp_line, act_line, list_notes = _summarize_list_length_mismatch(err, wit, record)
+        if record.matcher_spec is not None and record.step_kind == "assert_tool_calls":
+            preview = format_spec_at_path(record.matcher_spec, (), max_len=200)
+            if preview:
+                exp_line = f"{exp_line}\n{preview}"
+        elif record.matcher_spec is not None and record.step_kind == "forbid_tool_calls":
+            preview = format_forbidden_spec(record.matcher_spec, max_len=200)
+            if preview:
+                exp_line = f"{exp_line}\n{preview}"
+        return exp_line, act_line, list_notes
 
-    path_s = path_to_str(err.path)
-    if path_s not in ("$", "()") and record.step_kind == "assert_tool_calls" and isinstance(record.actual, list):
-        focused = _deref_match_path(record.actual, err.path)
-        if focused is not _MISSING:
-            exp_line = _short(f"{err.code}: expected {err.expected}", 200)
-            notes.append(err.message)
-            return exp_line, "", notes
+    if (
+        record.matcher_spec is not None
+        and record.step_kind == "forbid_tool_calls"
+    ):
+        exp_line = format_forbidden_spec(record.matcher_spec, max_len=600)
+        actual_min: Any = wit.get("actual_witness", record.actual)
+        notes.append(err.message)
+        return exp_line, _format_actual_value(actual_min), notes
 
-    actual_min: Any = wit.get("actual_witness", record.actual)
+    if (
+        record.matcher_spec is not None
+        and record.step_kind == "assert_tool_calls"
+    ):
+        spec_line = format_spec_at_path(record.matcher_spec, err.path, max_len=600)
+        exp_line = spec_line
+        actual_min = wit.get("actual_witness", record.actual)
+        notes.append(err.message)
+        return exp_line, _format_actual_value(actual_min), notes
+
+    actual_min = wit.get("actual_witness", record.actual)
     notes.append(err.message)
     return _short(f"{err.code}: expected {err.expected}", 200), _format_actual_value(actual_min), notes
 

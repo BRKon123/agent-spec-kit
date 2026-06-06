@@ -16,6 +16,8 @@ FRAMEWORKS = [
     "pydantic_evals",
     "promptfoo",
     "braintrust",
+    "ragas",
+    "deepeval",
 ]
 
 _PY_FRAMEWORKS = [fw for fw in FRAMEWORKS if fw != "promptfoo"]
@@ -37,6 +39,7 @@ _PORT_PY_NAMES = frozenset(
     {
         "dataset.py",
         "experiment.py",
+        "metrics.py",
         "evaluators.py",
         "scorers.py",
         "test_checks.py",
@@ -177,7 +180,7 @@ def loc_by_framework() -> dict[str, dict[str, int]]:
 
 
 def extract_all_snippets() -> list[CheckSnippet]:
-    """One snippet per (check_id, framework) — 72 cells for C01–C12 × six frameworks."""
+    """One snippet per (check_id, framework) — 96 cells for C01–C12 × eight frameworks."""
     snippets: list[CheckSnippet] = []
 
     for py in sorted(IMPL.rglob("*.py")):

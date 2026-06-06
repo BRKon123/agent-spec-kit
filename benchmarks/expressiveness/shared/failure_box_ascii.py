@@ -93,7 +93,9 @@ def counterexample_to_ascii_box(cx: Counterexample, *, title: str) -> str:
         body.append(f"Where: {cx.location}")
     if _meaningful_path(cx.path):
         body.append(f"Path: {cx.path}")
-    body.append(f"Expected: {cx.expected_summary}")
+    body.append("Expected:")
+    for line in cx.expected_summary.splitlines():
+        body.append(line)
     body.append("Actual:")
     body.extend(_format_actual_compact(cx.actual_min))
     for note in cx.notes:

@@ -1,4 +1,4 @@
-"""Braintrust ports — Score scorers over output + metadata.tool_calls (Braintrust agent pattern)."""
+"""Braintrust ports — inlined Score scorers over output + metadata.tool_calls."""
 
 from __future__ import annotations
 
@@ -32,28 +32,6 @@ from store.store import TelcoStore  # noqa: E402
 from tasks.specs import oracles as o  # noqa: E402
 
 
-def _as_dict(score: Score) -> dict[str, Any]:
-    return {"key": score.name, "score": 0 if score.score is None else score.score}
-
-
-def _tool_calls(metadata: dict[str, Any]) -> list[dict[str, Any]]:
-    return list(metadata.get("tool_calls") or [])
-
-
-def _tool_from_calls(calls: list[dict[str, Any]], name: str) -> dict[str, Any] | None:
-    for call in calls:
-        if call.get("name") == name:
-            return call
-    return None
-
-
-def _tool_result(trace: dict[str, Any], name: str) -> Any:
-    for t in trace.get("tools") or []:
-        if t.get("name") == name:
-            return t.get("result")
-    return None
-
-
 # check: C01
 def score_c01(
     input: dict[str, Any], output: dict[str, Any], expected: dict[str, Any] | None = None, **kwargs: Any
@@ -63,7 +41,9 @@ def score_c01(
     text = str(metadata.get("output_text", output.get("output", ""))).lower()
     topic = "credit" in text or "refund" in text
     money = "$" in text or "dollar" in text
-    return _as_dict(Score(name="C01", score=1.0 if topic and money else 0.0))
+    ok = topic and money
+    score = Score(name="C01", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -73,7 +53,11 @@ def score_c02(
 ) -> dict:
     trace = output
     # CHECK_START
-    result = _tool_result(trace, "run_network_diagnostics_specialist")
+    result = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_network_diagnostics_specialist":
+            result = t.get("result")
+            break
     schema = {
         "type": "object",
         "additionalProperties": False,
@@ -89,7 +73,8 @@ def score_c02(
         ok = True
     except jsonschema.ValidationError:
         ok = False
-    return _as_dict(Score(name="C02", score=1.0 if ok else 0.0))
+    score = Score(name="C02", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -99,14 +84,19 @@ def score_c03(
 ) -> dict:
     trace = output
     # CHECK_START
-    result = _tool_result(trace, "run_billing_policy_specialist")
+    result = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_billing_policy_specialist":
+            result = t.get("result")
+            break
     if not isinstance(result, dict) or "eligible" not in result:
         ok = False
     elif result.get("eligible"):
         ok = "amount" in result and float(result["amount"]) > 0
     else:
         ok = "amount" not in result
-    return _as_dict(Score(name="C03", score=1.0 if ok else 0.0))
+    score = Score(name="C03", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -116,7 +106,11 @@ def score_c04(
 ) -> dict:
     trace = output
     # CHECK_START
-    result = _tool_result(trace, "run_billing_policy_specialist")
+    result = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_billing_policy_specialist":
+            result = t.get("result")
+            break
     schema = {
         "type": "object",
         "required": ["eligible", "amount"],
@@ -130,7 +124,8 @@ def score_c04(
         ok = True
     except jsonschema.ValidationError:
         ok = False
-    return _as_dict(Score(name="C04", score=1.0 if ok else 0.0))
+    score = Score(name="C04", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -140,13 +135,16 @@ def score_c05(
 ) -> dict:
     metadata = kwargs.get("metadata") or {}
     # CHECK_START
-    names = [str(c.get("name", "")) for c in _tool_calls(metadata)]
+    calls = list(metadata.get("tool_calls") or [])
+    names = [str(c.get("name", "")) for c in calls]
     exp = ["authenticate_customer", "get_outage_status"]
     ei = 0
     for name in names:
         if ei < len(exp) and name == exp[ei]:
             ei += 1
-    return _as_dict(Score(name="C05", score=1.0 if ei == len(exp) else 0.0))
+    ok = ei == len(exp)
+    score = Score(name="C05", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -156,8 +154,11 @@ def score_c06(
 ) -> dict:
     metadata = kwargs.get("metadata") or {}
     # CHECK_START
-    names = {str(c.get("name", "")) for c in _tool_calls(metadata)}
-    return _as_dict(Score(name="C06", score=1.0 if "apply_bill_credit" not in names else 0.0))
+    calls = list(metadata.get("tool_calls") or [])
+    names = {str(c.get("name", "")) for c in calls}
+    ok = "apply_bill_credit" not in names
+    score = Score(name="C06", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -168,7 +169,7 @@ def score_c07(
     metadata = kwargs.get("metadata") or {}
     line_id = meta()["line_id"]
     # CHECK_START
-    calls = _tool_calls(metadata)
+    calls = list(metadata.get("tool_calls") or [])
     names = [str(c.get("name", "")) for c in calls]
     exp = ["authenticate_customer", "get_line_status"]
     ei = 0
@@ -176,10 +177,16 @@ def score_c07(
         if ei < len(exp) and name == exp[ei]:
             ei += 1
     if ei != len(exp):
-        return _as_dict(Score(name="C07", score=0.0))
-    gls = _tool_from_calls(calls, "get_line_status")
+        score = Score(name="C07", score=0.0)
+        return {"key": score.name, "score": 0 if score.score is None else score.score}
+    gls = None
+    for c in calls:
+        if c.get("name") == "get_line_status":
+            gls = c
+            break
     ok = gls is not None and gls.get("args", {}).get("line_id") == line_id
-    return _as_dict(Score(name="C07", score=1.0 if ok else 0.0))
+    score = Score(name="C07", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -189,7 +196,11 @@ def score_c08(
 ) -> dict:
     trace = output
     # CHECK_START
-    result = _tool_result(trace, "run_network_diagnostics_specialist")
+    result = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_network_diagnostics_specialist":
+            result = t.get("result")
+            break
     schema = {
         "type": "object",
         "additionalProperties": False,
@@ -205,7 +216,8 @@ def score_c08(
         ok = True
     except jsonschema.ValidationError:
         ok = False
-    return _as_dict(Score(name="C08", score=1.0 if ok else 0.0))
+    score = Score(name="C08", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -215,15 +227,18 @@ def score_c09(
 ) -> dict:
     trace = output
     # CHECK_START
-    parent = next(
-        (t for t in trace.get("tools") or [] if t.get("name") == "run_network_diagnostics_specialist"),
-        None,
-    )
+    parent = None
+    for t in trace.get("tools") or []:
+        if t.get("name") == "run_network_diagnostics_specialist":
+            parent = t
+            break
     if parent is None:
-        return _as_dict(Score(name="C09", score=0.0))
+        score = Score(name="C09", score=0.0)
+        return {"key": score.name, "score": 0 if score.score is None else score.score}
     names = [str(c.get("name", "")) for c in parent.get("children") or []]
     ok = names == ["pull_network_events", "score_signal_anomaly"]
-    return _as_dict(Score(name="C09", score=1.0 if ok else 0.0))
+    score = Score(name="C09", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -233,9 +248,12 @@ def score_c10(
 ) -> dict:
     metadata = kwargs.get("metadata") or {}
     # CHECK_START
-    names = {str(c.get("name", "")) for c in _tool_calls(metadata)}
+    calls = list(metadata.get("tool_calls") or [])
+    names = {str(c.get("name", "")) for c in calls}
     required = {"heartbeat_ping", "get_line_status"}
-    return _as_dict(Score(name="C10", score=1.0 if required <= names else 0.0))
+    ok = required <= names
+    score = Score(name="C10", score=1.0 if ok else 0.0)
+    return {"key": score.name, "score": 0 if score.score is None else score.score}
     # CHECK_END
 
 
@@ -254,7 +272,8 @@ def score_c11(
             ok = True
         except AssertionError:
             ok = False
-        return _as_dict(Score(name="C11", score=1.0 if ok else 0.0))
+        score = Score(name="C11", score=1.0 if ok else 0.0)
+        return {"key": score.name, "score": 0 if score.score is None else score.score}
     finally:
         shutil.rmtree(base, ignore_errors=True)
     # CHECK_END
@@ -267,14 +286,16 @@ def score_c12(
     metadata = kwargs.get("metadata") or {}
     line_id = meta()["line_id"]
     # CHECK_START
-    names = [str(c.get("name", "")) for c in _tool_calls(metadata)]
+    calls = list(metadata.get("tool_calls") or [])
+    names = [str(c.get("name", "")) for c in calls]
     exp = ["authenticate_customer", "create_support_ticket"]
     ei = 0
     for name in names:
         if ei < len(exp) and name == exp[ei]:
             ei += 1
     if ei != len(exp):
-        return _as_dict(Score(name="C12", score=0.0))
+        score = Score(name="C12", score=0.0)
+        return {"key": score.name, "score": 0 if score.score is None else score.score}
     base = Path(tempfile.mkdtemp(prefix="bt_c12_"))
     try:
         telco = TelcoStore(base / "telco.sqlite")
@@ -285,7 +306,8 @@ def score_c12(
             state_ok = True
         except AssertionError:
             state_ok = False
-        return _as_dict(Score(name="C12", score=1.0 if state_ok else 0.0))
+        score = Score(name="C12", score=1.0 if state_ok else 0.0)
+        return {"key": score.name, "score": 0 if score.score is None else score.score}
     finally:
         shutil.rmtree(base, ignore_errors=True)
     # CHECK_END
@@ -319,8 +341,7 @@ def metadata_for_trace(trace: dict[str, Any], check_id: str) -> dict[str, Any]:
         "output_text": str(trace.get("output", "")),
     }
 
+
 CHECK_IDS = [f"C{i:02d}" for i in range(1, 13)]
 
-# Native Braintrust layout: one Eval registers all scorers (harness invokes the scorer for each specimen).
 EXPRESSIVENESS_SCORERS = [SCORERS[cid] for cid in CHECK_IDS]
-
