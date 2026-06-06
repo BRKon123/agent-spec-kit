@@ -25,12 +25,29 @@ def test_extraction_config_points_at_extracted_sim() -> None:
     assert "extracted_sim" in ext.target_file
 
 
+def test_failure_signature_from_display() -> None:
+    from study_failure_signatures import failure_signature_from_display
+
+    detail = (
+        "assert_tool_calls:assert_tool_calls: test_t38_fuzz: "
+        "could not match expected element at index 1 while preserving order\n"
+        "closest underlying mismatch was (at $[1].children): wrong list length"
+    )
+    sig = failure_signature_from_display(detail, turn_count=4)
+    assert sig is not None
+    assert sig.check_kind == "assert_tool_calls"
+    assert sig.path == "$[1].children"
+    assert sig.turn_index == 3
+
+
 def test_signatures_match() -> None:
-    a = FailureSignature(check_kind="assert_tool_calls", path="$", assertion_id=None)
-    b = FailureSignature(check_kind="assert_tool_calls", path="$", assertion_id=None)
+    a = FailureSignature(check_kind="assert_tool_calls", path="$", assertion_id=None, turn_index=1)
+    b = FailureSignature(check_kind="assert_tool_calls", path="$", assertion_id=None, turn_index=1)
     c = FailureSignature(check_kind="assert_output", path=None, assertion_id=None)
+    d = FailureSignature(check_kind="assert_tool_calls", path="$", assertion_id=None, turn_index=2)
     assert signatures_match(a, b)
     assert not signatures_match(a, c)
+    assert not signatures_match(a, d)
 
 
 def test_extraction_summary_counts() -> None:

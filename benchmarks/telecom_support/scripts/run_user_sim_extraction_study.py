@@ -23,6 +23,7 @@ from user_sim_extraction_study_lib import (
     load_candidates_from_shrink_json,
     load_extraction_study_config,
     load_results,
+    refresh_candidate_signatures,
     save_results,
     validate_extraction_rerun,
 )
@@ -133,12 +134,25 @@ async def phase_extract(
     _log(f"extract done: {done}/{total} (sequential; append-safe)")
 
 
+async def phase_refresh(
+    cfg: dict,
+    results: dict,
+    *,
+    workers: int,
+) -> None:
+    candidates = results.get("candidates") or []
+    await refresh_candidate_signatures(cfg, candidates, workers=workers)
+    ok_n = sum(1 for c in candidates if c.get("capture_status") == "ok")
+    _log(f"refresh done: {ok_n} candidates updated from display signatures")
+
+
 async def phase_rerun(
     cfg: dict,
     results: dict,
     *,
     checkpoint_path: Path,
     workers: int,
+    force_rerun: bool,
 ) -> None:
     from user_sim_extraction_study_lib import load_registry_for_extracted_rerun
 
@@ -156,7 +170,7 @@ async def phase_rerun(
     async def _one(cand: dict, i: int) -> None:
         nonlocal done
         ex = cand.get("extraction") or {}
-        if ex.get("rerun_status") in ("passed", "failed"):
+        if ex.get("rerun_status") in ("passed", "failed") and not force_rerun:
             _log(f"rerun [{i}/{total}] {cand.get('id')}: skip (already validated)")
             return
         _log(f"rerun [{i}/{total}] {cand.get('id')} validating...")
@@ -214,11 +228,20 @@ async def _run(args: argparse.Namespace) -> int:
             raise SystemExit("collect needs --bootstrap-study or --reuse-candidates")
         await phase_collect(cfg, results, workers=args.workers, reuse_candidates_path=reuse_path)
 
+    if "refresh" in phases:
+        await phase_refresh(cfg, results, workers=args.workers)
+
     if "extract" in phases:
         await phase_extract(cfg, results, checkpoint_path=path, workers=args.workers)
 
     if "rerun" in phases:
-        await phase_rerun(cfg, results, checkpoint_path=path, workers=args.workers)
+        await phase_rerun(
+            cfg,
+            results,
+            checkpoint_path=path,
+            workers=args.workers,
+            force_rerun=args.force_rerun,
+        )
 
     results["summary"] = extraction_summary(results)
     save_results(path, results)
@@ -235,7 +258,7 @@ async def _run(args: argparse.Namespace) -> int:
 
 def main() -> int:
     p = argparse.ArgumentParser(description="User-sim extraction-only study")
-    p.add_argument("--phase", default="all", help="collect|extract|rerun|report|all")
+    p.add_argument("--phase", default="all", help="collect|refresh|extract|rerun|report|all")
     p.add_argument("-n", "--workers", type=int, default=12)
     p.add_argument("--resume", action="store_true")
     p.add_argument("--bootstrap-study", type=str, default=None)
@@ -244,6 +267,11 @@ def main() -> int:
         type=str,
         default=None,
         help="Reuse candidates from shrink study JSON (skip re-capture)",
+    )
+    p.add_argument(
+        "--force-rerun",
+        action="store_true",
+        help="Re-validate extracted regressions even if rerun_status is already set",
     )
     args = p.parse_args()
     return asyncio.run(_run(args))

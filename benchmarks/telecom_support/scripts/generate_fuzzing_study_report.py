@@ -15,6 +15,7 @@ if str(BENCH_SCR) not in sys.path:
     sys.path.insert(0, str(BENCH_SCR))
 
 from fuzzing_study_lib import BENCH
+from study_failure_signatures import equivalence_key_from_record
 
 
 def _authoring_effort(method: str, *, mutation_backend: str | None = None) -> str:
@@ -92,30 +93,33 @@ def generate_markdown(study: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def build_fuzz_new_failures(study: dict[str, Any]) -> dict[str, Any]:
-    sim_sigs: set[str] = set()
-    manual_sigs: set[str] = set()
-    for r in study["records"]:
-        sig = r.get("failure_signature")
-        if not sig:
+def _equiv_keys(records: list[dict[str, Any]], method: str) -> set[tuple[Any, ...]]:
+    out: set[tuple[Any, ...]] = set()
+    for r in records:
+        if r.get("method") != method:
             continue
-        if r["method"] == "sim":
-            sim_sigs.add(sig)
-        elif r["method"] == "manual":
-            manual_sigs.add(sig)
-    known = sim_sigs | manual_sigs
+        key = equivalence_key_from_record(r)
+        if key is not None:
+            out.add(key)
+    return out
+
+
+def build_fuzz_new_failures(study: dict[str, Any]) -> dict[str, Any]:
+    records = study["records"]
+    known = _equiv_keys(records, "sim") | _equiv_keys(records, "manual")
     new_rows = []
-    for r in study["records"]:
+    for r in records:
         if r["method"] != "fuzz":
             continue
-        sig = r.get("failure_signature")
-        if sig and sig not in known:
+        key = equivalence_key_from_record(r)
+        if key is not None and key not in known:
             new_rows.append(
                 {
                     "task_id": r["task_id"],
                     "mutation_operator": r.get("mutation_operator"),
                     "framework_trial_index": r.get("framework_trial_index"),
-                    "failure_signature": sig,
+                    "failure_equivalence_key": list(key),
+                    "failure_signature": r.get("failure_signature"),
                     "tool_path_signature": r.get("tool_path_signature"),
                     "case_id": r.get("case_id"),
                 }
@@ -124,12 +128,12 @@ def build_fuzz_new_failures(study: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_failure_signatures(study: dict[str, Any]) -> dict[str, Any]:
-    by_method: dict[str, list[str]] = defaultdict(list)
+    by_method: dict[str, list[list[Any]]] = defaultdict(list)
     for r in study["records"]:
-        sig = r.get("failure_signature")
-        if sig:
-            by_method[r["method"]].append(sig)
-    return {m: sorted(set(sigs)) for m, sigs in by_method.items()}
+        key = equivalence_key_from_record(r)
+        if key is not None:
+            by_method[r["method"]].append(list(key))
+    return {m: sorted(sigs) for m, sigs in by_method.items()}
 
 
 def main() -> int:

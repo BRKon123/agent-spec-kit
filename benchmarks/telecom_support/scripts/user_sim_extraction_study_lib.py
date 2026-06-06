@@ -15,6 +15,7 @@ from agent_spec_kit.isolated_generative import probe_generative_scenario
 from agent_spec_kit.registries import ScenarioDef
 from agent_spec_kit.runner import JobResult, run_scenario_job
 
+from study_failure_signatures import classify_rerun_match, signatures_equivalent
 from user_sim_shrink_study_lib import (
     BENCH,
     bootstrap_sim_records,
@@ -24,6 +25,7 @@ from user_sim_shrink_study_lib import (
     find_case_index,
     flat_turns,
     load_results,
+    refresh_candidate_signatures,
     regression_id,
     save_results,
 )
@@ -62,9 +64,7 @@ def failure_signature_from_job(job: JobResult) -> FailureSignature | None:
 
 
 def signatures_match(target: FailureSignature | None, observed: FailureSignature | None) -> bool:
-    if target is None or observed is None:
-        return False
-    return target.check_kind == observed.check_kind and target.path == observed.path
+    return signatures_equivalent(target, observed)
 
 
 def count_user_turns(candidate: dict[str, Any]) -> int:
@@ -226,7 +226,12 @@ async def validate_extraction_rerun(
             "path": None,
             "assertion_id": None,
         }
-    if not job.ok and signatures_match(target_sig, observed):
+    out["rerun_outcome_class"] = classify_rerun_match(
+        target=target_sig,
+        observed=observed,
+        job_ok=bool(job.ok),
+    )
+    if out["rerun_outcome_class"] == "same_signature":
         out["reproduces_failure"] = True
     return out
 
@@ -243,6 +248,10 @@ def extraction_summary(results: dict[str, Any]) -> dict[str, Any]:
     repro = sum(1 for e in ex_rows if e.get("reproduces_failure"))
     dup = sum(1 for e in ex_rows if e.get("extraction_status") == "skipped_duplicate")
     turns = [e.get("user_turns") for e in ex_rows if e.get("user_turns") is not None]
+    rerun_same = sum(1 for e in ex_rows if e.get("rerun_outcome_class") == "same_signature")
+    rerun_passed = sum(1 for e in ex_rows if e.get("rerun_outcome_class") == "passed")
+    rerun_diff_kind = sum(1 for e in ex_rows if e.get("rerun_outcome_class") == "different_check_kind")
+    rerun_diff_loc = sum(1 for e in ex_rows if e.get("rerun_outcome_class") == "same_check_different_location")
     return {
         "simulated_conversations": len(sim_records),
         "failing_conversations": len([r for r in sim_records if r.get("failure_signature")]),
@@ -252,6 +261,10 @@ def extraction_summary(results: dict[str, Any]) -> dict[str, Any]:
         "import_success_rate_pct": round(100 * imp / n_ex, 1) if n_ex else 0.0,
         "collection_success_rate_pct": round(100 * col / n_ex, 1) if n_ex else 0.0,
         "same_failure_reproduction_rate_pct": round(100 * repro / n_ex, 1) if n_ex else 0.0,
+        "rerun_same_signature": rerun_same,
+        "rerun_passed": rerun_passed,
+        "rerun_different_check_kind": rerun_diff_kind,
+        "rerun_same_check_different_location": rerun_diff_loc,
         "median_user_turns": float(median(turns)) if turns else 0.0,
         "duplicate_skips": dup,
     }
@@ -279,6 +292,7 @@ __all__ = [
     "load_candidates_from_shrink_json",
     "load_extraction_study_config",
     "load_results",
+    "refresh_candidate_signatures",
     "save_results",
     "validate_extraction_rerun",
 ]

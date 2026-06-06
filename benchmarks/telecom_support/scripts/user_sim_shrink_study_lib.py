@@ -309,6 +309,36 @@ async def classify_stability(
     return "non_reproducing"
 
 
+def refresh_candidate_signatures_from_display(candidates: list[dict[str, Any]]) -> None:
+    """Refresh structural signatures from stored display text (no agent replay)."""
+    from study_failure_signatures import failure_signature_from_display
+
+    for cand in candidates:
+        if cand.get("capture_status") != "ok":
+            continue
+        display = cand.get("failure_signature_display")
+        if not isinstance(display, str) or not display:
+            continue
+        sig = failure_signature_from_display(
+            display,
+            agent_turn_count=cand.get("agent_turn_count"),
+            turn_count=cand.get("turn_count"),
+        )
+        if sig is not None:
+            cand["failure_signature"] = sig.as_dict()
+
+
+async def refresh_candidate_signatures(
+    cfg: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    *,
+    workers: int,
+) -> None:
+    """Refresh structural failure signatures (display parse; avoids slow agent replay)."""
+    del cfg, workers
+    refresh_candidate_signatures_from_display(candidates)
+
+
 async def capture_candidate(
     scenario_def: ScenarioDef,
     *,

@@ -216,7 +216,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T49",
@@ -703,7 +714,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T17",
@@ -1016,7 +1038,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].children",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].children",
+        3
+      ]
     },
     {
       "task_id": "T17",
@@ -1114,7 +1147,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T17",
@@ -1220,7 +1264,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].name",
+        3
+      ]
     },
     {
       "task_id": "T04",
@@ -1413,7 +1468,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].name",
+        3
+      ]
     },
     {
       "task_id": "T20",
@@ -1463,7 +1529,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$",
+        3
+      ]
     },
     {
       "task_id": "T38",
@@ -1517,7 +1594,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].name",
+        3
+      ]
     },
     {
       "task_id": "T29",
@@ -1565,7 +1653,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].args.sim_type",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].args.sim_type",
+        3
+      ]
     },
     {
       "task_id": "T38",
@@ -1623,7 +1722,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].name",
+        3
+      ]
     },
     {
       "task_id": "T27",
@@ -1728,7 +1838,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$",
+        3
+      ]
     },
     {
       "task_id": "T30",
@@ -1886,7 +2007,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$",
+        3
+      ]
     },
     {
       "task_id": "T42",
@@ -1943,7 +2075,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_that",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_that",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T20",
@@ -1997,7 +2140,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$",
+        3
+      ]
     },
     {
       "task_id": "T35",
@@ -2157,7 +2311,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].children",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].children",
+        1
+      ]
     },
     {
       "task_id": "T27",
@@ -2341,7 +2506,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_that",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_that",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T42",
@@ -2397,7 +2573,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        3
+      ]
     },
     {
       "task_id": "T43",
@@ -2441,7 +2628,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 5
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        5
+      ]
     },
     {
       "task_id": "T42",
@@ -2542,7 +2740,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[1]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "forbid_tool_calls",
+        "$[1]",
+        1
+      ]
     },
     {
       "task_id": "T43",
@@ -2603,7 +2812,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 2
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        2
+      ]
     },
     {
       "task_id": "T27",
@@ -2701,7 +2921,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[2]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "forbid_tool_calls",
+        "$[2]",
+        1
+      ]
     },
     {
       "task_id": "T44",
@@ -2755,7 +2986,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0].name",
+        "assertion_id": null,
+        "turn_index": 5
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0].name",
+        5
+      ]
     },
     {
       "task_id": "T27",
@@ -3040,7 +3282,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T29",
@@ -3087,7 +3340,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[2]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "forbid_tool_calls",
+        "$[2]",
+        1
+      ]
     },
     {
       "task_id": "T43",
@@ -3148,7 +3412,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        3
+      ]
     },
     {
       "task_id": "T43",
@@ -3205,7 +3480,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[7]",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "forbid_tool_calls",
+        "$[7]",
+        3
+      ]
     },
     {
       "task_id": "T29",
@@ -3256,7 +3542,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].args.line_id",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].args.line_id",
+        3
+      ]
     },
     {
       "task_id": "T29",
@@ -3304,7 +3601,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "forbid_tool_calls",
+        "path": "$[1]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "forbid_tool_calls",
+        "$[1]",
+        1
+      ]
     },
     {
       "task_id": "T44",
@@ -3412,7 +3720,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 5
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        5
+      ]
     },
     {
       "task_id": "T44",
@@ -3524,7 +3843,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 0
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        0
+      ]
     },
     {
       "task_id": "T44",
@@ -3930,7 +4260,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 0
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        0
+      ]
     },
     {
       "task_id": "T03",
@@ -3988,7 +4329,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T30",
@@ -4239,7 +4591,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T04",
@@ -4353,7 +4716,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T04",
@@ -4404,7 +4778,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_that",
+        "path": null,
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_that",
+        null,
+        3
+      ]
     },
     {
       "task_id": "T04",
@@ -4459,7 +4844,18 @@
       ],
       "invalid_run_reason": null,
       "per_step_user_turns": [],
-      "calibration_steering": false
+      "calibration_steering": false,
+      "failure_signature_struct": {
+        "check_kind": "assert_that",
+        "path": null,
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_that",
+        null,
+        1
+      ]
     },
     {
       "task_id": "T30",
@@ -4513,7 +4909,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        1
+      ]
     },
     {
       "task_id": "T35",
@@ -4754,7 +5161,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        1
+      ]
     },
     {
       "task_id": "T42",
@@ -5010,7 +5428,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        3
+      ]
     },
     {
       "task_id": "T04",
@@ -5082,7 +5511,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0].name",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0].name",
+        1
+      ]
     },
     {
       "task_id": "T38",
@@ -5134,7 +5574,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        1
+      ]
     },
     {
       "task_id": "T03",
@@ -5523,7 +5974,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        1
+      ]
     },
     {
       "task_id": "T27",
@@ -5732,7 +6194,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0].name",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0].name",
+        1
+      ]
     },
     {
       "task_id": "T38",
@@ -5791,7 +6264,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].children",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].children",
+        1
+      ]
     },
     {
       "task_id": "T44",
@@ -5931,7 +6415,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0].name",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0].name",
+        1
+      ]
     },
     {
       "task_id": "T42",
@@ -6060,7 +6555,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T30",
@@ -6558,7 +7064,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T35",
@@ -6610,7 +7127,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        1
+      ]
     },
     {
       "task_id": "T29",
@@ -6676,7 +7204,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        1
+      ]
     },
     {
       "task_id": "T38",
@@ -6739,7 +7278,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].children",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].children",
+        1
+      ]
     },
     {
       "task_id": "T45",
@@ -6876,7 +7426,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].name",
+        1
+      ]
     },
     {
       "task_id": "T45",
@@ -6939,7 +7500,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 3
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        3
+      ]
     },
     {
       "task_id": "T44",
@@ -7153,7 +7725,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 0
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        0
+      ]
     },
     {
       "task_id": "T38",
@@ -7212,7 +7795,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].children",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].children",
+        1
+      ]
     },
     {
       "task_id": "T35",
@@ -7664,7 +8258,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0].name",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0].name",
+        1
+      ]
     },
     {
       "task_id": "T49",
@@ -7842,7 +8447,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].children",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].children",
+        1
+      ]
     },
     {
       "task_id": "T43",
@@ -7915,7 +8531,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        1
+      ]
     },
     {
       "task_id": "T30",
@@ -8674,7 +9301,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_output",
+        "path": "$",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_output",
+        "$",
+        1
+      ]
     },
     {
       "task_id": "T17",
@@ -8736,7 +9374,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[1].name",
+        "assertion_id": null,
+        "turn_index": 0
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[1].name",
+        0
+      ]
     },
     {
       "task_id": "T42",
@@ -8888,7 +9537,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0]",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0]",
+        1
+      ]
     },
     {
       "task_id": "T04",
@@ -8961,7 +9621,18 @@
       ],
       "calibration_steering": false,
       "framework_trial_index": 0,
-      "trial_status": "failed"
+      "trial_status": "failed",
+      "failure_signature_struct": {
+        "check_kind": "assert_tool_calls",
+        "path": "$[0].name",
+        "assertion_id": null,
+        "turn_index": 1
+      },
+      "failure_equivalence_key": [
+        "assert_tool_calls",
+        "$[0].name",
+        1
+      ]
     }
   ],
   "summary": {
@@ -8979,7 +9650,7 @@
       "unique_tool_paths": 56,
       "unique_tool_sets": 46,
       "unique_tool_bigrams": 105,
-      "distinct_failure_signatures": 26,
+      "distinct_failure_signatures": 16,
       "distinct_fuzz_discovered_failure_signatures": 0,
       "median_turns": 4.0
     },
@@ -8988,7 +9659,7 @@
       "unique_tool_paths": 40,
       "unique_tool_sets": 36,
       "unique_tool_bigrams": 75,
-      "distinct_failure_signatures": 18,
+      "distinct_failure_signatures": 8,
       "distinct_fuzz_discovered_failure_signatures": 17,
       "median_turns": 4.0
     },
@@ -9012,5 +9683,6 @@
     },
     "job_count": 70,
     "record_count": 154
-  }
+  },
+  "failure_equivalence_rehydrated_utc": "2026-06-05T12:31:58.517512+00:00"
 }

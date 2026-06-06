@@ -47,6 +47,7 @@ if str(REPO) not in sys.path:
 if str(BENCH) not in sys.path:
     sys.path.insert(0, str(BENCH))
 
+from study_failure_signatures import failure_record_fields
 from tasks.fuzzing.scenarios.common import load_fuzz_study_config, load_manual_seed_messages, max_user_turns_by_segment
 
 
@@ -123,10 +124,8 @@ def record_from_fuzz_job(
     agent_turns = sum(1 for t in turns if getattr(t, "actor", None) == "agent")
     tool_seq = _extract_agent_tool_sequence(job.turn_results)
     signature = " -> ".join(tool_seq) if tool_seq else "(no_tools)"
-    failure_signature = None
-    if not job.ok:
-        detail = job.detail or job.failure_message or "failed"
-        failure_signature = f"{job.failure_kind or job.status}:{detail}"
+    fail_fields = failure_record_fields(job)
+    failure_signature = fail_fields["failure_signature"]
 
     seed = None
     mutation_operator = None
@@ -181,6 +180,8 @@ def record_from_fuzz_job(
         "final_status": job.status,
         "oracle_results": {"F": bool(job.ok)},
         "failure_signature": failure_signature,
+        "failure_signature_struct": fail_fields["failure_signature_struct"],
+        "failure_equivalence_key": fail_fields["failure_equivalence_key"],
         "tool_path_signature": signature,
         "tool_set": _extract_agent_tool_set(job.turn_results),
         "tool_bigram_set": _extract_agent_tool_bigrams(job.turn_results),

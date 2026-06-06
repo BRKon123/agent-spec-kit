@@ -31,6 +31,7 @@ from fuzzing_study_lib import (
     record_from_fuzz_job,
     write_transcript,
 )
+from study_failure_signatures import equivalence_key_from_record
 
 
 def _task_from_tags(tags: tuple[str, ...]) -> str | None:
@@ -51,7 +52,7 @@ def _aggregate(records: list[dict[str, Any]]) -> dict[str, Any]:
         "unique_tool_sets": len({tuple(r["tool_set"]) for r in records}),
         "unique_tool_bigrams": len({b for r in records for b in r["tool_bigram_set"]}),
         "distinct_failure_signatures": len(
-            {r["failure_signature"] for r in records if r["failure_signature"]}
+            {k for r in records if (k := equivalence_key_from_record(r)) is not None}
         ),
         "distinct_fuzz_discovered_failure_signatures": len(
             {

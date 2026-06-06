@@ -107,10 +107,10 @@ def record_from_job(task_id: str, method: str, job: JobResult) -> dict[str, Any]
     agent_turns = sum(1 for t in turns if getattr(t, "actor", None) == "agent")
     tool_seq = _extract_agent_tool_sequence(job.turn_results)
     signature = " -> ".join(tool_seq) if tool_seq else "(no_tools)"
-    failure_signature = None
-    if not job.ok:
-        detail = job.detail or job.failure_message or "failed"
-        failure_signature = f"{job.failure_kind or job.status}:{detail}"
+    from study_failure_signatures import failure_record_fields
+
+    fail_fields = failure_record_fields(job)
+    failure_signature = fail_fields["failure_signature"]
     seed = _seed_from_case_id(job.case_id) if method == "sim" else None
     baseline_type = "none"
     if task_id in {"T03", "T44"} and failure_signature:
@@ -129,6 +129,8 @@ def record_from_job(task_id: str, method: str, job: JobResult) -> dict[str, Any]
         "final_status": job.status,
         "oracle_results": {"F": bool(job.ok)},
         "failure_signature": failure_signature,
+        "failure_signature_struct": fail_fields["failure_signature_struct"],
+        "failure_equivalence_key": fail_fields["failure_equivalence_key"],
         "tool_path_signature": signature,
         "tool_set": _extract_agent_tool_set(job.turn_results),
         "tool_bigram_set": _extract_agent_tool_bigrams(job.turn_results),
