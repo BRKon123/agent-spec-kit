@@ -25,11 +25,11 @@ Human-readable placement (e.g.\ second \texttt{assert\_tool\_calls} after turn 3
 \texttt{path} &
 JSON-pointer into structured actuals (\texttt{\$.args.line\_id}). \\
 \texttt{expected\_summary} / \texttt{actual\_min} &
-Contrast without dumping entire traces twice; for tool checks, \texttt{expected\_summary} pairs a matcher hint with a path-focused spec excerpt (Section~\ref{sec:matcher-spec-repr}). \\
+Side-by-side summaries of what was expected and what was observed, without dumping full traces. \\
 \texttt{notes} &
 Extra context (e.g.\ per-criterion \texttt{llm\_criteria} rationales). \\
 \texttt{events} &
-Bounded Rich/UI tree for the failing turn neighbourhood. \\
+Bounded trace of agent events around the failure, rendered as a Rich tree in the CLI and a collapsible tree in the web UI. \\
 \bottomrule
 \end{tabularx}
 \caption{Counterexample fields and their role in debugging.}
