@@ -79,7 +79,7 @@ m.tool_call(
 )
 \end{lstlisting}
 
-\texttt{forbid\_tool\_calls} expresses negative expectations (a credit tool must not appear). When the list length differs from the spec, witness metadata on the matcher error can name expected versus actual tool sequences, which feeds readable summaries in the failure panel as described in Section~\ref{sec:matcher-spec-repr}. That shared dictionary shape is what lets the same \texttt{m.tool\_call} spec run against LangGraph and Pydantic AI without scenario changes.
+\texttt{forbid\_tool\_calls} expresses negative expectations (a credit tool must not appear). When the list length differs from the spec, witness metadata on the matcher error can name expected versus actual tool sequences, which feeds readable summaries in the failure panel as described in Section~\ref{sec:matcher-spec-repr}. That shared dictionary shape is what lets the same \texttt{m.tool\_call} spec run against any integrated agent stack without scenario changes.
 
 Function-calling benchmarks such as BFCL (Figure~\ref{fig:bfcl-ast-eval} in Chapter~\ref{chap:background}) check argument trees against schemas; the match layer generalises that idea to partial specs and incomplete traces where only some fields matter for policy.
 
