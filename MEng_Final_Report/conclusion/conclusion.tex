@@ -1,1 +1,38 @@
 \chapter{Conclusion}
+\label{chap:conclusion}
+
+\section{The problem this project set out to solve}
+
+Language models are no longer judged mainly on a single generated paragraph. In agent systems they plan, call tools, talk to users, and change application state. A polite final reply can hide a skipped authentication step, a tool called in the wrong order, or a database left in the wrong shape. Chapter~\ref{chap:background} traced that shift from answer correctness to trajectory and state correctness. Chapter~\ref{chap:related-work} showed that popular evaluation stacks still struggle to match it in day-to-day development.
+
+Benchmarks such as $\tau$-bench and AppWorld make trace and state visible on fixed leaderboards, but they are not reusable test infrastructure for a team writing its own policies. Libraries such as DeepEval, Ragas, Promptfoo, and observability tools such as Langfuse are genuinely useful: they grade outputs, ship metrics, and show traces. Yet checks are often split across datasets, scorers, transforms, and provider wiring. A developer who wants one readable test that asserts on the reply, the tool trace, and the store after each turn still has to glue those pieces together by hand. When something fails, the result is often a score, a bare \texttt{AssertionError}, or a trace to read without a clear link to the expectation that broke.
+
+This project asked whether agent evaluation could feel more like software testing: declare behaviour in one place, run it repeatedly, see exactly what failed, fix the agent, and keep the failure as a regression test.
+
+\section{How \emph{agent-spec-kit} fills those gaps}
+
+\emph{agent-spec-kit} is built around that loop. A scenario is a conversation script with checks woven in after each turn: user lines, tool expectations, output rubrics, and state postconditions live together in one file. The same language covers deterministic matchers and selective LLM rubrics where nuance is needed. When an assertion fails, the framework attaches a structured counterexample: which check broke, on which turn, at which field path, with expected and actual summaries and enough transcript context to act.
+
+The methodology chapter extended that core with the features missing from most comparison libraries. Repeated runs support stochastic agents. User simulation and mutation fuzzing explore dialogue a human author might not write, using the same oracles throughout. Shrinking and regression extraction turn an exploratory failure into a small, permanent script the suite can rerun. Integrations for LangChain and Pydantic AI normalise traces so scenarios do not depend on one framework's message format. A CLI and local web UI persist runs, compare experiments, and show the same failure card a developer sees in the terminal.
+
+In short, the library does not try to replace Ragas or DeepEval on every metric they already ship. It tries to give agent teams something those tools do not centre: a single, readable behavioural contract per episode, precise failure reports at the assertion that broke, and a path from discovery to regression without leaving the same scenario model.
+
+\section{What the evaluation showed}
+
+Chapter~\ref{chap:evaluation} tested \emph{agent-spec-kit} on TelcoSupportBench: fifty telecom support tasks, four oracle lanes, and a reference LangGraph agent. Four results stood out.
+
+\textbf{Multi-surface checks matter.} One hundred and forty-six of two hundred oracle slots passed, yet many failures lived in trace and state while the reply still sounded fine. Output-only grading would have missed them.
+
+\textbf{Scenarios are clearer to write.} Across twelve policy checks and eight frameworks, including Ragas and DeepEval, \emph{agent-spec-kit} was the clearest to read: each check is one short script from customer turn through tool and state expectations. It needed 165 lines of check logic against 496 for DeepEval and 532 for Pydantic Evals, because other ports repeat trace parsing and evaluator wiring per check.
+
+\textbf{Failures are clearer to fix.} On deliberate wrong runs, built-in matchers named the check, turn, path, and mismatch. Pytest often returned \texttt{AssertionError}; Ragas tool metrics sometimes a scalar; DeepEval longer prose without path-level counterexamples. That specificity shortens the agent update loop: the developer sees what broke, changes the agent, reruns the scenario, and compares experiments without rebuilding the failure from a raw trace or opaque score.
+
+\textbf{Discovery scales beyond fixed scripts.} Full oracles caught most injected tool and state faults that output-only lanes missed. Simulated users found sixteen failure signatures on fourteen tasks where manual scripts found four; fuzzing and regression extraction extended that pipeline without changing the oracles.
+
+On readable multi-surface specs and assertion-local diagnostics, \emph{agent-spec-kit} matches or beats Ragas, DeepEval, and the glue-code patterns teams otherwise write in pytest or Promptfoo. It goes further: user simulation and mutation fuzzing are first-class parts of the same scenario model, judged by the same oracles and pinned as regressions when something breaks. Existing evaluation libraries grade fixed examples well, but they do not offer an integrated way to explore dialogue a test author would never think to write, surface new failure modes from that search, and keep them in the suite. For stateful agent teams, that combination is the difference between checking known paths and actively discovering unknown ones.
+
+\section{Limitations and outlook}
+
+The results describe one reference agent, one telecom domain, and one judge model for generative arms. Stronger models or different domains may shift pass rates and discovery counts. LLM criteria in some lanes make a subset of failures judge-dependent. Signature-stable rerun after extraction remains a workflow concern worth hardening.
+
+Those limits do not undercut the central finding. Agent reliability needs more than leaderboard scores or final-answer grades. It needs behavioural specs a team can read, run, debug, and extend. \emph{agent-spec-kit} delivers that in a form that stood up to comparison against current practice on realistic tasks. For developers who must trust agents that touch real tools and real state, it is a promising foundation: explicit about what should happen, precise about what went wrong, and designed to turn surprises into tests the suite keeps forever.
