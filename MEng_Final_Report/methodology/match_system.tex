@@ -71,7 +71,7 @@ m.tool_call(
 )
 \end{lstlisting}
 
-\texttt{forbid\_tool\_calls} expresses negative expectations (a credit tool must not appear). Ordered lists require the spec sequence to appear as a subsequence when \texttt{allow\_extras=True}, or as an exact length match when extras are disallowed. Unordered lists treat the spec as a multiset of required calls, which suits parallel specialist tools that may complete in either order. When the list length differs from the spec, witness metadata on the matcher error can name expected versus actual tool sequences, which feeds readable summaries in the failure panel.
+\texttt{forbid\_tool\_calls} expresses negative expectations (a credit tool must not appear). Ordered lists require the spec sequence to appear as a subsequence when \texttt{allow\_extras=True}, or as an exact length match when extras are disallowed. Unordered lists treat the spec as a multiset of required calls, which suits parallel specialist tools that may complete in either order. When the list length differs from the spec, witness metadata on the matcher error can name expected versus actual tool sequences, which feeds readable summaries in the failure panel as described in Section~\ref{sec:matcher-spec-repr}.
 
 Tool-call matching runs on the normalised dictionaries produced by integrations (Section~\ref{sec:integrations}): each call exposes \texttt{name}, \texttt{args}, optional \texttt{result}, and nested \texttt{children} when subgraph streaming is enabled. That normalisation is what allows the same \texttt{m.tool\_call} spec to run against LangGraph and Pydantic AI without scenario changes.
 

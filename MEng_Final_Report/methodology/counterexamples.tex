@@ -25,7 +25,7 @@ Human-readable placement (e.g.\ second \texttt{assert\_tool\_calls} after turn 3
 \texttt{path} &
 JSON-pointer into structured actuals (\texttt{\$.args.line\_id}). \\
 \texttt{expected\_summary} / \texttt{actual\_min} &
-Contrast without dumping entire traces twice. \\
+Contrast without dumping entire traces twice; for tool checks, \texttt{expected\_summary} pairs a matcher hint with a path-focused spec excerpt (Section~\ref{sec:matcher-spec-repr}). \\
 \texttt{notes} &
 Extra context (e.g.\ per-criterion \texttt{llm\_criteria} rationales). \\
 \texttt{events} &
@@ -85,9 +85,37 @@ Infrastructure, tool exception, or bad observation. \\
 \label{tab:failure-hints}
 \end{table}
 
-Tool-call failures often include witness data listing expected and actual tool names in order, which is easier to scan than dumping the entire trace twice. Witness JSON on \texttt{MatchError} can also carry abbreviated actual values for list-length mismatches, so the expected summary in the panel can read ``expected tools in order: \texttt{auth}, \texttt{get\_line\_status}; got 1: \texttt{auth}'' without repeating every argument blob. Environment-only failures may not have a JSON path; the counterexample still records the step kind and human-readable location detail (for example ``second \texttt{assert\_tool\_calls} after turn 3 (agent turn)'').
+Environment-only failures may not have a JSON path; the counterexample still records the step kind and human-readable location detail (for example ``second \texttt{assert\_tool\_calls} after turn 3 (agent turn)'').
 
 For display, the trace window keeps the last few agent turns with interleaved user lines so panels stay readable. LangGraph adapters sometimes emit redundant root event shells; the trace builder flattens those so tool nodes appear directly under the relevant user line in the tree.
+
+Tool-call failures often include witness data listing expected and actual tool names in order, which is easier to scan than dumping the entire trace twice; Section~\ref{sec:matcher-spec-repr} explains in more detail how path, witness, and author spec combine into the \texttt{Expected} and \texttt{Actual} blocks.
+
+\subsection{Readable Expected Lines for Tool Failures}
+\label{sec:matcher-spec-repr}
+
+Tool assertions are written as rich specs: which tools should run, in what order, and with which arguments. When a check fails, the framework still knows the exact field that broke, but the default error text is often vague (for example ``each list item to match the expected matcher at the same index''). The counterexample therefore prints the author's spec back in readable form, cut down to the part around that failure.
+
+The failure panel includes a \texttt{Path} line such as \texttt{\$[1].args.line\_id}, which names the precise slot that did not match: the second tool in the list, its \texttt{args}, and the \texttt{line\_id} field inside them. The display step uses that path as a guide. It shows the expected value at that slot in full, plus enough of the surrounding spec to explain the policy, and shortens everything else. Other tools in the list may appear as names only; unrelated argument fields may be left out or marked with \texttt{...}. The \texttt{Expected} block starts with a one-line hint (\texttt{equality: expected 'LINE-001'}) and then the trimmed spec. The \texttt{Actual} block shows what the agent recorded instead (here \texttt{LINE-002}).
+
+Implementation-wise, the printer walks the spec in the same top-down order as the assertion (tool list, then each tool's fields, then nested \texttt{args} keys). At every step it compares its current position to the failure path. Segments that lie on the path are expanded; segments that branch away are \emph{stubbed} to a short form (a tool name only, or \texttt{...} for a skipped field). Segments far from the failure may be dropped entirely if the panel would otherwise grow too long. The result is not a second copy of the whole spec, but a single pass that keeps what the path points at and thins out the rest.
+
+Listing~\ref{lst:matcher-spec-repr-example} walks through a two-tool trace where \texttt{line\_id} was wrong on the second call: expected \texttt{LINE-001}, got \texttt{LINE-002}. Only the second tool's \texttt{args} are expanded; the first tool is shown by name alone.
+
+\begin{lstlisting}[caption={Example failure panel excerpt: path, \texttt{Expected}, and \texttt{Actual} for a tool-argument mismatch.},label=lst:matcher-spec-repr-example,basicstyle=\small\ttfamily]
+Path: $[1].args.line_id
+Expected:
+equality: expected 'LINE-001'
+[
+  [0] tool_call("authenticate_customer"),
+  [1] tool_call("get_line_status", args={"line_id": "LINE-001", ...})
+]
+Actual:
+  [0] authenticate_customer() -> ok
+  [1] get_line_status(line_id='LINE-002') -> {data_enabled=True}
+\end{lstlisting}
+
+\texttt{forbid\_tool\_calls} follows the same shape but uses \texttt{must not call ...} wording, because the path points at a tool that should not have appeared.
 
 \subsection{Agent-Update Workflow}
 

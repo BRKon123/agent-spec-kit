@@ -348,6 +348,11 @@ def _summarize_list_length_mismatch(
     return _short(f"{err.code}: expected {err.expected}", 200), str(wit.get("actual_witness", record.actual)), [err.message]
 
 
+def _matcher_expected_hint(err: MatchError) -> str:
+    """One-line expected contrast from the deepest :class:`MatchError`."""
+    return f"{err.code}: expected {err.expected}"
+
+
 def _summarize_matcher_counterexample(record: FailureRecord, err: MatchError, wit: dict[str, Any]) -> tuple[str, str, list[str]]:
     notes: list[str] = []
     if err.code == "list_length_mismatch":
@@ -366,7 +371,9 @@ def _summarize_matcher_counterexample(record: FailureRecord, err: MatchError, wi
         record.matcher_spec is not None
         and record.step_kind == "forbid_tool_calls"
     ):
-        exp_line = format_forbidden_spec(record.matcher_spec, max_len=600)
+        hint = _matcher_expected_hint(err)
+        spec_line = format_forbidden_spec(record.matcher_spec, max_len=600)
+        exp_line = f"{hint}\n{spec_line}" if spec_line else hint
         actual_min: Any = wit.get("actual_witness", record.actual)
         notes.append(err.message)
         return exp_line, _format_actual_value(actual_min), notes
@@ -375,8 +382,9 @@ def _summarize_matcher_counterexample(record: FailureRecord, err: MatchError, wi
         record.matcher_spec is not None
         and record.step_kind == "assert_tool_calls"
     ):
+        hint = _matcher_expected_hint(err)
         spec_line = format_spec_at_path(record.matcher_spec, err.path, max_len=600)
-        exp_line = spec_line
+        exp_line = f"{hint}\n{spec_line}" if spec_line else hint
         actual_min = wit.get("actual_witness", record.actual)
         notes.append(err.message)
         return exp_line, _format_actual_value(actual_min), notes

@@ -61,9 +61,9 @@ Multi-turn memory & 19 & 26 & 55 & 69 & 20 & 24 & 42 & 79 \\
 \end{tabular}
 \end{table}
 
-Promptfoo remains among the more concise ports (126 lines): checks are mostly declarative \texttt{assert} entries in \texttt{promptfooconfig.yaml}, with trajectory rules expressed as compact assertion types. The LOC measure counts only the body of each check---trace extraction, evaluator or metric configuration, and result capture---and excludes harness code outside the marked region. Libraries that repeat evaluator boilerplate in every specimen therefore total higher: DeepEval (496), Pydantic Evals (532), LangSmith and Ragas (303 each), then Braintrust (172) and plain pytest (167). \emph{agent-spec-kit} totals 165 and remains competitive because the scenario DSL expresses whole checks in one block; the gap to metric-oriented libraries reflects wiring that must be duplicated when a library offers no compact declarative check form.
+Promptfoo remains among the more concise ports (126 lines): checks are mostly declarative \texttt{assert} entries in \texttt{promptfooconfig.yaml}, with trajectory rules expressed as compact assertion types rather than imperative trace code. The LOC measure counts only the body of each check (trace extraction, evaluator or metric configuration, and result capture) and excludes harness code outside the marked region. Totals therefore rise when a library expects the same plumbing repeated in every specimen: trace normalisation, metric construction, and result capture each add lines even when the policy under test is simple. Metric-oriented libraries (LangSmith, Ragas, DeepEval, Pydantic Evals, Braintrust) occupy the upper half of Table~\ref{tab:expressiveness-loc} at roughly two to three times the line count of the declarative band; authors must configure evaluators and map trace fields into library schemas in every specimen, and readers must chase that wiring before the policy under test becomes visible. \emph{agent-spec-kit} totals 165 lines and stays in the concise band because its scenario DSL states the whole check (stimulus, tool expectations, and assertions) in one contiguous block; a reader can follow a specimen from user script to oracle without adapters, sidecar configs, or per-specimen metric boilerplate.
 
-Plain pytest totals 167 lines because trace walking and field guards appear in each check body. \emph{agent-spec-kit} totals 165 and sits below every metric-oriented library while remaining in the same band as pytest. Line count alone therefore understates how easy checks are to maintain when much of the apparent difference is where the code lives, not how much logic each check requires. The clarity study below judges readability directly: on a first read, is the \emph{intent} of each check obvious, or do you have to trace through helper code and framework wiring before you see what is being tested? Table~\ref{tab:expressiveness-authoring-clarity} and the listings that follow compare frameworks on that question specimen by specimen.
+Plain pytest reaches a similar total (167 lines) only by reintroducing the same trace-walking and field-guard patterns in nearly every check body. \emph{agent-spec-kit} therefore matches pytest on raw line count while doing more per line: composable matchers replace bespoke guards, and the shared scenario vocabulary carries across all twelve specimens rather than twelve slightly different ad-hoc scripts. The extra bulk in metric-oriented ports is not cosmetic: it reflects real authoring effort and slower first-read comprehension, even when much of the gap is where code lives rather than how much policy logic each check expresses. The clarity study below judges readability directly: on a first read, is the \emph{intent} of each check obvious, or do you have to trace through helper code and framework wiring before you see what is being tested? Table~\ref{tab:expressiveness-authoring-clarity} and the listings that follow compare frameworks on that question specimen by specimen.
 
 \subsection{Authoring clarity (LLM-judged)}
 
@@ -236,7 +236,7 @@ Multi-turn memory & A & D & B & B & B & B & B & B \\
 \end{tabular}
 \end{table}
 
-\emph{agent-spec-kit} scores \textbf{A} on eleven of twelve specimens and \textbf{B} on final-state only: failures routinely name the check, where it ran in the dialogue, a JSON path, and expected-vs-actual witnesses. Plain pytest is almost always \textbf{D} on trace-heavy checks (bare \texttt{AssertionError}) and only reaches \textbf{B} when authors hand-write a field-level message (C07). LangSmith, Pydantic Evals, Promptfoo, Braintrust, Ragas, and DeepEval cluster at \textbf{B} or \textbf{C}: they identify the rule, field, or metric but rarely expose structured counterexamples; Ragas \texttt{ToolCallAccuracy} on C07 returns only a scalar score (\textbf{C}). DeepEval \texttt{ToolCorrectnessMetric} and \texttt{JsonCorrectnessMetric} surface longer natural-language reasons (\textbf{B}) when checks fail. The listings below demonstrate this.
+\emph{agent-spec-kit} scores \textbf{A} on eleven of twelve specimens and \textbf{B} on final-state only: failures routinely name the check, where it ran in the dialogue, a JSON path, and expected-vs-actual witnesses; on tool checks the \texttt{Expected} block renders the scenario spec in focused form (Section~\ref{sec:matcher-spec-repr}). Plain pytest is almost always \textbf{D} on trace-heavy checks (bare \texttt{AssertionError}) and only reaches \textbf{B} when authors hand-write a field-level message (C07). LangSmith, Pydantic Evals, Promptfoo, Braintrust, Ragas, and DeepEval cluster at \textbf{B} or \textbf{C}: they identify the rule, field, or metric but rarely expose structured counterexamples; Ragas \texttt{ToolCallAccuracy} on C07 returns only a scalar score (\textbf{C}). DeepEval \texttt{ToolCorrectnessMetric} and \texttt{JsonCorrectnessMetric} surface longer natural-language reasons (\textbf{B}) when checks fail. The listings below demonstrate this.
 
 \subsection{Illustrative failure messages}
 
@@ -248,7 +248,9 @@ Multi-turn memory & A & D & B & B & B & B & B & B \\
 | Check: forbid_tool_calls                                                       |
 | Where: 1st forbid_tool_calls after turn #1 (forbidden tool call patterns)      |
 | Path: $[1]                                                                     |
-| Expected: forbidden_tool_call: expected no 'apply_bill_credit'                 |
+| Expected:                                                                      |
+| forbidden_tool_call: expected no 'apply_bill_credit'                           |
+| must not call tool_call('apply_bill_credit')                                   |
 | Actual:                                                                        |
 |   [0] get_customer_profile(customer_id='CUST-OTHER') -> None                   |
 |   [1] apply_bill_credit(amount=10) -> ok                                       |
@@ -287,7 +289,12 @@ Multi-turn memory & A & D & B & B & B & B & B & B \\
 | Check: assert_tool_calls                                                       |
 | Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
 | Path: $[1].args.line_id                                                        |
-| Expected: equality: expected 'LINE-001'                                        |
+| Expected:                                                                      |
+| equality: expected 'LINE-001'                                                  |
+| [                                                                              |
+|   [0] tool_call("authenticate_customer"),                                      |
+|   [1] tool_call('get_line_status', args=object({'line_id': 'LINE-001'}))       |
+| ]                                                                              |
 | Actual:                                                                        |
 |   [0] authenticate_customer() -> ok                                            |
 |   [1] get_line_status(line_id='LINE-002') -> {data_enabled=True}               |
@@ -326,7 +333,13 @@ Multi-turn memory & A & D & B & B & B & B & B & B \\
 +------------------------ agent_spec_kit (C10)  grade A -------------------------+
 | Check: assert_tool_calls                                                       |
 | Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
-| Expected: list_too_short: expected >= 2                                        |
+| Path: $                                                                         |
+| Expected:                                                                      |
+| list_too_short: expected >= 2                                                  |
+| [                                                                              |
+|   [0] tool_call('heartbeat_ping'),                                             |
+|   [1] tool_call('get_line_status')                                             |
+| ]                                                                              |
 | Actual:                                                                        |
 |   [0] heartbeat_ping() -> ok                                                   |
 | list is too short: need at least 2 item(s) to match all expected values (order |

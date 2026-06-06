@@ -155,6 +155,7 @@ def test_counterexample_uses_deepest_inner_path_for_tool_call_mismatch() -> None
     cx = counterexample_from_failure(record)
     assert cx.path == "$[0].args.a"
     assert "mismatch at $[0].args.a" in cx.headline
+    assert "equality: expected 7" in cx.expected_summary or "expected 7" in cx.expected_summary
     assert "7" in cx.expected_summary
     assert "each list item" not in cx.expected_summary.lower()
     assert isinstance(cx.actual_min, list)
