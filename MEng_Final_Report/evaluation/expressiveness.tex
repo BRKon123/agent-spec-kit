@@ -65,9 +65,9 @@ Promptfoo remains among the more concise ports (126 lines): checks are mostly de
 
 Plain pytest reaches a similar total (167 lines) only by reintroducing the same trace-walking and field-guard patterns in nearly every check body. \emph{agent-spec-kit} therefore matches pytest on raw line count while doing more per line: composable matchers replace bespoke guards, and the shared scenario vocabulary carries across all twelve specimens rather than twelve slightly different ad-hoc scripts. The extra bulk in metric-oriented ports is not cosmetic: it reflects real authoring effort and slower first-read comprehension, even when much of the gap is where code lives rather than how much policy logic each check expresses. The clarity study below judges readability directly: on a first read, is the \emph{intent} of each check obvious, or do you have to trace through helper code and framework wiring before you see what is being tested? Table~\ref{tab:expressiveness-authoring-clarity} and the listings that follow compare frameworks on that question specimen by specimen.
 
-\subsection{Authoring clarity (LLM-judged)}
+\subsection{Authoring clarity}
 
-A complementary study asks how easy that same check logic is to read: whether the test intent is obvious, whether you can see what the agent was told, and whether tools and fields under test are clear. For LOC and for clarity we use only the body of each check (the lines between marked start and end points in each implementation file), so helper code and imports are not counted. An LLM (\texttt{openai:gpt-5-mini}) assigns one combined A--D clarity grade per check and framework (Table~\ref{tab:authoring-clarity-rubric}, Table~\ref{tab:expressiveness-authoring-clarity}). Letter grades are \textbf{A best, D worst}. Clarity is separate from LOC and from failure-specificity (Table~\ref{tab:specificity-rubric}), which judges \emph{failure messages} only.
+This study asks how easy that same check logic is to read: whether the test intent is obvious, whether you can see what the agent was told, and whether tools and fields under test are clear. For LOC and for clarity we use only the body of each check (the lines between marked start and end points in each implementation file), so helper code and imports are not counted. An LLM (\texttt{openai:gpt-5-mini}) assigns one combined A--D clarity grade per check and framework (Table~\ref{tab:authoring-clarity-rubric}, Table~\ref{tab:expressiveness-authoring-clarity}). Letter grades are \textbf{A best, D worst}. Clarity is separate from LOC and from failure-specificity (Table~\ref{tab:specificity-rubric}), which judges \emph{failure messages} only.
 
 \begin{table}[H]
 \centering
@@ -94,7 +94,7 @@ D & Excerpt does not convey what is tested, what the agent saw, or which propert
 
 \begin{table}[H]
 \centering
-\caption{Authoring-clarity grade by check and framework (LLM-judged, A--D).}
+\caption{Authoring-clarity grade by check and framework (A--D).}
 \label{tab:expressiveness-authoring-clarity}
 \footnotesize
 \begin{tabular}{@{}p{2.8cm}cccccccc@{}}
