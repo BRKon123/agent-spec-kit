@@ -4,7 +4,7 @@
 \section{Existing Evaluation Libraries and Observability Tooling}
 \label{sec:existing_eval_libraries}
 
-Alongside academic benchmarks, several practical libraries have emerged for evaluating LLM applications during development. These tools are useful because they move evaluation closer to the developer workflow: test cases can be rerun, prompts and models can be compared, and failures can be inspected more systematically than with ad hoc scripts. However, they also show that current tooling is still only partially suited to evaluating stateful, tool-using agents.
+Alongside academic benchmarks, several practical libraries have emerged for evaluating LLM applications during development. These tools are useful because they move evaluation closer to the developer workflow. Test cases can be rerun, prompts and models can be compared, and failures can be inspected more systematically than with ad hoc scripts. However, they also show that current tooling is still only partially suited to evaluating stateful, tool-using agents.
 
 \subsection{OpenAI Evals}
 
@@ -23,7 +23,7 @@ DeepEval and Ragas provide more application-oriented evaluation abstractions. De
   \label{fig:geval-prompt}
 \end{figure}
 
-Ragas was originally designed for RAG evaluation, decomposing quality into dimensions such as faithfulness, answer relevance, context precision, and context recall \cite{es2023ragas,ragasDocs}. More recent versions also include agent metrics such as tool call accuracy, tool call F1, and agent goal accuracy \cite{ragasDocs}. Agent goal accuracy is a binary multi-turn metric: an evaluator LLM reads the full interaction trace, infers the outcome the agent reached, and judges whether it matches the user's goal, either against a provided reference outcome or by inferring the goal from the conversation \cite{ragasDocs}.
+Ragas was originally designed for RAG evaluation, decomposing quality into dimensions such as faithfulness, answer relevance, context precision, and context recall \cite{es2023ragas,ragasDocs}. More recent versions also include agent metrics such as tool call accuracy, tool call F1, and agent goal accuracy \cite{ragasDocs}. Agent goal accuracy is a binary multi-turn metric. An evaluator LLM reads the full interaction trace, infers the outcome the agent reached, and judges whether it matches the user's goal, either against a provided reference outcome or by inferring the goal from the conversation \cite{ragasDocs}.
 
 These libraries are valuable because they recognise that LLM systems should not only be judged by final-answer quality. However, their tool checks are still relatively metric-oriented. They are useful for comparing expected and actual tool calls, but they are less ergonomic when a developer wants to specify precise properties of a tool argument or a structured output. For example, checking that a particular tool argument contains the substring \texttt{urgent}, or that a nested structured output field satisfies a domain-specific predicate, is not usually a first-class assertion. It generally requires custom code, a custom metric, or reshaping the output into the format expected by the evaluator. This makes simple behavioural expectations feel heavier than ordinary software tests.
 
@@ -44,19 +44,19 @@ A related group of tools focuses on observability rather than evaluation alone. 
   \label{fig:langfuse-trace}
 \end{figure}
 
-These tools are important because agent failures are often hard to understand without seeing the full execution trace: the prompts, model responses, tool calls, tool outputs, intermediate steps, latency, and cost.
+These tools are important because agent failures are often hard to understand without seeing the full execution trace, including the prompts, model responses, tool calls, tool outputs, intermediate steps, latency, and cost.
 
-Observability tools are therefore highly complementary to evaluation libraries. They help developers inspect what happened during a run. However, observability does not by itself define what should have happened. A trace viewer can show that a tool was called, but the developer still needs a concise way to state what should have happened: for instance, argument constraints on a tool call or a required postcondition on external state.
+Observability tools are therefore highly complementary to evaluation libraries. They help developers inspect what happened during a run. However, observability does not by itself define what should have happened. A trace viewer can show that a tool was called, but the developer still needs a concise way to state what should have happened, such as argument constraints on a tool call or a required postcondition on external state.
 
 \subsection{Gaps in Existing Libraries}
 
-Existing libraries cover scoring, metrics, traces, and monitoring, but leave gaps for teams building domain-specific agents. The subsections above illustrate those limitations tool by tool; the gaps below summarise what is still missing.
+Existing libraries cover scoring, metrics, traces, and monitoring, but they leave important gaps for teams building domain-specific agents.
 
 \begin{itemize}
     \item \textbf{Final-output evaluation hides agent failures.}
     Benchmarks and LLM judges compare isolated inputs and replies \cite{liang2022holistic,liu2023geval,zheng2023judging}, but that is not enough for tool-using agents.
     \begin{itemize}
-        \item A plausible final answer can hide wrong tools, skipped steps, or invalid state; a terse reply may still reflect a correct trajectory.
+        \item A plausible final answer can hide wrong tools, skipped steps, or invalid state, while a terse reply may still reflect a correct trajectory.
         \item Failures often collapse to a single score, leaving the developer to reconstruct \emph{where} the trace went wrong.
     \end{itemize}
 
@@ -71,7 +71,7 @@ Existing libraries cover scoring, metrics, traces, and monitoring, but leave gap
     Eval setup often spans datasets, graders, trace assertions, and runner config in separate places.
     \begin{itemize}
         \item Teammates must jump between files to see what is actually being tested.
-        \item For multi-turn agents, the natural unit is the conversation: message, agent turn, checks, then the next turn.
+        \item For multi-turn agents, the natural unit is the conversation, with message, agent turn, checks, then the next turn.
         \item What is missing is one declarative script with dialogue and oracles after each turn, repeats included.
     \end{itemize}
 
@@ -83,29 +83,28 @@ Existing libraries cover scoring, metrics, traces, and monitoring, but leave gap
     \end{itemize}
 
     \item \textbf{Failure reports lack the precision needed for fast iteration.}
-    Trace viewers show what happened; metrics show pass or fail. Neither alone answers which expectation broke, on which turn, at which field. \emph{agent-spec-kit} keeps both the failing assertion and the episode trace in one view (Section~\ref{sec:execution-workflow}).
+    Trace viewers show what happened, and metrics show pass or fail. Neither alone answers which expectation broke, on which turn, at which field. \emph{agent-spec-kit} keeps both the failing assertion and the episode trace in one view (Section~\ref{sec:execution-workflow}).
     \begin{itemize}
         \item The bug may sit in tool args, a missing tool, or state while the reply still sounds fine.
-        \item Without assertion-local reports (path, expected vs.\ actual, transcript context), debugging becomes trace archaeology.
+        \item Without assertion-local reports (path, expected vs.\ actual, transcript context), the developer must reconstruct what failed by reading through long raw traces by hand.
     \end{itemize}
 
     \item \textbf{Exploratory coverage and regression preservation are not first-class.}
-    Scripted scenarios only cover paths the author anticipated; dependable agents must survive dialogue they did not write by hand.
+    Scripted scenarios only cover paths the author anticipated, but dependable agents must survive dialogue they did not write by hand.
     \begin{itemize}
-        \item Users vary in tone, disclosure, and pressure; scripting every phrasing and persona does not scale.
+        \item Users vary in tone, disclosure, and pressure, so scripting every phrasing and persona does not scale.
         \item Fuzzing and user simulation can surface failures on altered scripts or new customer styles, but most libraries treat those runs separately or leave them as hard-to-rerun traces.
         \item When exploration finds a failure, teams still need to turn it into a version-controlled regression the suite runs on every change.
-        \item What is missing is the same output, tool, and state oracles on scripted and generative runs, plus extraction of a minimal failing script so discoveries persist in the suite.
     \end{itemize}
 \end{itemize}
 
-Taken together, what is missing is concise, scenario-style tooling: declare behaviour in one place, explore beyond fixed scripts, debug precisely when it fails, and preserve new failures as regressions.
+Taken together, what is missing is concise, scenario-style tooling that lets teams declare behaviour in one place, explore beyond fixed scripts, debug precisely when it fails, and preserve new failures as regressions.
 
 \section{Motivation for Agent-Spec-Kit}
 \label{sec:agent-spec-kit-motivation}
 
-Chapter~\ref{chap:background} argues that agent evaluation must go beyond final answers: traces, tool use, environment state, and repeated runs all matter. Interactive benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why in realistic settings \cite{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}. Software-testing work complements them by showing how to find failures, simplify them, and preserve the result as a regression test \cite{claessen2000quickcheck,zeller2002simplifying,yu2023gptfuzzer,yao2023fuzzllm}.
+Chapter~\ref{chap:background} argues that agent evaluation must go beyond final answers. Traces, tool use, environment state, and repeated runs all matter. Interactive benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why in realistic settings \cite{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}. Software-testing work complements them by showing how to find failures, simplify them, and preserve the result as a regression test \cite{claessen2000quickcheck,zeller2002simplifying,yu2023gptfuzzer,yao2023fuzzllm}.
 
-As Section~\ref{sec:existing_eval_libraries} argued, existing tools still scatter dialogue, graders, and trace checks across separate files rather than one readable scenario script; make it awkward to assert on replies, tool calls, and environment state in a single episode; expose pass or fail (or raw traces) rather than a mismatch report tied to the specific assertion that broke; and seldom offer user simulation or mutation fuzzing as first-class features, let alone a path from an exploratory failure to a saved regression scenario.
+As Section~\ref{sec:existing_eval_libraries} argued, existing tools still scatter dialogue, graders, and trace checks across separate files rather than one readable scenario script. They make it awkward to assert on replies, tool calls, and environment state in a single episode, expose pass or fail (or raw traces) rather than a mismatch report tied to the specific assertion that broke, and seldom offer user simulation or mutation fuzzing as first-class features, let alone a path from an exploratory failure to a saved regression scenario.
 
-\emph{agent-spec-kit} targets that combined gap. Each agent episode is a testable scenario with explicit checks on the final reply, tool calls, and environment state. When an assertion fails, the framework reports which expectation broke, where in the episode, and structured expected-versus-actual detail at that check (Section~\ref{sec:counterexamples} defines this as a \emph{Counterexample}). User simulation, mutation fuzzing, failure shrinking, and regression extraction extend the same model so discoveries from exploration can stay in the suite; the methodology chapter develops those workflows in full.
+\emph{agent-spec-kit} targets that combined gap. Each agent episode is a testable scenario with explicit checks on the final reply, tool calls, and environment state. When an assertion fails, the framework reports which expectation broke, where in the episode, and structured expected-versus-actual detail at that check (Section~\ref{sec:counterexamples} defines this as a \emph{Counterexample}). User simulation, mutation fuzzing, failure shrinking, and regression extraction extend the same model so discoveries from exploration can stay in the suite. The methodology chapter develops those workflows in full.

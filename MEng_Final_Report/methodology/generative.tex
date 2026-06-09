@@ -1,7 +1,9 @@
 \section{Generative Conversation Testing}
 \label{sec:generative}
 
-Scripted \texttt{user\_message} lines work well when the conversation path is known in advance: a support flow with fixed steps, or a tutor drill with explicit questions. They are less helpful when the goal is to see how an agent behaves across many plausible or adversarial ways of speaking. Writing out every phrasing, escalation, and multi-turn tangent by hand does not scale, and some user styles are awkward to script at all. A frustrated customer who repeats themselves, mixes threats with requests, or refuses to follow the agent's process is not a single line of dialogue; it is a persona that unfolds over several turns. Generative features exist so the developer can supply \emph{who} is speaking (a user simulator or a fuzz strategy) and still judge the agent with the same \texttt{assert\_tool\_calls}, \texttt{assert\_output}, and \texttt{assert\_that} steps as in a fully scripted scenario. Generation explores conversation; the scenario script still states what must hold when the exchange ends.
+Scripted \texttt{user\_message} lines work well when the conversation path is known in advance, such as a support flow with fixed steps or a tutor drill with explicit questions. They are less helpful when the goal is to see how an agent behaves across many plausible or adversarial ways of speaking. Writing out every phrasing, escalation, and multi-turn tangent by hand does not scale, and some user styles are awkward to script at all. A frustrated customer who repeats themselves, mixes threats with requests, or refuses to follow the agent's process is not a single line of dialogue. It is a persona that unfolds over several turns. Generative features exist so the developer can supply \emph{who} is speaking (a user simulator or a fuzz strategy) and still judge the agent with the same \texttt{assert\_tool\_calls}, \texttt{assert\_output}, and \texttt{assert\_that} steps as in a fully scripted scenario. Generation explores conversation, but the scenario script still states what must hold when the exchange ends.
+
+The same fluent chaining from Section~\ref{sec:scenario-language} applies here. A scripted opening line can seed context (\texttt{user\_message("Let's practice multiplication briefly.")}) before a \texttt{simulate\_conversation} or \texttt{fuzz\_conversation} block whose user lines are produced by a simulator or fuzz strategy. Assertions after the block remain ordinary \texttt{assert\_output} or \texttt{assert\_tool\_calls} steps. Assertions can interleave with scripted and generative user lines because the whole scenario lives in one queue executed by a single runner.
 
 \subsection{User Simulation}
 
@@ -26,34 +28,41 @@ Listing~\ref{lst:simulate-student} runs a short simulated student session, then 
 )
 \end{lstlisting}
 
-The point is exploratory coverage: discover whether the agent still calls the right tools and respects policy when the user side is not perfectly cooperative, then tighten any failure with the counterexample and regression tools in the subsections below.
+The point is exploratory coverage. Discover whether the agent still calls the right tools and respects policy when the user side is not perfectly cooperative, then tighten any failure with the counterexample and regression tools in the subsections below.
 
 \subsection{Fuzzing}
 
 \texttt{fuzz\_conversation} samples many user-side scripts in one run when even a persona-backed simulator is too narrow. Each trial draws a sequence of user messages from a \texttt{FuzzConfig} strategy, for example \texttt{behaviour\_grammar} with weighted templates (off-topic chatter, repeated demands, abrupt topic changes), \texttt{hybrid} mixtures, or \texttt{llm\_mutations} that rewrite seed lines. Trials execute in the generative orchestrator (\texttt{isolated\_generative.py}), not inside a casual \texttt{materialise()} call, so the runner can schedule them in worker processes and attach per-trial counterexamples.
 
-Listing~\ref{lst:fuzz-demo} shows a fuzz block followed by a strict tool assertion: many generated dialogues are off-topic, so the last agent turn often lacks the expected multiplication call and the matcher fails in a controlled way.
+Listing~\ref{lst:fuzz-demo} shows a fuzz block followed by a strict tool assertion. Many generated dialogues are off-topic, so the last agent turn often lacks the expected multiplication call and the matcher fails in a controlled way.
 
 \begin{lstlisting}[language=Python,caption={Behaviour-grammar fuzz followed by a strict tool assertion.},label=lst:fuzz-demo]
-s.fuzz_conversation(fuzz_config=_FUZZ, trials=3, max_user_turns=5).assert_tool_calls(
-    [
-        m.tool_call(
-            "multiply_integers",
-            args={
-                "a": m.number(min=0, max=10, int_only=True),
-                "b": m.number(min=0, max=10, int_only=True),
-            },
-        )
-    ],
-    ordered=True,
-    allow_extras=False,
-    actor="agent",
+(
+    s.fuzz_conversation(
+        fuzz_config=_FUZZ,
+        trials=3,
+        max_user_turns=5,
+    )
+    .assert_tool_calls(
+        [
+            m.tool_call(
+                "multiply_integers",
+                args={
+                    "a": m.number(min=0, max=10, int_only=True),
+                    "b": m.number(min=0, max=10, int_only=True),
+                },
+            )
+        ],
+        ordered=True,
+        allow_extras=False,
+        actor="agent",
+    )
 )
 \end{lstlisting}
 
-When shrinking or extraction is enabled, a \texttt{FailureSignature} records which assertion failed (step kind, assertion index, matcher fingerprint) so shortened user scripts still reproduce the same failure rather than merely failing for some other reason. Shrink passes re-run the scenario with candidate shorter transcripts and reject candidates that fail on a different assertion or pass unexpectedly. That signature pairs with the counterexample machinery in Section~\ref{sec:counterexamples} and is what makes a generative failure ``the same bug'' after simplification.
+When extraction or shrinking is enabled, a \texttt{FailureSignature} records which assertion failed (step kind, assertion index, matcher fingerprint) so shortened user scripts still reproduce the same failure rather than merely failing for some other reason. Shrink passes re-run the scenario with candidate shorter transcripts and reject candidates that fail on a different assertion or pass unexpectedly. That signature pairs with the counterexample machinery in Section~\ref{sec:counterexamples} and is what makes a generative failure ``the same bug'' after simplification.
 
-Per-trial results are stored like ordinary repeats: each fuzz trial can carry its own counterexample blob and transcript in SQLite, and the run-detail UI exposes a trials table so a developer can open the trace for one generated dialogue without re-running the suite.
+Per-trial results are stored like ordinary repeats. Each fuzz trial can carry its own counterexample blob and transcript in SQLite, and the run-detail UI exposes a trials table so a developer can open the trace for one generated dialogue without re-running the suite.
 
 \begin{figure}[htbp]
   \centering
@@ -65,11 +74,30 @@ Per-trial results are stored like ordinary repeats: each fuzz trial can carry it
   \label{fig:generative-flow}
 \end{figure}
 
-\subsection{Shrinking and Extraction}
+\subsection{Extraction and Shrinking}
 
-When a generative run surfaces a surprising failure, the next step is often to make it reproducible. With \texttt{--shrink}, failing fuzz or simulate episodes can be reduced to fewer or simpler user messages while preserving the same failure signature. Passes include removing user turns and simplifying text; optional LLM-assisted simplification proposes shorter phrasing that still triggers the same assertion. With \texttt{--extract}, an AST-based pass can append a new \texttt{@scenario} with concrete \texttt{user\_message} lines to a regression file, turning an exploratory failure into a permanent script in the sense of Section~\ref{sec:scenario-language}. Listing~\ref{lst:shrink-config} shows a typical shrink configuration.
+When a generative run surfaces a surprising failure, the next step is often to make it reproducible. With \texttt{--extract}, an AST-based pass can append a new \texttt{@scenario} with concrete \texttt{user\_message} lines to a regression file, turning an exploratory failure into a permanent script in the sense of Section~\ref{sec:scenario-language}. Listing~\ref{lst:extracted-regression} continues the multiplication-tutor example from Listing~\ref{lst:simulate-student}. Extraction materialises the single user line from a failing fuzz trial that used a mutation strategy to rewrite the seed.
 
-\begin{lstlisting}[language=Python,caption={Shrink and extraction configuration on a scenario.},label=lst:shrink-config]
+\begin{lstlisting}[language=Python,caption={Extracted regression from a failing multiplication-tutor fuzz trial. The parent scenario applied a mutation strategy to the seed line ``What is 4 x 5?''; the mutation rewrote both operands as words (``four'' and ``five''; other trials may use alternate numeric spellings such as \texttt{4.0} and \texttt{5.0}). Extraction replaced \texttt{fuzz\_conversation} with this one \texttt{user\_message} and kept the original tool and output checks.},label=lst:extracted-regression]
+@ek.scenario(regression_id="reg_fuzz_multiply_001", tags=("regression", "fuzz-demo"), ...)
+async def regression_extracted_multiply(s):
+    (
+        s.user_message("What is four times five?")
+        .assert_tool_calls(
+            [m.tool_call("multiply_integers", args={"a": 4, "b": 5})],
+            ordered=True,
+            allow_extras=True,
+            actor="agent",
+        )
+        .assert_output(m.one_of(m.contains("20"), m.contains("twenty")), actor="agent")
+    )
+\end{lstlisting}
+
+Listing~\ref{lst:extracted-regression} is the kind of scenario a developer might extract after fuzzing. During the generative run, a mutation strategy may have sent ``What is four times five?'' to the tutor. The agent then attempted to call \texttt{multiply\_integers} with string arguments \texttt{"four"} and \texttt{"five"} instead of the integers \texttt{4} and \texttt{5}. \texttt{multiply\_integers} accepts only integer arguments, so this is invalid and is caught by the \texttt{assert\_tool\_calls} check. Extraction materialises that exact user line as a permanent regression so the team can tighten the tutor system prompt to ensure \texttt{multiply\_integers} is called only with integer arguments, then rerun the suite to confirm the failure no longer recurs.
+
+With \texttt{--shrink}, failing fuzz or simulate episodes can be reduced to fewer or simpler user messages while preserving the same failure signature. Passes include removing user turns and simplifying text. LLM-assisted simplification proposes shorter phrasing that still triggers the same assertion. Listing~\ref{lst:shrink-config} shows a typical shrink configuration.
+
+\begin{lstlisting}[language=Python,caption={Shrink configuration on a scenario.},label=lst:shrink-config]
 SHRINK_CFG = ek.ShrinkConfig(
     passes=(
         ek.shrink.remove_user_turns(),
@@ -79,20 +107,4 @@ SHRINK_CFG = ek.ShrinkConfig(
 )
 \end{lstlisting}
 
-Listing~\ref{lst:extracted-regression} shows what extraction produces: concrete \texttt{user\_message} lines appended as a new \texttt{@scenario} in a regression module, so the failure discovered by fuzz becomes a permanent script readable without re-running the generative engine.
-
-\begin{lstlisting}[language=Python,caption={Extracted regression scenario with materialised user lines.},label=lst:extracted-regression]
-@ek.scenario(regression_id="reg_...", tags=("regression",), ...)
-async def regression_extracted(s):
-    (
-        s.user_message("Tell me a joke about cats.")
-        .assert_tool_calls(
-            [m.tool_call("multiply_integers", args={...})],
-            ordered=True,
-            allow_extras=False,
-            actor="agent",
-        )
-    )
-\end{lstlisting}
-
-Generative steps are optional extensions to the scripting model in Section~\ref{sec:scenario-language}: they change how user lines are produced, not how expectations are expressed. When something goes wrong, the same counterexample and extraction path turns an exploratory dialogue into a small scripted regression the team can keep.
+Generative steps are optional extensions to the scripting model in Section~\ref{sec:scenario-language}. They change how user lines are produced, not how expectations are expressed. When something goes wrong, the same counterexample and extraction path turns an exploratory dialogue into a small scripted regression the team can keep.

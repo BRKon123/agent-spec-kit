@@ -1,7 +1,7 @@
 \section{System Architecture}
 \label{sec:architecture}
 
-Before describing how the library is wired together, it helps to see what a developer actually writes. Listing~\ref{lst:architecture-motivating} shows a compact scenario: a fixture supplies the agent under test, the scenario declares how many times to run it, and the body chains user lines with expectations on tools and reply text.
+Before describing how the library is wired together, it helps to see what a developer actually writes. Listing~\ref{lst:architecture-motivating} shows a compact scenario. A fixture supplies the agent under test, the scenario declares how many times to run it, and the body chains user lines with expectations on tools and reply text.
 
 \begin{lstlisting}[language=Python,caption={Scenario with fixture, repeats, user line, tool and output checks.},label=lst:architecture-motivating]
 @ek.fixture
@@ -29,11 +29,11 @@ async def test_multiply_dialog_scripted_user_messages(s):
     )
 \end{lstlisting}
 
-The fixture injects a LangGraph tutor wrapped as an \texttt{AdaptedAgent} so the scenario body can focus on behaviour rather than wiring. \texttt{repeats=3} schedules three independent executions of the same script, which is useful when the underlying LLM is stochastic and a single lucky pass is not enough evidence. The scenario body is the behavioural contract: after the user asks for $5 \times 6$, the tutor must call \texttt{multiply\_integers} with the right arguments and mention the product in its reply. Failures on either the tool trace or the final text produce a counterexample at that assertion (Section~\ref{sec:counterexamples}). The rest of this section explains how those declarations are discovered, executed, and checked; optional generative extensions (simulated users, fuzzing, shrinking) are described later in Section~\ref{sec:generative}.
+Expectations in the scenario body use matchers from the library's match module, imported as \texttt{import agent\_spec\_kit.match as m} and written \texttt{m} in listings for brevity (Section~\ref{sec:match-system}). The fixture injects a LangGraph tutor wrapped as an \texttt{AdaptedAgent} so the scenario body can focus on behaviour rather than wiring. \texttt{repeats=3} schedules three independent executions of the same script, which is useful when the underlying LLM is stochastic and a single lucky pass is not enough evidence. The scenario body is the behavioural contract. After the user asks for $5 \times 6$, the tutor must call \texttt{multiply\_integers} with the right arguments and mention the product in its reply. Failures on either the tool trace or the final text produce a counterexample at that assertion (Section~\ref{sec:counterexamples}). The rest of this section explains how those declarations are discovered, executed, and checked. Optional generative extensions (simulated users, fuzzing, shrinking) are described later in Section~\ref{sec:generative}.
 
 \subsection{End-to-End Pipeline}
 
-\emph{agent-spec-kit} is organised as a pipeline from decorated Python test modules through scenario execution to persisted results. The architecture keeps three concerns separate: discovering and running scenarios, normalising agent behaviour into typed events, and checking behaviour with composable matchers that produce structured failures when expectations are not met. Figure~\ref{fig:methodology-architecture} sketches that core path.
+\emph{agent-spec-kit} is organised as a pipeline from decorated Python test modules through scenario execution to persisted results. The architecture keeps three concerns separate, namely discovering and running scenarios, normalising agent behaviour into typed events, and checking behaviour with composable matchers that produce structured failures when expectations are not met. Figure~\ref{fig:methodology-architecture} sketches that core path.
 
 \begin{figure}[htbp]
   \centering
@@ -47,7 +47,7 @@ The fixture injects a LangGraph tutor wrapped as an \texttt{AdaptedAgent} so the
 
 Developers register fixtures and scenarios with decorators (\texttt{@fixture}, \texttt{@scenario}). The CLI command \texttt{agent-spec-kit run} discovers \texttt{test\_*.py} files, resolves fixture dependencies, and schedules one job per scenario case and repeat index. Each job builds a \texttt{Scenario} instance, runs the scenario function (which queues steps such as \texttt{user\_message} and \texttt{assert\_tool\_calls}), and calls \texttt{materialise()} to execute those steps in order.
 
-For each \texttt{user\_message}, the runner invokes \texttt{AdaptedAgent.run\_turn}, which returns a \texttt{TurnResult} with user-visible output and a tree of \texttt{AgentTurnEvent} and \texttt{ToolCallEvent} nodes. Assertion steps call \texttt{match.async\_check} on outputs, tool-call lists, or environment functions. On success the runner advances to the next queued step and eventually records a pass in the local result store; on failure the pipeline branches before that pass is written.
+For each \texttt{user\_message}, the runner invokes \texttt{AdaptedAgent.run\_turn}, which returns a \texttt{TurnResult} with user-visible output and a tree of \texttt{AgentTurnEvent} and \texttt{ToolCallEvent} nodes. Assertion steps call \texttt{match.async\_check} on outputs, tool-call lists, or environment functions. On success the runner advances to the next queued step and eventually records a pass in the local result store. On failure the pipeline branches before that pass is written.
 
 \subsection{Failure Path and Main Modules}
 

@@ -7,7 +7,7 @@ The rest of this section introduces the task catalogue and oracle lanes, then re
 
 \subsection{Task catalogue}
 
-The benchmark comprises fifty tasks (T01--T50) grouped into seven thematic categories. Table~\ref{tab:task-catalog-by-category} summarises coverage; Table~\ref{tab:representative-tasks} lists representative tasks that recur in the studies later in the chapter. The full catalogue appears in Appendix~\ref{app:full-task-catalog}.
+The benchmark comprises fifty tasks (T01--T50) grouped into seven thematic categories. Table~\ref{tab:task-catalog-by-category} summarises coverage. Table~\ref{tab:representative-tasks} lists representative tasks that recur in the studies later in the chapter. The full catalogue appears in Appendix~\ref{app:full-task-catalog}.
 
 \begin{table}[htbp]
 \centering
@@ -55,9 +55,9 @@ T50 & Adversarial & Partial account detail leaked before auth \\
 
 Each of the fifty tasks is exercised through four scenario variants that share the \emph{same} user messages and differ only in which assertions run. The lanes are output (O), state (S), trace (T), and full (F).
 
-Agent bugs do not always show up in the same place. A reply can pass a rubric while a tool is invoked with the wrong arguments; trace checks can fail while the customer-facing answer still sounds reasonable; store oracles can catch policy violations in application state that the reply never mentions. Splitting checks into lanes lets the evaluation compare how well each \emph{type} of assertion finds problems on the same dialogue: output-only scenarios approximate grading the final answer; trace and state lanes target tool choreography and side effects; the full lane (F) is the combined regression developers would run in practice. Later in the chapter, the fault-injection study (Section~\ref{sec:fault-detection}) reuses this split to measure which lanes catch injected faults and which miss them when only one surface is checked.
+Agent bugs do not always show up in the same place. A reply can pass a rubric while a tool is invoked with the wrong arguments. Trace checks can fail while the customer-facing answer still sounds reasonable. Store oracles can catch policy violations in application state that the reply never mentions. Splitting checks into lanes lets the evaluation compare how well each \emph{type} of assertion finds problems on the same dialogue. Output-only scenarios approximate grading the final answer. Trace and state lanes target tool choreography and side effects. The full lane (F) is the combined regression developers would run in practice. Later in the chapter, the fault-injection study (Section~\ref{sec:fault-detection}) reuses this split to measure which lanes catch injected faults and which miss them when only one surface is checked.
 
-Table~\ref{tab:oracle-lanes} maps each lane to the surface it inspects; the full scenario combines every check from the other three lanes at the same turn positions in the dialogue.
+Table~\ref{tab:oracle-lanes} maps each lane to the surface it inspects. The full scenario combines every check from the other three lanes at the same turn positions in the dialogue.
 
 \begin{table}[htbp]
 \centering
@@ -99,7 +99,7 @@ All lanes & 146 & 54 & 73\% \\
 \end{tabular}
 \end{table}
 
-Output checks pass on every task in this run: the agent's replies satisfy the rubrics when those are the only assertions enabled. Failures concentrate on trace, state, and full scenarios rather than on output alone. Twenty-seven tasks fail on at least one lane; common patterns are missing audit notes in the store, wrong tool order or line binding in the trace, state mutations that violate policy, and combined failures on long-horizon dialogues. Listing~\ref{lst:baseline-failure-audit} shows the counterexample box for one state-lane failure (task T21): the oracle names the violated rule, and the event trace shows that a credit was applied without the required audit note.
+Output checks pass on every task in this run. The agent's replies satisfy the rubrics when those are the only assertions enabled. Failures concentrate on trace, state, and full scenarios rather than on output alone. Twenty-seven tasks fail on at least one lane. Common patterns are missing audit notes in the store, wrong tool order or line binding in the trace, state mutations that violate policy, and combined failures on long-horizon dialogues. Listing~\ref{lst:baseline-failure-audit} shows the counterexample box for one state-lane failure (task T21). The oracle names the violated rule, and the event trace shows that a credit was applied without the required audit note.
 
 \begin{lstlisting}[caption={Captured failure box: state-oracle check on task T21 (missing audit note).},label=lst:baseline-failure-audit]
 +-------------------------- FAIL test_t21_state [1/1] ---------------------------+
@@ -117,4 +117,4 @@ Output checks pass on every task in this run: the agent's replies satisfy the ru
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-These figures describe the agent used in the rest of the chapter; they are not a leaderboard score. The fault-detection study in Section~\ref{sec:fault-detection} only injects faults on slots where this initial run passed, so injected faults are not confounded with failures the agent already exhibited.
+These figures describe the agent used in the rest of the chapter. They are not a leaderboard score. The fault-detection study in Section~\ref{sec:fault-detection} only injects faults on slots where this initial run passed, so injected faults are not confounded with failures the agent already exhibited.

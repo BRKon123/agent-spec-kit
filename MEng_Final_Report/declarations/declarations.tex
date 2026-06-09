@@ -11,7 +11,7 @@ Generative AI was used as an assistive tool during this project, not to produce 
 
 \medskip
 \noindent\textbf{Ethical Considerations}
-This project builds a testing framework for tool-using agents; it does not deploy one to real customers. The main ethical points are as follows.
+This project builds a testing framework for tool-using agents. It does not deploy one to real customers. The main ethical points are as follows.
 
 \begin{itemize}
     \item \textbf{Synthetic evaluation data.} All experiments used TelcoSupportBench, a fictional mobile customer-support domain. Customer names, line identifiers, and account details were invented for testing. No real subscriber data was collected or processed.
@@ -24,7 +24,7 @@ This project builds a testing framework for tool-using agents; it does not deplo
 
     \item \textbf{Tests are not a safety guarantee.} Scripted scenarios, user simulation, and mutation fuzzing only cover the tasks, personas, and oracles authors configure. Passing the suite may create false confidence, especially in customer support, billing, healthcare, or other settings where mistakes cause real harm. Automated tests should support expert oversight, not replace it.
 
-    \item \textbf{Generative and adversarial testing.} Simulated users and fuzz operators deliberately vary customer wording. Generated dialogues should be treated as test output: reviewed before sharing outside the team and not mistaken for real user communications. A small set of adversarial benchmark tasks stress policy adherence; they are not a substitute for production safeguards against abuse or misuse.
+    \item \textbf{Generative and adversarial testing.} Simulated users and fuzz operators deliberately vary customer wording. Generated dialogues should be treated as test output. Review them before sharing outside the team and do not mistake them for real user communications. A small set of adversarial benchmark tasks stress policy adherence. They are not a substitute for production safeguards against abuse or misuse.
 
     \item \textbf{Responsible use.} \emph{agent-spec-kit} helps developers find bugs before release. It does not decide whether an agent should launch, which users it should serve, or what policies it must follow. Those decisions remain with the product team.
 \end{itemize}

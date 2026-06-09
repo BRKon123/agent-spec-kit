@@ -1,15 +1,15 @@
 \section{Counterexamples and Diagnosability}
 \label{sec:counterexamples}
 
-Section~\ref{sec:design-goals} argued that scalar metrics and raw traces leave a gap when debugging custom agents. This section describes how \emph{agent-spec-kit} closes that gap at the assertion that failed. A \emph{counterexample} is a structured failure report attached to one scenario assertion: each failed \texttt{assert\_output}, \texttt{assert\_tool\_calls}, \texttt{forbid\_tool\_calls}, or \texttt{assert\_that} yields a \texttt{Counterexample} with headline, location, path, expected versus actual, notes, and a bounded event trace, intended to support an edit-test loop on prompts, graphs, and policies.
+Section~\ref{sec:design-goals} argued that scalar metrics and raw traces leave a gap when debugging custom agents. This section describes how \emph{agent-spec-kit} closes that gap at the assertion that failed. A \emph{counterexample} is a structured failure report attached to one scenario assertion. Each failed \texttt{assert\_output}, \texttt{assert\_tool\_calls}, \texttt{forbid\_tool\_calls}, or \texttt{assert\_that} yields a \texttt{Counterexample} with headline, location, path, expected versus actual, notes, and a bounded event trace, intended to support an edit-test loop on prompts, graphs, and policies.
 
 \subsection{Design Principles}
 
-A useful failure report should locate the failing step and turn, pinpoint the field path inside structured data, contrast expected and actual values, provide enough transcript and event context to see what the agent did, and phrase the headline so a developer can infer what to change. Observability tools excel at the third item in isolation; they show latency, tokens, and nested spans (Figure~\ref{fig:langfuse-trace}). Assertion-local counterexamples add the first two items at the check that was written in the scenario, so the developer does not manually correlate spans with test intent.
+A useful failure report should locate the failing step and turn, pinpoint the field path inside structured data, contrast expected and actual values, provide enough transcript and event context to see what the agent did, and phrase the headline so a developer can infer what to change. Observability tools excel at the third item in isolation. They show latency, tokens, and nested spans (Figure~\ref{fig:langfuse-trace}). Assertion-local counterexamples add the first two items at the check that was written in the scenario, so the developer does not manually correlate spans with test intent.
 
 \subsection{Failure Pipeline}
 
-When a scenario assertion fails, the framework first captures the precise mismatch: a JSON path to the offending field where one applies, a short explanation of what rule broke, and witness data such as expected versus actual tool names when that helps. It then records where in the script the failure occurred (an output, tool, environment, or runtime check; which dialogue turn; which assertion after that turn) and keeps a bounded snapshot of what the agent actually produced. Those pieces are assembled into the counterexample rendered in the CLI and web UI. Table~\ref{tab:counterexample-fields} lists the main fields in that report and why each exists.
+When a scenario assertion fails, the framework first captures the precise mismatch: a JSON path to the offending field where one applies, a short explanation of what rule broke, and witness data such as expected versus actual tool names when that helps. It then records where in the script the failure occurred (an output, tool, environment, or runtime check, which dialogue turn, and which assertion after that turn) and keeps a bounded snapshot of what the agent actually produced. Those pieces are assembled into the counterexample rendered in the CLI and web UI. Table~\ref{tab:counterexample-fields} lists the main fields in that report and why each exists.
 
 \begin{table}[htbp]
 \centering
@@ -48,11 +48,11 @@ The same structure is rendered in the CLI with Rich panels and in the web UI as 
   \label{fig:failure-pipeline}
 \end{figure}
 
-If several matcher errors are present, the headline often uses the first message while the reported path prefers the deepest path, and compound messages combine outer and inner explanations (\texttt{outer; mismatch at \$.foo: inner}). That behaviour matters when an object fails at a nested field: the developer sees both the high-level mismatch and the precise key.
+If several matcher errors are present, the headline often uses the first message while the reported path prefers the deepest path, and compound messages combine outer and inner explanations (\texttt{outer; mismatch at \$.foo: inner}). That behaviour matters when an object fails at a nested field. The developer sees both the high-level mismatch and the precise key.
 
 \subsection{Error Message Mechanics}
 
-Table~\ref{tab:failure-hints} relates common failure kinds to what appears in the UI or terminal and to typical remediation. The table is illustrative; the implementation fills in actual tool names and paths from witnesses.
+Table~\ref{tab:failure-hints} relates common failure kinds to what appears in the UI or terminal and to typical remediation. The table is illustrative. The implementation fills in actual tool names and paths from witnesses.
 
 \begin{table}[htbp]
 \centering
@@ -69,7 +69,7 @@ Expected vs.\ actual argument field &
 Tool argument construction or retrieval context. \\
 \texttt{forbid\_tool\_calls} &
 Named forbidden tool present &
-Policy violation; remove or gate the tool. \\
+Policy violation. Remove or gate the tool. \\
 \texttt{assert\_that} &
 Python assert message from oracle &
 Environment side effect or ordering bug. \\
@@ -85,22 +85,20 @@ Infrastructure, tool exception, or bad observation. \\
 \label{tab:failure-hints}
 \end{table}
 
-Environment-only failures may not have a JSON path; the counterexample still records the step kind and human-readable location detail (for example ``second \texttt{assert\_tool\_calls} after turn 3 (agent turn)'').
+Environment-only failures may not have a JSON path. The counterexample still records the step kind and human-readable location detail (for example ``second \texttt{assert\_tool\_calls} after turn 3 (agent turn)'').
 
-For display, the trace window keeps the last few agent turns with interleaved user lines so panels stay readable. LangGraph adapters sometimes emit redundant root event shells; the trace builder flattens those so tool nodes appear directly under the relevant user line in the tree.
-
-Tool-call failures often include witness data listing expected and actual tool names in order, which is easier to scan than dumping the entire trace twice; Section~\ref{sec:matcher-spec-repr} explains in more detail how path, witness, and author spec combine into the \texttt{Expected} and \texttt{Actual} blocks.
+Tool-call failures often include witness data listing expected and actual tool names in order, which is easier to scan than dumping the entire trace twice. Section~\ref{sec:matcher-spec-repr} explains in more detail how path, witness, and author spec combine into the \texttt{Expected} and \texttt{Actual} blocks.
 
 \subsection{Readable Expected Lines for Tool Failures}
 \label{sec:matcher-spec-repr}
 
-Tool assertions are written as rich specs: which tools should run, in what order, and with which arguments. When a check fails, the framework still knows the exact field that broke, but the default error text is often vague (for example ``each list item to match the expected matcher at the same index''). The counterexample therefore prints the author's spec back in readable form, cut down to the part around that failure.
+Tool assertions are written as rich specs that state which tools should run, in what order, and with which arguments. When a check fails, the framework still knows the exact field that broke, but the default error text is often vague (for example ``each list item to match the expected matcher at the same index''). The counterexample therefore prints the author's spec back in readable form, cut down to the part around that failure.
 
-The failure panel includes a \texttt{Path} line such as \texttt{\$[1].args.line\_id}, which names the precise slot that did not match: the second tool in the list, its \texttt{args}, and the \texttt{line\_id} field inside them. The display step uses that path as a guide. It shows the expected value at that slot in full, plus enough of the surrounding spec to explain the policy, and shortens everything else. Other tools in the list may appear as names only; unrelated argument fields may be left out or marked with \texttt{...}. The \texttt{Expected} block starts with a one-line hint (\texttt{equality: expected 'LINE-001'}) and then the trimmed spec. The \texttt{Actual} block shows what the agent recorded instead (here \texttt{LINE-002}).
+The failure panel includes a \texttt{Path} line such as \texttt{\$[1].args.line\_id}, which names the precise slot that did not match (the second tool in the list, its \texttt{args}, and the \texttt{line\_id} field inside them). The display step uses that path as a guide. It shows the expected value at that slot in full, plus enough of the surrounding spec to explain the policy, and shortens everything else. Other tools in the list may appear as names only. Unrelated argument fields may be left out or marked with \texttt{...}. The \texttt{Expected} block starts with a one-line hint (\texttt{equality: expected 'LINE-001'}) and then the trimmed spec. The \texttt{Actual} block shows what the agent recorded instead (here \texttt{LINE-002}).
 
-Implementation-wise, the printer walks the spec in the same top-down order as the assertion (tool list, then each tool's fields, then nested \texttt{args} keys). At every step it compares its current position to the failure path. Segments that lie on the path are expanded; segments that branch away are \emph{stubbed} to a short form (a tool name only, or \texttt{...} for a skipped field). Segments far from the failure may be dropped entirely if the panel would otherwise grow too long. The result is not a second copy of the whole spec, but a single pass that keeps what the path points at and thins out the rest.
+Implementation-wise, the printer walks the spec in the same top-down order as the assertion (tool list, then each tool's fields, then nested \texttt{args} keys). At every step it compares its current position to the failure path. Segments that lie on the path are expanded. Segments that branch away are \emph{stubbed} to a short form (a tool name only, or \texttt{...} for a skipped field). Segments far from the failure may be dropped entirely if the panel would otherwise grow too long. The result is not a second copy of the whole spec, but a single pass that keeps what the path points at and thins out the rest.
 
-Listing~\ref{lst:matcher-spec-repr-example} walks through a two-tool trace where \texttt{line\_id} was wrong on the second call: expected \texttt{LINE-001}, got \texttt{LINE-002}. Only the second tool's \texttt{args} are expanded; the first tool is shown by name alone.
+Listing~\ref{lst:matcher-spec-repr-example} walks through a two-tool trace where \texttt{line\_id} was wrong on the second call (expected \texttt{LINE-001}, got \texttt{LINE-002}). Only the second tool's \texttt{args} are expanded. The first tool is shown by name alone.
 
 \begin{lstlisting}[caption={Example failure panel excerpt: path, \texttt{Expected}, and \texttt{Actual} for a tool-argument mismatch.},label=lst:matcher-spec-repr-example,basicstyle=\small\ttfamily]
 Path: $[1].args.line_id
