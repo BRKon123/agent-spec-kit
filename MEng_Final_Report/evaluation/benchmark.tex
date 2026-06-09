@@ -103,17 +103,17 @@ Output checks pass on every task in this run. The agent's replies satisfy the ru
 
 \begin{lstlisting}[caption={Captured failure box: state-oracle check on task T21 (missing audit note).},label=lst:baseline-failure-audit]
 +-------------------------- FAIL test_t21_state [1/1] ---------------------------+
-| Check: assert_that                                                             |
-| Where: 2nd assert_that after turn #2 (agentturn) (environment / fixture check) |
-| Expected: assert_that failed: expected at least one audit note                 |
-| ----------------------------------------                                       |
-| Event trace                                                                    |
-| +-- UserTurn: We've had a long outage at E1 6AN and I'm already verified on... |
-| +-- AgentTurn: I understand you're requesting goodwill compensation for the... |
-|     +-- authenticate_customer                                                  |
-|     +-- check_outage                                                           |
-|     +-- run_billing_policy_specialist                                          |
-|     |     +-- ... (billing specialist child tools omitted) ...                 |
+Check: assert_that
+Where: 2nd assert_that after turn #2 (agentturn) (environment / fixture check)
+Expected: assert_that failed: expected at least one audit note
+----------------------------------------
+Event trace
++-- UserTurn: We've had a long outage at E1 6AN and I'm already verified on...
++-- AgentTurn: I understand you're requesting goodwill compensation for the...
+    +-- authenticate_customer
+    +-- check_outage
+    +-- run_billing_policy_specialist
+    |     +-- ... (billing specialist child tools omitted) ...
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 

@@ -1,4 +1,4 @@
-\documentclass[a4paper, twoside]{report}
+\documentclass[a4paper, twoside, 11pt]{report}
 
 %% Language and font encodings
 \usepackage[english]{babel}
@@ -7,7 +7,7 @@
 \usepackage{lmodern}
 
 %% Sets page size and margins
-\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm,marginparwidth=1.75cm]{geometry}
 
 %% Useful packages
 \usepackage{amsmath}
@@ -26,8 +26,10 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric}
 \usepackage{listings}
+%% Fixed listing size: matches \small lmtt under the previous 10pt document class.
+\newcommand{\listingfont}{\fontfamily{lmtt}\fontsize{9}{11}\selectfont}
 \lstset{
-  basicstyle=\fontfamily{lmtt}\selectfont\small,
+  basicstyle=\listingfont,
   breaklines=true,
   frame=single,
   columns=fixed,

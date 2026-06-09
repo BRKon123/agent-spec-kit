@@ -125,64 +125,64 @@ Specimen C02 requires \texttt{run\_network\_diagnostics\_specialist.result} to c
 
 \begin{lstlisting}[caption={C02 structured object: scenario DSL, imperative pytest, and Promptfoo config (grades in Table~\ref{tab:expressiveness-authoring-clarity}).},label=lst:c02-clarity-contrast]
 +------------------------ agent_spec_kit (C02)  grade A -------------------------+
-| (
-|     s.user_message("check")
-|     .assert_tool_calls(
-|         [
-|             m.tool_call(
-|                 "run_network_diagnostics_specialist",
-|                 result=m.object(
-|                     {
-|                         "severity": m.one_of("high"),
-|                         "recommended_action": m.one_of("create_ticket"),
-|                         "escalation_reason": m.string(min_len=1),
-|                     },
-|                     extra="forbid",
-|                 ),
-|             ),
-|         ],
-|         ordered=True,
-|         allow_extras=True,
-|     )
-| )
+(
+    s.user_message("check")
+    .assert_tool_calls(
+        [
+            m.tool_call(
+                "run_network_diagnostics_specialist",
+                result=m.object(
+                    {
+                        "severity": m.one_of("high"),
+                        "recommended_action": m.one_of("create_ticket"),
+                        "escalation_reason": m.string(min_len=1),
+                    },
+                    extra="forbid",
+                ),
+            ),
+        ],
+        ordered=True,
+        allow_extras=True,
+    )
+)
 +--------------------------------------------------------------------------------+
 +------------------------- pytest_plain (C02)  grade B --------------------------+
-| tool = find_tool(walk_root_tools(trace), "run_network_diagnostics_specialist")
-| if tool is None:
-|     assert False
-| r = tool.get("result")
-| if not isinstance(r, dict):
-|     assert False
-| keys = set(r.keys())
-| if keys != _C02_REQUIRED_KEYS:
-|     assert False
-| ok = (
-|     r.get("severity") == "high"
-|     and r.get("recommended_action") == "create_ticket"
-|     and len(str(r.get("escalation_reason", ""))) >= 1
-| )
-| assert ok
+tool = find_tool(walk_root_tools(trace), "run_network_diagnostics_specialist")
+if tool is None:
+    assert False
+r = tool.get("result")
+if not isinstance(r, dict):
+    assert False
+keys = set(r.keys())
+if keys != _C02_REQUIRED_KEYS:
+    assert False
+ok = (
+    r.get("severity") == "high"
+    and r.get("recommended_action") == "create_ticket"
+    and len(str(r.get("escalation_reason", ""))) >= 1
+)
+assert ok
 +--------------------------------------------------------------------------------+
 +--------------------------- promptfoo (C02)  grade B ---------------------------+
-|   - vars: {check_id: C02}                                                      |
-|     options:                                                                   |
-|       transform: |                                                             |
-|         (() => {                                                               |
-|           const trace = JSON.parse(output);                                    |
-|           const t = (trace.tools || []).find(                                  |
-|             (x) => x.name === 'run_network_diagnostics_specialist');          |
-|           return JSON.stringify(t?.result ?? null);                            |
-|         })()                                                                   |
-|     assert:                                                                    |
-|       - type: is-json                                                          |
-|         value:                                                                 |
-|           type: object                                                         |
-|           additionalProperties: false                                          |
-|           required: [severity, recommended_action, escalation_reason]        |
-|           properties:                                                          |
-|             severity: { const: high }                                          |
-|             recommended_action: { const: create_ticket }                       |
-|             escalation_reason: { type: string, minLength: 1 }                  |
+  - vars: {check_id: C02}
+    options:
+      transform: |
+        (() => {
+          const trace = JSON.parse(output);
+          const t = (trace.tools || []).find(
+            (x) => x.name === 'run_network_diagnostics_specialist');
+          return JSON.stringify(t?.result ?? null);
+        })()
+    assert:
+      - type: is-json
+        value:
+          type: object
+          additionalProperties: false
+          required: [severity, recommended_action, escalation_reason]
+          properties:
+            severity: { const: high }
+            recommended_action: { const: create_ticket }
+            escalation_reason: { type: string, minLength: 1 }
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
@@ -245,40 +245,40 @@ Multi-turn memory & A & D & B & B & B & B & B & B \\
 
 \begin{lstlisting}[caption={C06 forbidden tool-call: captured failure boxes.},label=lst:c06-failures]
 +------------------------ agent_spec_kit (C06)  grade A -------------------------+
-| Check: forbid_tool_calls                                                       |
-| Where: 1st forbid_tool_calls after turn #1 (forbidden tool call patterns)      |
-| Path: $[1]                                                                     |
-| Expected:                                                                      |
-| forbidden_tool_call: expected no 'apply_bill_credit'                           |
-| must not call tool_call('apply_bill_credit')                                   |
-| Actual:                                                                        |
-|   [0] get_customer_profile(customer_id='CUST-OTHER') -> None                   |
-|   [1] apply_bill_credit(amount=10) -> ok                                       |
-| forbidden tool call 'apply_bill_credit' found at index 1 (actual tool 'apply_b |
-| ill_credit')                                                                   |
+Check: forbid_tool_calls
+Where: 1st forbid_tool_calls after turn #1 (forbidden tool call patterns)
+Path: $[1]
+Expected:
+forbidden_tool_call: expected no 'apply_bill_credit'
+must not call tool_call('apply_bill_credit')
+Actual:
+  [0] get_customer_profile(customer_id='CUST-OTHER') -> None
+  [1] apply_bill_credit(amount=10) -> ok
+forbidden tool call 'apply_bill_credit' found at index 1 (actual tool 'apply_b
+ill_credit')
 +--------------------------------------------------------------------------------+
 +------------------------- pytest_plain (C06)  grade D --------------------------+
-| AssertionError                                                                 |
+AssertionError
 +--------------------------------------------------------------------------------+
 +--------------------------- langsmith (C06)  grade C ---------------------------+
-| {'key': 'forbidden_tools', 'score': 0}                                         |
+{'key': 'forbidden_tools', 'score': 0}
 +--------------------------------------------------------------------------------+
 +------------------------ pydantic_evals (C06)  grade B -------------------------+
-| forbidden span apply_bill_credit present                                       |
+forbidden span apply_bill_credit present
 +--------------------------------------------------------------------------------+
 +--------------------------- promptfoo (C06)  grade B ---------------------------+
-| not-trajectory:tool-used: forbidden tool apply_bill_credit present              |
+not-trajectory:tool-used: forbidden tool apply_bill_credit present
 +--------------------------------------------------------------------------------+
 +--------------------------- braintrust (C06)  grade C ---------------------------+
-| {'key': 'C06', 'score': 0.0}                                                   |
+{'key': 'C06', 'score': 0.0}
 +--------------------------------------------------------------------------------+
 +----------------------------- ragas (C06)  grade B -----------------------------+
-| forbidden tool 'apply_bill_credit' present in ['get_customer_profile',         |
-| 'apply_bill_credit']                                                           |
+forbidden tool 'apply_bill_credit' present in ['get_customer_profile',
+'apply_bill_credit']
 +--------------------------------------------------------------------------------+
 +--------------------------- deepeval (C06)  grade B ----------------------------+
-| forbidden tool 'apply_bill_credit' present in ['get_customer_profile',         |
-| 'apply_bill_credit']                                                           |
+forbidden tool 'apply_bill_credit' present in ['get_customer_profile',
+'apply_bill_credit']
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
@@ -286,44 +286,44 @@ Multi-turn memory & A & D & B & B & B & B & B & B \\
 
 \begin{lstlisting}[caption={C07 tool argument matching: captured failure boxes.},label=lst:c07-failures]
 +------------------------ agent_spec_kit (C07)  grade A -------------------------+
-| Check: assert_tool_calls                                                       |
-| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
-| Path: $[1].args.line_id                                                        |
-| Expected:                                                                      |
-| equality: expected 'LINE-001'                                                  |
-| [                                                                              |
-|   [0] tool_call("authenticate_customer"),                                      |
-|   [1] tool_call('get_line_status', args=object({'line_id': 'LINE-001'}))       |
-| ]                                                                              |
-| Actual:                                                                        |
-|   [0] authenticate_customer() -> ok                                            |
-|   [1] get_line_status(line_id='LINE-002') -> {data_enabled=True}               |
-| could not match expected element at index 1 while preserving order             |
-| searched actual positions 1 through 1                                          |
-| closest underlying mismatch was (at $[1].args.line_id): value does not equal e |
-| xpected                                                                        |
-| value does not equal expected                                                  |
-| (+1 more matcher error(s))                                                     |
+Check: assert_tool_calls
+Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)
+Path: $[1].args.line_id
+Expected:
+equality: expected 'LINE-001'
+[
+  [0] tool_call("authenticate_customer"),
+  [1] tool_call('get_line_status', args=object({'line_id': 'LINE-001'}))
+]
+Actual:
+  [0] authenticate_customer() -> ok
+  [1] get_line_status(line_id='LINE-002') -> {data_enabled=True}
+could not match expected element at index 1 while preserving order
+searched actual positions 1 through 1
+closest underlying mismatch was (at $[1].args.line_id): value does not equal e
+xpected
+value does not equal expected
+(+1 more matcher error(s))
 +--------------------------------------------------------------------------------+
 +------------------------- pytest_plain (C07)  grade B --------------------------+
-| get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'               |
+get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
 +--------------------------------------------------------------------------------+
 +--------------------------- langsmith (C07)  grade B ---------------------------+
-| {'key': 'tool_args', 'score': 0}                                               |
+{'key': 'tool_args', 'score': 0}
 +--------------------------------------------------------------------------------+
 +------------------------ pydantic_evals (C07)  grade B -------------------------+
-| get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'               |
+get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
 +--------------------------------------------------------------------------------+
 +--------------------------- promptfoo (C07)  grade B ---------------------------+
-| trajectory:tool-args-match get_line_status.line_id expected 'LINE-001', ...  |
+trajectory:tool-args-match get_line_status.line_id expected 'LINE-001', ...
 +--------------------------------------------------------------------------------+
 +----------------------------- ragas (C07)  grade C -----------------------------+
-| 0.5                                                                            |
+0.5
 +--------------------------------------------------------------------------------+
 +--------------------------- deepeval (C07)  grade B ----------------------------+
-| [ Tool Calling Reason: Incorrect tool usage: out-of-order tools                |
-| ['get_line_status']; expected ['authenticate_customer', 'get_line_status'],    |
-| called ['authenticate_customer', 'get_line_status']. ... ]                     |
+[ Tool Calling Reason: Incorrect tool usage: out-of-order tools
+['get_line_status']; expected ['authenticate_customer', 'get_line_status'],
+called ['authenticate_customer', 'get_line_status']. ... ]
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
@@ -331,39 +331,39 @@ Multi-turn memory & A & D & B & B & B & B & B & B \\
 
 \begin{lstlisting}[caption={C10 unordered sibling tools: captured failure boxes.},label=lst:c10-failures]
 +------------------------ agent_spec_kit (C10)  grade A -------------------------+
-| Check: assert_tool_calls                                                       |
-| Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)      |
-| Path: $                                                                         |
-| Expected:                                                                      |
-| list_too_short: expected >= 2                                                  |
-| [                                                                              |
-|   [0] tool_call('heartbeat_ping'),                                             |
-|   [1] tool_call('get_line_status')                                             |
-| ]                                                                              |
-| Actual:                                                                        |
-|   [0] heartbeat_ping() -> ok                                                   |
-| list is too short: need at least 2 item(s) to match all expected values (order |
-|  does not matter)                                                              |
+Check: assert_tool_calls
+Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)
+Path: $
+Expected:
+list_too_short: expected >= 2
+[
+  [0] tool_call('heartbeat_ping'),
+  [1] tool_call('get_line_status')
+]
+Actual:
+  [0] heartbeat_ping() -> ok
+list is too short: need at least 2 item(s) to match all expected values (order
+ does not matter)
 +--------------------------------------------------------------------------------+
 +------------------------- pytest_plain (C10)  grade D --------------------------+
-| AssertionError                                                                 |
+AssertionError
 +--------------------------------------------------------------------------------+
 +--------------------------- langsmith (C10)  grade B ---------------------------+
-| {'key': 'unordered_siblings', 'score': 0}                                      |
+{'key': 'unordered_siblings', 'score': 0}
 +--------------------------------------------------------------------------------+
 +------------------------ pydantic_evals (C10)  grade B -------------------------+
-| tool sequence expected ['heartbeat_ping', 'get_line_status'], ...              |
+tool sequence expected ['heartbeat_ping', 'get_line_status'], ...
 +--------------------------------------------------------------------------------+
 +--------------------------- promptfoo (C10)  grade B ---------------------------+
-| trajectory:tool-used: missing tools ['get_line_status']                        |
+trajectory:tool-used: missing tools ['get_line_status']
 +--------------------------------------------------------------------------------+
 +----------------------------- ragas (C10)  grade B -----------------------------+
-| missing required tools ['get_line_status'] in ['heartbeat_ping']               |
+missing required tools ['get_line_status'] in ['heartbeat_ping']
 +--------------------------------------------------------------------------------+
 +--------------------------- deepeval (C10)  grade B ----------------------------+
-| [ Tool Calling Reason: Incomplete tool usage: missing tools                    |
-| [ToolCall( name="get_line_status" )]; expected ['heartbeat_ping',              |
-| 'get_line_status'], called ['heartbeat_ping']. ... ]                             |
+[ Tool Calling Reason: Incomplete tool usage: missing tools
+[ToolCall( name="get_line_status" )]; expected ['heartbeat_ping',
+'get_line_status'], called ['heartbeat_ping']. ... ]
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 

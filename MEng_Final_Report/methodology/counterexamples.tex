@@ -100,7 +100,7 @@ Implementation-wise, the printer walks the spec in the same top-down order as th
 
 Listing~\ref{lst:matcher-spec-repr-example} walks through a two-tool trace where \texttt{line\_id} was wrong on the second call (expected \texttt{LINE-001}, got \texttt{LINE-002}). Only the second tool's \texttt{args} are expanded. The first tool is shown by name alone.
 
-\begin{lstlisting}[caption={Example failure panel excerpt: path, \texttt{Expected}, and \texttt{Actual} for a tool-argument mismatch.},label=lst:matcher-spec-repr-example,basicstyle=\small\ttfamily]
+\begin{lstlisting}[caption={Example failure panel excerpt: path, \texttt{Expected}, and \texttt{Actual} for a tool-argument mismatch.},label=lst:matcher-spec-repr-example,basicstyle=\listingfont]
 Path: $[1].args.line_id
 Expected:
 equality: expected 'LINE-001'

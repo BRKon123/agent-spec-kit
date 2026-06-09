@@ -47,19 +47,19 @@ F10 Wrong issue binding & 1/4 (25\%) & 0/4 (0\%) & 1/3 (33\%) & 4/4 (100\%) \\
 
 \begin{lstlisting}[caption={F02/T46 state-oracle failure: ticket written to stale \texttt{line\_id}; none on corrected line (captured panel).},label=lst:fault-detection-trace]
 +------------------------ FAIL test_f02_t46_state [1/1] -------------------------+
-| Check: assert_that                                                           |
-| Where: 1st assert_that after turn #6 (agentturn) (environment / fixture check)|
-| Expected: assert_that failed: expected ticket for line 'LINE-0046'            |
-| Actual: (fixture check; see Expected)                                        |
-| ----------------------------------------                                       |
-| Event trace                                                                    |
-| +-- UserTurn: Please open a support ticket on LINE-WRONG; my work phone ...  |
-| +-- UserTurn: Sorry, that is my old line; I meant my current work phone ...  |
-| +-- UserTurn: Yes use LINE-0046. Account CUST-046, verification ...; go ...  |
-| +-- AgentTurn: Ticket created successfully. Line: LINE-0046, Ticket TCK-00001 |
-|     +-- authenticate_customer                                                  |
-|     +-- create_support_ticket                                                  |
-|           result: { "ok": true, "ticket_id": "TCK-00001", "status": "open" }   |
+Check: assert_that
+Where: 1st assert_that after turn #6 (agentturn) (environment / fixture check)|
+Expected: assert_that failed: expected ticket for line 'LINE-0046'
+Actual: (fixture check; see Expected)
+----------------------------------------
+Event trace
++-- UserTurn: Please open a support ticket on LINE-WRONG; my work phone ...
++-- UserTurn: Sorry, that is my old line; I meant my current work phone ...
++-- UserTurn: Yes use LINE-0046. Account CUST-046, verification ...; go ...
++-- AgentTurn: Ticket created successfully. Line: LINE-0046, Ticket TCK-00001
+    +-- authenticate_customer
+    +-- create_support_ticket
+          result: { "ok": true, "ticket_id": "TCK-00001", "status": "open" }
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 

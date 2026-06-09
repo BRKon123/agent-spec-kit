@@ -115,27 +115,27 @@ AGENT: ... Escalated ticket TCK-00001 ... specialist will review ... and
 
 \begin{lstlisting}[caption={Captured failure box: T42 simulation (\texttt{multi\_issue\_user}), state oracle at segment boundary.},label=lst:t42-sim-failure]
 +-------------------------- FAIL T42 simulation [1/1] ---------------------------+
-| Check: assert_that                                                             |
-| Where: 2nd assert_that after turn #2 (agentturn) (environment / fixture check) |
-| Expected: assert_that failed: expected zero tickets, found 1                   |
-| Actual:                                                                        |
-|   (fixture check on ticket store; see event trace)                             |
-| ----------------------------------------                                       |
-| Event trace                                                                    |
-| +-- UserTurn: Hi, I'm on LINE-0042 and my mobile data isn't working at all...  |
-| +-- AgentTurn: ... Authentication completed ... Created support ticket         |
-| TCK-00001                                                                      |
-|     +-- authenticate_customer                                                  |
-|     +-- check_outage                                                           |
-|     +-- run_line_diagnostic                                                    |
-|     +-- send_troubleshooting_step                                              |
-|     +-- record_user_action                                                     |
-|     +-- create_support_ticket                                                  |
-| +-- UserTurn: Yes--please escalate TCK-00001 and add a note ... laundry ...    |
-| +-- AgentTurn: ... Escalated ticket TCK-00001 ... replacement options ...      |
-|     +-- authenticate_customer                                                  |
-|     +-- escalate_ticket                                                        |
-|     +-- add_audit_note                                                         |
+Check: assert_that
+Where: 2nd assert_that after turn #2 (agentturn) (environment / fixture check)
+Expected: assert_that failed: expected zero tickets, found 1
+Actual:
+  (fixture check on ticket store; see event trace)
+----------------------------------------
+Event trace
++-- UserTurn: Hi, I'm on LINE-0042 and my mobile data isn't working at all...
++-- AgentTurn: ... Authentication completed ... Created support ticket
+TCK-00001
+    +-- authenticate_customer
+    +-- check_outage
+    +-- run_line_diagnostic
+    +-- send_troubleshooting_step
+    +-- record_user_action
+    +-- create_support_ticket
++-- UserTurn: Yes--please escalate TCK-00001 and add a note ... laundry ...
++-- AgentTurn: ... Escalated ticket TCK-00001 ... replacement options ...
+    +-- authenticate_customer
+    +-- escalate_ticket
+    +-- add_audit_note
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
@@ -290,25 +290,25 @@ AGENT: Sure--please provide your customer_id and verification_token ... so I can
 
 \begin{lstlisting}[caption={Captured failure box: T45 fuzz (\texttt{drop\_required\_fact}), tool oracle after second segment.},label=lst:t45-fuzz-failure]
 +-------------------------- FAIL T45 fuzz trial [1/1] ---------------------------+
-| Check: assert_tool_calls                                                       |
-| Where: 1st assert_tool_calls after turn #4 (agentturn) (tool trace)            |
-| Path: $[0]                                                                     |
-| Expected:                                                                      |
-| missing_element: expected expected value to appear after the previous match    |
-| [[0] tool_call("authenticate_customer")]                                       |
-| Actual:                                                                        |
-|   (no tool calls)                                                              |
-| ----------------------------------------                                       |
-| Event trace                                                                    |
-| +-- UserTurn: What plan am I on? My line has not been working properly either. |
-| +-- AgentTurn: ... verify your identity first ... (no tools)                   |
-| +-- UserTurn: I do not have my verification code with me right now ...         |
-| +-- AgentTurn: ... can't share account details without verifying ... (no tools)  |
-| +-- UserTurn: Fine -- authenticate me.                                         |
-| +-- AgentTurn: ... provide your customer_id and verification_token ...         |
-|     (no tools)                                                                 |
-| +-- UserTurn: Now please check the line and tell me the plan name.             |
-| +-- AgentTurn: ... need to verify your account first ... (no tools)            |
+Check: assert_tool_calls
+Where: 1st assert_tool_calls after turn #4 (agentturn) (tool trace)
+Path: $[0]
+Expected:
+missing_element: expected expected value to appear after the previous match
+[[0] tool_call("authenticate_customer")]
+Actual:
+  (no tool calls)
+----------------------------------------
+Event trace
++-- UserTurn: What plan am I on? My line has not been working properly either.
++-- AgentTurn: ... verify your identity first ... (no tools)
++-- UserTurn: I do not have my verification code with me right now ...
++-- AgentTurn: ... can't share account details without verifying ... (no tools)
++-- UserTurn: Fine -- authenticate me.
++-- AgentTurn: ... provide your customer_id and verification_token ...
+    (no tools)
++-- UserTurn: Now please check the line and tell me the plan name.
++-- AgentTurn: ... need to verify your account first ... (no tools)
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
