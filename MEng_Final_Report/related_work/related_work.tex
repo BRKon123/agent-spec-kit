@@ -39,7 +39,7 @@ A related group of tools focuses on observability rather than evaluation alone. 
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.80\textwidth]{figures/langfuse_example_trace.png}
+  \includegraphics[width=0.68\textwidth]{figures/langfuse_example_trace.png}
   \caption{Example Langfuse trace for a RAG-style QA request: nested observations record retrieval (embedding and vector-store lookup), prompt retrieval, and final generation, with per-step latency, token usage, inputs, outputs, and cost \cite{langfuseDocs}.}
   \label{fig:langfuse-trace}
 \end{figure}
@@ -54,14 +54,14 @@ Existing libraries cover scoring, metrics, traces, and monitoring, but they leav
 
 \begin{itemize}
     \item \textbf{Final-output evaluation hides agent failures.}
-    Benchmarks and LLM judges compare isolated inputs and replies \cite{liang2022holistic,liu2023geval,zheng2023judging}, but that is not enough for tool-using agents.
+    Benchmarks and LLM judges compare isolated inputs and replies \citep{liang2022helm,liu2023geval}, but that is not enough for tool-using agents.
     \begin{itemize}
         \item A plausible final answer can hide wrong tools, skipped steps, or invalid state, while a terse reply may still reflect a correct trajectory.
         \item Failures often collapse to a single score, leaving the developer to reconstruct \emph{where} the trace went wrong.
     \end{itemize}
 
     \item \textbf{Benchmarks show the problem but do not supply reusable test infrastructure.}
-    Agent benchmarks have made trace- and state-aware evaluation visible \cite{liu2023agentbench,zhou2023webarena,yao2024taubench,trivedi2024appworld}.
+    Agent benchmarks have made trace- and state-aware evaluation visible \citep{yao2024taubench,trivedi2024appworld}.
     \begin{itemize}
         \item They are fixed leaderboards, not behavioural contracts a domain team can rerun on every change.
         \item Developers need executable scenarios with explicit oracles, not only scores on benchmark-chosen tasks.
@@ -71,8 +71,7 @@ Existing libraries cover scoring, metrics, traces, and monitoring, but they leav
     Eval setup often spans datasets, graders, trace assertions, and runner config in separate places.
     \begin{itemize}
         \item Teammates must jump between files to see what is actually being tested.
-        \item For multi-turn agents, the natural unit is the conversation, with message, agent turn, checks, then the next turn.
-        \item What is missing is one declarative script with dialogue and oracles after each turn, repeats included.
+        \item For multi-turn agents, the natural unit is the conversation (message, agent turn, checks, then the next turn), but what is missing is one declarative script with dialogue and oracles after each turn, repeats included.
     \end{itemize}
 
     \item \textbf{Multi-surface checks are awkward to express as one coherent scenario.}
@@ -103,7 +102,7 @@ Taken together, what is missing is concise, scenario-style tooling that lets tea
 \section{Motivation for Agent-Spec-Kit}
 \label{sec:agent-spec-kit-motivation}
 
-Chapter~\ref{chap:background} argues that agent evaluation must go beyond final answers. Traces, tool use, environment state, and repeated runs all matter. Interactive benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why in realistic settings \cite{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}. Software-testing work complements them by showing how to find failures, simplify them, and preserve the result as a regression test \cite{claessen2000quickcheck,zeller2002simplifying,yu2023gptfuzzer,yao2023fuzzllm}.
+Chapter~\ref{chap:background} argues that agent evaluation must go beyond final answers. Traces, tool use, environment state, and repeated runs all matter. Interactive benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why in realistic settings \citep{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}. Software-testing work complements them by showing how to find failures, simplify them, and preserve the result as a regression test \citep{claessen2000quickcheck,zeller2002simplifying}.
 
 As Section~\ref{sec:existing_eval_libraries} argued, existing tools still scatter dialogue, graders, and trace checks across separate files rather than one readable scenario script. They make it awkward to assert on replies, tool calls, and environment state in a single episode, expose pass or fail (or raw traces) rather than a mismatch report tied to the specific assertion that broke, and seldom offer user simulation or mutation fuzzing as first-class features, let alone a path from an exploratory failure to a saved regression scenario.
 
