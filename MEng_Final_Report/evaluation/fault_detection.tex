@@ -5,18 +5,28 @@ The third study injects known faulty behaviour into the reference agent and meas
 
 Ten fault families (F01--F10) reuse the same policy checks as the baseline bench, but run against a \emph{mutated} reference agent. Most mutations are prompt overrides that steer the coordinator toward a known bad habit. A few families (notably F04 and F07) also insert deterministic tool or reply probes so the fault is reproducible without relying on sampling alone.
 
-\begin{description}
-\item[F01 Premature escalation.] Opens a ticket or escalates before required troubleshooting steps (\texttt{send\_troubleshooting\_step}, diagnostics, or similar) when the user pushes for speed.
-\item[F02 Wrong line / customer binding.] Rewrites \texttt{line\_id} in tool arguments before they reach the store: either swaps the correct id for a decoy (e.g.\ \texttt{LINE-WRONG}), or keeps substituting the first line mentioned even after the user corrects themselves, so tickets and other writes land on the wrong line.
-\item[F03 Unsupported credit.] Calls \texttt{apply\_bill\_credit} even when \texttt{run\_billing\_policy\_specialist} returned ineligible.
-\item[F04 Auth / privacy leak.] Reads account data before \texttt{authenticate\_customer}, or echoes PII in the reply while still unauthenticated.
-\item[F05 Nested tool order.] Calls the network specialist's child tools in the wrong order or skips expected children under \texttt{run\_network\_diagnostics\_specialist}.
-\item[F06 Structured output.] Violates conditional shape on specialist JSON (e.g.\ \texttt{amount} present when not eligible, or forbidden extra fields).
-\item[F07 Missing clarification.] Places a ticket, SIM order, or credit while the user's line or intent is still ambiguous, instead of asking a clarifying question first.
-\item[F08 Missing audit note.] Performs a sensitive mutation but omits the \texttt{add\_audit\_note} call the reference scenario requires.
-\item[F09 Failure to act.] Explains helpfully yet refuses required mutations (\texttt{create\_support\_ticket}, \texttt{order\_replacement\_sim}, credits) when policy demands action.
-\item[F10 Wrong issue binding.] After the user corrects the problem type, keeps the first ticket reason, specialist path, or line binding from the opening turn.
-\end{description}
+\begin{table}[htbp]
+\centering
+\small
+\caption{Injected fault families (F01--F10).}
+\label{tab:fault-families}
+\begin{tabularx}{\textwidth}{@{}p{0.07\textwidth}X@{}}
+\toprule
+\textbf{ID} & \textbf{Fault family} \\
+\midrule
+F01 & Premature escalation. Opens a ticket or escalates before required troubleshooting steps (\texttt{send\_troubleshooting\_step}, diagnostics, or similar) when the user pushes for speed. \\
+F02 & Wrong line / customer binding. Rewrites \texttt{line\_id} in tool arguments before they reach the store: either swaps the correct id for a decoy (e.g.\ \texttt{LINE-WRONG}), or keeps substituting the first line mentioned even after the user corrects themselves, so tickets and other writes land on the wrong line. \\
+F03 & Unsupported credit. Calls \texttt{apply\_bill\_credit} even when \texttt{run\_billing\_policy\_specialist} returned ineligible. \\
+F04 & Auth / privacy leak. Reads account data before \texttt{authenticate\_customer}, or echoes PII in the reply while still unauthenticated. \\
+F05 & Nested tool order. Calls the network specialist's child tools in the wrong order or skips expected children under \texttt{run\_network\_diagnostics\_specialist}. \\
+F06 & Structured output. Violates conditional shape on specialist JSON (e.g.\ \texttt{amount} present when not eligible, or forbidden extra fields). \\
+F07 & Missing clarification. Places a ticket, SIM order, or credit while the user's line or intent is still ambiguous, instead of asking a clarifying question first. \\
+F08 & Missing audit note. Performs a sensitive mutation but omits the \texttt{add\_audit\_note} call the reference scenario requires. \\
+F09 & Failure to act. Explains helpfully yet refuses required mutations (\texttt{create\_support\_ticket}, \texttt{order\_replacement\_sim}, credits) when policy demands action. \\
+F10 & Wrong issue binding. After the user corrects the problem type, keeps the first ticket reason, specialist path, or line binding from the opening turn. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 Each fault family is run only on combinations of a benchmark task and an oracle lane (for example, task T46 under the state lane S) where that same combination had already passed on the unmutated agent (Table~\ref{tab:baseline-initial}), so results are not confounded with failures the reference agent already exhibited. \emph{Detection} means that, after fault injection, the scenario fails the same checks that had passed before mutation. In Table~\ref{tab:fault-detection-summary}, the denominator (\emph{eligible}) counts how many such task-and-lane combinations in that cell passed on the baseline run. The numerator (\emph{detected}) counts how many of those same combinations fail after injection. A higher percentage is better. The oracle caught the fault on more of the baseline-passing runs in that cell. The matrix contains 152 such combinations from the primary run.
 
@@ -114,4 +124,4 @@ Privacy before auth (F04/T45) & ask & A & Yes & Yes & Yes \\
 \end{tabular}
 \end{table}
 
-Three patterns recur in Table~\ref{tab:diagnostic-comparison} (full grid in Appendix~\ref{tab:diagnostic-injected-grid}). First, \emph{agent-spec-kit} is the most consistent on \textbf{where-in-trace} and structured expected-versus-actual detail on trace-heavy injections. Metric-oriented ports usually name the violated rule but stop short of a path-level witness. Second, pytest and Promptfoo often reach only \textbf{B} or \textbf{C} on the same faults. They can assert the policy in code, but the default failure surface is an \texttt{AssertionError} or a scorer label without turn context. Third, Ragas, DeepEval, LangSmith, and Pydantic Evals cluster in the middle. They are stronger on state predicates and requirement naming (F04) and weaker when the fix depends on knowing which tool argument or ordering step broke (F08). Detection and diagnostic quality pull in the same direction. Catching a fault on the right lane is necessary, but the speed of the agent update loop still depends on how precisely the failure message points to the broken check.
+Three patterns recur in Table~\ref{tab:diagnostic-comparison} (full grid in Appendix~\ref{tab:diagnostic-injected-grid}). First, when an injected fault is diagnosed from the \textbf{tool trace} (for example a missing \texttt{add\_audit\_note}, a wrong \texttt{line\_id} argument, or an out-of-order nested call), \emph{agent-spec-kit} most consistently reports \textbf{where in the dialogue} the check failed and structured expected-versus-actual detail. Metric-oriented ports usually name the violated rule but stop short of a path-level witness such as a JSON path into the tool list. Second, pytest and Promptfoo often reach only \textbf{B} or \textbf{C} on the same faults. They can assert the policy in code, but the default failure surface is an \texttt{AssertionError} or a scorer label without turn context. Third, Ragas, DeepEval, LangSmith, and Pydantic Evals cluster in the middle. They are stronger when the fault is visible as a state predicate or a named requirement (F04) and weaker when the developer must know which tool argument or ordering step broke (F08). Detection and diagnostic quality pull in the same direction. Catching a fault on the right lane is necessary, but the speed of the agent update loop still depends on how precisely the failure message points to the broken check.

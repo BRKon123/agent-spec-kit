@@ -188,7 +188,7 @@ assert ok
 
 Notice how the \emph{agent-spec-kit} excerpt reads like a short script. The opening \texttt{user\_message} and the tool-result check follow one another in the same block, so you can read the specimen top to bottom as a coherent story of what the customer says and what must hold in the trace. Pytest and Promptfoo split that story across trace-walking code, transforms, and schema assertions in separate places, so a reader has to jump between files and code paths before seeing what is being tested.
 
-In Table~\ref{tab:expressiveness-authoring-clarity}, only the \emph{agent-spec-kit} implementation scores \textbf{A} on every specimen. The user turn and every field constraint appear in one declarative matcher block. Pytest and the metric-oriented libraries score mostly \textbf{B}. Trace parsing and evaluator wiring are visible in the graded excerpt. Pydantic Evals, Promptfoo, and Braintrust drop to \textbf{C} on a few trace-heavy specimens where span queries or YAML transforms obscure the policy. Ragas and DeepEval reach \textbf{B} on several checks when custom metric bodies name the violated rule in plain text.
+In Table~\ref{tab:expressiveness-authoring-clarity}, only the \emph{agent-spec-kit} implementation scores \textbf{A} on every specimen. The user turn and every field constraint appear in one declarative matcher block. Pytest and the metric-oriented libraries score mostly \textbf{B}. Trace parsing and evaluator wiring are visible in the graded excerpt. Pydantic Evals, Promptfoo, and Braintrust drop to \textbf{C} on a few specimens that assert over tool calls and arguments, where span queries or YAML transforms obscure the policy. Ragas and DeepEval reach \textbf{B} on several checks when custom metric bodies name the violated rule in plain text.
 
 \subsection{Failure specificity on deliberate wrong examples}
 
@@ -236,12 +236,7 @@ Multi-turn memory & A & D & B & B & B & B & B & B \\
 \end{tabular}
 \end{table}
 
-\emph{agent-spec-kit} scores \textbf{A} on eleven of twelve specimens and \textbf{B} on final-state only. Failures routinely name the check, where it ran in the dialogue, a JSON path, and expected-vs-actual witnesses. On tool checks the \texttt{Expected} block renders the scenario spec in focused form (Section~\ref{sec:matcher-spec-repr}). Plain pytest is almost always \textbf{D} on trace-heavy checks (bare \texttt{AssertionError}) and only reaches \textbf{B} when authors hand-write a field-level message (C07). LangSmith, Pydantic Evals, Promptfoo, Braintrust, Ragas, and DeepEval cluster at \textbf{B} or \textbf{C}. They identify the rule, field, or metric but rarely expose structured counterexamples. Ragas \texttt{ToolCallAccuracy} on C07 returns only a scalar score (\textbf{C}). DeepEval \texttt{ToolCorrectnessMetric} and \texttt{JsonCorrectnessMetric} surface longer natural-language reasons (\textbf{B}) when checks fail. The listings below demonstrate this.
-
-\subsection{Illustrative failure messages}
-
-
-\subsubsection{Forbidden tool-call (C06)}
+\emph{agent-spec-kit} scores \textbf{A} on eleven of twelve specimens and \textbf{B} on final-state only. Failures routinely name the check, where it ran in the dialogue, a JSON path, and expected-vs-actual witnesses. On tool checks the \texttt{Expected} block renders the scenario spec in focused form (Section~\ref{sec:matcher-spec-repr}). Plain pytest is almost always \textbf{D} on checks over tool calls and arguments (bare \texttt{AssertionError}) and only reaches \textbf{B} when authors hand-write a field-level message (C07). LangSmith, Pydantic Evals, Promptfoo, Braintrust, Ragas, and DeepEval cluster at \textbf{B} or \textbf{C}. They identify the rule, field, or metric but rarely expose structured counterexamples. Ragas \texttt{ToolCallAccuracy} on C07 returns only a scalar score (\textbf{C}). DeepEval \texttt{ToolCorrectnessMetric} and \texttt{JsonCorrectnessMetric} surface longer natural-language reasons (\textbf{B}) when checks fail. Listing~\ref{lst:c06-failures} illustrates this on specimen C06.
 
 \begin{lstlisting}[caption={C06 forbidden tool-call: captured failure boxes.},label=lst:c06-failures]
 +------------------------ agent_spec_kit (C06)  grade A -------------------------+
@@ -279,91 +274,6 @@ forbidden tool 'apply_bill_credit' present in ['get_customer_profile',
 +--------------------------- deepeval (C06)  grade B ----------------------------+
 forbidden tool 'apply_bill_credit' present in ['get_customer_profile',
 'apply_bill_credit']
-+--------------------------------------------------------------------------------+
-\end{lstlisting}
-
-\subsubsection{Tool argument matching (C07)}
-
-\begin{lstlisting}[caption={C07 tool argument matching: captured failure boxes.},label=lst:c07-failures]
-+------------------------ agent_spec_kit (C07)  grade A -------------------------+
-Check: assert_tool_calls
-Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)
-Path: $[1].args.line_id
-Expected:
-equality: expected 'LINE-001'
-[
-  [0] tool_call("authenticate_customer"),
-  [1] tool_call('get_line_status', args=object({'line_id': 'LINE-001'}))
-]
-Actual:
-  [0] authenticate_customer() -> ok
-  [1] get_line_status(line_id='LINE-002') -> {data_enabled=True}
-could not match expected element at index 1 while preserving order
-searched actual positions 1 through 1
-closest underlying mismatch was (at $[1].args.line_id): value does not equal e
-xpected
-value does not equal expected
-(+1 more matcher error(s))
-+--------------------------------------------------------------------------------+
-+------------------------- pytest_plain (C07)  grade B --------------------------+
-get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
-+--------------------------------------------------------------------------------+
-+--------------------------- langsmith (C07)  grade B ---------------------------+
-{'key': 'tool_args', 'score': 0}
-+--------------------------------------------------------------------------------+
-+------------------------ pydantic_evals (C07)  grade B -------------------------+
-get_line_status.args.line_id expected 'LINE-001', got 'LINE-002'
-+--------------------------------------------------------------------------------+
-+--------------------------- promptfoo (C07)  grade B ---------------------------+
-trajectory:tool-args-match get_line_status.line_id expected 'LINE-001', ...
-+--------------------------------------------------------------------------------+
-+----------------------------- ragas (C07)  grade C -----------------------------+
-0.5
-+--------------------------------------------------------------------------------+
-+--------------------------- deepeval (C07)  grade B ----------------------------+
-[ Tool Calling Reason: Incorrect tool usage: out-of-order tools
-['get_line_status']; expected ['authenticate_customer', 'get_line_status'],
-called ['authenticate_customer', 'get_line_status']. ... ]
-+--------------------------------------------------------------------------------+
-\end{lstlisting}
-
-\subsubsection{Unordered sibling tools (C10)}
-
-\begin{lstlisting}[caption={C10 unordered sibling tools: captured failure boxes.},label=lst:c10-failures]
-+------------------------ agent_spec_kit (C10)  grade A -------------------------+
-Check: assert_tool_calls
-Where: 1st assert_tool_calls after turn #1 (tool call list for that turn)
-Path: $
-Expected:
-list_too_short: expected >= 2
-[
-  [0] tool_call('heartbeat_ping'),
-  [1] tool_call('get_line_status')
-]
-Actual:
-  [0] heartbeat_ping() -> ok
-list is too short: need at least 2 item(s) to match all expected values (order
- does not matter)
-+--------------------------------------------------------------------------------+
-+------------------------- pytest_plain (C10)  grade D --------------------------+
-AssertionError
-+--------------------------------------------------------------------------------+
-+--------------------------- langsmith (C10)  grade B ---------------------------+
-{'key': 'unordered_siblings', 'score': 0}
-+--------------------------------------------------------------------------------+
-+------------------------ pydantic_evals (C10)  grade B -------------------------+
-tool sequence expected ['heartbeat_ping', 'get_line_status'], ...
-+--------------------------------------------------------------------------------+
-+--------------------------- promptfoo (C10)  grade B ---------------------------+
-trajectory:tool-used: missing tools ['get_line_status']
-+--------------------------------------------------------------------------------+
-+----------------------------- ragas (C10)  grade B -----------------------------+
-missing required tools ['get_line_status'] in ['heartbeat_ping']
-+--------------------------------------------------------------------------------+
-+--------------------------- deepeval (C10)  grade B ----------------------------+
-[ Tool Calling Reason: Incomplete tool usage: missing tools
-[ToolCall( name="get_line_status" )]; expected ['heartbeat_ping',
-'get_line_status'], called ['heartbeat_ping']. ... ]
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 

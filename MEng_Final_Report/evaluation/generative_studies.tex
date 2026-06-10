@@ -155,27 +155,27 @@ Table~\ref{tab:fuzz-operators} lists the operator catalogue and what each one do
 \centering
 \caption{Mutation operators applied to manual seed transcripts (telecom fuzz study).}
 \label{tab:fuzz-operators}
-\footnotesize
-\begin{tabular}{@{}p{3.6cm}p{7.8cm}@{}}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.38\textwidth}X@{}}
 \toprule
 Operator & Effect on user messages \\
 \midrule
-\texttt{drop\_required\_fact} & Strips account, verification token, or line id from the opening turn \\
-\texttt{delay\_required\_fact} & Moves a late-turn fact earlier in the sequence \\
-\texttt{swap\_entity} & Swaps correct and stale line ids in the text \\
-\texttt{contradict\_entity\_later} & Appends a correction after an earlier wrong id \\
-\texttt{negate\_completed\_step} & User denies having completed a step they previously claimed \\
-\texttt{ambiguous\_acknowledgement} & Adds vague acknowledgement text to the last user line \\
-\texttt{remove\_confirmation} & Removes explicit yes/confirm phrasing \\
-\texttt{increase\_pressure} & Adds demand for escalation, refund, or immediate shipment \\
-\texttt{interleave\_secondary\_intent} & Inserts a secondary billing or line issue mid-dialogue \\
-\texttt{third\_party\_shift} & Frames the issue as belonging to another person's line \\
-\texttt{repeat\_or\_reorder\_turn} & Repeats or swaps order of user turns \\
-\texttt{minimise\_user\_replies} & Truncates replies to short, vague fragments \\
-\texttt{over\_specific\_false\_detail} & Adds plausible but false ticket or timestamp detail \\
-\texttt{policy\_boundary\_shift} & Adds aggressive compensation demand against policy \\
+\texttt{drop\_required\_fact} & Strips account, verification token, or line id from the opening turn. \\
+\texttt{delay\_required\_fact} & Moves a late-turn fact earlier in the sequence. \\
+\texttt{swap\_entity} & Swaps correct and stale line ids in the text. \\
+\texttt{contradict\_entity\_later} & Appends a correction after an earlier wrong id. \\
+\texttt{negate\_completed\_step} & User denies having completed a step they previously claimed. \\
+\texttt{ambiguous\_acknowledgement} & Adds vague acknowledgement text to the last user line. \\
+\texttt{remove\_confirmation} & Removes explicit yes/confirm phrasing. \\
+\texttt{increase\_pressure} & Adds demand for escalation, refund, or immediate shipment. \\
+\texttt{interleave\_secondary\_intent} & Inserts a secondary billing or line issue mid-dialogue. \\
+\texttt{third\_party\_shift} & Frames the issue as belonging to another person's line. \\
+\texttt{repeat\_or\_reorder\_turn} & Repeats or swaps order of user turns. \\
+\texttt{minimise\_user\_replies} & Truncates replies to short, vague fragments. \\
+\texttt{over\_specific\_false\_detail} & Adds plausible but false ticket or timestamp detail. \\
+\texttt{policy\_boundary\_shift} & Adds aggressive compensation demand against policy. \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 The combined fuzz pipeline also reuses the user-simulation personas on the same fourteen tasks (manual seed plus sim, then fuzz trials), which yields fifty-six unique paths from simulation and forty from mutation-only trials in the primary comparison below.
