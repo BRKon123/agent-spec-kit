@@ -1,17 +1,17 @@
 \section{Design Goals and Requirements}
 \label{sec:design-goals}
 
-Chapter~\ref{chap:related-work} argues that developers evaluating tool-using agents need more than aggregate scores or trace viewers. They need a single scenario in which output checks, tool checks, and state checks can be written together, and when something fails they need to know which expectation broke. Chapter~\ref{chap:background} shows why that need arises: agent correctness is spread across final messages, tool trajectories, and environment state, and failures on one turn may be hidden by recovery on a later turn. This section states the design goals that follow from that gap and contrasts how existing tools report failures with the response built into \emph{agent-spec-kit}.
+Chapter~\ref{chap:related-work} argues that developers evaluating tool-using agents need more than aggregate scores or trace viewers. They need a single scenario in which output checks, tool checks, and state checks can be written together, and when something fails they need to know which expectation broke. Chapter~\ref{chap:background} shows why that need arises. Agent correctness is spread across final messages, tool trajectories, and environment state, and failures on one turn may be hidden by recovery on a later turn. This section states the design goals that follow from that gap and contrasts how existing tools report failures with the response built into \emph{agent-spec-kit}.
 
 \subsection{Functional Requirements}
 
-The framework is intended to support evaluation workflows that resemble software testing more than benchmark leaderboards. Concretely, a developer should be able to express expectations over the user-facing output, the sequence of tool calls (including nested calls from specialist agents), and postconditions on databases or other fixtures, using one composable matcher language rather than ad hoc glue per check. When an assertion fails, the failure report should identify the failing step and turn, qualify the mismatch with a path into structured data (for example \texttt{\$.args.line\_id}), and attach enough transcript and event context to decide whether to change a prompt, reroute the graph, or revise policy text.
+The framework is intended to support evaluation workflows that resemble software testing more than benchmark leaderboards. Concretely, a developer should be able to express expectations over the user-facing output, the sequence of tool calls (including nested calls from specialist agents), and postconditions on databases or other fixtures, using one composable matcher language rather than ad hoc glue per check. When an assertion fails, the failure report should identify the failing step and turn, qualify the mismatch with a JSON-pointer into the value under check at that assertion (for example \texttt{\$[1].args.line\_id} within the recorded tool-call list), and attach enough transcript and event context to decide whether to change a prompt or agent architecture.
 
-The same scenario file should read as a conversation script with explicit user lines, checks after each agent turn, optional environment mutations between turns, and optional generative extensions when user behaviour should vary. Repeated runs of the same script support stochastic agents. Generative fuzzing and user simulation extend the script without changing the assertion vocabulary. Integrations for LangChain and Pydantic AI normalize traces so those assertions do not depend on framework-specific message formats. The framework complements trace inspection by stating what should have happened at the point of failure.
+The same scenario file should read as a conversation script with explicit user lines, checks after each agent turn, optional environment mutations between turns, and optional generative extensions when user behaviour should vary. Repeated runs of the same script support stochastic agents to increase reliability. Generative fuzzing and user simulation extend the script without changing the assertion vocabulary. Integrations for LangChain and Pydantic AI normalize traces so those assertions do not depend on framework-specific message formats. The framework complements trace inspection by stating what should have happened at the point of failure.
 
 \subsection{Diagnostics Compared with Existing Libraries}
 
-Table~\ref{tab:diagnostics-comparison} summarises how several common evaluation patterns report failure and what is still awkward when debugging a custom agent. The point is not to claim that other tools are inadequate in general, but to motivate why \emph{agent-spec-kit} invests in assertion-local counterexamples.
+Table~\ref{tab:diagnostics-comparison} summarises how several common evaluation patterns report failure and what is still awkward when debugging a custom agent. The point is not to claim that other tools are inadequate in general, but to motivate why \emph{agent-spec-kit} focuses on assertion-local counterexamples.
 
 \begin{table}[htbp]
 \centering
@@ -29,7 +29,7 @@ Numeric or rubric score &
 Strong for open-ended text but weak for precise tool-argument or state facts (Chapter~\ref{chap:background}, \S\ref{sec:bg-oracles}). \\
 Promptfoo &
 Pass/fail per assertion. Trajectory checks via OTLP traces &
-Powerful, but trace assertions sit apart from the scenario script. Multi-assertion scenarios require span navigation. \\
+Powerful, but expectations are spread across YAML, Python, custom JavaScript, and OTLP traces, so understanding a scenario means jumping between files. \\
 LangSmith / Langfuse &
 Rich trace trees, latency, cost &
 Shows what happened. The developer still infers expected behaviour (Figure~\ref{fig:langfuse-trace}). \\
@@ -42,4 +42,4 @@ Less reusable for bespoke agents. Dual-control setups such as $\tau^2$-bench~\ci
 \label{tab:diagnostics-comparison}
 \end{table}
 
-\emph{agent-spec-kit} responds by attaching a structured \emph{Counterexample} to each failed scenario assertion. The report includes a headline, a human-readable location (for example which \texttt{assert\_tool\_calls} ran after turn three), an optional JSON-pointer path, expected and actual summaries, notes (including per-criterion judge rationales), and a bounded event trace. Matchers are composable so inner failures surface with deeper paths. Section~\ref{sec:counterexamples} describes that pipeline. The intended workflow is to read the path, inspect the trace, change the agent or policy, rerun under a named experiment, and compare outcomes in the web UI (Section~\ref{sec:execution-workflow}).
+\emph{agent-spec-kit} responds by attaching a structured \emph{Counterexample} to each failed scenario assertion. The report includes a headline, a human-readable location (for example which assertion ran after turn three), an optional JSON-pointer into that same actual value (rooted at \texttt{\$}), expected and actual summaries, notes (including per-criterion judge rationales), and a bounded event trace. Matchers are composable so inner failures surface with deeper paths. Section~\ref{sec:counterexamples} describes that pipeline. The intended workflow is to read the path, inspect the trace, change the agent or policy, rerun under a named experiment, and compare outcomes in the web UI (Section~\ref{sec:execution-workflow}).

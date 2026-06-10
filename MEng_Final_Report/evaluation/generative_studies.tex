@@ -21,7 +21,7 @@ Table~\ref{tab:persona-dimensions} summarises the persona fields. Disclosure upf
 Field & Role & Examples across tasks \\
 \midrule
 Style & Tone of voice & cooperative, angry, frustrated, skeptical, brief \\
-Behaviour & How they act in the thread & demands refund quickly; corrects line late; mixes multiple issues \\
+Behaviour & How they act in the thread & demands refund quickly, corrects line late, mixes multiple issues \\
 Disclosure & When facts appear & \texttt{reveal\_upfront} vs.\ \texttt{reveal\_when\_prompted} \\
 Pressure & Escalation appetite & low, medium, high \\
 \bottomrule
@@ -71,7 +71,7 @@ The second row in the table is a sensitivity check that holds conversation count
 
 Across the study, two failures matched failures already seen on the initial baseline run and thirty-five were simulation-discovered. No invalid simulations were recorded. For example, manual T04 follows authentication, diagnostics, heartbeat, and ticket creation in a fixed order. Simulated T43 with a ``simple correction'' persona interleaves outage checks, duplicate \texttt{get\_line\_status}, diagnostics, and ticket creation in a different shape. The case study below (Listings~\ref{lst:t42-sim} and~\ref{lst:t42-sim-failure}) gives the transcript and captured failure box for T42 (\texttt{multi\_issue\_user}).
 
-\subsubsection{Case study: issue shift on T42 (simulation)}
+\subsubsection{Case study of issue shift on T42 (simulation)}
 
 Task T42 exercises a customer who reports mobile data failure, may mention a SIM found in the laundry, and explicitly does not want a replacement SIM shipped. The manual script keeps the agent on data troubleshooting and passes the full F-oracle on the study run. The simulation arm uses five task-specific personas. The example below uses \texttt{multi\_issue\_user}.
 
@@ -245,7 +245,7 @@ Fuzz & 8 & 25 & 7 & -- & 6 \\
 
 Simulation and fuzz share two failure signatures, while fourteen simulation signatures and six fuzz signatures remain arm-specific. The arms remain complementary at the transcript level. Personas explore alternative customer \emph{styles} (tone, disclosure timing, pressure) that rewrite the dialogue around a task intent, whereas mutation operators perturb the fixed initial manual messages along named axes such as missing facts, entity swaps, or vague acknowledgements. A failure on T42 from a multi-issue persona (state oracle, ticket opened too early) does not recur under \texttt{interleave\_secondary\_intent} (fuzz strategy) on those messages. Conversely, T45 \texttt{drop\_required\_fact} (fuzz strategy) surfaces tool non-invocation when credentials are stripped from the script, a path simulation personas hit through different output-oracle wording. The implication for evaluation design is that neither arm subsumes the other. Simulation widens \emph{who} the customer might be, fuzz widens \emph{how} a plausible script might be corrupted, and keeping both layers in the suite catches complementary regressions, including ones that share an oracle family but arise from different customer wordings.
 
-\subsubsection{Case study: credential stripping on T45 (fuzz)}
+\subsubsection{Case study of credential stripping on T45 (fuzz)}
 
 Task T45 exercises delayed authentication. The customer should not receive account-specific help until they supply a verification token. The manual seed transcript (four user turns) asks for plan information, refuses to authenticate, then authenticates explicitly. The manual arm \textbf{passes} the F-oracle in this evaluation. In the example below, the \texttt{drop\_required\_fact} operator (Table~\ref{tab:fuzz-operators}) removes account and credential facts from the seed transcript while keeping the dialogue grammatical.
 
@@ -374,7 +374,7 @@ async def regression_REG_SIM_T29_1(s, store_us_t29):
             [
                 m.tool_call('authenticate_customer'),
                 m.tool_call('order_replacement_sim',
-                            args=m.object({'line_id': 'LINE-0029'})),
+                            args={'line_id': 'LINE-0029'}),
             ],
             ...)
         .assert_output(m.llm_criteria(...), ...)

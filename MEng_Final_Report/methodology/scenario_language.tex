@@ -1,7 +1,7 @@
-\section{The Scenario Language: Scripting Conversations}
+\section{The Scenario Language for Scripting Conversations}
 \label{sec:scenario-language}
 
-The central interface of \emph{agent-spec-kit} is a scenario language implemented as fluent Python on a \texttt{Scenario} object. A scenario file should read top to bottom like a transcript with expectations woven in. Seed the world, send a user line, check tools and reply, optionally change the environment, send another line, and check again. That ordering matches how engineers describe multi-turn bugs in practice and avoids splitting conversation logic in YAML while assertions live elsewhere, which Chapter~\ref{chap:related-work} identifies as a common friction point.
+The central interface of \emph{agent-spec-kit} is a scenario language implemented as fluent Python on a \texttt{Scenario} object. A scenario file should read top to bottom like a transcript with expectations woven in. Seed the environment state, send a user line, check tools and reply, optionally change the environment, send another line, and check again. That ordering matches how engineers describe multi-turn bugs in practice and avoids splitting conversation logic in YAML while assertions live elsewhere, which Chapter~\ref{chap:related-work} identifies as a common friction point in some libraries.
 
 \subsection{Scripting Metaphor and Developer Ergonomics}
 
@@ -32,7 +32,7 @@ Listing~\ref{lst:multiply-dialog-scripted} shows a minimal two-turn script. Afte
 )
 \end{lstlisting}
 
-Each \texttt{user\_message} triggers one agent turn and appends to the transcript. By default, \texttt{assert\_output} and \texttt{assert\_tool\_calls} apply to the last agent turn (\texttt{turn="last"}). For dialogue-wide checks, \texttt{turn="up\_to\_now"} concatenates outputs so far, and \texttt{actor=} selects agent or user lines. Mixing tool and output assertions after the same user line is deliberate because many agent failures are visible only in the trace even when the final sentence sounds acceptable (Chapter~\ref{chap:background}).
+Each \texttt{user\_message} triggers one agent turn and appends to the transcript. By default, \texttt{assert\_output} and \texttt{assert\_tool\_calls} apply to the most recent agent turn (\texttt{turn="last"}). For dialogue-wide checks, set \texttt{turn="up\_to\_now"}. \texttt{actor=} selects agent or user lines. Mixing tool and output assertions after the same user line is deliberate because many agent failures are visible only in the trace even when the final sentence sounds acceptable (Chapter~\ref{chap:background}).
 
 \subsection{Environment Setup and Mid-Scenario Actions}
 

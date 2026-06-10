@@ -239,3 +239,28 @@ def test_all_of_nested_not_failure_propagates_not_and_contains() -> None:
     assert "all_of:" in r.errors[0].message
     assert "not:" in r.errors[0].message
     assert any(e.code == "not" for e in r.errors)
+
+
+def test_tool_call_plain_dict_args_ignores_extra_keys() -> None:
+    spec = m.tool_call("get_line_status", args={"line_id": "LINE-001"})
+    actual = {"name": "get_line_status", "args": {"line_id": "LINE-001", "verbose": True}}
+    assert m.check(spec, actual).ok
+
+
+def test_tool_call_plain_dict_args_rejects_wrong_listed_key() -> None:
+    spec = m.tool_call("get_line_status", args={"line_id": "LINE-001"})
+    actual = {"name": "get_line_status", "args": {"line_id": "LINE-999"}}
+    r = m.check(spec, actual)
+    assert not r.ok
+    assert any(e.path == ("args", "line_id") for e in r.errors)
+
+
+def test_tool_call_explicit_object_forbid_rejects_extra_arg_keys() -> None:
+    spec = m.tool_call(
+        "get_line_status",
+        args=m.object({"line_id": "LINE-001"}, extra="forbid"),
+    )
+    actual = {"name": "get_line_status", "args": {"line_id": "LINE-001", "verbose": True}}
+    r = m.check(spec, actual)
+    assert not r.ok
+    assert any(e.code == "extra_key" and e.path == ("args", "verbose") for e in r.errors)

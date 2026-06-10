@@ -1,7 +1,7 @@
 \section{TelcoSupportBench}
 \label{sec:telcosupportbench}
 
-TelcoSupportBench models a mobile-network customer-support desk. A reference agent can authenticate customers, inspect lines, run nested network and billing specialists, open tickets, apply credits, and mutate a permissive SQLite store. Correctness is defined by executable scenarios: each task specifies a scripted customer dialogue and explicit checks over the assistant's replies, the tool trace, and the final store state. This is closer to integration testing than to scoring a single final answer, and it differs from fixed leaderboard benchmarks such as $\tau$-bench or AppWorld, where task orchestration and environment code are bundled with the benchmark rather than expressed as reusable scenario tests on a developer's own agent \cite{yao2024taubench,trivedi2024appworld}.
+TelcoSupportBench models a mobile-network customer-support desk. A reference agent can authenticate customers, inspect lines, run nested network and billing specialists, open tickets, apply credits, and mutate a permissive SQLite store. Correctness is defined by executable scenarios. Each task specifies a scripted customer dialogue and explicit checks over the assistant's replies, the tool trace, and the final store state. This is closer to integration testing than to scoring a single final answer, and it differs from fixed leaderboard benchmarks such as $\tau$-bench or AppWorld, where task orchestration and environment code are bundled with the benchmark rather than expressed as reusable scenario tests on a developer's own agent \cite{yao2024taubench,trivedi2024appworld}.
 
 The rest of this section introduces the task catalogue and oracle lanes, then reports how the reference agent performed on an initial full run before the expressiveness, fault-injection, and generative studies later in the chapter.
 
@@ -75,11 +75,11 @@ F & Union of O, S, and T at matching turn positions & Combined scenario \\
 \end{tabular}
 \end{table}
 
-The baseline run below already illustrates the gap: output checks pass on every task, while trace and state lanes fail on many of the same conversations. That pattern motivates treating lane choice as part of test design, not only as an implementation detail.
+The baseline run below already illustrates the gap. Output checks pass on every task, while trace and state lanes fail on many of the same conversations. That pattern motivates treating lane choice as part of test design, not only as an implementation detail.
 
 \subsection{Initial baseline results}
 
-The reference agent was run once on every task and oracle lane before the later studies. Table~\ref{tab:baseline-initial} summarises the outcome: each cell is whether that scenario's checks passed on the actual agent run. There are two hundred slots in total (fifty tasks times four lanes), all completed with no incomplete runs.
+The reference agent was run once on every task and oracle lane before the later studies. Table~\ref{tab:baseline-initial} summarises the outcome. Each cell is whether that scenario's checks passed on the actual agent run. There are two hundred slots in total (fifty tasks times four lanes), all completed with no incomplete runs.
 
 \begin{table}[htbp]
 \centering

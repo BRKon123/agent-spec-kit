@@ -5,13 +5,13 @@
   \node[flow] (dec) {\texttt{@fixture} /\\\texttt{@scenario}};
   \node[flow, below=of dec] (cli) {CLI \texttt{run}};
   \node[flow, below=of cli] (job) {\texttt{run\_scenario\_job}};
-  \node[flow, below=of job] (mat) {\texttt{Scenario.}\\\texttt{materialise}};
-  \node[flow, below=of mat] (agent) {\texttt{AdaptedAgent}\\\texttt{run\_turn}};
-  \node[flow, below=of agent] (match) {\texttt{match.}\\\texttt{async\_check}};
+  \node[flow, below=of job] (mat) {\texttt{Scenario.}\\[1pt]\texttt{materialise}};
+  \node[flow, below=of mat] (agent) {\texttt{AdaptedAgent}\\[1pt]\texttt{run\_turn}};
+  \node[flow, below=of agent] (match) {\texttt{match.}\\[1pt]\texttt{async\_check}};
 
   \node[fail, below left=10mm and 4mm of match] (rec) {\texttt{FailureRecord}};
   \node[fail, below=of rec] (cx) {\texttt{Counterexample}};
-  \node[fail, below=of cx] (out) {CLI panel /\\SQLite / UI};
+  \node[fail, below=of cx] (out) {CLI panel,\\SQLite, and web UI};
 
   \node[store, below right=10mm and 4mm of match] (store) {\texttt{LocalResultStore}};
 

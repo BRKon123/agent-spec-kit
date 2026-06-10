@@ -233,6 +233,21 @@ def contains(substring: str, *, case_sensitive: bool = False) -> PredicateMatche
     )
 
 
+def _coerce_tool_call_object_field(value: Any) -> BaseMatcher:
+    """Coerce ``args`` / ``metadata`` specs for :func:`tool_call`.
+
+    A plain ``dict`` becomes :func:`object` with ``extra="ignore"`` so authors can
+    list only the argument keys they care about. An explicit :class:`ObjectMatcher`
+    (from :func:`object`) is left unchanged so ``extra`` and ``rules`` stay under
+    author control.
+    """
+    if isinstance(value, ObjectMatcher):
+        return value
+    if isinstance(value, Mapping):
+        return object_matcher(value, extra="ignore")
+    return coerce_any(value)
+
+
 def tool_call(
     name: str,
     *,
@@ -245,19 +260,25 @@ def tool_call(
     """Build an object matcher for one normalized tool-call dict (``name``, ``args``, …).
 
     ``args``, ``result``, ``error``, ``metadata``, and ``children`` are keyword-only.
-    Omitted fields are not constrained (``extra="ignore"`` on the object matcher).
+    Omitted fields are not constrained (``extra="ignore"`` on the outer object matcher).
+
+    For ``args`` and ``metadata``, a plain ``dict`` is treated as
+    ``m.object(mapping, extra="ignore")`` so only listed keys are checked and
+    additional keys on the actual call are allowed. Pass :func:`object` explicitly
+    when you need ``extra="forbid"``, conditional :func:`require` / :func:`forbid`
+    rules, or other object options.
     """
     fields: dict[str, Any] = {"name": name}
     if args is not _MISSING:
-        fields["args"] = args
+        fields["args"] = _coerce_tool_call_object_field(args)
     if result is not _MISSING:
-        fields["result"] = result
+        fields["result"] = coerce_any(result)
     if error is not _MISSING:
-        fields["error"] = error
+        fields["error"] = coerce_any(error)
     if metadata is not _MISSING:
-        fields["metadata"] = metadata
+        fields["metadata"] = _coerce_tool_call_object_field(metadata)
     if children is not _MISSING:
-        fields["children"] = children
+        fields["children"] = coerce_any(children)
     return object_matcher(fields, extra="ignore")
 
 

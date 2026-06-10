@@ -9,7 +9,7 @@ A useful failure report should locate the failing step and turn, pinpoint the fi
 
 \subsection{Failure Pipeline}
 
-When a scenario assertion fails, the framework first captures the precise mismatch: a JSON path to the offending field where one applies, a short explanation of what rule broke, and witness data such as expected versus actual tool names when that helps. It then records where in the script the failure occurred (an output, tool, environment, or runtime check, which dialogue turn, and which assertion after that turn) and keeps a bounded snapshot of what the agent actually produced. Those pieces are assembled into the counterexample rendered in the CLI and web UI. Table~\ref{tab:counterexample-fields} lists the main fields in that report and why each exists.
+When a scenario assertion fails, the framework first captures the precise mismatch, including a JSON-pointer path into the assertion's actual value (the tool-call list, output text, or other structured value the matcher ran against) where one applies, a short explanation of what rule broke, and witness data such as expected versus actual tool names when that helps. It then records where in the script the failure occurred (an output, tool, environment, or runtime check, which dialogue turn, and which assertion after that turn) and keeps a bounded snapshot of what the agent actually produced. Those pieces are assembled into the counterexample rendered in the CLI and web UI. Table~\ref{tab:counterexample-fields} lists the main fields in that report and why each exists.
 
 \begin{table}[htbp]
 \centering
@@ -23,7 +23,7 @@ One-line summary of the first or deepest mismatch. \\
 \texttt{location\_detail} &
 Human-readable placement (e.g.\ second \texttt{assert\_tool\_calls} after turn 3). \\
 \texttt{path} &
-JSON-pointer into structured actuals (\texttt{\$.args.line\_id}). \\
+JSON-pointer into the assertion's actual value (\texttt{\$[1].args.line\_id} indexes the second tool call in the list being matched). \\
 \texttt{expected\_summary} / \texttt{actual\_min} &
 Side-by-side summaries of what was expected and what was observed, without dumping full traces. \\
 \texttt{notes} &
@@ -63,7 +63,7 @@ Table~\ref{tab:failure-hints} relates common failure kinds to what appears in th
 \midrule
 \texttt{assert\_tool\_calls} length &
 Expected tool sequence vs.\ recorded calls &
-Prompt or policy: call missing tool or stop early. \\
+Adjust prompt or policy so the agent calls the missing tool or stops early. \\
 Path on \texttt{args} &
 Expected vs.\ actual argument field &
 Tool argument construction or retrieval context. \\

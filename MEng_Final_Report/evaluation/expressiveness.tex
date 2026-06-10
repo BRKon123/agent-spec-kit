@@ -117,9 +117,9 @@ Multi-turn memory & A & B & B & B & C & B & B & C \\
 \end{tabular}
 \end{table}
 
-\subsubsection{Illustrative contrast: structured object shape (C02)}
+\subsubsection{Illustrative contrast for structured object shape (C02)}
 
-Listing~\ref{lst:c02-clarity-contrast} contrasts three \emph{ways} of stating the same C02 policy across different libraries (structured specialist result): a scenario specification, imperative trace inspection, and declarative eval-config assertions. The clarity study rewards how quickly a maintainer understands the policy when \emph{reading} the check, not whether the logic is equivalent after working through every step.
+Listing~\ref{lst:c02-clarity-contrast} contrasts three \emph{ways} of stating the same C02 policy across different libraries (structured specialist result). The specimens are a scenario specification, imperative trace inspection, and declarative eval-config assertions. The clarity study rewards how quickly a maintainer understands the policy when \emph{reading} the check, not whether the logic is equivalent after working through every step.
 
 Specimen C02 requires \texttt{run\_network\_diagnostics\_specialist.result} to contain exactly \texttt{severity}, \texttt{recommended\_action}, and \texttt{escalation\_reason}, with values \texttt{high}, \texttt{create\_ticket}, and a non-empty reason. The same rule can be written as (i)~a scenario block that ties a user turn to an expected tool \texttt{result} object, (ii)~Python that finds the tool in a saved trace and checks each field, or (iii)~Promptfoo YAML that picks out the specialist result and applies an \texttt{is-json} schema. LangSmith and Pydantic Evals follow the same idea in code. Promptfoo works well when a built-in assert type fits. Otherwise custom logic (finding the right tool, conditional fields, nested children) has to live in JavaScript inside the YAML, which is harder to write and review than keeping checks in one place.
 

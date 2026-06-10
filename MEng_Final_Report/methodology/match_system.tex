@@ -1,4 +1,4 @@
-\section{Match System: Composable Oracles}
+\section{Match System for Composable Oracles}
 \label{sec:match-system}
 
 Scenarios declare \emph{what} should hold. The match system decides whether observed behaviour satisfies those declarations and, when it does not, produces structured errors that feed counterexamples (Section~\ref{sec:counterexamples}). The design goal is expressiveness through composability. One small vocabulary of matchers should cover substring checks, JSON-shaped outputs, ordered or unordered tool lists, nested tools from specialist agents, forbidden tools, and selective LLM rubrics, without bespoke Python per check. That aligns with the oracle types summarised in Table~\ref{tab:agent-oracle-types} in Chapter~\ref{chap:background}.
@@ -42,13 +42,13 @@ m.object(
 )
 \end{lstlisting}
 
-Nested \texttt{m.object} specs mirror nested agent outputs. Each layer contributes path segments on failure (for example \texttt{\$.itinerary[1].day}), so the counterexample can point inside a large JSON body rather than reporting only that the object did not match. When an outer object fails because an inner field fails, error selection prefers the deepest path so the headline can combine an outer summary with an inner explanation (\texttt{outer; mismatch at \$.foo: inner}).
+Nested \texttt{m.object} specs mirror nested agent outputs. Each layer contributes path segments on failure (for example \texttt{\$.itinerary[1].day} within the parsed output value the matcher checked), so the counterexample can point inside a large JSON body rather than reporting only that the object did not match. When an outer object fails because an inner field fails, error selection prefers the deepest path so the headline can combine an outer summary with an inner explanation (\texttt{outer; mismatch at \$.foo: inner}).
 
 When agents return structured payloads from tools or coordinators, these matchers play the role of the structured-output oracle row in Table~\ref{tab:agent-oracle-types}. The surrounding scenario text should state the intent, and the listing carries the field-level detail.
 
 \subsection{List and Tool-Call Matching}
 
-\texttt{m.list} checks whether an actual sequence matches an expected one. In order mode, the spec sequence must appear as a subsequence when \texttt{allow\_extras=True}, or as an exact length match when extras are disallowed. In unordered mode, the spec is a multiset of required items, which suits parallel tools that may complete in either order. \texttt{m.list\_of} is the homogeneous case: one inner spec applied to every item in the run. Listing~\ref{lst:match-list-of} shows a structured output check where every alert in an \texttt{alerts} array must carry one of three allowed severity levels.
+\texttt{m.list} checks whether an actual sequence matches an expected one. In order mode, the spec sequence must appear as a subsequence when \texttt{allow\_extras=True}, or as an exact length match when extras are disallowed. In unordered mode, the spec is a multiset of required items, which suits parallel tools that may complete in either order. \texttt{m.list\_of} is the homogeneous case in which one inner spec is applied to every item in the run. Listing~\ref{lst:match-list-of} shows a structured output check where every alert in an \texttt{alerts} array must carry one of three allowed severity levels.
 
 \begin{lstlisting}[language=Python,caption={\texttt{m.list\_of}: every item in the list must satisfy the same inner spec (here, each alert object must have \texttt{severity} set to \texttt{low}, \texttt{medium}, or \texttt{high}).},label=lst:match-list-of]
 m.list_of(
@@ -56,14 +56,14 @@ m.list_of(
 )
 \end{lstlisting}
 
-Tool assertions build on those list matchers. Each recorded call is matched as a small dictionary with \texttt{name}, \texttt{args}, optional \texttt{result}, and optional \texttt{children} for calls made on behalf of a parent tool (for example by a specialist agent). \texttt{m.tool\_call} describes one such entry. An \texttt{assert\_tool\_calls} spec is a list of those descriptions (using \texttt{m.list} under the hood). Nested \texttt{children} follow the same pattern. A parent \texttt{m.tool\_call} can require a nested list of child calls, each with its own argument and result checks. Listing~\ref{lst:match-tool-nested} shows that layout.
+Tool assertions build on those list matchers. Each recorded call is matched as a small dictionary with \texttt{name}, \texttt{args}, optional \texttt{result}, and optional \texttt{children} for calls made on behalf of a parent tool (for example by a specialist agent). \texttt{m.tool\_call} describes one such entry. For \texttt{args} (and \texttt{metadata}), a plain \texttt{dict} is treated as \texttt{m.object(..., extra="ignore")}, so only the listed keys are checked and additional keys on the actual call are allowed. Pass \texttt{m.object} explicitly when you need \texttt{extra="forbid"} or conditional rules. An \texttt{assert\_tool\_calls} spec is a list of those descriptions (using \texttt{m.list} under the hood). Nested \texttt{children} follow the same pattern. A parent \texttt{m.tool\_call} can require a nested list of child calls, each with its own argument and result checks. Listing~\ref{lst:match-tool-nested} shows that layout.
 
 \begin{lstlisting}[language=Python,caption={Nested tool-call spec with child tools.},label=lst:match-tool-nested]
 m.tool_call(
     "run_forensics_specialist",
     args={"query": m.contains("latency")},
     children=[
-        m.tool_call("pull_logs", args=m.object({...}, extra="forbid")),
+        m.tool_call("pull_logs", args={...}),
         m.tool_call(
             "score_anomaly",
             result=m.llm_criteria(
