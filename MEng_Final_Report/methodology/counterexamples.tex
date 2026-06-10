@@ -5,7 +5,7 @@ Section~\ref{sec:design-goals} argued that scalar metrics and raw traces leave a
 
 \subsection{Design Principles}
 
-A useful failure report should locate the failing step and turn, pinpoint the field path inside structured data, contrast expected and actual values, provide enough transcript and event context to see what the agent did, and phrase the headline so a developer can infer what to change. Observability tools excel at the third item in isolation. They show latency, tokens, and nested spans (Figure~\ref{fig:langfuse-trace}). Assertion-local counterexamples add the first two items at the check that was written in the scenario, so the developer does not manually correlate spans with test intent.
+A useful failure report should locate the failing step and turn, pinpoint the field path inside structured data, contrast expected and actual values, provide enough transcript and event context to see what the agent did, and phrase the headline so a developer can infer what to change. Observability tools excel at the third item in isolation. They show latency, tokens, and nested spans (Figure~\ref{fig:langfuse-trace}). Assertion-local counterexamples add the first two items at the check that was written in the scenario. The failure report names which expectation broke and where in the trace it failed, instead of leaving the developer to read nested spans or an opaque error and work out what the test was meant to enforce and which step caused the failure.
 
 \subsection{Failure Pipeline}
 
@@ -48,7 +48,7 @@ The same structure is rendered in the CLI with Rich panels and in the web UI as 
   \label{fig:failure-pipeline}
 \end{figure}
 
-If several matcher errors are present, the headline often uses the first message while the reported path prefers the deepest path, and compound messages combine outer and inner explanations (\texttt{outer; mismatch at \$.foo: inner}). That behaviour matters when an object fails at a nested field. The developer sees both the high-level mismatch and the precise key.
+If several matcher errors are present, the headline often uses the first message while the reported path prefers the deepest path, and compound messages combine an outer error summary, the nested path, and an inner error summary (for example \texttt{outer summary; mismatch at \$.foo: inner summary}). That behaviour matters when an object fails at a nested field. The developer sees both the high-level mismatch and the precise key.
 
 \subsection{Error Message Mechanics}
 
@@ -85,9 +85,9 @@ Infrastructure, tool exception, or bad observation. \\
 \label{tab:failure-hints}
 \end{table}
 
-Environment-only failures may not have a JSON path. The counterexample still records the step kind and human-readable location detail (for example ``second \texttt{assert\_tool\_calls} after turn 3 (agent turn)'').
+Environment-only failures may not have a JSON path. The counterexample still records the step kind and human-readable location detail (for example ``second \texttt{assert\_that} after turn 3 (agent turn) (environment / fixture check)'').
 
-Tool-call failures often include witness data listing expected and actual tool names in order, which is easier to scan than dumping the entire trace twice. Section~\ref{sec:matcher-spec-repr} explains in more detail how path, witness, and author spec combine into the \texttt{Expected} and \texttt{Actual} blocks.
+Tool-call failures often include witness data listing expected and actual tool names in order, which is easier to scan than dumping the entire trace twice.
 
 \subsection{Readable Expected Lines for Tool Failures}
 \label{sec:matcher-spec-repr}
@@ -98,7 +98,7 @@ The failure panel includes a \texttt{Path} line such as \texttt{\$[1].args.line\
 
 Implementation-wise, the printer walks the spec in the same top-down order as the assertion (tool list, then each tool's fields, then nested \texttt{args} keys). At every step it compares its current position to the failure path. Segments that lie on the path are expanded. Segments that branch away are \emph{stubbed} to a short form (a tool name only, or \texttt{...} for a skipped field). Segments far from the failure may be dropped entirely if the panel would otherwise grow too long. The result is not a second copy of the whole spec, but a single pass that keeps what the path points at and thins out the rest.
 
-Listing~\ref{lst:matcher-spec-repr-example} walks through a two-tool trace where \texttt{line\_id} was wrong on the second call (expected \texttt{LINE-001}, got \texttt{LINE-002}). Only the second tool's \texttt{args} are expanded. The first tool is shown by name alone.
+Listing~\ref{lst:matcher-spec-repr-example} walks through a two-tool trace where \texttt{line\_id} was wrong on the second call (expected \texttt{LINE-001}, got \texttt{LINE-002}). Because the failure path points at the second tool, only that tool's \texttt{args} are expanded in the \texttt{Expected} block. The first tool is shown by name alone.
 
 \begin{lstlisting}[caption={Example failure panel excerpt: path, \texttt{Expected}, and \texttt{Actual} for a tool-argument mismatch.},label=lst:matcher-spec-repr-example,basicstyle=\listingfont]
 Path: $[1].args.line_id

@@ -11,10 +11,6 @@
   \draw[arr] (gen) -- (replay);
   \draw[arr] (replay) -- (out);
 
-  \node[font=\footnotesize, align=center, below=6mm of gen]
-    (orch) {\texttt{isolated\_generative.py}};
-  \draw[arr, dashed, draw=black!45] (orch.north) -- (gen.south);
-
   \node[font=\footnotesize, align=center, below=6mm of out, text width=2.8cm]
     (shrink) {Optional:\\\texttt{--shrink} / \texttt{--extract}};
   \draw[arr, dashed, draw=black!45] (replay.south) |- (shrink.west);

@@ -1,24 +1,24 @@
 \section{Agent Integrations}
 \label{sec:integrations}
 
-Scenarios and matchers are agnostic to how the agent is built. Integrations are the adapters that turn framework-specific runs into the shared event model those matchers expect. The contract is small on purpose so that most of the chapter can focus on what is being checked rather than how each vendor formats messages.
+Scenarios and matchers are agnostic to how the agent is built. Integrations are the adapters that turn framework-specific runs into the shared event model those matchers expect. The contract is deliberately small so developers can add integrations for new agent frameworks without relearning the scenario language or matcher layer.
 
 \subsection{AdaptedAgent and Shipped Adapters}
 
-Every integration implements \texttt{AdaptedAgent.run\_turn(user\_message)}, returning a \texttt{TurnResult} with user-visible \texttt{output}, a list of typed events, and optional error metadata. Events are instances of \texttt{AgentTurnEvent} and \texttt{ToolCallEvent} (and related types in \texttt{events.py}), not opaque dictionaries. Tool nodes carry normalised argument dicts and optional nested \texttt{children} when a specialist agent delegates further tool calls. That choice lets \texttt{assert\_tool\_calls} and the trace renderer share one structure regardless of the underlying agent library, and it is what makes path-qualified matcher errors meaningful in the counterexample panel.
+Every integration implements \texttt{AdaptedAgent.run\_turn(user\_message)}, returning a \texttt{TurnResult} with user-visible \texttt{output}, a list of typed events, and optional error metadata. Events are typed records for agent turns and tool calls, not opaque dictionaries. Tool nodes carry normalised argument dicts and optional nested \texttt{children} when a specialist agent delegates further tool calls. That choice lets \texttt{assert\_tool\_calls} and the trace renderer share one structure regardless of the underlying agent library, and it is what makes path-qualified matcher errors meaningful in the counterexample panel.
 
-The library ships \texttt{wrap\_langchain\_agent} for LangChain and LangGraph agents. That wrapper runs one user turn, streams graph updates, and turns them into the shared event trace that \texttt{assert\_tool\_calls}, counterexamples, and the UI consume during evaluation. Listing~\ref{lst:wrap-langchain} shows the typical setup. \texttt{subgraphs=True} is important when scenarios assert on \texttt{children=[...]} under a parent tool call from a specialist agent.
+The library ships \texttt{wrap\_langchain\_agent} for LangChain and LangGraph agents. That wrapper runs one user turn, streams agent events, and turns them into the shared event trace that \texttt{assert\_tool\_calls}, counterexamples, and the UI consume during evaluation. Listing~\ref{lst:wrap-langchain} shows the typical setup. \texttt{subgraphs=True} ensures nested tool calls from specialist agents are collected in the trace, so scenarios can assert on \texttt{children=[...]} under a parent tool call.
 
 \begin{lstlisting}[language=Python,caption={Wrapping a LangGraph agent for scenario execution.},label=lst:wrap-langchain]
 adapted = wrap_langchain_agent(
-    graph,
+    langchain_agent,
     lambda msg: {"messages": [HumanMessage(content=msg)]},
     subgraphs=True,
 )
 \end{lstlisting}
 
-The library also ships \texttt{wrap\_pydantic\_ai\_agent} for Pydantic AI. It plays the same role. It traces each turn's tool calls and results and maps them into the normalised dictionaries consumed by \texttt{m.tool\_call} specs in Section~\ref{sec:match-system}.
+The library also ships \texttt{wrap\_pydantic\_ai\_agent} for Pydantic AI. It plays the same role. It traces each turn's tool calls and results and maps them into the normalised dictionaries consumed by \texttt{m.tool\_call} specs.
 
 \subsection{Adding Another Framework}
 
-A new framework can be supported without changing the scenario DSL. Implement \texttt{AdaptedAgent}, populate coarse-grained events per turn (tool-level detail rather than token streams), expose the wrapper through a fixture, and register scenarios as usual. CrewAI, custom REST agents, or internal orchestrators can all follow that path. The methodology chapter does not prescribe adapter internals beyond the event shape and the requirement that tool lists remain stable enough for assertions written once in scenario files.
+A new framework can be supported without changing the scenario DSL. Implement \texttt{AdaptedAgent}, populate coarse-grained events per turn (tool-level detail rather than token streams), expose the wrapper through a fixture, and register scenarios as usual. CrewAI~\cite{crewai2024} or internal orchestrators can all follow that path. How much detail each adapter records is up to the developer. A useful \texttt{AdaptedAgent} implementation must capture every event the scenarios will assert on, including nested tool calls, argument fields, and results the matchers expect to see.

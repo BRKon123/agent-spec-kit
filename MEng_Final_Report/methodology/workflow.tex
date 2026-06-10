@@ -1,7 +1,7 @@
 \section{Execution Infrastructure and Workflow}
 \label{sec:execution-workflow}
 
-The framework is meant to be used repeatedly during agent development. Run suites locally or in CI, inspect failures, change the agent, and compare runs over time. Persistence and the web UI support that loop. The CLI remains the quickest path for a single failing scenario.
+The framework is meant to be used repeatedly during agent development. Run suites locally or in CI, inspect failures, change the agent, and compare runs over time. Persistence and the web UI support that loop.
 
 \subsection{Command-Line Interface}
 
@@ -43,12 +43,12 @@ The command \texttt{agent-spec-kit ui} serves a read-only React application over
   \label{fig:ui-trace-drawer}
 \end{figure}
 
-The UI is read-only over the local SQLite store started by \texttt{agent-spec-kit ui --open}. It complements Langfuse-style production tracing (Chapter~\ref{chap:related-work}) but stays assertion-first. The FailureCard mirrors the CLI counterexample fields rather than asking the developer to infer expectations from spans alone.
+The UI complements Langfuse-style production tracing (Chapter~\ref{chap:related-work}) but stays assertion-first. The FailureCard mirrors the CLI counterexample fields. It names which expectation broke and where in the trace it failed, rather than leaving the developer to work out the error location from nested spans or an opaque failure message alone.
 
 \subsection{Compare Page and Regression Workflow}
 \label{sec:ui-compare}
 
-After changing an agent, rerunning the same scenarios under a new experiment name and opening the Compare page answers a practical question. Which cases flipped between pass and fail? The route \texttt{/compare?experiments=v1,v3} syncs experiment slots to the query string so a comparison view can be bookmarked or shared within a team. Rows align on scenario keys. Columns show the latest repeat status per experiment. Rows with differing pass/fail are highlighted so regressions stand out without opening every trace. Clicking a cell opens the trace drawer for that experiment's repeat on the scenario, reusing the same FailureCard and TraceTree components as run detail.
+After changing an agent, rerunning the same scenarios under a new experiment name and opening the Compare page answers a practical question. Which cases flipped between pass and fail? The Compare page syncs the selected experiments to the URL so a comparison view can be bookmarked or shared within a team. Rows align on scenario keys. Columns show the latest repeat status per experiment. Rows with differing pass/fail are highlighted so regressions stand out without opening every trace. Clicking a cell opens the trace drawer for that experiment's repeat on the scenario, reusing the same FailureCard and TraceTree components as run detail.
 
 \begin{figure}[htbp]
   \centering
