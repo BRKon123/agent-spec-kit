@@ -20,7 +20,7 @@ Table~\ref{tab:persona-dimensions} summarises the persona fields. Disclosure upf
 \toprule
 Field & Role & Examples across tasks \\
 \midrule
-Style & Tone of voice & cooperative, angry, frustrated, skeptical, brief \\
+Style & Tone of voice & cooperative, angry, frustrated, sceptical, brief \\
 Behaviour & How they act in the thread & demands refund quickly, corrects line late, mixes multiple issues \\
 Disclosure & When facts appear & \texttt{reveal\_upfront} vs.\ \texttt{reveal\_when\_prompted} \\
 Pressure & Escalation appetite & low, medium, high \\
@@ -89,7 +89,7 @@ Name & Style & Behaviour (abridged) & Disclosure & Pressure \\
 \end{tabular}
 \end{table}
 
-The persona behaviour note is ``mentions multiple issues before prioritizing.'' Combined with situational facts (data broken, SIM possibly in laundry, no replacement shipment), the simulator is steered to surface \emph{both} the laundry/SIM story and the data outage in early turns rather than following the manual script's narrower symptom ordering. The simulation segment stop criteria require the agent to avoid confirming SIM shipment. They do not prevent the agent from opening a ticket in the first segment once the user has authenticated and supplied line context.
+The persona behaviour note is ``mentions multiple issues before prioritising.'' Combined with situational facts (data broken, SIM possibly in laundry, no replacement shipment), the simulator is steered to surface \emph{both} the laundry/SIM story and the data outage in early turns rather than following the manual script's narrower symptom ordering. The simulation segment stop criteria require the agent to avoid confirming SIM shipment. They do not prevent the agent from opening a ticket in the first segment once the user has authenticated and supplied line context.
 
 In this run the simulated customer states credentials and constraints in one opening message, then agrees to escalation when the agent offers it. Listing~\ref{lst:t42-sim} shows the customer-facing transcript. On the first agent turn (Listing~\ref{lst:t42-sim-failure}, event trace), the agent authenticates, runs an outage check and line diagnostic, sends a troubleshooting step, records user action, and opens \texttt{TCK-00001}, all \emph{before} the mid-conversation issue-shift checkpoint where \texttt{assert\_no\_mutations} requires an empty ticket store. The second agent turn escalates that ticket with notes mentioning ``replacement options,'' although the user declined a replacement shipment.
 

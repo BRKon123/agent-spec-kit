@@ -80,13 +80,13 @@ Dual-control evaluation, where both agent and user can change shared state throu
 
 \texttt{repeats=N} schedules \texttt{N} independent jobs for the same case, useful when the same scenario may pass or fail on different runs because the model is not deterministic. Run summaries report how many of those jobs passed.
 
-\subsection{Parametrized Fixtures}
+\subsection{Parametrised Fixtures}
 
 When the same conversation script should run against several LLM backends, seeds, or configuration tuples, duplicating the scenario body is wasteful and hard to maintain. \texttt{@parametrize} on a fixture (or on \texttt{@scenario}) lists the varying values once, and the framework then runs one job per value, each with its own row in run summaries and the Compare UI.
 
 Listing~\ref{lst:parametrize-fixture} shows the idea. The scenario body is written once, and only the fixture varies the model passed into the wrapped graph. The framework runs that scenario once per listed value.
 
-\begin{lstlisting}[language=Python,caption={Parametrized agent fixture: one scenario, multiple model cases.},label=lst:parametrize-fixture]
+\begin{lstlisting}[language=Python,caption={Parametrised agent fixture: one scenario, multiple model cases.},label=lst:parametrize-fixture]
 _LLM_MODEL_CASES = (
     ek.case("gpt-4.1-nano-2025-04-14", id="gpt41nano"),
     ek.case("gpt-5-nano", id="gpt5nano"),
@@ -103,4 +103,4 @@ async def test_multiply_dialog(s):
     ...
 \end{lstlisting}
 
-Parametrization is orthogonal to \texttt{repeats}. A parametrized case can still set \texttt{repeats=3} to estimate pass rate for that model, whereas repeats without parametrization re-runs the identical configuration. Section~\ref{sec:execution-workflow} describes how runs and experiments surface those rows when comparing agent updates across models or prompts.
+Parametrisation is orthogonal to \texttt{repeats}. A parametrised case can still set \texttt{repeats=3} to estimate pass rate for that model, whereas repeats without parametrisation re-runs the identical configuration. Section~\ref{sec:execution-workflow} describes how runs and experiments surface those rows when comparing agent updates across models or prompts.
