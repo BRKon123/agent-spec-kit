@@ -13,7 +13,7 @@ The first contribution is a unified behavioural specification. A scenario is a c
 
 The second contribution is a framework-neutral execution and diagnostic model. Integrations for LangChain and Pydantic AI normalise traces so scenarios do not depend on one framework's message format. When an assertion fails, the framework attaches a structured counterexample that names which check broke, on which turn, at which field path, with expected and actual summaries and enough transcript context to act. A CLI and local web UI persist runs, compare experiments, and show the same failure card a developer sees in the terminal.
 
-The third contribution is an integrated discovery-to-regression workflow. Repeated runs increase confidence when evaluating stochastic agents. User simulation and mutation fuzzing explore dialogue a human author might not write, using the same oracles throughout. Shrinking and regression extraction turn an exploratory failure into a small, permanent script the suite can rerun. The library does not try to replace every metric-oriented library on its own ground. It offers a single behavioural contract per episode, precise failure reports at the assertion that broke, and a path from discovery to regression within the same scenario model.
+The third contribution is an integrated discovery-to-regression workflow. Repeated runs increase confidence when evaluating stochastic agents. User simulation and mutation fuzzing explore dialogue a human author might not write, using the same oracles throughout. Shrinking and regression extraction turn an exploratory failure into a small, permanent script the suite can rerun. The library offers a single behavioural contract per episode, precise failure reports at the assertion that broke, and a path from discovery to regression within the same scenario model.
 
 \section{Interpretation of the Findings}
 
@@ -25,10 +25,10 @@ Generated exploration complements authored tests rather than replacing them. Man
 
 \section{Limitations and Future Work}
 
-Chapter~\ref{chap:evaluation} identified limits to construct, external, and rerun validity. Clarity and diagnostic grades relied on LLM judges. Some lanes depended on LLM criteria. Only one reference agent and one telecom domain were studied, and extracted scenarios did not always reproduce the same failure signature on immediate rerun.
+Chapter~\ref{chap:evaluation} identified limits to construct, external, and rerun validity. Clarity and diagnostic grades relied on LLM judges. Only one reference agent and one telecom domain were studied, and extracted scenarios did not always reproduce the same failure signature on immediate rerun.
 
 Several directions follow from those limits. Evaluation on additional domains and agent frameworks would test whether the scenario model transfers beyond TelcoSupportBench. Human assessment of authoring clarity and diagnostic usefulness would strengthen construct validity. Signature-stable replay after extraction, and more robust matching of stochastic trajectories, would make discovery findings easier to keep as regressions. Larger suites and team-based studies would also clarify how the workflow scales in everyday development.
 
 \section{Final Remarks}
 
-Agent reliability needs more than leaderboard scores or final-answer grades. It needs behavioural specifications a team can read, run, debug, and extend. \emph{agent-spec-kit} provides a promising basis for further investigation along those lines. It is explicit about what should happen, precise about what went wrong, and designed to turn exploratory failures into tests the suite can keep.
+Agent reliability needs more than leaderboard scores or final-answer grades. It needs behavioural specifications a team can read, run, debug, and extend. \emph{agent-spec-kit} provides a promising basis for further development along those lines. It is explicit about what should happen, precise about what went wrong, and designed to turn exploratory failures into tests the suite can keep.

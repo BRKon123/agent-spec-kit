@@ -5,7 +5,7 @@ Section~\ref{sec:design-goals} argued that scalar metrics and raw traces leave a
 
 \subsection{Design Principles}
 
-A useful failure report should locate the failing step and turn, pinpoint the field path inside structured data, contrast expected and actual values, provide enough transcript and event context to see what the agent did, and phrase the headline so a developer can infer what to change. Observability tools excel at the third item in isolation. They show latency, tokens, and nested spans (Figure~\ref{fig:langfuse-trace}). Assertion-local counterexamples add the first two items at the check that was written in the scenario. The failure report names which expectation broke and where in the trace it failed, instead of leaving the developer to read nested spans or an opaque error and work out what the test was meant to enforce and which step caused the failure.
+A useful failure report should locate the failing step and turn, pinpoint the field path inside structured data, contrast expected and actual values, provide enough transcript and event context to see what the agent did, and phrase the headline so a developer can infer what to change. Observability tools excel at transcript and event context in isolation. They show latency, tokens, and nested spans (Figure~\ref{fig:langfuse-trace}). Assertion-local counterexamples add which step and turn failed and which field path inside structured data mismatched, at the check that was written in the scenario. The failure report names which expectation broke and where in the trace it failed, instead of leaving the developer to read nested spans or an opaque error and work out what the test was meant to enforce and which step caused the failure.
 
 \subsection{Failure Pipeline}
 

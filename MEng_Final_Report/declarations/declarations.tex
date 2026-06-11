@@ -22,11 +22,7 @@ This project builds a testing framework for tool-using agents. It does not deplo
 
     \item \textbf{Third-party language models.} Several study arms call commercial APIs (e.g.\ \texttt{openai:gpt-5-mini}) for simulated users, dialogue judges, output rubrics, and some grading. Prompts and model outputs therefore leave the local machine. Reusers should read provider terms, avoid sending real personal data in prompts, and expect API cost and possible model changes over time.
 
-    \item \textbf{Limits of automated judging.} Some checks use an LLM judge for tone, helpfulness, or stop conditions. Judges can be inconsistent or favour verbose answers. A passing scenario does not prove that a human reviewer would accept the agent. Subjective rubrics should sit alongside deterministic checks on tools and application state.
-
     \item \textbf{Tests are not a safety guarantee.} Scripted scenarios, user simulation, and mutation fuzzing only cover the tasks, personas, and oracles authors configure. Passing the suite may create false confidence, especially in customer support, billing, healthcare, or other settings where mistakes cause real harm. Automated tests should support expert oversight, not replace it.
-
-    \item \textbf{Generative and adversarial testing.} Simulated users and fuzz operators deliberately vary customer wording. Generated dialogues should be treated as test output. Review them before sharing outside the team and do not mistake them for real user communications. A small set of adversarial benchmark tasks stress policy adherence. They are not a substitute for production safeguards against abuse or misuse.
 
     \item \textbf{Responsible use.} \emph{agent-spec-kit} helps developers find bugs before release. It does not decide whether an agent should launch, which users it should serve, or what policies it must follow. Those decisions remain with the product team.
 \end{itemize}
