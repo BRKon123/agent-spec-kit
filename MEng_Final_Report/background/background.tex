@@ -4,20 +4,20 @@
 \section{From Language Models to Agentic Systems}
 \label{sec:bg-llms-to-agents}
 
-Modern large language models are built on the Transformer architecture, introduced by Vaswani et al. as a sequence model based on attention rather than recurrence or convolution \cite{vaswani2017attention}. Scaling this architecture produced models that can interpret natural-language instructions, generate structured text, and retain conversational context. Brown et al. showed that sufficiently large pretrained models can perform many tasks through in-context learning rather than task-specific gradient updates \cite{brown2020language}. Instruction tuning and reinforcement learning from human feedback subsequently made these models more useful as general-purpose assistants \cite{ouyang2022training}.
+Modern large language models are built on the Transformer architecture, introduced by Vaswani et al. as a sequence model based on attention rather than recurrence or convolution \citep{vaswani2017attention}. Scaling this architecture produced models that can interpret natural-language instructions, generate structured text, and retain conversational context. Brown et al. showed that sufficiently large pretrained models can perform many tasks through in-context learning rather than task-specific gradient updates \citep{brown2020language}. Instruction tuning and reinforcement learning from human feedback subsequently made these models more useful as general-purpose assistants \citep{ouyang2022training}.
 
-Prompting research also showed that model behaviour depends strongly on how a task is framed. Few-shot examples can define a task through demonstrations \cite{brown2020language}, while chain-of-thought and zero-shot reasoning prompts can change how models decompose problems \cite{wei2022chain,kojima2022large}. Self-consistency exploits the fact that repeated samples may follow different reasoning paths \cite{wang2022self}. These prompting methods demonstrate that LLM behaviour is probabilistic and sensitive to prompt wording. One successful execution does not establish that a system will behave reliably across repeated trials.
+Prompting research also showed that model behaviour depends strongly on how a task is framed. Few-shot examples can define a task through demonstrations \citep{brown2020language}, while chain-of-thought and zero-shot reasoning prompts can change how models decompose problems \citep{wei2022chain,kojima2022large}. Self-consistency exploits the fact that repeated samples may follow different reasoning paths \citep{wang2022self}. These prompting methods demonstrate that LLM behaviour is probabilistic and sensitive to prompt wording. One successful execution does not establish that a system will behave reliably across repeated trials.
 
-As LLMs were incorporated into applications, the unit of behaviour expanded beyond a single generated answer. Retrieval-augmented generation combines retrieval, context selection, and generation \cite{lewis2020retrieval}. A failure may arise because the wrong material was retrieved, because relevant evidence was ignored, or because the answer was unsupported. Tool-using agents add another layer. ReAct introduced a pattern in which an LLM alternates between reasoning, executable actions, and environment observations \cite{yao2023react}.
+As LLMs were incorporated into applications, the unit of behaviour expanded beyond a single generated answer. Retrieval-augmented generation combines retrieval, context selection, and generation \citep{lewis2020retrieval}. A failure may arise because the wrong material was retrieved, because relevant evidence was ignored, or because the answer was unsupported. Tool-using agents add another layer. ReAct introduced a pattern in which an LLM alternates between reasoning, executable actions, and environment observations \citep{yao2023react}.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/react_prompting.png}
-  \caption{ReAct interleaves natural-language reasoning with executable actions and environment observations \cite{yao2023react}.}
+  \caption{ReAct interleaves natural-language reasoning with executable actions and environment observations \citep{yao2023react}.}
   \label{fig:react-prompting}
 \end{figure}
 
-Toolformer explored models that decide when and how to call external tools \cite{schick2023toolformer}, while Gorilla focused on selecting APIs from large collections \cite{patil2023gorilla}. These systems make the execution trace a first-class artefact. Behaviour includes an ordered sequence of tool calls, arguments, observations, and state changes, not only the final paragraph shown to the user.
+Toolformer explored models that decide when and how to call external tools \citep{schick2023toolformer}, while Gorilla focused on selecting APIs from large collections \citep{patil2023gorilla}. These systems make the execution trace a first-class artefact. Behaviour includes an ordered sequence of tool calls, arguments, observations, and state changes, not only the final paragraph shown to the user.
 
 A tool-using agent must be evaluated on its actions and their effects as well as its answer. A conventional language benchmark asks whether a model produced an acceptable answer. A tool-using agent evaluation must also ask whether the system selected appropriate actions, respected policy constraints, interpreted observations correctly, and achieved the intended effect in its environment.
 
@@ -26,20 +26,20 @@ A tool-using agent must be evaluated on its actions and their effects as well as
 
 Hallucination in an agent can affect more than the final wording. A system may invent the contents of a tool result, assume that an action succeeded, or continue from a state the environment never reached. Since later steps depend on earlier observations, one unsupported assumption can propagate through an entire trajectory and become difficult to diagnose from the final response alone.
 
-Tool use introduces additional failure classes. An agent may select the wrong tool, construct an invalid or semantically wrong argument, call otherwise correct tools in the wrong order, or act when it should ask for clarification or abstain. Function-calling benchmarks such as BFCL explicitly include relevance detection, abstention, and multi-step calls \cite{patil2025bfcl}. ToolEmu shows that selecting a plausible tool is not sufficient when arguments are fabricated, unsafe, or misaligned with the instruction \cite{ruan2024toolemu}.
+Tool use introduces additional failure classes. An agent may select the wrong tool, construct an invalid or semantically wrong argument, call otherwise correct tools in the wrong order, or act when it should ask for clarification or abstain. Function-calling benchmarks such as BFCL explicitly include relevance detection, abstention, and multi-step calls \citep{patil2025bfcl}. ToolEmu shows that selecting a plausible tool is not sufficient when arguments are fabricated, unsafe, or misaligned with the instruction \citep{ruan2024toolemu}.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figures/tool_emu_failure_examples.png}
-  \caption{Typical failures of LM agents in ToolEmu \cite{ruan2024toolemu}, including fabricated assumptions, instruction misinterpretation, unsafe execution, and risk ignorance.}
+  \caption{Typical failures of LM agents in ToolEmu \citep{ruan2024toolemu}, including fabricated assumptions, instruction misinterpretation, unsafe execution, and risk ignorance.}
   \label{fig:toolemu-failures}
 \end{figure}
 
-Multi-turn interaction makes these issues more pronounced. AgentBench evaluates agents across several interactive environments and identifies long-term reasoning and instruction following as major obstacles \cite{liu2023agentbench}. MINT similarly shows that single-turn ability does not necessarily transfer to interactions in which the system must update its plan after feedback \cite{wang2023mint}. An agent must remember earlier constraints, distinguish corrected information from stale information, and maintain consistent bindings between user entities and tool arguments.
+Multi-turn interaction makes these issues more pronounced. AgentBench evaluates agents across several interactive environments and identifies long-term reasoning and instruction following as major obstacles \citep{liu2023agentbench}. MINT similarly shows that single-turn ability does not necessarily transfer to interactions in which the system must update its plan after feedback \citep{wang2023mint}. An agent must remember earlier constraints, distinguish corrected information from stale information, and maintain consistent bindings between user entities and tool arguments.
 
-Security work adds a related concern. Agents that browse, retrieve documents, or process user-provided files must distinguish trusted instructions from untrusted content. Greshake et al. show that indirect prompt injection can redirect LLM-integrated applications through instructions embedded in external data \cite{greshake2023not}. A response may therefore appear fluent and relevant while the system has violated an instruction hierarchy, exposed protected information, or performed an unsafe action.
+Security work adds a related concern. Agents that browse, retrieve documents, or process user-provided files must distinguish trusted instructions from untrusted content. Greshake et al. show that indirect prompt injection can redirect LLM-integrated applications through instructions embedded in external data \citep{greshake2023not}. A response may therefore appear fluent and relevant while the system has violated an instruction hierarchy, exposed protected information, or performed an unsafe action.
 
-A further difficulty is non-determinism. Even with the same prompt and tools, stochastic decoding and small contextual differences may produce different trajectories. A system that succeeds once but fails under repeated runs may be unsuitable for deployment. Metrics such as \textit{pass}$^k$ in $\tau$-bench address this by measuring consistent success across repeated attempts \cite{yao2024taubench}.
+A further difficulty is non-determinism. Even with the same prompt and tools, stochastic decoding and small contextual differences may produce different trajectories. A system that succeeds once but fails under repeated runs may be unsuitable for deployment. Metrics such as \textit{pass}$^k$ in $\tau$-bench address this by measuring consistent success across repeated attempts \citep{yao2024taubench}.
 
 These failures can be organised into three related notions of correctness. \emph{Answer correctness} concerns what the user sees. \emph{Trajectory correctness} concerns the sequence of decisions, tool calls, and observations. \emph{State correctness} concerns the environment after execution. They can diverge. A support agent may produce a reassuring reply while skipping authentication, writing to the wrong account, or failing to perform the promised action. Conversely, imperfect wording may accompany operationally correct behaviour. This distinction motivates evaluation that preserves the conversation, trace, and resulting state.
 
@@ -48,36 +48,36 @@ Side effects make trajectory and state errors persistent: a wrong database updat
 \section{General LLM Evaluation and Its Limits}
 \label{sec:bg-general-eval}
 
-General language-model benchmarks provide standardised comparisons of knowledge, reasoning, and language understanding. MMLU, for example, measures performance across many academic and professional domains \cite{hendrycks2021mmlu}. HELM broadened evaluation from a single accuracy score to a coverage problem across scenarios and dimensions such as robustness, calibration, fairness, toxicity, and efficiency \cite{liang2022helm}. These benchmarks make model-level progress visible and reproducible, but they usually operate on fixed inputs and final outputs rather than an executable environment.
+General language-model benchmarks provide standardised comparisons of knowledge, reasoning, and language understanding. MMLU, for example, measures performance across many academic and professional domains \citep{hendrycks2021mmlu}. HELM broadened evaluation from a single accuracy score to a coverage problem across scenarios and dimensions such as robustness, calibration, fairness, toxicity, and efficiency \citep{liang2022helm}. These benchmarks make model-level progress visible and reproducible, but they usually operate on fixed inputs and final outputs rather than an executable environment.
 
-Open-ended generation also makes strict reference-based metrics less adequate. Exact match, BLEU, and ROUGE assume that good responses resemble a reference, even though many valid answers may use different wording. LLM-as-a-judge methods instead use a strong model to apply natural-language criteria. G-Eval reports higher correlation with human judgement than many traditional metrics \cite{liu2023geval}. MT-Bench and Chatbot Arena popularised model-based pairwise comparison while also documenting biases in judge behaviour \cite{zheng2023judging}.
+Open-ended generation also makes strict reference-based metrics less adequate. Exact match, BLEU, and ROUGE assume that good responses resemble a reference, even though many valid answers may use different wording. LLM-as-a-judge methods instead use a strong model to apply natural-language criteria. G-Eval reports higher correlation with human judgement than many traditional metrics \citep{liu2023geval}. MT-Bench and Chatbot Arena popularised model-based pairwise comparison while also documenting biases in judge behaviour \citep{zheng2023judging}.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.76\textwidth]{figures/geval_pipeline.png}
-  \caption{G-Eval applies a rubric-driven LLM judge and aggregates the model's probability over rating levels \cite{liu2023geval}.}
+  \caption{G-Eval applies a rubric-driven LLM judge and aggregates the model's probability over rating levels \citep{liu2023geval}.}
   \label{fig:geval-pipeline}
 \end{figure}
 
 These methods scale more easily than human review and are useful for qualities such as relevance, tone, completeness, or helpfulness. However, a model judge may not reliably establish whether a particular tool was called, whether an argument matched a schema, or whether a database changed correctly. It may also reward verbose explanations that sound plausible. In an agent evaluation, an LLM judge is therefore one possible oracle rather than a substitute for executable checks.
 
-RAG evaluation frameworks illustrate a more component-oriented approach. RAGAS separates dimensions such as context relevance, faithfulness, and answer relevance \cite{es2023ragas}. ARES combines synthetic data, lightweight judges, and a small amount of human annotation \cite{saadfalcon2023ares}. These approaches recognise that a pipeline should be evaluated at the level of its components and evidence flow. Nevertheless, RAG systems typically retrieve and generate, whereas agents may interact over several turns, use multiple tools, and cause persistent side effects.
+RAG evaluation frameworks illustrate a more component-oriented approach. RAGAS separates dimensions such as context relevance, faithfulness, and answer relevance \citep{es2023ragas}. ARES combines synthetic data, lightweight judges, and a small amount of human annotation \citep{saadfalcon2023ares}. These approaches recognise that a pipeline should be evaluated at the level of its components and evidence flow. Nevertheless, RAG systems typically retrieve and generate, whereas agents may interact over several turns, use multiple tools, and cause persistent side effects.
 
 Scalar metrics remain valuable for ranking systems, comparing experiments, and tracking regressions. A single score, however, rarely shows where a failure arose, whether in instruction interpretation, tool choice, argument construction, observation handling, response generation, or state mutation. A useful failure report includes the execution trace and the exact check that failed. Reply quality may be judged semantically, but tool and state requirements are better checked with deterministic matchers and executable tests.
 
 \section{Tool-Use and Function-Calling Benchmarks}
 \label{sec:bg-tool-benchmarks}
 
-The first wave of tool-use benchmarks focused on mapping natural-language requests to API calls. API-Bank introduced dialogue tasks involving intent understanding, API selection, and correct call generation \cite{li2023apibank}. ToolLLM and ToolBench expanded the setting to more than 16,000 real-world APIs and included both single- and multi-tool instructions \cite{qin2023toollm}. These benchmarks made the interface between models and software explicit. A generated call must satisfy machine-readable constraints as well as the user's request.
+The first wave of tool-use benchmarks focused on mapping natural-language requests to API calls. API-Bank introduced dialogue tasks involving intent understanding, API selection, and correct call generation \citep{li2023apibank}. ToolLLM and ToolBench expanded the setting to more than 16,000 real-world APIs and included both single- and multi-tool instructions \citep{qin2023toollm}. These benchmarks made the interface between models and software explicit. A generated call must satisfy machine-readable constraints as well as the user's request.
 
-Large API spaces also complicate evaluation. A call can be syntactically valid yet semantically inappropriate, while a partially correct chain may still fail the user's goal. StableToolBench highlights an additional reproducibility issue. Benchmarks that depend on live APIs can change because services fail, return different data, or become unavailable \cite{guo2024stabletoolbench}. Its virtual API server illustrates the importance of controlling the environment so that changes in results can be attributed to the agent rather than external noise.
+Large API spaces also complicate evaluation. A call can be syntactically valid yet semantically inappropriate, while a partially correct chain may still fail the user's goal. StableToolBench highlights an additional reproducibility issue. Benchmarks that depend on live APIs can change because services fail, return different data, or become unavailable \citep{guo2024stabletoolbench}. Its virtual API server illustrates the importance of controlling the environment so that changes in results can be attributed to the agent rather than external noise.
 
-BFCL provides a systematic view of function-calling capabilities, including function selection, relevance detection, AST-based argument checking, executable calls, parallel calls, multi-turn interactions, and agentic scenarios \cite{patil2025bfcl}. Its contribution is to make tool correctness precise. Evaluation may need to consider the function name, required and optional arguments, types and values, call order, number of calls, and whether the model should have abstained.
+BFCL provides a systematic view of function-calling capabilities, including function selection, relevance detection, AST-based argument checking, executable calls, parallel calls, multi-turn interactions, and agentic scenarios \citep{patil2025bfcl}. Its contribution is to make tool correctness precise. Evaluation may need to consider the function name, required and optional arguments, types and values, call order, number of calls, and whether the model should have abstained.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.70\textwidth]{figures/ast_based_function_evaluation.png}
-  \caption{BFCL parses generated function calls and checks names, parameters, types, and values against the reference \cite{patil2025bfcl}.}
+  \caption{BFCL parses generated function calls and checks names, parameters, types, and values against the reference \citep{patil2025bfcl}.}
   \label{fig:bfcl-ast-eval}
 \end{figure}
 
@@ -88,36 +88,36 @@ These benchmarks also motivate trace normalisation. Agent frameworks may represe
 \section{Executable and Stateful Agent Benchmarks}
 \label{sec:bg-stateful-benchmarks}
 
-Executable benchmarks shift the unit of evaluation from a generated answer to an episode in an environment. AgentBench evaluates multi-step reasoning, decision-making, and instruction following across several interactive domains \cite{liu2023agentbench}. WebArena uses self-hosted websites and programmatic validators so that success depends on the resulting website state, not an agent's statement that the task was completed \cite{zhou2023webarena}. SWE-bench applies the same principle to software engineering. A generated patch is judged by whether it resolves an issue and passes tests in the repository \cite{jimenez2024swebench}.
+Executable benchmarks shift the unit of evaluation from a generated answer to an episode in an environment. AgentBench evaluates multi-step reasoning, decision-making, and instruction following across several interactive domains \citep{liu2023agentbench}. WebArena uses self-hosted websites and programmatic validators so that success depends on the resulting website state, not an agent's statement that the task was completed \citep{zhou2023webarena}. SWE-bench applies the same principle to software engineering. A generated patch is judged by whether it resolves an issue and passes tests in the repository \citep{jimenez2024swebench}.
 
-Planning benchmarks provide a complementary view. PlanBench studies whether models can reason about preconditions, effects, and goal states \cite{valmeekam2023planbench}. These concepts appear implicitly in tool-using agents. A missing prerequisite, impossible call, or incorrect assumption about state can invalidate the remainder of a trajectory.
+Planning benchmarks provide a complementary view. PlanBench studies whether models can reason about preconditions, effects, and goal states \citep{valmeekam2023planbench}. These concepts appear implicitly in tool-using agents. A missing prerequisite, impossible call, or incorrect assumption about state can invalidate the remainder of a trajectory.
 
-AppWorld is particularly relevant to stateful evaluation. It provides simulated applications and hundreds of APIs, then uses programmatic tests over initial and final state to verify task completion \cite{trivedi2024appworld}. It also checks for collateral damage, recognising that an agent should not achieve the main goal through unrelated or harmful changes.
+AppWorld is particularly relevant to stateful evaluation. It provides simulated applications and hundreds of APIs, then uses programmatic tests over initial and final state to verify task completion \citep{trivedi2024appworld}. It also checks for collateral damage, recognising that an agent should not achieve the main goal through unrelated or harmful changes.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.86\textwidth]{figures/app_world_engine_and_benchmark.png}
-  \caption{AppWorld uses simulated applications and programmatic tests over initial and final state \cite{trivedi2024appworld}.}
+  \caption{AppWorld uses simulated applications and programmatic tests over initial and final state \citep{trivedi2024appworld}.}
   \label{fig:appworld-engine}
 \end{figure}
 
-$\tau$-bench combines simulated users, domain policies, database-backed tools, final-state validation, and repeated trials in realistic retail and airline tasks \cite{yao2024taubench}. Its design captures several properties of deployed domain agents. Success depends jointly on conversation, policy compliance, tool use, and state, while reliability depends on repeated performance.
+$\tau$-bench combines simulated users, domain policies, database-backed tools, final-state validation, and repeated trials in realistic retail and airline tasks \citep{yao2024taubench}. Its design captures several properties of deployed domain agents. Success depends jointly on conversation, policy compliance, tool use, and state, while reliability depends on repeated performance.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/tao_bench_setup.png}
-  \caption{$\tau$-bench combines a simulated user, a policy-guided agent, and database-backed tools. Success is determined from the resulting environment state rather than the final reply alone \cite{yao2024taubench}.}
+  \caption{$\tau$-bench combines a simulated user, a policy-guided agent, and database-backed tools. Success is determined from the resulting environment state rather than the final reply alone \citep{yao2024taubench}.}
   \label{fig:taubench-setup}
 \end{figure}
 
-ToolSandbox extends this direction with stateful tool execution, implicit dependencies, on-policy user simulation, and milestone-based evaluation \cite{lu2024toolsandbox}. Milestones expose whether required intermediate conditions were satisfied, which is useful when final-state success could conceal unsafe or incomplete behaviour.
+ToolSandbox extends this direction with stateful tool execution, implicit dependencies, on-policy user simulation, and milestone-based evaluation \citep{lu2024toolsandbox}. Milestones expose whether required intermediate conditions were satisfied, which is useful when final-state success could conceal unsafe or incomplete behaviour.
 
 These benchmarks extend evaluation from static outputs to episodes that execute tools, change state, interact with users, and run repeatedly. They demonstrate why traces and state matter, but they are primarily fixed research environments. A team still needs reusable infrastructure for expressing its own conversations, policies, tool expectations, and postconditions. \emph{agent-spec-kit} therefore focuses on reusable infrastructure for writing domain-specific episodes and oracles.
 
 \section{Test Oracles, Specifications and Structured Evidence}
 \label{sec:bg-oracles}
 
-The software-testing literature provides useful language for this problem. A test oracle is a mechanism for deciding whether observed behaviour is correct. Barr et al. identify the oracle problem as central to testing. Generating inputs is not sufficient if there is no reliable way to determine whether the result is right \cite{barr2015oracle}. LLM systems intensify the problem because outputs are open-ended, context-dependent, and often partially correct. Strict string comparison may be too brittle, while an unconstrained natural-language judgement may be too vague.
+The software-testing literature provides useful language for this problem. A test oracle is a mechanism for deciding whether observed behaviour is correct. Barr et al. identify the oracle problem as central to testing. Generating inputs is not sufficient if there is no reliable way to determine whether the result is right \citep{barr2015oracle}. LLM systems intensify the problem because outputs are open-ended, context-dependent, and often partially correct. Strict string comparison may be too brittle, while an unconstrained natural-language judgement may be too vague.
 
 For an agent, there is rarely one universal oracle. Different surfaces require different checks, including semantic criteria for a final response, schemas for structured output, names and arguments for tool calls, ordering constraints for trajectories, and invariants or postconditions for environment state. Table~\ref{tab:agent-oracle-types} summarises representative examples.
 
@@ -147,23 +147,23 @@ Structured evidence makes these checks useful for debugging. A scenario-level fa
 
 LLM judges complement rather than replace deterministic oracles. They are useful for subjective qualities that are difficult to encode, but precise machine-level claims are better handled by structured matchers and executable checks. A judge may assess whether a response is empathetic, but it should not be the only evidence that a JSON field matched its schema or that a database row was updated correctly.
 
-Metamorphic testing supplies another useful idea for cases where exact outputs are difficult to specify. It checks relations across multiple executions rather than a single reference result \cite{chen1998metamorphic}. For an agent, harmless paraphrases should often preserve the intended action, irrelevant context should not alter a decision, and semantically equivalent tool observations should lead to compatible behaviour. Such relations define robustness properties without requiring a golden transcript.
+Metamorphic testing supplies another useful idea for cases where exact outputs are difficult to specify. It checks relations across multiple executions rather than a single reference result \citep{chen1998metamorphic}. For an agent, harmless paraphrases should often preserve the intended action, irrelevant context should not alter a decision, and semantically equivalent tool observations should lead to compatible behaviour. Such relations define robustness properties without requiring a golden transcript.
 
 \section{Property-Based Testing, Fuzzing and Shrinking}
 \label{sec:bg-testing-lineage}
 
-Property-based testing is a natural predecessor for generative agent evaluation. QuickCheck separates generation from checking. A developer specifies properties, the system explores many generated inputs, and failures are returned as counterexamples \cite{claessen2000quickcheck}. This is useful when manually enumerating all relevant cases is impractical. Agent interactions have the same difficulty because the space of user phrasings, dialogue paths, observations, and edge cases is too large for a fixed set of hand-written scripts.
+Property-based testing is a natural predecessor for generative agent evaluation. QuickCheck separates generation from checking. A developer specifies properties, the system explores many generated inputs, and failures are returned as counterexamples \citep{claessen2000quickcheck}. This is useful when manually enumerating all relevant cases is impractical. Agent interactions have the same difficulty because the space of user phrasings, dialogue paths, observations, and edge cases is too large for a fixed set of hand-written scripts.
 
 Generated conversations become tests only when an oracle decides whether their behaviour is acceptable. A generated interaction becomes useful when it is checked against requirements such as required tool use, forbidden side effects, policy compliance, or acceptable final responses. Otherwise, generation produces transcripts but no justified correctness signal.
 
-After a failure is found, shrinking removes irrelevant input while preserving the same failure. QuickCheck reduces failing values, while Delta Debugging formalises the broader task of simplifying failure-inducing inputs without removing the failure \cite{zeller2002simplifying}. A smaller counterexample reduces debugging effort by excluding irrelevant material. For an agent, however, the input is an interactive trajectory rather than a single value. Removing one turn may change every subsequent response, so a shrinker must preserve the same diagnostic failure rather than merely producing any shorter failing conversation.
+After a failure is found, shrinking removes irrelevant input while preserving the same failure. QuickCheck reduces failing values, while Delta Debugging formalises the broader task of simplifying failure-inducing inputs without removing the failure \citep{zeller2002simplifying}. A smaller counterexample reduces debugging effort by excluding irrelevant material. For an agent, however, the input is an interactive trajectory rather than a single value. Removing one turn may change every subsequent response, so a shrinker must preserve the same diagnostic failure rather than merely producing any shorter failing conversation.
 
-Fuzzing varies seed conversations through explicit mutation operators. Traditional fuzzers mutate inputs to discover crashes or unexpected behaviour. LLM-specific work adapts this idea to prompts and safety failures. GPTFuzzer uses seed prompts, mutation operators, and a judgement model to generate jailbreak prompts \cite{yu2023gptfuzzer}. FuzzLLM combines structured attack templates, constraints, policy-violating questions, and a label-model oracle \cite{yao2023fuzzllm}.
+Fuzzing varies seed conversations through explicit mutation operators. Traditional fuzzers mutate inputs to discover crashes or unexpected behaviour. LLM-specific work adapts this idea to prompts and safety failures. GPTFuzzer uses seed prompts, mutation operators, and a judgement model to generate jailbreak prompts \citep{yu2023gptfuzzer}. FuzzLLM combines structured attack templates, constraints, policy-violating questions, and a label-model oracle \citep{yao2023fuzzllm}.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.90\textwidth]{figures/fuzz_llm_pipeline.png}
-  \caption{FuzzLLM combines seed templates, structured mutations, execution against a target model, and an automated oracle \cite{yao2023fuzzllm}.}
+  \caption{FuzzLLM combines seed templates, structured mutations, execution against a target model, and an automated oracle \citep{yao2023fuzzllm}.}
   \label{fig:fuzzllm-pipeline}
 \end{figure}
 

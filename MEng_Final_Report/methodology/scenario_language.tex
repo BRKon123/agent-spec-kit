@@ -72,7 +72,7 @@ def _apply_state() -> None:
 
 That pattern supports offline user effects (a device reboot, a payment posted outside the chat) without building a full user simulator, and it supports ordering constraints such as verifying that the agent did not mutate state before authentication.
 
-Dual-control evaluation, where both agent and user can change shared state through tools, appears in $\tau^2$-bench~\cite{barres2025tau2}. The scenario language can express the same pattern with a \texttt{user\_fixture} with its own tools and \texttt{simulate\_conversation}, scripted \texttt{action} steps for deterministic user-side effects, and \texttt{assert\_that} on a shared store after both parties have acted. Chapter~\ref{chap:background} contrasts $\tau$-bench-style single-control users with this richer interaction model. The empirical study in this project uses a single-control telecom setup, but dual-control scenarios can be written with these fixtures and steps today.
+Dual-control evaluation, where both agent and user can change shared state through tools, appears in $\tau^2$-bench~\citep{barres2025tau2}. The scenario language can express the same pattern with a \texttt{user\_fixture} with its own tools and \texttt{simulate\_conversation}, scripted \texttt{action} steps for deterministic user-side effects, and \texttt{assert\_that} on a shared store after both parties have acted. Chapter~\ref{chap:background} contrasts $\tau$-bench-style single-control users with this richer interaction model. The empirical study in this project uses a single-control telecom setup, but dual-control scenarios can be written with these fixtures and steps today.
 
 \subsection{Registration, Discovery, and Repeats}
 
