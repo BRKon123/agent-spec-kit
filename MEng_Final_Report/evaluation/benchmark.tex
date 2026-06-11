@@ -55,7 +55,7 @@ T50 & Adversarial & Partial account detail leaked before auth \\
 
 Each of the fifty tasks is exercised through four scenario variants that share the \emph{same} user messages and differ only in which assertions run. The lanes are output (O), state (S), trace (T), and full (F).
 
-Agent bugs do not always show up in the same place. A reply can pass a rubric while a tool is invoked with the wrong arguments. Trace checks can fail while the customer-facing answer still sounds reasonable. Store oracles can catch policy violations in application state that the reply never mentions. Splitting checks into lanes lets the evaluation compare how well each \emph{type} of assertion finds problems on the same dialogue. Output-only scenarios approximate grading the final answer. Trace and state lanes target tool choreography and side effects. The full lane (F) is the combined regression developers would run in practice. Later in the chapter, the fault-injection study (Section~\ref{sec:fault-detection}) reuses this split to measure which lanes catch injected faults and which miss them when only one surface is checked.
+Agent bugs do not always show up in the same place. A reply can pass a rubric while a tool is invoked with the wrong arguments. Trace checks can fail while the customer-facing answer still sounds reasonable. Store oracles can catch policy violations in application state that the reply never mentions. Splitting checks into lanes lets the evaluation compare how well each \emph{type} of assertion finds problems on the same dialogue. Output-only scenarios approximate grading the final answer. Trace and state lanes target tool choreography and side effects. The full lane (F) is the combined regression developers would run in practice. The fault-injection study (Section~\ref{sec:fault-detection}) reuses this split to measure which lanes catch injected faults and which miss them when only one surface is checked.
 
 Table~\ref{tab:oracle-lanes} maps each lane to the surface it inspects. The full scenario combines every check from the other three lanes at the same turn positions in the dialogue.
 
@@ -63,11 +63,11 @@ Table~\ref{tab:oracle-lanes} maps each lane to the surface it inspects. The full
 \centering
 \caption{Oracle lanes on TelcoSupportBench. The same scripted dialogue is used in all four variants; only the checks differ.}
 \label{tab:oracle-lanes}
-\begin{tabular}{@{}llp{6.8cm}@{}}
+\begin{tabular}{@{}ll>{\raggedright\arraybackslash}p{6.8cm}@{}}
 \toprule
 Lane & Surface & Typical assertions \\
 \midrule
-O & User-facing reply after each user turn & \texttt{assert\_output}, \texttt{m.llm\_criteria} rubrics \\
+O & User-facing reply after each user turn & \texttt{assert\_output} and \texttt{m.llm\_criteria} rubrics \\
 S & SQLite store (tickets, credits, lines) & \texttt{assert\_that} with store oracles \\
 T & Tool-call sequence (incl.\ nested calls from specialist agents) & \texttt{assert\_tool\_calls}, ordered and nested matchers \\
 F & Union of O, S, and T at matching turn positions & Combined scenario \\
@@ -117,4 +117,4 @@ Event trace
 +--------------------------------------------------------------------------------+
 \end{lstlisting}
 
-These figures describe the agent used in the rest of the chapter. They are not a leaderboard score. The fault-detection study in Section~\ref{sec:fault-detection} only injects faults on slots where this initial run passed, so injected faults are not confounded with failures the agent already exhibited.
+These figures describe the agent used in the rest of the chapter. They are not a leaderboard score.
