@@ -5,6 +5,6 @@ Several choices follow directly from the goal of scenario-driven, diagnosable te
 
 Deterministic matchers are preferred whenever machine-checkable facts are available. LLM criteria judges should be reserved for subjective slices of behaviour or dialogue stop conditions, consistent with the caution in Chapter~\ref{chap:background} about over-relying on model judges for precise state. The framework does not implement a built-in ``pass if $k$ of $n$ repeats succeed'' rule. Repeats are reported separately and pass rates are derived in summaries or external analysis.
 
-Integrations ship for LangChain/LangGraph and Pydantic AI on Python 3.12 or newer. Other stacks can use the same \texttt{AdaptedAgent} contract, but adapter quality and event completeness remain the responsibility of whoever implements the wrapper.
+Other stacks can use the same \texttt{AdaptedAgent} contract, but adapter quality and event completeness remain the responsibility of whoever implements the wrapper.
 
 Chapter~\ref{chap:evaluation} evaluates the library on a custom telecom benchmark. Among other things, it tests whether scenarios are readable and failures are diagnosable compared with other libraries, whether injected faults are caught by the checks the framework supports, and whether discovery workflows surface failures beyond fixed scripts.

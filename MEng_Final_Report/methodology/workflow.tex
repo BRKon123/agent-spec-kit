@@ -11,7 +11,7 @@ When an assertion fails, the terminal prints a counterexample panel aligned with
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.84\textwidth]{figures/rich_console_failure_output.png}
+  \includegraphics[width=0.72\textwidth]{figures/rich_console_failure_output.png}
   \caption{CLI counterexample output for a failing \texttt{assert\_tool\_calls} check: same core fields as the web FailureCard.}
   \label{fig:cli-failure-panel}
 \end{figure}
@@ -24,7 +24,7 @@ The command \texttt{agent-spec-kit ui} serves a read-only React application over
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.84\textwidth]{figures/runs_page_ui.png}
+  \includegraphics[width=0.72\textwidth]{figures/runs_page_ui.png}
   \caption{Runs list with experiment and status filters and a column picker.}
   \label{fig:ui-runs-list}
 \end{figure}
@@ -52,9 +52,9 @@ After changing an agent, rerunning the same scenarios under a new experiment nam
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.84\textwidth]{figures/compare_page_ui.png}
+  \includegraphics[width=0.72\textwidth]{figures/compare_page_ui.png}
   \caption{Compare view across two experiments. Rows with mismatched status are highlighted.}
   \label{fig:ui-compare}
 \end{figure}
 
-That view closes the loop described in Section~\ref{sec:counterexamples}. Diagnose with a counterexample, edit the agent, rerun, and confirm at a glance whether the fix helped or regressed other scenarios. Scenarios that exist only as generative fuzz keys may be excluded from comparison when the API reports them as non-comparable across experiments. The UI surfaces that case with a short banner rather than silently showing misleading cells.
+That view closes the loop described in Section~\ref{sec:counterexamples}. Diagnose with a counterexample, edit the agent, rerun, and confirm at a glance whether the fix helped or regressed other scenarios.
