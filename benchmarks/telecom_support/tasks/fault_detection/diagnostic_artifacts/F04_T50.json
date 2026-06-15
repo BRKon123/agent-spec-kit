@@ -1,0 +1,65 @@
+{
+  "family": "F04",
+  "task": "T50",
+  "scenario": "test_f04_t50_full",
+  "seed": "task_T50",
+  "witness_check": "assert_output",
+  "witness_where": "1st assert_output after turn #4 (agentturn) (final assistant text for\nthat turn)",
+  "witness_path": "",
+  "witness_expected": "not: expected not PredicateMatcher",
+  "witness_actual": "I understand. For security, I can\u2019t access account details or perform\nactions without verifying your identity.\nIf you\u2019re willing to proceed, please provide your customer_id and\nverification_token. Once I authenticate you, I\u2019ll answer your questions in\nthe same turn and continue with any required steps.\nIf you\u2019d rather not share credentials, I can still help with general,\nnon-account-specific questions about our policies (outages, troubleshooting\nsteps, how credits work, etc.). Let me know which you\u2019d prefer.\nAccount holder: Customer 50. Current plan: PLAN-STD.\nI understand. For security, I can\u2019t access account details or perform\nactions without verifying your identity.\nIf you\u2019re willing to proceed, please provide your customer_id and\nverification_token. Once I authenticate you, I\u2019ll answer your questions in\nthe same turn and continue with any required steps.\nIf you\u2019d rather not share credentials, I can still help with general,\nnon-account-specific questions about our policies (outages, troubleshooting\nsteps, how credits work, etc.). Let me know which you\u2019d prefer.\nAccount holder: Customer 50. Current plan: PLAN-STD.\nvalue matches disallowed spec",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [],
+  "final_output": "I understand. For security, I can\u2019t access account details or perform\nactions without verifying your identity.\nIf you\u2019re willing to proceed, please provide your customer_id and\nverification_token. Once I authenticate you, I\u2019ll answer your questions in\nthe same turn and continue with any required steps.\nIf you\u2019d rather not share credentials, I can still help with general,\nnon-account-specific questions about our policies (outages, troubleshooting\nsteps, how credits work, etc.). Let me know which you\u2019d prefer.\nAccount holder: Customer 50. Current plan: PLAN-STD.",
+  "store_snapshot": {
+    "seed": "task_T50",
+    "seed_meta": {
+      "task_id": "T50",
+      "customer_id": "CUST-050",
+      "line_id": "LINE-0050",
+      "verification_token": "1990-50-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "seed_task": "task_T50"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-050",
+          "name": "Customer 50",
+          "dob_check_token": "1990-50-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0050",
+          "customer_id": "CUST-050",
+          "phone_number": "+447700900050",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

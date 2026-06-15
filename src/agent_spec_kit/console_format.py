@@ -5,9 +5,11 @@ from __future__ import annotations
 import json
 from typing import Any
 
-# Caps apply only to terminal output; blobs / UI keep full payloads.
-CONSOLE_ACTUAL_MAX_LEN = 12_000
-CONSOLE_TRACE_VALUE_MAX_LEN = 500
+# Keep terminal payloads effectively untruncated for diagnostic exports/parsing.
+CONSOLE_ACTUAL_MAX_LEN = 1_000_000
+# Keep event-trace values effectively untruncated too; downstream benchmark exports
+# depend on full panel text for diagnostic-quality scoring.
+CONSOLE_TRACE_VALUE_MAX_LEN = 1_000_000
 
 
 def try_parse_json_string(value: str) -> Any | None:

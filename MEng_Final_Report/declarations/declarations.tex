@@ -1,0 +1,36 @@
+\chapter{Declarations}
+
+\noindent\textbf{Use of Generative AI}
+Generative AI was used as an assistive tool during this project. Its main uses were as follows.
+
+\begin{itemize}
+    \item \textbf{Implementation.} I acknowledge the use of Cursor (Anysphere, \url{https://cursor.com}) to help implement comparison code in other evaluation libraries for the expressiveness study, and to investigate failures and fix bugs while building \emph{agent-spec-kit}.
+
+    \item \textbf{Report writing.} I acknowledge the use of ChatGPT~5.5 (OpenAI, \url{https://chatgpt.com}) only to help revise phrasing in certain sections of this report.
+\end{itemize}
+
+\noindent I confirm that the structure, arguments, technical claims, experimental results, and conclusions are my own work, and that no AI-generated content has been presented as my own.
+
+\medskip
+\noindent\textbf{Ethical Considerations}
+This project builds a testing framework for tool-using agents. It does not deploy one to real customers. The main ethical points are as follows.
+
+\begin{itemize}
+    \item \textbf{Synthetic evaluation data.} All experiments used TelcoSupportBench, a fictional mobile customer-support domain. Customer names, line identifiers, and account details were invented for testing. No real subscriber data was collected or processed.
+
+    \item \textbf{Privacy in production use.} In a live setting, agent runs produce transcripts, tool arguments, and database changes that may contain personal information. The framework stores run metadata and failure reports locally. Teams adopting it should restrict access to those artefacts, redact sensitive fields where possible, and follow applicable data-protection rules.
+
+    \item \textbf{Third-party language models.} Several study arms call commercial APIs (e.g.\ \texttt{openai:gpt-5-mini}) for simulated users, dialogue judges, output rubrics, and some grading. Prompts and model outputs therefore leave the local machine. Reusers should read provider terms, avoid sending real personal data in prompts, and expect API cost and possible model changes over time.
+
+    \item \textbf{Tests are not a safety guarantee.} Scripted scenarios, user simulation, and mutation fuzzing only cover the tasks, personas, and oracles authors configure. Passing the suite may create false confidence, especially in customer support, billing, healthcare, or other settings where mistakes cause real harm. Automated tests should support expert oversight, not replace it.
+
+    \item \textbf{Responsible use.} \emph{agent-spec-kit} helps developers find bugs before release. It does not decide whether an agent should launch, which users it should serve, or what policies it must follow. Those decisions remain with the product team.
+\end{itemize}
+
+\medskip
+\noindent\textbf{Sustainability}
+This work does not train language models. Most development is local software engineering with modest compute. The evaluation studies do call third-party APIs for agent runs, judging, and generative discovery, so energy use arises mainly from inference during experiments rather than from model training. That footprint is small relative to large-scale training runs but is not zero.
+
+\medskip
+\noindent\textbf{Availability of Data and Materials}
+The code repository associated with this project and its experiments is available at \url{https://github.com/BRKon123/agent-spec-kit}.

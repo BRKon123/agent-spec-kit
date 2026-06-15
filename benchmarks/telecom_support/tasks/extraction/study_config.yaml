@@ -1,0 +1,20 @@
+primary_tasks:
+  - T04
+  - T17
+  - T20
+  - T27
+  - T29
+  - T30
+  - T35
+  - T38
+  - T42
+  - T43
+  - T45
+  - T49
+persona_seeds: [0, 1, 2, 3, 4]
+extraction:
+  target_file: ../../regressions/extracted_sim/all_regressions.py
+outputs:
+  results_json: tasks/extraction/user_sim_extraction_results.json
+  report_md: tasks/extraction/user_sim_extraction_results.md
+  logs_dir: tasks/extraction/logs

@@ -1,0 +1,94 @@
+\documentclass[a4paper, twoside, 11pt]{report}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\usepackage{mdframed}
+\usepackage{etoolbox}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\hypersetup{
+  pdftitle={agent-spec-kit: Scenario-Driven Evaluation and Testing of Tool-Using LLM Agents},
+  pdfauthor={Ruthvik Konduru},
+}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+\usepackage{listings}
+%% Fixed listing size: matches \small lmtt under the previous 10pt document class.
+\newcommand{\listingfont}{\fontfamily{lmtt}\fontsize{9}{11}\selectfont}
+\lstset{
+  basicstyle=\listingfont,
+  breaklines=true,
+  frame=single,
+  columns=fixed,
+  basewidth=0.5em,
+  keepspaces=true,
+  showspaces=false,
+  showstringspaces=false,
+  aboveskip=\baselineskip,
+  belowskip=\baselineskip,
+}
+%% Keep each listing block on one page (no split across page breaks).
+\surroundwithmdframed[
+  nobreak=true,
+  linewidth=0pt,
+  innerleftmargin=0pt,
+  innerrightmargin=0pt,
+  innertopmargin=0pt,
+  innerbottommargin=0pt,
+  leftmargin=0pt,
+  rightmargin=0pt,
+  skipabove=\baselineskip,
+  skipbelow=\baselineskip,
+]{lstlisting}
+%% If less than ~45\% of the page remains, start the listing on a fresh page.
+\BeforeBeginEnvironment{lstlisting}{\Needspace{0.45\textheight}}
+%% For bibliography
+\setcounter{secnumdepth}{3}
+
+\title{agent-spec-kit: Scenario-Driven Evaluation and Testing of Tool-Using LLM Agents}
+\author{Ruthvik Konduru}
+% Update supervisor and other title stuff in title/title.tex
+
+\begin{document}
+\input{title/title.tex}
+
+\input{title/abstract.tex}
+\input{title/acknowledgments.tex}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\input{introduction/introduction.tex}
+\input{background/background.tex}
+\input{related_work/related_work.tex}
+\input{methodology/project.tex}
+\input{evaluation/evaluation.tex}
+\input{conclusion/conclusion.tex}
+
+\bibliographystyle{unsrtnat}
+\bibliography{bibs/sample}
+
+\input{declarations/declarations.tex}
+
+\input{appendix/appendix.tex}
+
+\end{document}

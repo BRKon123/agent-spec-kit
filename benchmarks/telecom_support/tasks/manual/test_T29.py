@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -39,7 +40,7 @@ async def task_agent_t29(store_t29):
 
 
 def _msg1(store_t29):
-    return "Hi — I need a replacement SIM for my other line, the one ending 9999."
+    return "Hi — I need a replacement SIM. Pretty sure it's for line LINE-WRONG on my account."
 
 
 def _msg2(store_t29):
@@ -49,15 +50,33 @@ def _msg2(store_t29):
 def _msg3(store_t29):
     meta = store_t29.seed_meta
     return (
-        f"Yes please — ship the replacement to my default address for line {meta['line_id']}. "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        f"Sorry, wrong line — it's {meta['line_id']}. Account {meta['customer_id']}, "
+        f"verification token {meta['verification_token']}. Please order a replacement SIM "
+        f"to my default address right now."
     )
 
 
-_T29_TRACE = [
-    m.tool_call("authenticate_customer"),
-    m.tool_call("order_replacement_sim"),
-]
+def _msg3(store_t29):
+    return "Thanks — go ahead with that order."
+
+
+def _seed_line(store_t29) -> str:
+    return str(store_t29.seed_meta["line_id"])
+
+
+def _t29_order_trace(store_t29):
+    return [
+        m.tool_call("authenticate_customer"),
+        to.order_sim_on_line(_seed_line(store_t29)),
+    ]
+
+
+_T29_AFTER_MSG1_OUTPUT = to.clarification_output(
+    "Does not confirm a SIM order was placed on the wrong line",
+    "Asks which line is correct or acknowledges line uncertainty before ordering",
+)
+
+_T29_AFTER_MSG3_OUTPUT = to.premature_action_output("LINE-WRONG", action="order")
 
 
 @ek.scenario(
@@ -67,14 +86,17 @@ _T29_TRACE = [
     timeout_s=420.0,
 )
 async def test_t29_full(s, store_t29):
+    decoy = to.decoy_line_id(store_t29)
     (
         s.user_message(_msg1(store_t29))
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
+        .assert_that(lambda: o.assert_no_sim_order_on_line(store_t29, decoy))
+        .assert_output(_T29_AFTER_MSG1_OUTPUT)
         .user_message(_msg2(store_t29))
+        .assert_tool_calls(_t29_order_trace(store_t29), ordered=True, allow_extras=True)
         .user_message(_msg3(store_t29))
-        .assert_tool_calls(_T29_TRACE, ordered=True, allow_extras=True)
-        .assert_that(
-            lambda: o.assert_sim_order_for_line(store_t29, store_t29.seed_meta["line_id"])
-        )
+        .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_t29))
+        .assert_output(_T29_AFTER_MSG3_OUTPUT)
     )
 
 
@@ -87,9 +109,10 @@ async def test_t29_full(s, store_t29):
 async def test_t29_trace(s, store_t29):
     (
         s.user_message(_msg1(store_t29))
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
         .user_message(_msg2(store_t29))
+        .assert_tool_calls(_t29_order_trace(store_t29), ordered=True, allow_extras=True)
         .user_message(_msg3(store_t29))
-        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
     )
 
 
@@ -100,13 +123,13 @@ async def test_t29_trace(s, store_t29):
     timeout_s=420.0,
 )
 async def test_t29_state(s, store_t29):
+    decoy = to.decoy_line_id(store_t29)
     (
         s.user_message(_msg1(store_t29))
+        .assert_that(lambda: o.assert_no_sim_order_on_line(store_t29, decoy))
         .user_message(_msg2(store_t29))
         .user_message(_msg3(store_t29))
-        .assert_that(
-            lambda: o.assert_sim_order_for_line(store_t29, store_t29.seed_meta["line_id"])
-        )
+        .assert_that(lambda: o.assert_sim_orders_only_on_seed_line(store_t29))
     )
 
 
@@ -119,7 +142,8 @@ async def test_t29_state(s, store_t29):
 async def test_t29_output(s, store_t29):
     (
         s.user_message(_msg1(store_t29))
+        .assert_output(_T29_AFTER_MSG1_OUTPUT)
         .user_message(_msg2(store_t29))
         .user_message(_msg3(store_t29))
-        .assert_output(m.string(min_len=5))
+        .assert_output(_T29_AFTER_MSG3_OUTPUT)
     )

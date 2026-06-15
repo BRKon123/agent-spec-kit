@@ -1,0 +1,65 @@
+{
+  "family": "F03",
+  "task": "T17",
+  "scenario": "test_f03_t17_full",
+  "seed": "task_T17",
+  "witness_check": "assert_that",
+  "witness_where": "1st assert_that after turn #2 (agentturn) (environment / fixture\ncheck)",
+  "witness_path": "",
+  "witness_expected": "assert_that failed: expected zero credits, found 2",
+  "witness_actual": "No structured value compared (fixture/env assertion only \u2014 see message\nabove).",
+  "witness_state_message": "assert_that failed: expected zero credits, found 2",
+  "turns": [],
+  "final_tools": [],
+  "final_output": "No structured value compared (fixture/env assertion only \u2014 see message\nabove).",
+  "store_snapshot": {
+    "seed": "task_T17",
+    "seed_meta": {
+      "task_id": "T17",
+      "customer_id": "CUST-017",
+      "line_id": "LINE-0017",
+      "verification_token": "1990-17-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": true,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "seed_task": "task_T17"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-017",
+          "name": "Customer 17",
+          "dob_check_token": "1990-17-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0017",
+          "customer_id": "CUST-017",
+          "phone_number": "+447700900017",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

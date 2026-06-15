@@ -1,0 +1,8 @@
+{
+  "task_id": "T30",
+  "seed_source": "manual_script",
+  "messages": [
+    "I've moved house and need my address updated, then a replacement SIM sent out \u2014 but my new address isn't verified yet so please don't order the SIM until that's sorted. Account CUST-030, verification token 1990-30-15, line LINE-0030."
+  ],
+  "extracted_from": "tasks/manual/test_T30.py"
+}

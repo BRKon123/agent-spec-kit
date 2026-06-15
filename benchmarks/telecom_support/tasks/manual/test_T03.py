@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -41,9 +42,9 @@ async def task_agent_t03(store_t03):
 def _msg(store_t03):
     meta = store_t03.seed_meta
     return (
-        f"My mobile data just died at {meta['postcode']} and I don't think it's a network outage "
-        f"in my area — what should I try? "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"My mobile data died near {meta['postcode']} and I don't think it's a network outage — "
+        f"I haven't restarted yet and don't want a ticket, just what to try first. Account "
+        f"{meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
@@ -71,12 +72,20 @@ _T03_OUTPUT = m.llm_criteria(
 )
 async def test_t03_full(s, store_t03):
     (
-        s.user_message(_msg(store_t03))
-        .assert_tool_calls(_T03_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_tickets(store_t03))
-        .assert_that(lambda: o.assert_no_credit_rows(store_t03))
-        .assert_output(_T03_OUTPUT)
-    )
+            s.user_message(_msg(store_t03))
+            .assert_tool_calls(
+                [
+                    m.tool_call("authenticate_customer"),
+                    m.tool_call("check_outage"),
+                    m.tool_call("run_line_diagnostic"),
+                ],
+                ordered=True,
+                allow_extras=True,
+            )
+            .assert_that(lambda: o.assert_no_tickets(store_t03))
+            .assert_that(lambda: o.assert_no_credit_rows(store_t03))
+            .assert_output(to.troubleshooting_without_ticket_output())
+        )
 
 
 @ek.scenario(
@@ -110,4 +119,8 @@ async def test_t03_state(s, store_t03):
     timeout_s=420.0,
 )
 async def test_t03_output(s, store_t03):
-    (s.user_message(_msg(store_t03)).assert_output(_T03_OUTPUT))
+    meta = store_t03.seed_meta
+    (
+            s.user_message(_msg(store_t03))
+            .assert_output(to.troubleshooting_without_ticket_output())
+        )

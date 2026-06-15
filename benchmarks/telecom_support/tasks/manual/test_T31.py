@@ -41,10 +41,23 @@ async def task_agent_t31(store_t31):
 def _msg(store_t31):
     meta = store_t31.seed_meta
     return (
-        f"My phone won't read the SIM anymore — can you send me an eSIM for line {meta['line_id']}? "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        f"My phone won't take eSIM any more but I still need a replacement eSIM on my line — "
+        f"can you arrange that without checking device compatibility?"
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
+
+_T31_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("get_customer_profile"),
+    m.tool_call(
+        "order_replacement_sim",
+        args=m.object({"sim_type": m.one_of("esim")}, extra="forbid"),
+    ),
+]
+
+_T31_OUTPUT = m.string(min_len=5)
 
 
 @ek.scenario(
@@ -54,20 +67,19 @@ def _msg(store_t31):
     timeout_s=420.0,
 )
 async def test_t31_full(s, store_t31):
-    meta = store_t31.seed_meta
     (
-            s.user_message(_msg(store_t31))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_customer_profile"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_sim_orders(store_t31))
-            .assert_output(m.string(min_len=5))
+        s.user_message(_msg(store_t31))
+        .assert_tool_calls(
+            [
+                m.tool_call("authenticate_customer"),
+                m.tool_call("get_customer_profile"),
+            ],
+            ordered=True,
+            allow_extras=True,
         )
+        .assert_that(lambda: o.assert_no_sim_orders(store_t31))
+        .assert_output(_T31_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -77,19 +89,10 @@ async def test_t31_full(s, store_t31):
     timeout_s=420.0,
 )
 async def test_t31_trace(s, store_t31):
-    meta = store_t31.seed_meta
     (
-            s.user_message(_msg(store_t31))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("get_customer_profile"),
-                    m.tool_call('order_replacement_sim', args=m.object({'sim_type': m.one_of('esim')}, extra='forbid')),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg(store_t31))
+        .assert_tool_calls(_T31_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -99,11 +102,10 @@ async def test_t31_trace(s, store_t31):
     timeout_s=420.0,
 )
 async def test_t31_state(s, store_t31):
-    meta = store_t31.seed_meta
     (
-            s.user_message(_msg(store_t31))
-            .assert_that(lambda: o.assert_no_sim_orders(store_t31))
-        )
+        s.user_message(_msg(store_t31))
+        .assert_that(lambda: o.assert_no_sim_orders(store_t31))
+    )
 
 
 @ek.scenario(
@@ -113,8 +115,7 @@ async def test_t31_state(s, store_t31):
     timeout_s=420.0,
 )
 async def test_t31_output(s, store_t31):
-    meta = store_t31.seed_meta
     (
-            s.user_message(_msg(store_t31))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t31))
+        .assert_output(_T31_OUTPUT)
+    )

@@ -8,6 +8,16 @@ from typing import Any, Literal
 
 from langchain_core.tools import BaseTool, tool
 
+from store.fault_variants import (
+    enrich_profile_payload,
+    mark_preauth_sensitive_read,
+    note_line_mention,
+    note_network_events_pulled,
+    network_events_pulled,
+    resolve_mutation_line,
+    rewrite_ticket_reason,
+    skip_state_mutation,
+)
 from store.store import TelcoStore
 
 
@@ -36,8 +46,8 @@ def _line_row(store: TelcoStore, line_id: str) -> dict[str, Any] | None:
 def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> list[BaseTool]:
     """Root coordinator tools (15) plus heartbeat_ping; specialist delegates added in agents/reference.py."""
 
-    skip_ticket_insert = variant == "fault_missing_ticket"
-    skip_audit_insert = variant == "fault_audit_omission"
+    skip_ticket_insert = variant in ("fault_missing_ticket", "fault_failure_to_act")
+    skip_mutation_insert = skip_state_mutation(variant)
 
     @tool
     def authenticate_customer(customer_id: str, verification_token: str) -> str:
@@ -68,6 +78,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
     @tool
     def get_customer_profile(customer_id: str) -> str:
         """Return customer name, account status, and linked line ids (no auth gate)."""
+        mark_preauth_sensitive_read(store, variant)
         row = _customer_row(store, customer_id.strip())
         if row is None:
             return json.dumps({"error": "unknown_customer_id"})
@@ -80,18 +91,27 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
             lines = [dict(r) for r in cur.fetchall()]
         finally:
             conn.close()
-        return json.dumps(
+        payload = enrich_profile_payload(
+            store,
+            variant,
             {
                 "customer_id": row["customer_id"],
                 "name": row["name"],
                 "account_status": row["account_status"],
                 "lines": lines,
-            }
+            },
+            customer_row=row,
         )
+        return json.dumps(payload)
 
     @tool
     def get_line_status(line_id: str) -> str:
-        """Return SIM status, roaming/data flags, and plan id for a line."""
+        """Return SIM status, roaming/data flags, and plan id for a line.
+
+        When the user asks to check both plan and line (especially roaming abroad),
+        call this tool first, then get_plan_details for the returned plan_id.
+        """
+        mark_preauth_sensitive_read(store, variant)
         row = _line_row(store, line_id.strip())
         if row is None:
             return json.dumps({"error": "unknown_line_id"})
@@ -109,7 +129,11 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def get_plan_details(plan_id: str) -> str:
-        """Return plan type, data allowance, roaming rules, and price."""
+        """Return plan type, data allowance, roaming rules, and price.
+
+        Call after get_line_status when both plan limits and line flags are needed.
+        """
+        mark_preauth_sensitive_read(store, variant)
         conn = store.connect()
         try:
             cur = conn.execute("SELECT * FROM plans WHERE plan_id = ?", (plan_id.strip(),))
@@ -146,11 +170,12 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
     @tool
     def run_line_diagnostic(line_id: str) -> str:
         """Run line/network diagnostic and store results."""
-        row = _line_row(store, line_id.strip())
+        effective = resolve_mutation_line(store, variant, line_id)
+        row = _line_row(store, effective)
         if row is None:
             return json.dumps({"error": "unknown_line_id"})
         result = {
-            "line_id": line_id.strip(),
+            "line_id": effective,
             "sim_status": row["sim_status"],
             "data_enabled": bool(row["data_enabled"]),
             "roaming_enabled": bool(row["roaming_enabled"]),
@@ -160,7 +185,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
         try:
             conn.execute(
                 "INSERT INTO diagnostics (line_id, kind, result_json, created_at) VALUES (?,?,?,?)",
-                (line_id.strip(), "line", json.dumps(result), _now()),
+                (effective, "line", json.dumps(result), _now()),
             )
             conn.commit()
         finally:
@@ -187,8 +212,8 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
     def record_user_action(line_id: str, action: str, result: str) -> str:
         """Record the outcome of a user-performed action (e.g. reboot, toggle airplane mode).
 
-        Only call after the user explicitly confirms they completed a troubleshooting step you asked
-        for in this conversation — not on the initial complaint turn.
+        When the user confirms they restarted the phone or completed a troubleshooting step,
+        call this before create_support_ticket in the same agent turn.
         """
         line = _line_row(store, line_id.strip())
         if line is None:
@@ -224,18 +249,27 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def create_support_ticket(
-        customer_id: str, line_id: str, reason: str, priority: str
+        customer_id: str,
+        line_id: str,
+        reason: str,
+        priority: str = "normal",
     ) -> str:
-        """Open a support ticket for human follow-up (plan-change billing errors, unresolved disputes).
+        """Create a support ticket with the given reason and priority.
 
-        Prefer this over run_billing_policy_specialist when the customer asks to raise or open a
-        ticket rather than an immediate credit decision. Mention plan or plan-change in reason when relevant.
+        Pass priority as its own argument ("normal" or "high") — do not embed it in reason.
+
+        After the user confirms a restart or troubleshooting step, call record_user_action
+        first, then this tool in the same turn. Use a reason that mentions diagnostic findings.
         """
         if _customer_row(store, customer_id.strip()) is None:
             return json.dumps({"error": "unknown_customer_id"})
-        if _line_row(store, line_id.strip()) is None:
+        effective_line = resolve_mutation_line(store, variant, line_id)
+        if variant == "fault_stale_belief":
+            note_line_mention(store, line_id)
+        if _line_row(store, effective_line) is None:
             return json.dumps({"error": "unknown_line_id"})
         ticket_id = store.next_ticket_id()
+        effective_reason = rewrite_ticket_reason(store, variant, reason)
         if skip_ticket_insert:
             return json.dumps({"ok": True, "ticket_id": ticket_id, "status": "open"})
         conn = store.connect()
@@ -246,8 +280,8 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
                 (
                     ticket_id,
                     customer_id.strip(),
-                    line_id.strip(),
-                    reason.strip(),
+                    effective_line,
+                    effective_reason,
                     priority.strip(),
                     "open",
                     _now(),
@@ -266,6 +300,8 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
             cur = conn.execute("SELECT ticket_id FROM tickets WHERE ticket_id = ?", (ticket_id.strip(),))
             if cur.fetchone() is None:
                 return json.dumps({"error": "unknown_ticket_id"})
+            if skip_mutation_insert:
+                return json.dumps({"ok": True, "ticket_id": ticket_id.strip(), "status": "escalated"})
             conn.execute(
                 "UPDATE tickets SET status = ?, reason = reason || ' | ESCALATION: ' || ? WHERE ticket_id = ?",
                 ("escalated", escalation_reason.strip(), ticket_id.strip()),
@@ -285,23 +321,41 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
         """
         if _customer_row(store, customer_id.strip()) is None:
             return json.dumps({"error": "unknown_customer_id"})
+        credit_amount = float(amount) if amount else 25.0
+        if variant == "fault_unsupported_credit" and credit_amount <= 0:
+            credit_amount = 25.0
+        if skip_mutation_insert:
+            return json.dumps({"ok": True, "customer_id": customer_id.strip(), "amount": credit_amount})
         conn = store.connect()
         try:
             conn.execute(
                 "INSERT INTO credits (customer_id, amount, reason, created_at) VALUES (?,?,?,?)",
-                (customer_id.strip(), float(amount), reason.strip(), _now()),
+                (customer_id.strip(), credit_amount, reason.strip(), _now()),
             )
             conn.commit()
         finally:
             conn.close()
-        return json.dumps({"ok": True, "customer_id": customer_id.strip(), "amount": float(amount)})
+        return json.dumps({"ok": True, "customer_id": customer_id.strip(), "amount": credit_amount})
 
     @tool
     def order_replacement_sim(line_id: str, sim_type: str, address_id: str) -> str:
         """Order a replacement SIM (physical or eSIM) for a line."""
-        if _line_row(store, line_id.strip()) is None:
+        effective = resolve_mutation_line(store, variant, line_id)
+        if variant == "fault_stale_belief":
+            note_line_mention(store, line_id)
+        if _line_row(store, effective) is None:
             return json.dumps({"error": "unknown_line_id"})
         order_id = store.next_sim_order_id()
+        if skip_mutation_insert:
+            return json.dumps(
+                {
+                    "ok": True,
+                    "order_id": order_id,
+                    "line_id": effective,
+                    "sim_type": sim_type.strip(),
+                    "address_id": address_id.strip(),
+                }
+            )
         conn = store.connect()
         try:
             conn.execute(
@@ -309,7 +363,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
                 "VALUES (?,?,?,?,?,?)",
                 (
                     order_id,
-                    line_id.strip(),
+                    effective,
                     sim_type.strip(),
                     address_id.strip(),
                     "ordered",
@@ -323,7 +377,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
                 detail=json.dumps(
                     {
                         "order_id": order_id,
-                        "line_id": line_id.strip(),
+                        "line_id": effective,
                         "sim_type": sim_type.strip(),
                         "address_id": address_id.strip(),
                     }
@@ -336,7 +390,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
             {
                 "ok": True,
                 "order_id": order_id,
-                "line_id": line_id.strip(),
+                "line_id": effective,
                 "sim_type": sim_type.strip(),
                 "address_id": address_id.strip(),
             }
@@ -362,13 +416,9 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def add_audit_note(customer_id: str, note: str) -> str:
-        """Append an audit note for a customer.
-
-        Call after apply_bill_credit for goodwill or duplicate-charge credits. Required for
-        lost-SIM replacement orders (order_replacement_sim) — call in the same turn as the order.
-        """
-        if skip_audit_insert:
-            return json.dumps({"ok": True, "customer_id": customer_id.strip(), "skipped": True})
+        """Append an audit note for a customer."""
+        if variant == "fault_audit_omission":
+            return json.dumps({"ok": True, "customer_id": customer_id.strip()})
         conn = store.connect()
         try:
             store.audit(conn, customer_id=customer_id.strip(), action="note", detail=note.strip())
@@ -379,7 +429,7 @@ def make_coordinator_tools(store: TelcoStore, *, variant: str = "reference") -> 
 
     @tool
     def heartbeat_ping() -> str:
-        """Health check sidecar; call alongside get_line_status when the user asks if systems are healthy."""
+        """Health check sidecar; call alongside get_line_status when the user asks for a quick line check."""
         return json.dumps({"status": "ok", "heartbeat": "ping"})
 
     return [
@@ -411,6 +461,7 @@ def make_network_specialist_tools(store: TelcoStore, *, variant: str = "referenc
         """Pull recent network events for a line within a time window."""
         if _line_row(store, line_id.strip()) is None:
             return json.dumps({"error": "unknown_line_id"})
+        note_network_events_pulled(store)
         conn = store.connect()
         try:
             cur = conn.execute(
@@ -488,6 +539,7 @@ def make_network_specialist_tools(store: TelcoStore, *, variant: str = "referenc
                 "risk_band": "elevated" if anomaly_score >= 0.5 else "low",
                 "source": source,
                 "window_minutes": window_minutes,
+                "nested_order_fault": variant == "fault_wrong_nested_tool",
             }
         )
 

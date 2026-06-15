@@ -1,0 +1,172 @@
+# Expressiveness benchmark — native Promptfoo assertion types in CHECK regions.
+# Run: npx promptfoo@latest eval -c benchmarks/expressiveness/implementations/promptfoo
+
+description: Expressiveness specimens (native Promptfoo asserts)
+
+providers:
+  - id: file://./provider.py
+
+prompts:
+  - "{{check_id}}"
+
+tests:
+  - vars: {check_id: C01}
+    options:
+      # // CHECK_START
+      transform: JSON.parse(output).output
+    assert:
+      - type: icontains-any
+        value: [credit, refund]
+      - type: icontains-any
+        value: ['$', dollar]
+      # // CHECK_END
+
+  - vars: {check_id: C02}
+    options:
+      # // CHECK_START
+      transform: |
+        (() => {
+          const trace = JSON.parse(output);
+          const t = (trace.tools || []).find((x) => x.name === 'run_network_diagnostics_specialist');
+          return JSON.stringify(t?.result ?? null);
+        })()
+    assert:
+      - type: is-json
+        value:
+          type: object
+          additionalProperties: false
+          required: [severity, recommended_action, escalation_reason]
+          properties:
+            severity: { const: high }
+            recommended_action: { const: create_ticket }
+            escalation_reason: { type: string, minLength: 1 }
+      # // CHECK_END
+
+  - vars: {check_id: C03}
+    assert:
+      # // CHECK_START
+      - type: javascript
+        value: |
+          const trace = JSON.parse(output);
+          const t = (trace.tools || []).find((x) => x.name === 'run_billing_policy_specialist');
+          if (!t || typeof t.result !== 'object' || t.result === null) return false;
+          const r = t.result;
+          if (!('eligible' in r)) return false;
+          if (r.eligible) return typeof r.amount === 'number' && r.amount > 0;
+          return !('amount' in r);
+      # // CHECK_END
+
+  - vars: {check_id: C04}
+    options:
+      # // CHECK_START
+      transform: |
+        (() => {
+          const trace = JSON.parse(output);
+          const t = (trace.tools || []).find((x) => x.name === 'run_billing_policy_specialist');
+          return JSON.stringify(t?.result ?? null);
+        })()
+    assert:
+      - type: is-json
+        value:
+          type: object
+          additionalProperties: false
+          required: [eligible, amount]
+          properties:
+            eligible: { const: true }
+            amount: { type: number, minimum: 0.01, maximum: 500 }
+      # // CHECK_END
+
+  - vars: {check_id: C05}
+    assert:
+      # // CHECK_START
+      - type: trajectory:tool-sequence
+        value:
+          mode: in_order
+          steps:
+            - authenticate_customer
+            - get_outage_status
+      # // CHECK_END
+
+  - vars: {check_id: C06}
+    assert:
+      # // CHECK_START
+      - type: not-trajectory:tool-used
+        value: apply_bill_credit
+      # // CHECK_END
+
+  - vars: {check_id: C07}
+    assert:
+      # // CHECK_START
+      - type: trajectory:tool-sequence
+        value:
+          mode: in_order
+          steps:
+            - authenticate_customer
+            - get_line_status
+      - type: trajectory:tool-args-match
+        value:
+          name: get_line_status
+          mode: exact
+          args:
+            line_id: LINE-001
+      # // CHECK_END
+
+  - vars: {check_id: C08}
+    options:
+      # // CHECK_START
+      transform: |
+        (() => {
+          const trace = JSON.parse(output);
+          const t = (trace.tools || []).find((x) => x.name === 'run_network_diagnostics_specialist');
+          return JSON.stringify(t?.result ?? null);
+        })()
+    assert:
+      - type: is-json
+        value:
+          type: object
+          additionalProperties: false
+          required: [severity, recommended_action, summary]
+          properties:
+            severity: { enum: [medium, high] }
+            recommended_action: { type: string, minLength: 1 }
+            summary: { type: string, minLength: 10 }
+      # // CHECK_END
+
+  - vars: {check_id: C09}
+    assert:
+      # // CHECK_START
+      - type: javascript
+        value: |
+          const trace = JSON.parse(output);
+          const parent = (trace.tools || []).find((x) => x.name === 'run_network_diagnostics_specialist');
+          if (!parent) return false;
+          const names = (parent.children || []).map((c) => c.name);
+          return names.length === 2 && names[0] === 'pull_network_events' && names[1] === 'score_signal_anomaly';
+      # // CHECK_END
+
+  - vars: {check_id: C10}
+    assert:
+      # // CHECK_START
+      - type: trajectory:tool-used
+        value: heartbeat_ping
+      - type: trajectory:tool-used
+        value: get_line_status
+      # // CHECK_END
+
+  - vars: {check_id: C11}
+    assert:
+      - type: python
+        value: file://./assert_c11.py
+
+  - vars: {check_id: C12}
+    assert:
+      # // CHECK_START
+      - type: trajectory:tool-sequence
+        value:
+          mode: in_order
+          steps:
+            - authenticate_customer
+            - create_support_ticket
+      # // CHECK_END
+      - type: python
+        value: file://./assert_c12.py

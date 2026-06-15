@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -44,25 +45,42 @@ def _msg1(_store_t42):
 
 def _msg2(_store_t42):
     return (
-        "Sorry, ignore the data thing for a moment — I actually lost my SIM card. "
-        "Can you check whether my line is still active? Please do not order a replacement yet."
+        f"My mobile data is not working at all. Account {meta['customer_id']}, "
+        f"verification {meta['verification_token']}, line {meta['line_id']}."
+    )
+
+
+def _msg2(store_t42):
+    meta = store_t42.seed_meta
+    return (
+        f"Wait — I just found my SIM in the laundry. I thought it was lost. "
+        f"Can you confirm whether line {meta['line_id']} is still active? "
+        f"Do not ship a replacement SIM. {meta['customer_id']}, {meta['verification_token']}."
     )
 
 
 def _msg3(store_t42):
     meta = store_t42.seed_meta
     return (
-        f"Yes, still the lost SIM — check line status only. Do not order or ship a "
-        f"replacement SIM. Account {meta['customer_id']}, verification token "
-        f"{meta['verification_token']}, line {meta['line_id']}."
+        f"Sorry for the whiplash — data was the original problem. Is line {meta['line_id']} "
+        f"showing OK on your side? {meta['customer_id']}, {meta['verification_token']}."
     )
 
 
-_T42_TRACE = [m.tool_call("authenticate_customer")]
+_T42_AFTER_MSG2_OUTPUT = to.clarification_output(
+    "Acknowledges the customer does not want a replacement SIM shipped",
+    "Addresses the data issue or line status rather than ordering a new SIM",
+)
 
+_T42_AFTER_MSG1_OUTPUT = to.clarification_output(
+    "Does not confirm a replacement SIM order was placed before the customer clarified",
+    "Addresses mobile data or line status rather than shipping a new SIM immediately",
+)
 
-def _dialogue(s, store_t42):
-    return s.user_message(_msg1(store_t42)).user_message(_msg2(store_t42)).user_message(_msg3(store_t42))
+_T42_OUTPUT = to.issue_binding_output(
+    "Focuses on mobile data connectivity or line status rather than ordering a replacement SIM",
+    "Does not confirm a replacement SIM was shipped",
+)
 
 
 @ek.scenario(
@@ -73,10 +91,16 @@ def _dialogue(s, store_t42):
 )
 async def test_t42_full(s, store_t42):
     (
-        _dialogue(s, store_t42)
-        .assert_tool_calls(_T42_TRACE, ordered=True, allow_extras=True)
+        s.user_message(_msg1(store_t42))
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
+        .assert_output(_T42_AFTER_MSG1_OUTPUT)
+        .user_message(_msg2(store_t42))
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
         .assert_that(lambda: o.assert_no_mutations(store_t42))
-        .assert_output(m.string(min_len=5))
+        .assert_output(_T42_AFTER_MSG2_OUTPUT)
+        .user_message(_msg3(store_t42))
+        .assert_that(lambda: o.assert_no_mutations(store_t42))
+        .assert_output(_T42_OUTPUT)
     )
 
 
@@ -87,7 +111,14 @@ async def test_t42_full(s, store_t42):
     timeout_s=420.0,
 )
 async def test_t42_trace(s, store_t42):
-    (_dialogue(s, store_t42).assert_tool_calls(_T42_TRACE, ordered=True, allow_extras=True))
+    (
+        s.user_message(_msg1(store_t42))
+        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
+        .user_message(_msg2(store_t42))
+        .forbid_tool_calls(to.ORDER_SIM_FORBIDDEN)
+        .user_message(_msg3(store_t42))
+    )
 
 
 @ek.scenario(
@@ -97,7 +128,13 @@ async def test_t42_trace(s, store_t42):
     timeout_s=420.0,
 )
 async def test_t42_state(s, store_t42):
-    (_dialogue(s, store_t42).assert_that(lambda: o.assert_no_mutations(store_t42)))
+    (
+        s.user_message(_msg1(store_t42))
+        .user_message(_msg2(store_t42))
+        .assert_that(lambda: o.assert_no_mutations(store_t42))
+        .user_message(_msg3(store_t42))
+        .assert_that(lambda: o.assert_no_mutations(store_t42))
+    )
 
 
 @ek.scenario(
@@ -107,4 +144,11 @@ async def test_t42_state(s, store_t42):
     timeout_s=420.0,
 )
 async def test_t42_output(s, store_t42):
-    (_dialogue(s, store_t42).assert_output(m.string(min_len=5)))
+    (
+        s.user_message(_msg1(store_t42))
+        .assert_output(_T42_AFTER_MSG1_OUTPUT)
+        .user_message(_msg2(store_t42))
+        .assert_output(_T42_AFTER_MSG2_OUTPUT)
+        .user_message(_msg3(store_t42))
+        .assert_output(_T42_OUTPUT)
+    )

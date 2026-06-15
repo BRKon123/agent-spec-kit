@@ -1,0 +1,17 @@
+{
+  "output": "Your service is active; no billing changes this cycle.",
+  "tools": [
+    {
+      "name": "authenticate_customer",
+      "args": {},
+      "result": "ok"
+    },
+    {
+      "name": "get_billing_summary",
+      "args": {},
+      "result": {
+        "duplicate": true
+      }
+    }
+  ]
+}

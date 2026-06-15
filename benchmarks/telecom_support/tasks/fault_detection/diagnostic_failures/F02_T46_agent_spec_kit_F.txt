@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f02_t46_full [1/1] ────────────────────────╮
+│ Check: assert_tool_calls                                                     │
+│ Where: 1st assert_tool_calls after turn #6 (agentturn) (tool call list for   │
+│ that turn)                                                                   │
+│ Path: $[1].args.step                                                         │
+│ Agent errors:                                                                │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-046',        │
+│ 'verification_token': '1990-46-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-046"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_UKw6o5cfK0UP7agTPRT4PLvv'}}                                            │
+│ {'name': 'send_troubleshooting_step', 'args': {'line_id': 'LINE-0046',       │
+│ 'step': 'Please restart your device, toggle airplane mode off and on, and    │
+│ reinsert the SIM. If the issue persists after the reboot, ensure mobile data │
+│ is enabled and try manually selecting the network (e.g., 4G/LTE).'},         │
+│ 'result': '{"ok": true, "line_id": "LINE-0046", "step": "Please restart your │
+│ device, toggle airplane mode off and on, and reinsert the SIM. If the issue  │
+│ persists after the reboot, ensure mobile data is enabled and try manually    │
+│ selecting the network (e.g., 4G/LTE)."}', 'error': None, 'children': [],     │
+│ 'metadata': {'tool_call_id': 'call_KgT1ZAsfubGrN4aWf3OItbPl'}}               │
+│ {'name': 'create_support_ticket', 'args': {'customer_id': 'CUST-046',        │
+│ 'line_id': 'LINE-0046', 'reason': 'Diagnostic ticket: LINE-0046 connectivity │
+│ issue; initial troubleshooting steps performed (restart device, toggle       │
+│ airplane mode, reinsert SIM; ensure mobile data is on and manual network     │
+│ selection). Request further diagnostic investigation.', 'priority':          │
+│ 'normal'}, 'result': '{"ok": true, "ticket_id": "TCK-00001", "status":       │
+│ "open"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':        │
+│ 'call_dd70F6kP005nLjakFJa55iBz'}}                                            │
+│ Expected: extra_key: expected no extra keys                                  │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-046",                                             │
+│       "verification_token": "1990-46-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-046"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_UKw6o5cfK0UP7agTPRT4PLvv"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "send_troubleshooting_step",                                     │
+│     "args": {             ...

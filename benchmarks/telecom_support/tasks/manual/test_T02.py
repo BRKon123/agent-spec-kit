@@ -41,10 +41,9 @@ async def task_agent_t02(store_t02):
 def _msg(store_t02):
     meta = store_t02.seed_meta
     return (
-        f"No mobile data at home since this morning — neighbours said there might be an outage "
-        f"around {meta['postcode']}. Is that what's going on? "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"I've got no mobile data at home — could there be an outage around {meta['postcode']}? "
+        f"Just checking, not trying to log a ticket yet. Account {meta['customer_id']}, "
+        f"verification token {meta['verification_token']}, line {meta['line_id']}."
     )
 
 

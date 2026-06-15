@@ -41,8 +41,8 @@ async def task_agent_t15(store_t15):
 def _msg(store_t15):
     meta = store_t15.seed_meta
     return (
-        f"I'm travelling and mobile data died right after I crossed the border. "
-        f"Could it be an outage back home? My postcode is {meta['postcode']}. "
+        f"I'm overseas and my phone's useless — could this be an outage back home instead of roaming? "
+        f"My home postcode is {meta['postcode']}. "
         f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )

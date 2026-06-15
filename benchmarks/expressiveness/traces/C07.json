@@ -1,0 +1,11 @@
+{
+  "output": "Data is enabled on your line.",
+  "tools": [
+    {"name": "authenticate_customer", "args": {}, "result": "ok"},
+    {
+      "name": "get_line_status",
+      "args": {"line_id": "LINE-001"},
+      "result": {"data_enabled": true}
+    }
+  ]
+}

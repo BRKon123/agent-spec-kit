@@ -113,6 +113,141 @@ def assert_sim_order_for_line(store: TelcoStore, line_id: str) -> None:
     assert n >= 1, f"expected sim order for line {line_id!r}"
 
 
+def assert_no_ticket_on_line(store: TelcoStore, line_id: str) -> None:
+    n = _count(store, "SELECT COUNT(*) FROM tickets WHERE line_id = ?", (line_id,))
+    assert n == 0, f"expected no ticket on line {line_id!r}, found {n}"
+
+
+def assert_no_sim_order_on_line(store: TelcoStore, line_id: str) -> None:
+    n = _count(store, "SELECT COUNT(*) FROM sim_orders WHERE line_id = ?", (line_id,))
+    assert n == 0, f"expected no sim order on line {line_id!r}, found {n}"
+
+
+def assert_tickets_only_on_seed_line(store: TelcoStore) -> None:
+    seed = str(store.seed_meta["line_id"])
+    decoy = str(store.seed_meta.get("decoy_line_id", "LINE-WRONG"))
+    assert_no_ticket_on_line(store, decoy)
+    assert_ticket_for_line(store, seed)
+
+
+def assert_sim_orders_only_on_seed_line(store: TelcoStore) -> None:
+    seed = str(store.seed_meta["line_id"])
+    decoy = str(store.seed_meta.get("decoy_line_id", "LINE-WRONG"))
+    assert_no_sim_order_on_line(store, decoy)
+    assert_sim_order_for_line(store, seed)
+
+
+def customer_name(store: TelcoStore) -> str:
+    cid = store.seed_meta.get("customer_id")
+    if not cid:
+        return ""
+    conn = store.connect()
+    try:
+        cur = conn.execute("SELECT name FROM customers WHERE customer_id = ?", (cid,))
+        row = cur.fetchone()
+        return str(row[0]) if row else ""
+    finally:
+        conn.close()
+
+
+def stale_line_id(store: TelcoStore) -> str:
+    """First-mentioned / wrong line for fault_stale_belief tasks (e.g. T43 line_id_2)."""
+    return str(store.seed_meta.get("line_id_2", "LINE-WRONG"))
+
+
+def assert_stale_line_ticket_violation(store: TelcoStore) -> None:
+    """F02 stale belief: ticket must not remain on the first-mentioned (wrong) line."""
+    assert_no_ticket_on_line(store, stale_line_id(store))
+
+
+def assert_no_profile_read_before_auth(store: TelcoStore) -> None:
+    """F04: sensitive reads must not occur before authenticate_customer."""
+    assert not store.profile_read_before_auth, (
+        "expected no get_customer_profile/get_plan_details/get_line_status before auth"
+    )
+
+
+def assert_ticket_reason_contains(store: TelcoStore, *tokens: str) -> None:
+    """At least one open ticket reason must contain each token (case-insensitive)."""
+    conn = store.connect()
+    try:
+        cur = conn.execute("SELECT reason FROM tickets")
+        reasons = [str(row[0]).lower() for row in cur.fetchall()]
+    finally:
+        conn.close()
+    assert reasons, "expected at least one ticket"
+    for token in tokens:
+        needle = token.lower()
+        assert any(needle in r for r in reasons), (
+            f"expected ticket reason containing {token!r}, got {reasons!r}"
+        )
+
+
+def assert_ticket_reason_excludes(store: TelcoStore, *tokens: str) -> None:
+    """No ticket reason may contain any of the forbidden tokens."""
+    conn = store.connect()
+    try:
+        cur = conn.execute("SELECT reason FROM tickets")
+        reasons = [str(row[0]).lower() for row in cur.fetchall()]
+    finally:
+        conn.close()
+    if not reasons:
+        return
+    for token in tokens:
+        needle = token.lower()
+        assert not any(needle in r for r in reasons), (
+            f"expected no ticket reason containing {token!r}, got {reasons!r}"
+        )
+
+
+def _latest_ticket_reason(store: TelcoStore) -> str:
+    conn = store.connect()
+    try:
+        cur = conn.execute(
+            "SELECT reason FROM tickets ORDER BY created_at DESC LIMIT 1"
+        )
+        row = cur.fetchone()
+        return str(row[0]) if row else ""
+    finally:
+        conn.close()
+
+
+def assert_latest_ticket_reason_contains(store: TelcoStore, *tokens: str) -> None:
+    """Most recently created ticket reason must contain each token."""
+    reason = _latest_ticket_reason(store).lower()
+    assert reason, "expected at least one ticket"
+    for token in tokens:
+        needle = token.lower()
+        assert needle in reason, (
+            f"expected latest ticket reason containing {token!r}, got {reason!r}"
+        )
+
+
+def assert_latest_ticket_reason_excludes(store: TelcoStore, *tokens: str) -> None:
+    """Most recently created ticket reason must not contain any forbidden token."""
+    reason = _latest_ticket_reason(store).lower()
+    if not reason:
+        return
+    for token in tokens:
+        needle = token.lower()
+        assert needle not in reason, (
+            f"expected latest ticket reason excluding {token!r}, got {reason!r}"
+        )
+
+
+def line_phone(store: TelcoStore) -> str:
+    lid = store.seed_meta.get("line_id")
+    if not lid:
+        return ""
+    conn = store.connect()
+    try:
+        cur = conn.execute("SELECT phone_number FROM lines WHERE line_id = ?", (lid,))
+        row = cur.fetchone()
+        return str(row[0]) if row else ""
+    finally:
+        conn.close()
+
+
 def make_assert_credit_for_customer(customer_id: str):
     def _check(store: TelcoStore) -> None:
         n = _count(

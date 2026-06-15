@@ -23,6 +23,7 @@ from agents.prompts import (
 )
 from agents.schemas import BillingDecision, NetworkAssessment
 from store.store import TelcoStore
+from store.fault_variants import maybe_auto_credit_after_billing
 from store.tools import (
     make_billing_specialist_tools,
     make_coordinator_tools,
@@ -53,15 +54,47 @@ def calibration_steering_enabled() -> bool:
     )
 
 
-def _structured_response_json(out: dict[str, Any]) -> str:
+def _structured_response_json(out: dict[str, Any], *, variant: str = "reference") -> str:
     sr = out.get("structured_response")
     if sr is not None:
+        if hasattr(sr, "model_dump_json"):
+            raw = sr.model_dump(mode="json")
+        elif isinstance(sr, dict):
+            raw = sr
+        else:
+            raw = None
+        if raw is not None and variant == "fault_structured_output":
+            raw = _mutate_structured_fault_payload(raw)
+            return json.dumps(raw)
         if hasattr(sr, "model_dump_json"):
             return sr.model_dump_json()
         return json.dumps(sr) if isinstance(sr, dict) else str(sr)
     last = out["messages"][-1]
     content = getattr(last, "content", last)
     return str(content)
+
+
+def _mutate_structured_fault_payload(raw: dict[str, Any]) -> dict[str, Any]:
+    """Fault-only: emit JSON that may fail task matchers (never used for reference)."""
+    out = dict(raw)
+    if "fault_domain" in out:
+        if out.get("fault_domain") != "unknown":
+            out["evidence"] = []
+        if out.get("severity") == "high" and out.get("recommended_action") == "create_ticket":
+            out["escalation_reason"] = None
+        if "user_explanation" in out:
+            out["user_explanation"] = (
+                f"{out['user_explanation']} The root cause is definitely confirmed."
+            )
+    if "eligible" in out:
+        if out.get("eligible") is True:
+            out["amount"] = None
+        else:
+            out["amount"] = 50.0
+        out["user_explanation"] = (
+            "We guarantee a full refund and compensation will be applied immediately."
+        )
+    return out
 
 
 def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
@@ -88,10 +121,10 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
 
     @tool
     def run_network_diagnostics_specialist(line_id: str, complaint: str) -> str:
-        """Delegate connectivity/roaming/outage/latency diagnostics to NetworkDiagnosticsSpecialist.
+        """Delegate connectivity/roaming/outage diagnostics to NetworkDiagnosticsSpecialist.
 
-        Call in the same turn immediately after authenticate_customer when the user reports
-        latency spikes, intermittent connectivity, or ambiguous network issues.
+        For latency spikes or ambiguous network issues, call in the same agent turn as
+        authenticate_customer (do not stop after auth alone).
         """
         out = network_specialist.invoke(
             {
@@ -108,11 +141,14 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
                 ]
             }
         )
-        return _structured_response_json(out)
+        return _structured_response_json(out, variant=variant)
 
     @tool
     def run_billing_policy_specialist(customer_id: str, issue: str) -> str:
-        """Delegate refund/compensation policy to BillingPolicySpecialist."""
+        """Delegate refund/compensation policy to BillingPolicySpecialist.
+
+        Use after auth for duplicate charges, brief outages, and compensation requests.
+        """
         out = billing_specialist.invoke(
             {
                 "messages": [
@@ -127,7 +163,9 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
                 ]
             }
         )
-        return _structured_response_json(out)
+        raw = _structured_response_json(out, variant=variant)
+        maybe_auto_credit_after_billing(store, variant, raw)
+        return raw
 
     coordinator_tools: list[BaseTool] = [
         *make_coordinator_tools(store, variant=variant),

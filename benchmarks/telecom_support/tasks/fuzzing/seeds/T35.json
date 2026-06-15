@@ -1,0 +1,8 @@
+{
+  "task_id": "T35",
+  "seed_source": "manual_script",
+  "messages": [
+    "I already have open ticket TCK-EXIST-01 for this \u2014 please escalate that one, don't open a duplicate. Account CUST-035, verification token 1990-35-15, line LINE-0035."
+  ],
+  "extracted_from": "tasks/manual/test_T35.py"
+}

@@ -1,0 +1,32 @@
+% \section{Objectives}
+% \section{Challenges}
+% \section{Contributions}
+
+\chapter{Introduction}
+\label{chap:introduction}
+
+\section{Motivation}
+
+Tool-using LLM agents can change external state, so their correctness cannot be judged from the final reply alone. Early progress in large-scale language modelling showed that Transformer-based models could perform a wide range of tasks from natural language prompts alone \citep{vaswani2017attention,brown2020language}, and instruction tuning made these models more useful as general-purpose assistants that follow user intent \citep{ouyang2022training}. More recently, LLMs have been used as agents, meaning systems that plan over multiple steps, call tools, retrieve information, interact with users, and modify external state. Approaches such as ReAct demonstrated the value of combining reasoning with action \citep{yao2023react}, while work such as Toolformer and API-Bank showed the growing importance of external tool use in language model systems \citep{schick2023toolformer,li2023apibank}. Agent evaluation must therefore cover both the reply and the actions that produced it. A plausible final answer is only one part of correctness. The evaluation must also verify tool selection, policy compliance, execution order, and final application state.
+
+The distinction matters in deployed systems. A support agent that sounds polite but skips authentication, calls the wrong account tool, or leaves a ticket in an invalid state can expose account data, create an invalid ticket, or apply an incorrect credit even when the final reply reads well. Building dependable agents therefore requires a workflow closer to software engineering than to prompt tuning alone. The development process should begin with explicit behavioural checks. Developers can then run the agent, inspect any failed check, and rerun the suite after changing the prompt, policy, or orchestration. Without tooling that supports that loop, teams cannot move from ``it worked once in the playground'' to justified confidence that an agent will behave correctly under repeated, varied interaction.
+
+Existing evaluation approaches only partly support that workflow. Traditional benchmarks and LLM-as-a-judge methods such as HELM, G-Eval, and MT-Bench are valuable for comparing models on isolated inputs and final outputs \citep{liang2022helm,liu2023geval,zheng2023judging}, but they hide failures that live in tool traces and application state. A final answer can look reasonable while the agent skipped a required step or changed state incorrectly. Recent agent benchmarks such as AgentBench, WebArena, $\tau$-bench, and AppWorld have made trace- and state-aware evaluation more visible \citep{liu2023agentbench,zhou2023webarena,yao2024taubench,trivedi2024appworld}, yet they are fixed leaderboards rather than reusable infrastructure for a domain team writing its own behavioural contracts. Practical libraries and observability tools help developers run checks and inspect traces, but they still make it awkward to express a full multi-turn scenario (with output, tool, and state checks together) and to get precise diagnostics when something fails. Chapter~\ref{chap:related-work} analyses those limitations in detail.
+
+\emph{agent-spec-kit} implements these checks as executable conversation scenarios. The framework treats readable, executable behavioural specifications as the basis of agent testing. A scenario reads like a conversation script with user messages, checks on the agent's reply and tool use after each turn, and state postconditions, all in one place. When an assertion fails, the framework reports which expectation broke and where in the trace it applied, so developers can fix the agent quickly rather than reconstruct the episode from a raw trace or aggregate score. The approach draws on software-testing ideas such as test oracles, repeated trials, and failure simplification \citep{claessen2000quickcheck,barr2015oracle,zeller2002simplifying,ribeiro2020checklist}. The framework makes expected behaviour executable. It records the failed requirement and preserves useful exploratory failures as regression tests.
+
+\section{Contributions}
+
+This project makes the following high-level contributions.
+
+\begin{itemize}
+    \item \textbf{The scenario API places user turns, reply checks, tool checks, and state postconditions in one Python script.} Those pieces live in one place instead of being scattered across datasets, graders, and runner config, which makes behavioural contracts easier to read, review, and change as product rules evolve.
+
+    \item \textbf{Failed assertions report the turn, trace location, expected value, and observed value.} When an assertion fails, the framework reports which expectation broke, where in the trace it applied, and structured expected versus actual detail, so developers can fix the agent or policy without reconstructing the episode from a raw trace or aggregate score alone. Failure shrinking can reduce exploratory cases to smaller reproducers while preserving the same broken check. Runs are stored locally and can be compared across named experiments in the CLI and web interface.
+
+    \item \textbf{Generative workflows for bug discovery.} Scripted suites encode policies teams already know, but they miss dialogue and mutation paths no author wrote down. Repeated runs estimate consistency, while simulated users and transcript mutations generate additional conversations. Regression extraction saves failures found in exploration as permanent scenarios in the suite.
+
+    \item \textbf{An empirical evaluation of the framework on agent tasks.} The evaluation uses fifty synthetic mobile-support tasks executed against a reference LangGraph agent. The evaluation focuses on readability and usability compared to other libraries, on how well distinct failure modes are exposed, and on converting those failures into reproducible regression cases.
+\end{itemize}
+
+Scalar scores and final-answer judges do not reveal every tool, ordering, or state failure. Reliable agent development requires declarative behavioural specs that a team can read, run repeatedly, and debug precisely when they fail.

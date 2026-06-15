@@ -1,0 +1,17 @@
+\begin{tikzpicture}[
+  node distance=7mm and 5mm,
+  arr/.style={-{Stealth[length=2.2mm]}, thick, draw=black!65},
+]
+  \node[flownarrow] (assert) {\texttt{assert\_*}\\steps};
+  \node[flownarrow, right=of assert] (match) {\texttt{match.}\\\texttt{async\_check}};
+  \node[flownarrow, right=of match] (raise) {\texttt{raise\_scenario}\\\texttt{\_match\_failure}};
+  \node[flownarrow, right=of raise] (rec) {\texttt{Failure}\\\texttt{Record}};
+  \node[flownarrow, right=of rec] (cx) {\texttt{Counter}\\\texttt{example}};
+  \node[flownarrow, right=of cx] (ui) {CLI /\\UI};
+
+  \draw[arr] (assert) -- (match);
+  \draw[arr] (match) -- (raise);
+  \draw[arr] (raise) -- (rec);
+  \draw[arr] (rec) -- (cx);
+  \draw[arr] (cx) -- (ui);
+\end{tikzpicture}

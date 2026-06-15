@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f10_t44_full [1/1] ────────────────────────╮
+│ Check: assert_tool_calls                                                     │
+│ Where: 1st assert_tool_calls after turn #6 (agentturn) (tool call list for   │
+│ that turn)                                                                   │
+│ Path: $[0].name                                                              │
+│ Agent errors:                                                                │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-044',        │
+│ 'verification_token': '1990-44-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-044"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_RcxPBIIA0pmTq6cJNGbFZaam'}}                                            │
+│ {'name': 'get_line_status', 'args': {'line_id': 'LINE-0044'}, 'result':      │
+│ '{"line_id": "LINE-0044", "customer_id": "CUST-044", "phone_number":         │
+│ "+447700900044", "plan_id": "PLAN-STD", "sim_status": "active",              │
+│ "roaming_enabled": true, "data_enabled": true}', 'error': None, 'children':  │
+│ [], 'metadata': {'tool_call_id': 'call_mpEYTNFohGMGgyShCA3hAwT4'}}           │
+│ {'name': 'heartbeat_ping', 'args': {}, 'result': '{"status": "ok",           │
+│ "heartbeat": "ping"}', 'error': None, 'children': [], 'metadata':            │
+│ {'tool_call_id': 'call_tyozd58OqMa5aSVEezGq7lIy'}}                           │
+│ Expected: equality: expected 'send_troubleshooting_step'                     │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-044",                                             │
+│       "verification_token": "1990-44-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-044"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_RcxPBIIA0pmTq6cJNGbFZaam"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "get_line_status",                                               │
+│     "args": {                                                                │
+│       "line_id": "LINE-0044"                                                 │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "line_id": "LINE-0044",                                                │
+│       "customer_id": "CUST-044",                                             │
+│       "phone_number": "+447700900044",                                       │
+│       "plan_id": "PLAN-STD",                                                 │
+│       "sim_status": "active",                                                │
+│       "roaming_enabled": t...

@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f01_t44_full [1/1] ────────────────────────╮
+│ Check: assert_tool_calls                                                     │
+│ Where: 1st assert_tool_calls after turn #6 (agentturn) (tool call list for   │
+│ that turn)                                                                   │
+│ Path: $[0].name                                                              │
+│ Agent errors:                                                                │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-044',        │
+│ 'verification_token': '1990-44-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-044"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_cIuUUIvHxMsRvK25PAGgwlYF'}}                                            │
+│ Expected: equality: expected 'send_troubleshooting_step'                     │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-044",                                             │
+│       "verification_token": "1990-44-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-044"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_cIuUUIvHxMsRvK25PAGgwlYF"                        │
+│     }                                                                        │
+│   }                                                                          │
+│ ]                                                                            │
+│ could not match expected element at index 0 while preserving order           │
+│ searched actual positions 0 through 0                                        │
+│ closest underlying mismatch was (at $[0].name): value does not equal         │
+│ expected                                                                     │
+│ value does not equal expected                                                │
+│ (+1 more matcher error(s))                                                   │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My mobile data still does not work and I need this sorted.     │
+│ │   Account CU...                                                            │
+│ ├── AgentTurn: You're all set. I’ve authenticated your account and pulled    │
+│ │   the curren...                                                            │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-044"                                      │
+│ │   │       }             ...

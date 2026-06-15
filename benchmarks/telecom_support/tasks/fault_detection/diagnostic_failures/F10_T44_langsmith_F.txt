@@ -1,0 +1,1 @@
+{'key': 'f10_tool_sequence', 'score': 0, 'comment': "expected first tool send_troubleshooting_step, got 'authenticate_customer'"}

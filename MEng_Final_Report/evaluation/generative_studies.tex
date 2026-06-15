@@ -1,0 +1,384 @@
+\section{Generative discovery studies}
+\label{sec:generative-studies}
+
+The fourth part of the evaluation asks whether layered discovery (manual scripts, simulated users, and mutation fuzz) finds failures beyond fixed regression dialogues, using the same F-oracles throughout. Fourteen tasks overlap across the user-simulation and fuzz studies (T03, T04, T17, T20, T27, T29, T30, T35, T38, T42, T43, T44, T45, T49).
+
+\subsection{User simulation}
+
+\subsubsection{Simulation design}
+
+The user-simulation arm keeps the same F-oracles and reference agent as the manual scripts, but replaces the fixed customer dialogue with an LLM-powered \texttt{simulate\_conversation} loop. For each of the fourteen study tasks, the simulation setup defines a short \emph{task intent} (what the customer is trying to achieve), a block of \emph{situational facts} drawn from the task seed (line id, postcode, beliefs such as a wrong line id on T43), and five \emph{personas}, not five scripts. Each persona is a seed with a name, conversational style, behaviour notes, a disclosure pattern, and a pressure level. The simulator prompt tells the model it is only the customer, must follow the persona, and may volunteer or withhold details according to \texttt{reveal\_upfront} versus \texttt{reveal\_when\_prompted}.
+
+Table~\ref{tab:persona-dimensions} summarises the persona fields. Disclosure upfront means the customer states relevant ids and context in early messages. Disclosure when prompted means they lead with the problem and answer when the agent asks. Segments end when an LLM \texttt{sim\_stop} judge (same model as the user) decides the task-specific stopping criteria are met (for example authentication completed and the agent has addressed the stated goal) rather than always exhausting a turn cap.
+
+\begin{table}[htbp]
+\centering
+\caption{Persona dimensions used in the user-simulation study (five seeds per task).}
+\label{tab:persona-dimensions}
+\small
+\begin{tabular}{@{}llp{5.5cm}@{}}
+\toprule
+Field & Role & Examples across tasks \\
+\midrule
+Style & Tone of voice & cooperative, angry, frustrated, sceptical, brief \\
+Behaviour & How they act in the thread & demands refund quickly, corrects line late, mixes multiple issues \\
+Disclosure & When facts appear & \texttt{reveal\_upfront} vs.\ \texttt{reveal\_when\_prompted} \\
+Pressure & Escalation appetite & low, medium, high \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Personas are task-specific because the intent differs. On T42 (issue shift from data to SIM), seeds include \texttt{multi\_issue\_user}, who mentions several problems before prioritising data, and \texttt{late\_realisation\_user}, who changes the issue mid-thread. On T43 (wrong then corrected line), seeds include \texttt{simple\_correction} and \texttt{work\_personal\_mix\_up}. On T45 (delayed authentication), seeds include \texttt{impatient\_user} and \texttt{suspicious\_user}, who resist sharing a verification token early. The model chooses wording and turn boundaries. It does not replay the fixed lines of the manual script verbatim.
+
+\subsubsection{Study results}
+
+Manual scripts provide one canonical conversation per task. Simulated users reuse one profile per task with five persona seeds, yielding five conversations per task at similar median length (four turns). Table~\ref{tab:user-sim-primary} summarises the primary comparison. Simulated users explore fifty-six distinct tool paths versus eleven for manual scripts, and sixteen distinct failure signatures versus four for manual scripts.
+
+\begin{table}[htbp]
+\centering
+\caption{User simulation study (fourteen tasks): manual scripts vs.\ simulated users.}
+\label{tab:user-sim-primary}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Method & Conversations & Unique tool paths & Distinct failure signatures & Median turns \\
+\midrule
+Manual scripts & 14 & 11 & 4 & 4.0 \\
+Simulated users & 70 & 56 & 16 & 4.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:user-sim-fairness} reports two fairness views from the same study. The first holds authoring effort comparable. Each task gets either one persona profile with five seeds or one full manual script, so the simulated arm runs seventy conversations against fourteen for manual scripts. That imbalance is still a fair comparison at the artefact level. Adding another persona seed is mostly defining style, disclosure, and behaviour notes, whereas another manual scenario means writing and maintaining every customer turn. The extra simulated runs reflect low marginal authoring cost, not free coverage without setup work. Under that pairing, simulated users still reach fifty-six unique tool paths and sixteen distinct failure signatures against eleven paths and four signatures for manual scripts.
+
+\begin{table}[htbp]
+\centering
+\caption{User simulation fairness comparisons (fourteen tasks).}
+\label{tab:user-sim-fairness}
+\small
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+Comparison & Method & Conv. & Paths & Signatures & Authoring \\
+\midrule
+Equal artefacts & Manual & 14 & 11 & 4 & Full script per task \\
+Equal artefacts & Simulated & 70 & 56 & 16 & Profile + seeds \\
+Equal conv.\ count & Manual & 14 & 11 & 4 & Full script per task \\
+Equal conv.\ count & Simulated & 14 & 14 & 5 & Profile + seeds \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The second row in the table is a sensitivity check that holds conversation count at fourteen by taking only the first seed per task. Simulated users still reach fourteen unique paths and five signatures versus eleven paths and four signatures for manual scripts, so the path and signature advantage is not only an artefact of running more personas. The trade-off is clear. A simulation setup costs less authoring effort than a full manual script. The developer defines task intent, situational facts, and persona seeds rather than writing every customer line. Personas buy broader coverage and dialogue diversity because the user model chooses wording and turn shape. Manual scripts remain the stable regression backbone because their user lines are fixed and the same scenario always replays the same transcript. Simulated runs are stochastic. Rerunning the same persona can produce a different conversation, so a failure found in exploration is harder to pin as a permanent regression until it is extracted or rewritten with concrete user messages.
+
+Across the study, simulation produced sixteen distinct failure signatures (Table~\ref{tab:user-sim-primary}), fifteen absent from manual-script failures. No invalid simulations were recorded. For example, manual T04 follows authentication, diagnostics, heartbeat, and ticket creation in a fixed order. Simulated T43 with a ``simple correction'' persona interleaves outage checks, duplicate \texttt{get\_line\_status}, diagnostics, and ticket creation in a different shape.
+
+\subsubsection{Case study of issue shift on T42 (simulation)}
+
+Task T42 exercises a customer who reports mobile data failure, may mention a SIM found in the laundry, and explicitly does not want a replacement SIM shipped. The manual script keeps the agent on data troubleshooting and passes the full F-oracle on the study run. The simulation arm uses five task-specific personas. The example below uses \texttt{multi\_issue\_user}.
+
+\begin{table}[htbp]
+\centering
+\caption{Persona used in the T42 simulation example.}
+\label{tab:t42-persona}
+\small
+\begin{tabular}{@{}llp{3.2cm}ll@{}}
+\toprule
+Name & Style & Behaviour (abridged) & Disclosure & Pressure \\
+\midrule
+\texttt{multi\_issue\_user} & \texttt{multi\_issue} & Mentions multiple issues before prioritising & \texttt{reveal\_when\_prompted} & medium \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The persona behaviour note is ``mentions multiple issues before prioritising.'' Combined with situational facts (data broken, SIM possibly in laundry, no replacement shipment), the simulator is steered to surface \emph{both} the laundry/SIM story and the data outage in early turns rather than following the manual script's narrower symptom ordering. The simulation segment stop criteria require the agent to avoid confirming SIM shipment. They do not prevent the agent from opening a ticket in the first segment once the user has authenticated and supplied line context.
+
+In this run the simulated customer states credentials and constraints in one opening message, then agrees to escalation when the agent offers it. Listing~\ref{lst:t42-sim} shows the customer-facing transcript. On the first agent turn (Listing~\ref{lst:t42-sim-failure}, event trace), the agent authenticates, runs an outage check and line diagnostic, sends a troubleshooting step, records user action, and opens \texttt{TCK-00001}, all \emph{before} the mid-conversation issue-shift checkpoint where \texttt{assert\_no\_mutations} requires an empty ticket store. The second agent turn escalates that ticket with notes mentioning ``replacement options,'' although the user declined a replacement shipment.
+
+\begin{lstlisting}[caption={T42 simulated conversation (\texttt{multi\_issue\_user}); manual arm passes.},label=lst:t42-sim]
+USER: Hi, I'm on LINE-0042 and my mobile data isn't working at all. I may have
+  found my SIM in the laundry and I don't want a replacement shipped; core issue
+  is data, details: customer_id CUST-042, verification_token 1990-42-15, line
+  LINE-0042, postcode E1 6AN.
+
+AGENT: ... Authentication completed for customer CUST-042.
+  ... Ran a line diagnostic on LINE-0042 ...
+  Created a support ticket (TCK-00001) with a diagnostic-based reason ...
+  ticket is open.
+  Would you like me to escalate the ticket or schedule a follow-up?
+
+USER: Yes--please escalate TCK-00001 and add a note that the SIM might have been
+  found in the laundry to give context. ... customer_id CUST-042, line_id
+  LINE-0042, postcode E1 6AN, verification_token 1990-42-15.
+
+AGENT: ... Escalated ticket TCK-00001 ... specialist will review ... and
+  replacement options.
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Captured failure box: T42 simulation (\texttt{multi\_issue\_user}), state oracle at segment boundary.},label=lst:t42-sim-failure]
++-------------------------- FAIL T42 simulation [1/1] ---------------------------+
+Check: assert_that
+Where: 2nd assert_that after turn #2 (agentturn) (environment / fixture check)
+Expected: assert_that failed: expected zero tickets, found 1
+Actual:
+  (fixture check on ticket store; see event trace)
+----------------------------------------
+Event trace
++-- UserTurn: Hi, I'm on LINE-0042 and my mobile data isn't working at all...
++-- AgentTurn: ... Authentication completed ... Created support ticket
+TCK-00001
+    +-- authenticate_customer
+    +-- check_outage
+    +-- run_line_diagnostic
+    +-- send_troubleshooting_step
+    +-- record_user_action
+    +-- create_support_ticket
++-- UserTurn: Yes--please escalate TCK-00001 and add a note ... laundry ...
++-- AgentTurn: ... Escalated ticket TCK-00001 ... replacement options ...
+    +-- authenticate_customer
+    +-- escalate_ticket
+    +-- add_audit_note
++--------------------------------------------------------------------------------+
+\end{lstlisting}
+
+The failure is not a vague reply-quality score. The box names the violated check (\texttt{assert\_that} / \texttt{assert\_no\_mutations}) and the event trace shows \texttt{create\_support\_ticket} on the first agent turn while the store still expected zero tickets at the segment boundary. The manual script for T42 does not produce this failure in this study. It keeps the customer on a narrower symptom sequence, so the agent never opens a ticket before the issue-shift checkpoint. When a customer might mix several symptoms or change priority mid-thread, one fixed script is unlikely to exercise every risky dialogue shape. Simulated users are one way to explore those variants.
+
+\subsection{Mutation fuzzing and failure taxonomy}
+
+\subsubsection{Fuzzing design}
+
+The fuzz arm does not invent new personas. It starts from the \emph{manual seed transcript} for each task (the canonical scripted dialogue), then applies one mutation operator per fuzz trial. Each of the fourteen tasks runs five trials. Each trial uses a named operator from Table~\ref{tab:fuzz-operators} with a fixed random seed for reproducibility. Operators are generic and reused across all fourteen tasks. Each trial applies one named operator to that task's manual seed transcript.
+
+Each operator can be applied either as a deterministic transform over the seed lines (regex deletion, string replacement, reordering, template insertion) or as an LLM-guided mutation that realises the same named intent on the transcript, optionally conditioned on prior turns in multi-segment dialogues.
+
+Table~\ref{tab:fuzz-operators} lists the operator catalogue and what each one does to the seed lines. Some operators are \emph{dynamic}. They depend on dialogue segment (for example \texttt{contradict\_entity\_later} appends a correction only after the first segment). A few trials compose two operators in sequence (for example \texttt{contradict\_entity\_later} followed by \texttt{ambiguous\_acknowledgement}).
+
+\begin{table}[htbp]
+\centering
+\caption{Mutation operators applied to manual seed transcripts (telecom fuzz study).}
+\label{tab:fuzz-operators}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.38\textwidth}X@{}}
+\toprule
+Operator & Effect on user messages \\
+\midrule
+\texttt{drop\_required\_fact} & Strips account, verification token, or line id from the opening turn. \\
+\texttt{delay\_required\_fact} & Moves a late-turn fact earlier in the sequence. \\
+\texttt{swap\_entity} & Swaps correct and stale line ids in the text. \\
+\texttt{contradict\_entity\_later} & Appends a correction after an earlier wrong id. \\
+\texttt{negate\_completed\_step} & User denies having completed a step they previously claimed. \\
+\texttt{ambiguous\_acknowledgement} & Adds vague acknowledgement text to the last user line. \\
+\texttt{remove\_confirmation} & Removes explicit yes/confirm phrasing. \\
+\texttt{increase\_pressure} & Adds demand for escalation, refund, or immediate shipment. \\
+\texttt{interleave\_secondary\_intent} & Inserts a secondary billing or line issue mid-dialogue. \\
+\texttt{third\_party\_shift} & Frames the issue as belonging to another person's line. \\
+\texttt{repeat\_or\_reorder\_turn} & Repeats or swaps order of user turns. \\
+\texttt{minimise\_user\_replies} & Truncates replies to short, vague fragments. \\
+\texttt{over\_specific\_false\_detail} & Adds plausible but false ticket or timestamp detail. \\
+\texttt{policy\_boundary\_shift} & Adds aggressive compensation demand against policy. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The combined fuzz pipeline also reuses the user-simulation personas on the same fourteen tasks (manual seed plus sim, then fuzz trials), which yields fifty-six unique paths from simulation and forty from mutation-only trials in the primary comparison below.
+
+\subsubsection{Study results}
+
+Table~\ref{tab:fuzz-primary} compares manual scripts, user simulation, and mutation fuzz on the fourteen tasks. Fuzz produces forty unique tool paths and eight distinct failure signatures at median four turns, the same median length as manual and simulation arms because many mutations vary phrasing in place rather than always stretching the dialogue.
+
+\begin{table}[htbp]
+\centering
+\caption{Fuzzing study primary comparison (fourteen tasks).}
+\label{tab:fuzz-primary}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Method & Conversations & Unique paths & Distinct signatures & Median turns \\
+\midrule
+Manual scripts & 14 & 11 & 4 & 4.0 \\
+User simulation & 70 & 56 & 16 & 4.0 \\
+Mutation fuzz & 70 & 40 & 8 & 4.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:fuzz-operator-failures} counts failing conversations per operator in the fuzz study. \texttt{minimise\_user\_replies} and \texttt{ambiguous\_acknowledgement} are the most productive. Entity and ordering operators still surface binding and sequencing bugs on multi-line tasks.
+
+\begin{table}[htbp]
+\centering
+\caption{Failing conversations by mutation operator (fuzz arm).}
+\label{tab:fuzz-operator-failures}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Operator & Failing conversations \\
+\midrule
+\texttt{minimise\_user\_replies} & 4 \\
+\texttt{ambiguous\_acknowledgement} & 4 \\
+\texttt{drop\_required\_fact} & 3 \\
+\texttt{delay\_required\_fact} & 3 \\
+\texttt{repeat\_or\_reorder\_turn} & 3 \\
+\texttt{increase\_pressure} & 3 \\
+\texttt{contradict\_entity\_later} & 2 \\
+\texttt{negate\_completed\_step} & 1 \\
+\texttt{remove\_confirmation} & 1 \\
+\texttt{swap\_entity} & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:failure-taxonomy} summarises failures from the combined study. Appendix~\ref{app:taxonomy-per-task} gives the per-task breakdown.
+
+\begin{table}[htbp]
+\centering
+\caption{Failure taxonomy (fourteen tasks, combined study). Each row is a discovery arm. \emph{Distinct sigs} counts equivalence classes $(\textit{check kind}, \textit{path}, \textit{turn})$; \emph{Convs} is failing conversations. \emph{New vs.\ manual}, \emph{New vs.\ fuzz}, and \emph{New vs.\ sim} count distinct equivalence classes on the row arm absent from the baseline arm (``--'' = not applicable).}
+\label{tab:failure-taxonomy}
+\small
+\begin{tabular}{@{}lrrccc@{}}
+\toprule
+Arm & Distinct sigs & Convs & New vs.\ manual & New vs.\ fuzz & New vs.\ sim \\
+\midrule
+Manual & 4 & 4 & -- & -- & -- \\
+Simulation & 16 & 32 & 15 & 14 & -- \\
+Fuzz & 8 & 25 & 7 & -- & 6 \\
+\midrule
+\textbf{Total failing} & -- & \textbf{61} & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Simulation and fuzz share two failure signatures, while fourteen simulation signatures and six fuzz signatures remain arm-specific. The arms remain complementary at the transcript level. Personas explore alternative customer \emph{styles} (tone, disclosure timing, pressure) that rewrite the dialogue around a task intent, whereas mutation operators perturb the fixed initial manual messages along named axes such as missing facts, entity swaps, or vague acknowledgements. A failure on T42 from a multi-issue persona (state oracle, ticket opened too early) does not recur under \texttt{interleave\_secondary\_intent} (fuzz strategy) on those messages. Conversely, T45 \texttt{drop\_required\_fact} (fuzz strategy) surfaces tool non-invocation when credentials are stripped from the script, a path simulation personas hit through different output-oracle wording. The implication for evaluation design is that neither arm subsumes the other. Simulation widens \emph{who} the customer might be, fuzz widens \emph{how} a plausible script might vary, and keeping both layers in the suite catches complementary regressions, including ones that share an oracle family but arise from different customer wordings.
+
+\subsubsection{Case study of credential stripping on T45 (fuzz)}
+
+Task T45 exercises delayed authentication. The customer should not receive account-specific help until they supply a verification token. The manual seed transcript (four user turns) asks for plan information, refuses to authenticate, then authenticates explicitly. The manual arm \textbf{passes} the F-oracle in this evaluation. In the example below, the \texttt{drop\_required\_fact} operator (Table~\ref{tab:fuzz-operators}) removes account and credential facts from the seed transcript while keeping the dialogue grammatical.
+
+\begin{table}[htbp]
+\centering
+\caption{T45 user turns: manual seed vs.\ \texttt{drop\_required\_fact} mutation (verbatim from fuzz run).}
+\label{tab:t45-fuzz-mutation}
+\small
+\begin{tabular}{@{}lp{10.2cm}@{}}
+\toprule
+Turn & Manual seed vs.\ mutated \\
+\midrule
+Opening & \textbf{Seed:} What plan am I on? My line has not been working properly either. My account is CUST-045. \\
+        & \textbf{Mutated:} What plan am I on? My line has not been working properly either. \\
+Auth turn & \textbf{Seed:} Fine, authenticate me: customer CUST-045, verification 1990-45-15, line LINE-0045. \\
+          & \textbf{Mutated:} Fine, authenticate me. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mutation omits \texttt{CUST-045} from the opening turn and later drops the explicit \texttt{customer\_id}, \texttt{verification\_token}, and \texttt{line\_id} from the authentication line. Listing~\ref{lst:t45-fuzz} shows the full mutated dialogue. The agent stays in prose-only pre-auth mode on the first two turns (requesting credentials without naming an account id), so segment~0 passes its output rubric. The failure appears in segment~1 (Listing~\ref{lst:t45-fuzz-failure}). After the user says ``Fine, authenticate me'' without supplying credentials, the agent again asks for \texttt{customer\_id} and \texttt{verification\_token} in text but never calls \texttt{authenticate\_customer}, which violates the segment's \texttt{assert\_tool\_calls} expectation.
+
+\begin{lstlisting}[caption={T45 fuzz: \texttt{drop\_required\_fact} transcript; manual arm passes.},label=lst:t45-fuzz]
+USER: What plan am I on? My line has not been working properly either.
+
+AGENT: I can help with that. I need to verify your identity first to pull your
+  account details securely. Please provide your customer_id and verification_token
+  ... Once I'm verified, I'll check the plan attached to your line ...
+
+USER: I do not have my verification code with me right now -- can you just tell
+  me what is on the account first?
+
+AGENT: I can't share account details without verifying your identity. Please
+  provide your customer_id and the verification_token ... I can't proceed with
+  account details without the code.
+
+USER: Fine -- authenticate me.
+
+AGENT: Sure--please provide your customer_id and verification_token ... so I can
+  authenticate you. Once authenticated, I'll proceed with the next steps.
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Captured failure box: T45 fuzz (\texttt{drop\_required\_fact}), tool oracle after second segment.},label=lst:t45-fuzz-failure]
++-------------------------- FAIL T45 fuzz trial [1/1] ---------------------------+
+Check: assert_tool_calls
+Where: 1st assert_tool_calls after turn #4 (agentturn) (tool trace)
+Path: $[0]
+Expected:
+missing_element: expected expected value to appear after the previous match
+[[0] tool_call("authenticate_customer")]
+Actual:
+  (no tool calls)
+----------------------------------------
+Event trace
++-- UserTurn: What plan am I on? My line has not been working properly either.
++-- AgentTurn: ... verify your identity first ... (no tools)
++-- UserTurn: I do not have my verification code with me right now ...
++-- AgentTurn: ... can't share account details without verifying ... (no tools)
++-- UserTurn: Fine -- authenticate me.
++-- AgentTurn: ... provide your customer_id and verification_token ...
+    (no tools)
++-- UserTurn: Now please check the line and tell me the plan name.
++-- AgentTurn: ... need to verify your account first ... (no tools)
++--------------------------------------------------------------------------------+
+\end{lstlisting}
+
+The box names a trace-level violation rather than a reply-quality score. The agent never authenticates even after the user signals willingness, because the mutated transcript never re-supplies the structured credentials the tools require. User simulation on T45 still fails under several personas with output-oracle pre-auth violations. This fuzz case shows a complementary failure mode (tool non-invocation when facts are paraphrased away) without authoring a new persona.
+
+\subsubsection{Why generative discovery matters}
+
+Taken together, the user-simulation and fuzz studies widen coverage well beyond what a single manual script per task can exercise. On the fourteen shared tasks, simulated users ran seventy conversations and reached fifty-six unique tool paths and sixteen distinct failure signatures, against eleven paths and four signatures for manual scripts alone. Mutation fuzz added a further forty paths and eight signatures from seventy trials at the same median length. The combined study recorded sixty-one failing conversations (four manual, thirty-two simulation, twenty-five fuzz; Table~\ref{tab:failure-taxonomy}).
+
+That breadth matters because real customers do not follow one canonical dialogue. They withhold credentials, correct themselves mid-thread, mix several issues, or answer in fragments. Personas and mutation operators surface tool orderings, binding mistakes, and policy violations that a test author is unlikely to script exhaustively, yet are exactly the stresses that matter in production-like settings where user behaviour is unpredictable. The case studies above (T42 simulation, T45 fuzz) illustrate failures that manual seeds did not expose in this run.
+
+Generative search is only half the loop. Each failure is reported as a structured counterexample (check kind, path, turn, event trace) in the CLI and web UI (Section~\ref{sec:execution-workflow}), so a developer can see which expectation broke without reconstructing the episode from logs. Rerunning under a new experiment name and comparing pass/fail across scenarios supports the spec, run, inspect, and fix workflow. The next subsection on regression extraction enables this loop. When a simulated failure is worth keeping, extraction pins the realised transcript as a permanent regression script.
+
+\subsection{Regression extraction from simulated failures}
+
+\subsubsection{Extraction design}
+
+Discovery becomes more useful when a surprising sim failure can be pinned as a permanent script. The regression-extraction arm takes failing user-simulation runs from twelve study tasks (T04, T17, T20, T27, T29, T30, T35, T38, T42, T43, T45, T49) with five persona seeds each, captures the realised customer transcript per generative step, and materialises it into a new \texttt{@scenario} in a regression module. The AST pass keeps the original F-oracle assertions and replaces \texttt{simulate\_conversation} with concrete \texttt{user\_message} lines from the captured run (Section~\ref{sec:generative}, Listing~\ref{lst:extracted-regression}). Each extracted test is tagged with a \texttt{regression\_id} (for example \texttt{REG-SIM-T29-1}) and keyed to the source \texttt{failure\_signature} so a rerun can be checked for the same assertion failure, not merely any failure.
+
+\subsubsection{Study results}
+
+Of sixty simulated conversations in this arm, twenty-nine failed and twenty-eight had transcripts captured successfully (one capture failed). All twenty-eight were written to \texttt{all\_regressions.py} with valid Python syntax and discoverable scenario functions (one hundred per cent import and collection success). Table~\ref{tab:regression-extraction} summarises the pipeline.
+
+\begin{table}[htbp]
+\centering
+\caption{Regression extraction from user-simulation failures (twelve tasks, five seeds each).}
+\label{tab:regression-extraction}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Metric & Value \\
+\midrule
+Simulated conversations & 60 \\
+Failing conversations & 29 \\
+Transcripts captured (eligible) & 28 \\
+Regressions extracted & 28 \\
+Import / collection success & 100\% \\
+Median user turns in extracted test & 2.0 \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\emph{Rerun outcomes (28 extracted)}} \\
+Same \texttt{failure\_signature} & 13 (46.4\%) \\
+Passed on rerun & 3 (10.7\%) \\
+Failed, different check kind & 9 (32.1\%) \\
+Failed, same check, different path & 3 (10.7\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On immediate rerun, thirteen extracted scenarios failed again on the same check and JSON path as the original sim run (Table~\ref{tab:regression-extraction}). Only three passed outright (all on T04), giving a regression pass rate of 10.7\%. For tests extracted \emph{from} failures, a low pass rate is desirable because it means the pinned script still exercises the oracle rather than letting the agent slip through. The other twenty-five reruns failed. Nine broke on a different \emph{check kind} (for example an original \texttt{forbid\_tool\_calls} violation surfacing instead as an \texttt{assert\_output} judge failure), and three more on the same check type but at a different trace path after a slightly different tool ordering. The honest reading is mixed. Extraction reliably turns a stochastic dialogue into a readable, version-controlled script with the full F-oracle attached, but under half of extracted cases immediately reproduce the \emph{same} failure signature. That gap is expected because the agent remains stochastic even when user lines are fixed, and because each extracted scenario still carries the full multi-oracle F-check. Small differences in tool ordering or reply wording can shift which assertion breaks first even when the underlying policy stress is similar. Even when rerun behaviour drifts, the extracted file still documents the customer lines and policy checks that triggered the original discovery and can be edited or repeated like any other manual script.
+
+\subsubsection{Illustrative extracted regression (T29)}
+
+Listing~\ref{lst:t29-regression} shows an extracted regression for T29 (replacement SIM on the wrong line). The simulator produced one customer turn naming both \texttt{LINE-0029} and \texttt{LINE-WRONG}. Extraction materialises that line verbatim and keeps the trace and output oracles from the sim scenario. On rerun this case failed on the same forbidden early \texttt{order\_replacement\_sim} call as the initial simulation run. It is an example of a stable trace-level failure that reproduces reliably.
+
+\begin{lstlisting}[language=Python,caption={Extracted regression \texttt{REG-SIM-T29-1}: concrete user line plus original F-oracle.},label=lst:t29-regression]
+@ek.scenario(regression_id='REG-SIM-T29-1', tags=('telecom', 'regression', 'user-sim'), ...)
+async def regression_REG_SIM_T29_1(s, store_us_t29):
+    (
+        s.user_message("Hi, I'm customer CUST-029 with verification token 1990-29-15. "
+                       "The line I need fixed is LINE-0029 (not LINE-WRONG); I need a "
+                       "replacement SIM sent to my default address at E1 6AN.")
+        .forbid_tool_calls([m.tool_call('order_replacement_sim')], ...)
+        .assert_tool_calls(
+            [
+                m.tool_call('authenticate_customer'),
+                m.tool_call('order_replacement_sim',
+                            args={'line_id': 'LINE-0029'}),
+            ],
+            ...)
+        .assert_output(m.llm_criteria(...), ...)
+    )
+\end{lstlisting}
+
+The regression study completes the discovery-to-regression workflow described in Chapter~\ref{chap:methodology}. Simulated users widen search, counterexamples explain what broke, and extraction preserves the dialogue as a script the team can keep in the suite without re-running the user simulator.

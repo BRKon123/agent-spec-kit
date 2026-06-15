@@ -2,12 +2,65 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from typing import Any
 
 from agent_spec_kit.match.protocol import BaseMatcher, coerce_any
 from agent_spec_kit.match.types import MatchError, MatchResult, Path, _short_repr
+
+
+def _path_depth(error: MatchError) -> int:
+    return len(error.path)
+
+
+def _pick_representative_error(errors: list[MatchError]) -> MatchError | None:
+    if not errors:
+        return None
+    return max(errors, key=_path_depth)
+
+
+def _error_payload(error: MatchError) -> dict[str, Any]:
+    return {
+        "path": list(error.path),
+        "code": error.code,
+        "message": error.message,
+        "expected": error.expected,
+        "actual": error.actual,
+        "witness_json": error.witness_json,
+    }
+
+
+def _combinator_failure(
+    *,
+    path: Path,
+    code: str,
+    summary: str,
+    inner: MatchError | None,
+    expected: str,
+    actual: str,
+    include_inner_in_errors: bool = True,
+    extra_errors: tuple[MatchError, ...] = (),
+) -> MatchResult:
+    witness: dict[str, Any] = {}
+    message = summary
+    if inner is not None:
+        witness["inner_error"] = _error_payload(inner)
+        message = f"{summary}: {inner.message}"
+    outer = MatchError(
+        path=path,
+        code=code,
+        message=message,
+        expected=expected,
+        actual=actual,
+        witness_json=json.dumps(witness, default=str) if witness else None,
+    )
+    errors: list[MatchError] = [outer]
+    if inner is not None and include_inner_in_errors:
+        errors.append(inner)
+    errors.extend(extra_errors)
+    return MatchResult(ok=False, errors=tuple(errors))
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,35 +263,39 @@ class OneOfMatcher(BaseMatcher):
     options: tuple[BaseMatcher, ...]
 
     def check(self, actual: Any, path: Path) -> MatchResult:
+        attempt_errors: list[MatchError] = []
         for opt in self.options:
             r = opt.check(actual, path)
             if r.ok:
                 return MatchResult.success()
+            attempt_errors.extend(r.errors)
         joined = ", ".join(_matcher_summary(o) for o in self.options)
-        return MatchResult.failure(
-            MatchError(
-                path=path,
-                code="one_of",
-                message="value does not match any option",
-                expected=f"one of ({joined})",
-                actual=_short_repr(actual),
-            )
+        inner = _pick_representative_error(attempt_errors)
+        return _combinator_failure(
+            path=path,
+            code="one_of",
+            summary="one_of: value does not match any option",
+            inner=inner,
+            expected=f"one of ({joined})",
+            actual=_short_repr(actual),
         )
 
     async def async_check(self, actual: Any, path: Path) -> MatchResult:
+        attempt_errors: list[MatchError] = []
         for opt in self.options:
             r = await opt.async_check(actual, path)
             if r.ok:
                 return MatchResult.success()
+            attempt_errors.extend(r.errors)
         joined = ", ".join(_matcher_summary(o) for o in self.options)
-        return MatchResult.failure(
-            MatchError(
-                path=path,
-                code="one_of",
-                message="value does not match any option",
-                expected=f"one of ({joined})",
-                actual=_short_repr(actual),
-            )
+        inner = _pick_representative_error(attempt_errors)
+        return _combinator_failure(
+            path=path,
+            code="one_of",
+            summary="one_of: value does not match any option",
+            inner=inner,
+            expected=f"one of ({joined})",
+            actual=_short_repr(actual),
         )
 
 
@@ -253,7 +310,17 @@ class AllOfMatcher(BaseMatcher):
             if not r.ok:
                 errors.extend(r.errors)
         if errors:
-            return MatchResult(ok=False, errors=tuple(errors))
+            inner = _pick_representative_error(errors)
+            return _combinator_failure(
+                path=path,
+                code="all_of",
+                summary="all_of: not all constraints were satisfied",
+                inner=inner,
+                expected="all constraints to pass",
+                actual=_short_repr(actual),
+                include_inner_in_errors=False,
+                extra_errors=tuple(errors),
+            )
         return MatchResult.success()
 
     async def async_check(self, actual: Any, path: Path) -> MatchResult:
@@ -263,7 +330,17 @@ class AllOfMatcher(BaseMatcher):
             if not r.ok:
                 errors.extend(r.errors)
         if errors:
-            return MatchResult(ok=False, errors=tuple(errors))
+            inner = _pick_representative_error(errors)
+            return _combinator_failure(
+                path=path,
+                code="all_of",
+                summary="all_of: not all constraints were satisfied",
+                inner=inner,
+                expected="all constraints to pass",
+                actual=_short_repr(actual),
+                include_inner_in_errors=False,
+                extra_errors=tuple(errors),
+            )
         return MatchResult.success()
 
 
@@ -275,35 +352,35 @@ class NotMatcher(BaseMatcher):
         r = self.inner.check(actual, path)
         if not r.ok:
             return MatchResult.success()
-        return MatchResult.failure(
-            MatchError(
-                path=path,
-                code="not",
-                message="value matches disallowed spec",
-                expected=f"not {_matcher_summary(self.inner)}",
-                actual=_short_repr(actual),
-            )
+        return _combinator_failure(
+            path=path,
+            code="not",
+            summary="not: value matched disallowed spec",
+            inner=None,
+            expected=f"not {_matcher_summary(self.inner)}",
+            actual=_short_repr(actual),
+            include_inner_in_errors=False,
         )
 
     async def async_check(self, actual: Any, path: Path) -> MatchResult:
         r = await self.inner.async_check(actual, path)
         if not r.ok:
             return MatchResult.success()
-        return MatchResult.failure(
-            MatchError(
-                path=path,
-                code="not",
-                message="value matches disallowed spec",
-                expected=f"not {_matcher_summary(self.inner)}",
-                actual=_short_repr(actual),
-            )
+        return _combinator_failure(
+            path=path,
+            code="not",
+            summary="not: value matched disallowed spec",
+            inner=None,
+            expected=f"not {_matcher_summary(self.inner)}",
+            actual=_short_repr(actual),
+            include_inner_in_errors=False,
         )
 
 
 def _matcher_summary(m: BaseMatcher) -> str:
-    if isinstance(m, EqualityMatcher):
-        return _short_repr(m.expected)
-    return type(m).__name__
+    from agent_spec_kit.match.spec_repr import matcher_summary
+
+    return matcher_summary(m)
 
 
 @dataclass(frozen=True, slots=True)

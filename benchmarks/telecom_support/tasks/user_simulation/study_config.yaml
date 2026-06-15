@@ -1,0 +1,32 @@
+primary_tasks:
+  - T04
+  - T17
+  - T20
+  - T27
+  - T29
+  - T30
+  - T35
+  - T38
+  - T42
+  - T43
+  - T45
+  - T49
+interesting_tasks:
+  - T03
+  - T44
+simulation:
+  seeds:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+  max_turns_segment_1: 5
+  max_turns_segment_2: 7
+  max_turns_segment_3: 6
+outputs:
+  study_json: tasks/user_simulation/user_simulation_study.json
+  study_md: tasks/user_simulation/user_simulation_study.md
+  path_signatures_json: tasks/user_simulation/path_signatures.json
+  failure_signatures_json: tasks/user_simulation/failure_signatures.json
+  transcripts_dir: tasks/user_simulation/transcripts

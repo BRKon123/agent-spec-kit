@@ -1,0 +1,127 @@
+\section{Fault detection across oracle lanes}
+\label{sec:fault-detection}
+
+The third study injects known faulty behaviour into the reference agent and measures whether the existing TelcoSupportBench oracles fail on those runs. The expectation is that more encompassing checks catch more injections. Trace and state oracles can surface tool and store mistakes that still leave the customer-facing reply acceptable, whereas output-only grading may pass. We therefore track detection separately across the four oracle lanes from Section~\ref{sec:telcosupportbench}, namely output (O), state (S), trace (T), and full (F). The full lane combines all three surfaces on the same scripted dialogue.
+
+Ten fault families (F01--F10) reuse the same policy checks as the baseline bench, but run against a \emph{mutated} reference agent. Most mutations are prompt overrides that steer the coordinator toward a known bad habit. A few families (notably F04 and F07) also insert deterministic tool or reply probes so the fault is reproducible without relying on sampling alone.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Injected fault families (F01--F10).}
+\label{tab:fault-families}
+\begin{tabularx}{\textwidth}{@{}p{0.07\textwidth}X@{}}
+\toprule
+\textbf{ID} & \textbf{Fault family} \\
+\midrule
+F01 & Premature escalation. Opens a ticket or escalates before required troubleshooting steps (\texttt{send\_troubleshooting\_step}, diagnostics, or similar) when the user pushes for speed. \\
+F02 & Wrong line / customer binding. Rewrites \texttt{line\_id} in tool arguments before they reach the store. It either swaps the correct id for a decoy (e.g.\ \texttt{LINE-WRONG}), or keeps substituting the first line mentioned even after the user corrects themselves, so tickets and other writes land on the wrong line. \\
+F03 & Unsupported credit. Calls \texttt{apply\_bill\_credit} even when \texttt{run\_billing\_policy\_specialist} returned ineligible. \\
+F04 & Auth / privacy leak. Reads account data before \texttt{authenticate\_customer}, or echoes PII in the reply while still unauthenticated. \\
+F05 & Nested tool order. Calls the network specialist's child tools in the wrong order or skips expected children under \texttt{run\_network\_diagnostics\_specialist}. \\
+F06 & Structured output. Violates conditional shape on specialist JSON (e.g.\ \texttt{amount} present when not eligible, or forbidden extra fields). \\
+F07 & Missing clarification. Places a ticket, SIM order, or credit while the user's line or intent is still ambiguous, instead of asking a clarifying question first. \\
+F08 & Missing audit note. Performs a sensitive mutation but omits the \texttt{add\_audit\_note} call the reference scenario requires. \\
+F09 & Failure to act. Explains helpfully yet refuses required mutations (\texttt{create\_support\_ticket}, \texttt{order\_replacement\_sim}, credits) when policy demands action. \\
+F10 & Wrong issue binding. After the user corrects the problem type, keeps the first ticket reason, specialist path, or line binding from the opening turn. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Each fault family is run only on combinations of a benchmark task and an oracle lane (for example, task T46 under the state lane S) where that same combination had already passed on the unmutated agent (Table~\ref{tab:baseline-initial}), so results are not confounded with failures the reference agent already exhibited. \emph{Detection} means that, after fault injection, the scenario fails the same checks that had passed before mutation. In Table~\ref{tab:fault-detection-summary}, the denominator (\emph{eligible}) counts how many such task-and-lane combinations in that cell passed on the baseline run. The numerator (\emph{detected}) counts how many of those same combinations fail after injection. A higher percentage is better. This means the oracle caught the fault on more of the baseline-passing runs in that cell. The primary matrix has 152 task-and-lane cells (38 fault--task rows $\times$ 4 oracle lanes), and 121 of those passed on the baseline and are eligible for detection measurement.
+
+\paragraph{Worked example (F02 stale line binding, task T46).}
+Task T46 is a multi-turn ticket flow. The user first asks for a ticket on \texttt{LINE-WRONG}, then corrects to the real work line \texttt{LINE-0046}. The \texttt{fault\_stale\_belief} mutant records that first line and rewrites every subsequent \texttt{line\_id} tool argument to it before the write runs. The agent may call \texttt{create\_support\_ticket} with \texttt{LINE-0046} and report success on that line, but the tool layer still inserts the ticket under \texttt{LINE-WRONG}. The state oracle uses the same store check as the baseline task (\texttt{assert\_ticket\_for\_line} on \texttt{LINE-0046}), which fails because no ticket exists on the corrected line. Listing~\ref{lst:fault-detection-trace} shows the resulting state-lane panel (S oracle). F02 is detected on all three T46 lanes in Table~\ref{tab:fault-detection-summary}.
+
+\begin{table}[htbp]
+\centering
+\caption{Fault detection (detected / eligible) by fault family and oracle lane. Each cell counts task-and-lane runs that passed on the baseline agent (\emph{eligible}) and how many of those fail after fault injection (\emph{detected}). Higher rates indicate better fault detection. Dashes mean no eligible baseline pass for that lane, not a missing injection. The task-by-task grid is in Appendix~\ref{app:fault-detection-grid}.}
+\label{tab:fault-detection-summary}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Fault & O & S & T & F \\
+\midrule
+F01 Premature escalation & 0/4 (0\%) & 0/2 (0\%) & -- & -- \\
+F02 Wrong line / customer & 0/3 (0\%) & 3/3 (100\%) & 2/3 (67\%) & 3/3 (100\%) \\
+F03 Unsupported credit & 0/4 (0\%) & 3/3 (100\%) & 0/3 (0\%) & 2/2 (100\%) \\
+F04 Auth / privacy leak & 1/4 (25\%) & 3/4 (75\%) & 0/4 (0\%) & 3/4 (75\%) \\
+F05 Nested tool order & 0/3 (0\%) & 0/3 (0\%) & 2/2 (100\%) & 1/1 (100\%) \\
+F06 Structured output & 3/4 (75\%) & 2/4 (50\%) & -- & -- \\
+F07 Missing clarification & 2/4 (50\%) & 2/4 (50\%) & 4/4 (100\%) & 4/4 (100\%) \\
+F08 Missing audit note & 0/4 (0\%) & 0/1 (0\%) & 3/4 (75\%) & 1/2 (50\%) \\
+F09 Failure to act & 2/4 (50\%) & 2/4 (50\%) & 2/4 (50\%) & 2/4 (50\%) \\
+F10 Wrong issue binding & 1/4 (25\%) & 0/4 (0\%) & 1/3 (33\%) & 4/4 (100\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{lstlisting}[caption={F02/T46 state-oracle failure: ticket written to stale \texttt{line\_id}; none on corrected line (captured panel).},label=lst:fault-detection-trace]
++------------------------ FAIL test_f02_t46_state [1/1] -------------------------+
+Check: assert_that
+Where: 1st assert_that after turn #6 (agentturn) (environment / fixture check)|
+Expected: assert_that failed: expected ticket for line 'LINE-0046'
+Actual: (fixture check; see Expected)
+----------------------------------------
+Event trace
++-- UserTurn: Please open a support ticket on LINE-WRONG; my work phone ...
++-- UserTurn: Sorry, that is my old line; I meant my current work phone ...
++-- UserTurn: Yes use LINE-0046. Account CUST-046, verification ...; go ...
++-- AgentTurn: Ticket created successfully. Line: LINE-0046, Ticket TCK-00001
+    +-- authenticate_customer
+    +-- create_support_ticket
+          result: { "ok": true, "ticket_id": "TCK-00001", "status": "open" }
++--------------------------------------------------------------------------------+
+\end{lstlisting}
+
+The failure states the policy directly. A ticket must exist on the corrected line. The reply still claims success on \texttt{LINE-0046}, but only the store oracle shows that the write went to the wrong \texttt{line\_id}.
+
+\paragraph{Detection trends by oracle lane.}
+Table~\ref{tab:fault-detection-summary} shows that no single lane is enough on its own. The \textbf{output (O)} lane is weakest on tool and store faults. Several families sit at 0\% (e.g.\ F02) because the reply can still sound correct. It only leads on structured-output faults (F06), where the mistake is visible in the final message. The \textbf{state (S)} lane is strong when the bug is a wrong write (e.g.\ F02 at 100\%) but misses ordering-only or missing-call faults (e.g.\ F01 at 0\%). The \textbf{trace (T)} lane catches choreography problems (e.g.\ F05 at 100\%) yet often passes when the tool sequence looks fine but the store is wrong (e.g.\ F03 at 0\%). The \textbf{full (F)} lane is usually the best or tied for best, often at 100\% where narrower lanes miss. F09 is the exception where every lane scores the same 50\%. Two tasks are detected on every surface and two are missed on every surface, so lane choice does not change the rate. Detection depends on whether the task oracle catches the missing mutation F09 exposes.
+
+The takeaway for teams writing tests is not to guess which surface will fail first. Injected faults pass output-only checks while failing on trace or state, and the pattern differs by family. It is hard to predict where an unexpected error will surface. Scenarios that combine reply, tool, and store checks in one episode are more all-encompassing, and the full lane in this table captures most injections for that reason. The expressiveness study (Section~\ref{sec:expressiveness}) already showed that \emph{agent-spec-kit} makes that broader style practical. Output, tool, and state expectations live in one readable scenario script, whereas other libraries tend to scatter the same policy across scorers, helpers, and glue code. Fault detection here confirms the payoff. Wider check surface area catches faults that any single-surface suite would miss.
+
+\subsection{Diagnostic quality when faults are detected}
+\label{sec:diagnostic-quality-faults}
+
+Detection alone does not tell a developer how to fix a run. For injections that \emph{were} caught on the full oracle (F lane), we replay the same policy checks in eight evaluation-library implementations and grade the captured failure panels with the specimen rubric (Table~\ref{tab:specificity-rubric}, Section~\ref{sec:expressiveness}). Grades come from \texttt{openai:gpt-5-mini}. The Req/Where/E-vs-A columns are deterministic parity flags against the built-in oracle witness.
+
+\begin{table}[H]
+\centering
+\caption{Injected-fault diagnostic specificity (detected, full oracle; A--E as Table~\ref{tab:specificity-rubric}). Full grid: Appendix~\ref{tab:diagnostic-injected-grid}.}
+\label{tab:diagnostic-comparison}
+\footnotesize
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+Fault shape & FW & Grade & Failed req? & Where? & E vs A? \\
+\midrule
+Wrong-line binding (F02/T29) & ask & A & Yes & Yes & Yes \\
+ & py & B & Yes & No & Yes \\
+ & ls & A & Yes & No & Yes \\
+ & pe & A & Yes & No & Yes \\
+ & pf & B & No & No & Yes \\
+ & bt & B & Yes & No & Yes \\
+ & rg & B & Yes & No & Yes \\
+ & de & A & Yes & No & Yes \\
+\addlinespace
+Missing audit note (F08/T21) & ask & B & Yes & Yes & Yes \\
+ & py & B & Yes & No & No \\
+ & ls & C & Yes & No & No \\
+ & pe & B & Yes & No & No \\
+ & pf & C & No & No & No \\
+ & bt & C & Yes & No & No \\
+ & rg & B & Yes & No & No \\
+ & de & B & Yes & No & No \\
+\addlinespace
+Privacy before auth (F04/T45) & ask & A & Yes & Yes & Yes \\
+ & py & B & Yes & No & No \\
+ & ls & C & Yes & No & No \\
+ & pe & A & Yes & No & Yes \\
+ & pf & B & No & No & Yes \\
+ & bt & B & Yes & No & Yes \\
+ & rg & A & Yes & No & No \\
+ & de & B & Yes & No & No \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three patterns recur in Table~\ref{tab:diagnostic-comparison}. First, when an injected fault is diagnosed from the \textbf{tool trace} (for example a missing \texttt{add\_audit\_note}, a wrong \texttt{line\_id} argument, or an out-of-order nested call), \emph{agent-spec-kit} most consistently reports \textbf{where in the dialogue} the check failed and structured expected-versus-actual detail. Metric-oriented ports usually name the violated rule but stop short of a path-level witness such as a JSON path into the tool list. Second, pytest and Promptfoo often reach only \textbf{B} or \textbf{C} on the same faults. They can assert the policy in code, but the default failure surface is an \texttt{AssertionError} or a scorer label without turn context. Third, Ragas, DeepEval, LangSmith, and Pydantic Evals cluster in the middle. They are stronger when the fault is visible as a state predicate or a named requirement (F04) and weaker when the developer must know which tool argument or ordering step broke (F08). Detection and diagnostic quality pull in the same direction. Catching a fault on the right lane is necessary, but the speed of the agent update loop still depends on how precisely the failure message points to the broken check.

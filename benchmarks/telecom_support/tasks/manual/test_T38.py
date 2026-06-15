@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -41,11 +42,20 @@ async def task_agent_t38(store_t38):
 def _msg(store_t38):
     meta = store_t38.seed_meta
     return (
-        f"I'm getting lag spikes on my line — can you run full network diagnostics and make sure "
-        f"your systems are responding? Account {meta['customer_id']}, verification token "
-        f"{meta['verification_token']}, line {meta['line_id']}."
+        f"My connection keeps lagging on and off — can you run thorough network diagnostics "
+        f"and make sure your systems are actually responding?"
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
+
+_T38_TRACE = [
+    m.tool_call("authenticate_customer"),
+    to.network_specialist_children(),
+    m.tool_call("heartbeat_ping"),
+]
+
+_T38_OUTPUT = m.string(min_len=5)
 
 
 @ek.scenario(
@@ -55,21 +65,12 @@ def _msg(store_t38):
     timeout_s=420.0,
 )
 async def test_t38_full(s, store_t38):
-    meta = store_t38.seed_meta
     (
-            s.user_message(_msg(store_t38))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_network_diagnostics_specialist"),
-                    m.tool_call("heartbeat_ping"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_mutations(store_t38))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t38))
+        .assert_tool_calls(_T38_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_mutations(store_t38))
+        .assert_output(_T38_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -79,19 +80,10 @@ async def test_t38_full(s, store_t38):
     timeout_s=420.0,
 )
 async def test_t38_trace(s, store_t38):
-    meta = store_t38.seed_meta
     (
-            s.user_message(_msg(store_t38))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("run_network_diagnostics_specialist"),
-                    m.tool_call("heartbeat_ping"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg(store_t38))
+        .assert_tool_calls(_T38_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -101,11 +93,10 @@ async def test_t38_trace(s, store_t38):
     timeout_s=420.0,
 )
 async def test_t38_state(s, store_t38):
-    meta = store_t38.seed_meta
     (
-            s.user_message(_msg(store_t38))
-            .assert_that(lambda: o.assert_no_mutations(store_t38))
-        )
+        s.user_message(_msg(store_t38))
+        .assert_that(lambda: o.assert_no_mutations(store_t38))
+    )
 
 
 @ek.scenario(
@@ -115,8 +106,7 @@ async def test_t38_state(s, store_t38):
     timeout_s=420.0,
 )
 async def test_t38_output(s, store_t38):
-    meta = store_t38.seed_meta
     (
-            s.user_message(_msg(store_t38))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t38))
+        .assert_output(_T38_OUTPUT)
+    )

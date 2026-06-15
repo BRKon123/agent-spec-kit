@@ -48,6 +48,9 @@ def apply_seed(store: TelcoStore, task_id: str | dict[str, Any]) -> dict[str, An
     if not isinstance(meta, dict):
         meta = {}
     store.seed_meta = dict(meta)
+    if isinstance(task_id, str):
+        store.seed_meta.setdefault("task_id", task_id.removeprefix("task_"))
+        store.seed_meta["seed_task"] = task_id
 
     conn = store.connect()
     try:

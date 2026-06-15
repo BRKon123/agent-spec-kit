@@ -1,0 +1,280 @@
+\section{Expressiveness}
+\label{sec:expressiveness}
+
+A second line of evaluation compares how concisely the same twelve policy checks can be written in \emph{agent-spec-kit} and in implementations using seven other evaluation libraries (plain pytest, LangSmith, Pydantic Evals, Promptfoo, Braintrust, Ragas, and DeepEval). Framework columns in the tables below are abbreviated as \texttt{ask} (\emph{agent-spec-kit}), \texttt{py} (pytest), \texttt{ls} (LangSmith), \texttt{pe} (Pydantic Evals), \texttt{pf} (Promptfoo), \texttt{bt} (Braintrust), \texttt{rg} (Ragas), and \texttt{de} (DeepEval). Each item is a small, self-contained check pattern rather than a full benchmark task. Table~\ref{tab:check-specimens} lists the twelve patterns and related telecom tasks.
+
+\begin{table}[htbp]
+\centering
+\caption{Expressiveness check specimens (C01--C12) and exemplar telecom tasks.}
+\label{tab:check-specimens}
+\small
+\begin{tabular}{@{}clp{5.8cm}@{}}
+\toprule
+Check & Name & Exemplar task \\
+\midrule
+C01 & Final output semantic / rubric & T16 \\
+C02 & Structured object shape & T09 \\
+C03 & Conditional structured object rule & T23 \\
+C04 & Numeric / range / regex field & T23 \\
+C05 & Ordered tool-call sequence & T02 \\
+C06 & Forbidden tool-call & T49 \\
+C07 & Tool argument matching & T01 \\
+C08 & Tool result matching & T10 \\
+C09 & Nested tool-call matching & T40 \\
+C10 & Unordered sibling tools & T06 \\
+C11 & Environment / final-state assertion & T04 \\
+C12 & Multi-turn state memory & T46 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+When a check fails, we record what each framework prints. We use fixed example agent runs with one deliberate mistake per specimen (not a fresh live evaluation each time), so the comparison is about the quality of failure text, not about re-running full production eval pipelines.
+
+\subsection{Authoring effort}
+
+Table~\ref{tab:expressiveness-loc} counts lines of check logic per framework on the twelve specimens (comment lines excluded). Each implementation was written to enforce the same policy. Automated tests confirm that all library implementations agree on pass and fail.
+
+\begin{table}[htbp]
+\centering
+\caption{Lines of check logic per framework (twelve specimens; lower is more concise).}
+\label{tab:expressiveness-loc}
+\scriptsize
+\begin{tabular}{@{}lp{2.4cm}rrrrrrrr@{}}
+\toprule
+Check & Check type & ask & py & ls & pe & pf & bt & rg & de \\
+\midrule
+C01 & Final output rubric & 8 & 5 & 5 & 22 & 6 & 6 & 22 & 46 \\
+C02 & Structured object shape & 20 & 22 & 23 & 62 & 16 & 22 & 31 & 31 \\
+C03 & Conditional object rule & 24 & 16 & 15 & 69 & 9 & 13 & 25 & 57 \\
+C04 & Numeric / regex field & 16 & 19 & 21 & 18 & 15 & 20 & 29 & 30 \\
+C05 & Ordered tool sequence & 11 & 8 & 48 & 50 & 6 & 10 & 23 & 32 \\
+C06 & Forbidden tool-call & 4 & 3 & 3 & 41 & 2 & 5 & 16 & 40 \\
+C07 & Tool argument matching & 14 & 20 & 45 & 55 & 12 & 18 & 24 & 32 \\
+C08 & Tool result matching & 20 & 19 & 23 & 19 & 16 & 22 & 31 & 31 \\
+C09 & Nested tool matching & 16 & 11 & 10 & 68 & 7 & 12 & 23 & 45 \\
+C10 & Unordered sibling tools & 8 & 4 & 42 & 46 & 4 & 6 & 18 & 32 \\
+C11 & Final-state assertion & 5 & 14 & 13 & 13 & 13 & 14 & 19 & 41 \\
+C12 & Multi-turn memory & 19 & 26 & 55 & 69 & 20 & 24 & 42 & 79 \\
+\midrule
+ & \textbf{Total} & \textbf{165} & \textbf{167} & \textbf{303} & \textbf{532} & \textbf{126} & \textbf{172} & \textbf{303} & \textbf{496} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The LOC measure counts only the body of each check (trace extraction, evaluator or metric configuration, and result capture) and excludes harness code outside the marked region. Promptfoo (126 lines) and \emph{agent-spec-kit} (165 lines) sit in the concise band. Promptfoo uses declarative \texttt{assert} entries in \texttt{promptfooconfig.yaml}. \emph{agent-spec-kit} states the whole check in one scenario block from user script to oracle. Metric-oriented libraries (LangSmith, Ragas, DeepEval, Pydantic Evals, Braintrust) express each check as evaluator or custom-metric setup over a normalised trace and return pass or fail as a score or label. They occupy the upper half of Table~\ref{tab:expressiveness-loc} at roughly two to three times the line count. Trace normalisation, evaluator wiring, and result capture add lines even for simple policies, and readers must read through that setup before they can see what is being tested.
+
+Plain pytest totals 167 lines only by repeating trace-walking and field-guard patterns in nearly every specimen. \emph{agent-spec-kit} matches that count while doing more per line through composable matchers and a shared scenario vocabulary. The metric-oriented gap is not cosmetic. The same policies need repeated evaluator wiring rather than composable matchers, which adds authoring effort and slows first-read comprehension. The clarity study below asks whether the intent of each check is obvious on first read (Table~\ref{tab:expressiveness-authoring-clarity}).
+
+\subsection{Authoring clarity}
+
+This study asks how easy that same check logic is to read, whether the test intent is obvious, whether you can see what the agent was told, and whether tools and fields under test are clear. Clarity grading uses the same check-body excerpts as the LOC measure above. Grades were initially assigned by human judges on a pilot subset. An LLM (\texttt{openai:gpt-5-mini}) produced similar rankings, so the full table uses LLM grading as a more scalable, time and cost efficient way to run the study. The model assigns one combined A--D clarity grade per check and framework (Table~\ref{tab:authoring-clarity-rubric}, Table~\ref{tab:expressiveness-authoring-clarity}). Letter grades are \textbf{A best, D worst}. Clarity is separate from LOC and from failure-specificity (Table~\ref{tab:specificity-rubric}), which judges \emph{failure messages} only.
+
+\begin{table}[H]
+\centering
+\caption{Authoring-clarity rubric (A best, D worst). One combined grade from the check excerpt and the policy it enforces.}
+\label{tab:authoring-clarity-rubric}
+\small
+\begin{tabular}{@{}lp{8.8cm}@{}}
+\toprule
+Lens & Question \\
+\midrule
+Immediate grasp & On first read, is the policy under test apparent without simulating long control-flow paths? \\
+Scenario shape & Can you see what is sent to the agent and how the check attaches to the conversation? \\
+Surface form & Are requirements stated plainly, or buried in lookups and step-by-step guards? \\
+\midrule
+Grade & Combined clarity \\
+\midrule
+A & Policy and scenario structure apparent at a glance. Checks read as specifications. \\
+B & Mostly clear. One modest procedural or contextual layer before the policy clicks. \\
+C & Policy only after several mechanical steps. Weak stimulus or flow in the excerpt. \\
+D & Excerpt does not convey what is tested, what the agent saw, or which properties matter \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Authoring-clarity grade by check and framework (A--D).}
+\label{tab:expressiveness-authoring-clarity}
+\footnotesize
+\begin{tabular}{@{}lp{2.4cm}cccccccc@{}}
+\toprule
+Check & Check type & ask & py & ls & pe & pf & bt & rg & de \\
+\midrule
+C01 & Final output rubric & A & B & B & B & B & B & B & B \\
+C02 & Structured object & A & B & B & B & B & B & B & B \\
+C03 & Conditional object & A & B & B & B & B & B & C & B \\
+C04 & Numeric / regex & A & B & B & B & B & C & B & B \\
+C05 & Ordered sequence & A & B & A & B & B & B & B & B \\
+C06 & Forbidden tool & A & B & B & C & C & B & B & B \\
+C07 & Tool arguments & A & B & B & B & B & C & B & B \\
+C08 & Tool result & A & B & B & B & C & B & B & B \\
+C09 & Nested tools & A & B & B & C & B & B & B & B \\
+C10 & Unordered siblings & A & B & B & B & B & B & B & C \\
+C11 & Final-state & A & B & A & A & B & A & B & B \\
+C12 & Multi-turn memory & A & B & B & B & C & B & B & C \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Illustrative contrast for structured object shape (C02)}
+
+Listing~\ref{lst:c02-clarity-contrast} contrasts three \emph{ways} of stating the same C02 policy across different libraries (structured specialist result). The specimens are a scenario specification, imperative trace inspection, and declarative eval-config assertions. The clarity study rewards how quickly a maintainer understands the policy when \emph{reading} the check, not whether the logic is equivalent after working through every step.
+
+Specimen C02 requires \texttt{run\_network\_diagnostics\_specialist.result} to contain exactly \texttt{severity}, \texttt{recommended\_action}, and \texttt{escalation\_reason}, with values \texttt{high}, \texttt{create\_ticket}, and a non-empty reason. The same rule can be written as (i)~a scenario block that ties a user turn to an expected tool \texttt{result} object, (ii)~Python that finds the tool in a saved trace and checks each field, or (iii)~Promptfoo YAML that picks out the specialist result and applies an \texttt{is-json} schema. LangSmith and Pydantic Evals follow the same idea in code. Promptfoo works well when a built-in assert type fits. Otherwise custom logic (finding the right tool, conditional fields, nested children) has to live in JavaScript inside the YAML, which is harder to write and review than keeping checks in one place.
+
+\begin{lstlisting}[caption={C02 structured object: scenario DSL, imperative pytest, and Promptfoo config.},label=lst:c02-clarity-contrast]
++------------------------ agent_spec_kit (C02)  grade A -------------------------+
+(
+    s.user_message("check")
+    .assert_tool_calls(
+        [
+            m.tool_call(
+                "run_network_diagnostics_specialist",
+                result=m.object(
+                    {
+                        "severity": m.one_of("high"),
+                        "recommended_action": m.one_of("create_ticket"),
+                        "escalation_reason": m.string(min_len=1),
+                    },
+                    extra="forbid",
+                ),
+            ),
+        ],
+        ordered=True,
+        allow_extras=True,
+    )
+)
++--------------------------------------------------------------------------------+
++------------------------- pytest_plain (C02)  grade B --------------------------+
+tool = find_tool(walk_root_tools(trace), "run_network_diagnostics_specialist")
+if tool is None:
+    assert False
+r = tool.get("result")
+if not isinstance(r, dict):
+    assert False
+keys = set(r.keys())
+if keys != _C02_REQUIRED_KEYS:
+    assert False
+ok = (
+    r.get("severity") == "high"
+    and r.get("recommended_action") == "create_ticket"
+    and len(str(r.get("escalation_reason", ""))) >= 1
+)
+assert ok
++--------------------------------------------------------------------------------+
++--------------------------- promptfoo (C02)  grade B ---------------------------+
+  - vars: {check_id: C02}
+    options:
+      transform: |
+        (() => {
+          const trace = JSON.parse(output);
+          const t = (trace.tools || []).find(
+            (x) => x.name === 'run_network_diagnostics_specialist');
+          return JSON.stringify(t?.result ?? null);
+        })()
+    assert:
+      - type: is-json
+        value:
+          type: object
+          additionalProperties: false
+          required: [severity, recommended_action, escalation_reason]
+          properties:
+            severity: { const: high }
+            recommended_action: { const: create_ticket }
+            escalation_reason: { type: string, minLength: 1 }
++--------------------------------------------------------------------------------+
+\end{lstlisting}
+
+Notice how the \emph{agent-spec-kit} excerpt reads like a short script. The opening \texttt{user\_message} and the tool-result check follow one another in the same block, so you can read the specimen top to bottom as a coherent story of what the customer says and what must hold in the trace. Pytest and Promptfoo split that story across trace-walking code, transforms, and schema assertions in separate places, so a reader has to jump between files and code paths before seeing what is being tested.
+
+In Table~\ref{tab:expressiveness-authoring-clarity}, only the \emph{agent-spec-kit} implementation scores \textbf{A} on every specimen. The user turn and every field constraint appear in one declarative matcher block. Pytest and the metric-oriented libraries score mostly \textbf{B}. Trace parsing and evaluator wiring are visible in the graded excerpt. Pydantic Evals, Promptfoo, and Braintrust drop to \textbf{C} on a few specimens that assert over tool calls and arguments, where span queries or YAML transforms obscure the policy. Ragas and DeepEval stay at \textbf{B} when custom metric code states the constraint directly, for example through an inline schema or explicit field checks, even though the excerpt still starts by searching a saved trace rather than opening in the \emph{agent-spec-kit} user-agent-turn style.
+
+\subsection{Failure specificity on deliberate wrong examples}
+
+When a check fails on a deliberate wrong example, we grade how helpful the failure message is (Table~\ref{tab:specificity-rubric}). Table~\ref{tab:failure-specificity} lists the grade for each check and framework.
+
+\begin{table}[htbp]
+\centering
+\caption{Failure-message specificity rubric (A best, E worst).}
+\label{tab:specificity-rubric}
+\begin{tabular}{@{}lp{9.2cm}@{}}
+\toprule
+Grade & What the developer sees \\
+\midrule
+A & Exact location in the trace plus expected vs actual (e.g.\ matcher counterexample) \\
+B & Names the broken rule, tool, or field in plain text \\
+C & Says which check failed (e.g.\ a scorer name and ``score 0'') but not which tool or field \\
+D & Generic \texttt{AssertionError} or other message with almost no detail \\
+E & Opaque pass/fail boolean with no diagnostic detail \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Specificity grade by check and framework when the example is meant to fail.}
+\label{tab:failure-specificity}
+\footnotesize
+\begin{tabular}{@{}p{2.8cm}cccccccc@{}}
+\toprule
+Check & ask & py & ls & pe & pf & bt & rg & de \\
+\midrule
+Final output rubric & A & D & B & B & B & B & B & B \\
+Structured object & A & D & B & B & B & B & B & B \\
+Conditional object & A & D & B & B & B & B & B & B \\
+Numeric / regex & A & D & B & B & B & B & B & B \\
+Ordered sequence & A & D & B & B & B & B & B & B \\
+Forbidden tool & A & D & C & B & B & C & B & B \\
+Tool arguments & A & B & B & B & B & B & C & B \\
+Tool result & A & D & B & B & B & B & B & B \\
+Nested tools & A & D & B & B & B & B & B & B \\
+Unordered siblings & A & D & B & B & B & B & B & B \\
+Final-state & B & B & B & B & B & B & B & B \\
+Multi-turn memory & A & D & B & B & B & B & B & B \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{agent-spec-kit} scores \textbf{A} on eleven of twelve specimens and \textbf{B} on final-state only. Failures routinely name the check, where it ran in the dialogue, a JSON path, and expected-vs-actual witnesses. On tool checks the \texttt{Expected} block renders the scenario spec in focused form (Section~\ref{sec:matcher-spec-repr}). Plain pytest is almost always \textbf{D} on checks over tool calls and arguments (bare \texttt{AssertionError}) and only reaches \textbf{B} when authors hand-write a field-level message (C07). LangSmith, Pydantic Evals, Promptfoo, Braintrust, Ragas, and DeepEval cluster at \textbf{B} or \textbf{C}. They identify the rule, field, or metric but rarely expose structured counterexamples. Ragas drops to \textbf{C} on tool-argument checks when a built-in metric returns only a scalar score. DeepEval more often reaches \textbf{B} when failures include a longer natural-language reason. Listing~\ref{lst:c06-failures} illustrates this on specimen C06.
+
+\begin{lstlisting}[caption={C06 forbidden tool-call: captured failure boxes.},label=lst:c06-failures]
++------------------------ agent_spec_kit (C06)  grade A -------------------------+
+Check: forbid_tool_calls
+Where: 1st forbid_tool_calls after turn #1 (forbidden tool call patterns)
+Path: $[1]
+Expected:
+forbidden_tool_call: expected no 'apply_bill_credit'
+must not call tool_call('apply_bill_credit')
+Actual:
+  [0] get_customer_profile(customer_id='CUST-OTHER') -> None
+  [1] apply_bill_credit(amount=10) -> ok
+forbidden tool call 'apply_bill_credit' found at index 1 (actual tool 'apply_b
+ill_credit')
++--------------------------------------------------------------------------------+
++------------------------- pytest_plain (C06)  grade D --------------------------+
+AssertionError
++--------------------------------------------------------------------------------+
++--------------------------- langsmith (C06)  grade C ---------------------------+
+{'key': 'forbidden_tools', 'score': 0}
++--------------------------------------------------------------------------------+
++------------------------ pydantic_evals (C06)  grade B -------------------------+
+forbidden span apply_bill_credit present
++--------------------------------------------------------------------------------+
++--------------------------- promptfoo (C06)  grade B ---------------------------+
+not-trajectory:tool-used: forbidden tool apply_bill_credit present
++--------------------------------------------------------------------------------+
++--------------------------- braintrust (C06)  grade C ---------------------------+
+{'key': 'C06', 'score': 0.0}
++--------------------------------------------------------------------------------+
++----------------------------- ragas (C06)  grade B -----------------------------+
+forbidden tool 'apply_bill_credit' present in ['get_customer_profile',
+'apply_bill_credit']
++--------------------------------------------------------------------------------+
++--------------------------- deepeval (C06)  grade B ----------------------------+
+forbidden tool 'apply_bill_credit' present in ['get_customer_profile',
+'apply_bill_credit']
++--------------------------------------------------------------------------------+
+\end{lstlisting}
+
+The same A--E rubric is applied to captured failures after injected faults in Section~\ref{sec:diagnostic-quality-faults}.

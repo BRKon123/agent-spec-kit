@@ -159,8 +159,11 @@ def _flatten_chain_calls(expr: ast.AST) -> list[ast.Call]:
 
 def _chain_root_name(node: ast.AST) -> str | None:
     cur = node
-    while isinstance(cur, ast.Attribute):
-        cur = cur.value
+    while isinstance(cur, (ast.Call, ast.Attribute)):
+        if isinstance(cur, ast.Call):
+            cur = cur.func
+        else:
+            cur = cur.value
     if isinstance(cur, ast.Name):
         return cur.id
     return None
@@ -177,6 +180,34 @@ def _is_docstring_expr(expr: ast.expr) -> bool:
     return isinstance(expr, ast.Constant) and isinstance(expr.value, str)
 
 
+def _stmt_has_scenario_chain(st: ast.stmt) -> bool:
+    expr = _unwrap_expr(st)
+    if expr is None or _is_docstring_expr(expr):
+        return False
+    return any(
+        not _is_materialise_call(c) and _chain_root_name(c.func) == "s"
+        for c in _flatten_chain_calls(expr)
+    )
+
+
+def _collect_scenario_preamble(fn_node: ast.AsyncFunctionDef) -> list[ast.stmt]:
+    """Statements before the main ``s.`` chain (e.g. bind_scenario_context, locals for asserts)."""
+    preamble: list[ast.stmt] = []
+    for st in fn_node.body:
+        if _stmt_has_scenario_chain(st):
+            break
+        if isinstance(st, (ast.Assign, ast.AnnAssign)):
+            preamble.append(st)
+            continue
+        if isinstance(st, ast.Expr):
+            expr = _unwrap_expr(st)
+            if expr is None or _is_docstring_expr(expr):
+                continue
+            if isinstance(expr, ast.Call) and _chain_root_name(expr) != "s":
+                preamble.append(st)
+    return preamble
+
+
 def _collect_scenario_chain_calls(fn_node: ast.AsyncFunctionDef) -> list[ast.Call]:
     calls: list[ast.Call] = []
     for st in fn_node.body:
@@ -186,7 +217,11 @@ def _collect_scenario_chain_calls(fn_node: ast.AsyncFunctionDef) -> list[ast.Cal
         if _is_docstring_expr(expr):
             continue
         calls.extend(_flatten_chain_calls(expr))
-    return [c for c in calls if not _is_materialise_call(c)]
+    return [
+        c
+        for c in calls
+        if not _is_materialise_call(c) and _chain_root_name(c.func) == "s"
+    ]
 
 
 def _collect_load_names(node: ast.AST, *, skip: frozenset[str]) -> set[str]:
@@ -345,7 +380,7 @@ def _extract_legacy_user_messages_only(
     body_lines: list[str] = []
     for line in shrunk_user_turns:
         esc = json.dumps(line, ensure_ascii=False)
-        body_lines.append(f"    await s.user_message({esc})")
+        body_lines.append(f"    s.user_message({esc})")
 
     body = "\n".join(body_lines) if body_lines else "    pass"
 
@@ -471,6 +506,7 @@ def _extract_concretise_ast(
             function_name=None,
         )
 
+    preamble_stmts = _collect_scenario_preamble(fn_node)
     chain_calls = _collect_scenario_chain_calls(fn_node)
     if not chain_calls:
         return ExtractionResult(
@@ -501,14 +537,6 @@ def _extract_concretise_ast(
     for i, (call_tmpl, st) in enumerate(zip(chain_calls, body_steps, strict=True)):
         if isinstance(st, (_FuzzConversationStep, _SimulateStep)):
             turns = concrete_per_generative_step.get(i, ())
-            if not turns:
-                return ExtractionResult(
-                    status="noop",
-                    regression_id=regression_id,
-                    message=f"no concrete turns for generative step index {i}",
-                    fingerprint=None,
-                    function_name=None,
-                )
             for msg in turns:
                 expr = ast.Call(
                     func=ast.Attribute(value=expr, attr="user_message", ctx=ast.Load()),
@@ -536,6 +564,15 @@ def _extract_concretise_ast(
                 if n == "ek":
                     continue
                 extra_imports.add(n)
+
+    for st in preamble_stmts:
+        for n in _collect_load_names(st, skip=skip_names):
+            if n == "m":
+                needs_match_alias = True
+                continue
+            if n == "ek":
+                continue
+            extra_imports.add(n)
 
     mod = importlib.import_module(scenario_def.module)
     import_lines: list[str] = []
@@ -565,7 +602,7 @@ def _extract_concretise_ast(
             kwarg=None,
             vararg=None,
         ),
-        body=[ast.Expr(value=expr)],
+        body=[*preamble_stmts, ast.Expr(value=expr)],
         decorator_list=[dec],
         returns=None,
         type_params=[],

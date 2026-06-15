@@ -41,11 +41,21 @@ async def task_agent_t36(store_t36):
 def _msg(store_t36):
     meta = store_t36.seed_meta
     return (
-        f"Everyone on my street seems to be down — I'm at postcode {meta['postcode']}. "
-        f"Is there an outage? I'm not asking for money back. Account {meta['customer_id']}, "
-        f"verification token {meta['verification_token']}, line {meta['line_id']}."
+        f"There's a major outage round {meta['postcode']} — is my area affected? "
+        f"I'm not asking for bill credit, just want to know what's going on."
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
+
+_T36_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("check_outage"),
+]
+
+def _t36_output(store_t36):
+    meta = store_t36.seed_meta
+    return m.all_of(m.contains("outage"), m.contains(meta["postcode"]))
 
 
 @ek.scenario(
@@ -55,23 +65,13 @@ def _msg(store_t36):
     timeout_s=420.0,
 )
 async def test_t36_full(s, store_t36):
-    meta = store_t36.seed_meta
     (
-            s.user_message(_msg(store_t36))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t36))
-            .assert_that(lambda: o.assert_no_tickets(store_t36))
-            .assert_output(
-                m.all_of(m.contains("outage"), m.contains(meta["postcode"]))
-            )
-        )
+        s.user_message(_msg(store_t36))
+        .assert_tool_calls(_T36_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t36))
+        .assert_that(lambda: o.assert_no_tickets(store_t36))
+        .assert_output(_t36_output(store_t36))
+    )
 
 
 @ek.scenario(
@@ -81,18 +81,10 @@ async def test_t36_full(s, store_t36):
     timeout_s=420.0,
 )
 async def test_t36_trace(s, store_t36):
-    meta = store_t36.seed_meta
     (
-            s.user_message(_msg(store_t36))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call("check_outage"),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg(store_t36))
+        .assert_tool_calls(_T36_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -102,12 +94,11 @@ async def test_t36_trace(s, store_t36):
     timeout_s=420.0,
 )
 async def test_t36_state(s, store_t36):
-    meta = store_t36.seed_meta
     (
-            s.user_message(_msg(store_t36))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t36))
-            .assert_that(lambda: o.assert_no_tickets(store_t36))
-        )
+        s.user_message(_msg(store_t36))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t36))
+        .assert_that(lambda: o.assert_no_tickets(store_t36))
+    )
 
 
 @ek.scenario(
@@ -117,10 +108,7 @@ async def test_t36_state(s, store_t36):
     timeout_s=420.0,
 )
 async def test_t36_output(s, store_t36):
-    meta = store_t36.seed_meta
     (
-            s.user_message(_msg(store_t36))
-            .assert_output(
-                m.all_of(m.contains("outage"), m.contains(meta["postcode"]))
-            )
-        )
+        s.user_message(_msg(store_t36))
+        .assert_output(_t36_output(store_t36))
+    )

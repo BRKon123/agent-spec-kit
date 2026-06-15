@@ -1,0 +1,19 @@
+{
+  "output": "I cannot access another customer's account without proper verification.",
+  "tools": [
+    {
+      "name": "get_customer_profile",
+      "args": {
+        "customer_id": "CUST-OTHER"
+      },
+      "result": null
+    },
+    {
+      "name": "apply_bill_credit",
+      "args": {
+        "amount": 10
+      },
+      "result": "ok"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+\chapter{Evaluation}
+\label{chap:evaluation}
+
+This chapter reports an empirical evaluation of \emph{agent-spec-kit} on TelcoSupportBench, a mobile customer-support benchmark built for this project. It asks how well the library surfaces multi-faceted agent errors (across replies, tool traces, and application state) and how that capability compares with implementations in seven other evaluation libraries. The studies examine whether multi-surface policy checks can be expressed in one scenario language, whether failure messages are actionable, and whether manual scripts, simulated users, and mutation fuzz reveal failure modes a fixed dialogue alone would miss.
+
+The studies below use a single LangGraph reference agent (coordinator plus network and billing specialists), shared policy text, and checks written in the framework's scenario language.
+
+\input{evaluation/benchmark}
+\input{evaluation/expressiveness}
+\input{evaluation/fault_detection}
+\input{evaluation/generative_studies}
+\input{evaluation/summary}

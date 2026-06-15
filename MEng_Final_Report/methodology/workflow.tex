@@ -1,0 +1,60 @@
+\section{Execution Infrastructure and Workflow}
+\label{sec:execution-workflow}
+
+The framework is meant to be used repeatedly during agent development. Run suites locally or in CI, inspect failures, change the agent, and compare runs over time. Persistence and the web UI support that loop.
+
+\subsection{Command-Line Interface}
+
+The entry point \texttt{agent-spec-kit run PATH} discovers scenarios, resolves fixtures, executes jobs (optionally in parallel with \texttt{-n}), and writes results under \texttt{.agent\_spec\_kit/}. Runs can be grouped with \texttt{--experiment NAME} so later comparisons treat them as comparable buckets. Commands \texttt{runs} and \texttt{show RUN\_ID} list stored runs and summarise failures without opening the browser.
+
+When an assertion fails, the terminal prints a counterexample panel aligned with the web failure card. It includes headline, location detail, path, expected and actual summaries, and a Rich event tree (Figure~\ref{fig:cli-failure-panel}).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figures/rich_console_failure_output.png}
+  \caption{CLI counterexample output for a failing \texttt{assert\_tool\_calls} check: same core fields as the web FailureCard.}
+  \label{fig:cli-failure-panel}
+\end{figure}
+
+Each run records git metadata, command line, and gzipped transcript and counterexample blobs in SQLite. That makes failures reviewable long after the terminal session ends.
+
+\subsection{Web Results Browser}
+
+The command \texttt{agent-spec-kit ui} serves a read-only React application over the local store. Figure~\ref{fig:ui-runs-list} shows the runs list with experiment and status filters. Figure~\ref{fig:ui-run-detail} shows the scenario-and-repeat table on run detail. Generative scenarios with multiple fuzz trials can be expanded in place so each trial appears as a sub-row beneath the parent scenario, and clicking a trial row opens the same trace drawer as a normal repeat. Figure~\ref{fig:ui-trace-drawer} shows that drawer with a FailureCard, final output summary, and collapsible event tree. JSON fields on tool nodes can be toggled without leaving the page.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figures/runs_page_ui.png}
+  \caption{Runs list with experiment and status filters and a column picker.}
+  \label{fig:ui-runs-list}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.80\textwidth]{figures/fuzz_trials_scenario_expansion_view.png}
+  \caption{Run detail with a fuzz scenario expanded to show per-trial sub-rows. Each trial can be opened in the trace drawer like a standard repeat.}
+  \label{fig:ui-run-detail}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.80\textwidth]{figures/agent_trace_and_failure_right_panel.png}
+  \caption{Trace drawer for a failing repeat: FailureCard, final output, and collapsible event tree.}
+  \label{fig:ui-trace-drawer}
+\end{figure}
+
+The UI complements Langfuse-style production tracing (Chapter~\ref{chap:related-work}) but stays assertion-first. The FailureCard mirrors the CLI counterexample fields. It names which expectation broke and where in the trace it failed, rather than leaving the developer to work out the error location from nested spans or an opaque failure message alone.
+
+\subsection{Compare Page and Regression Workflow}
+\label{sec:ui-compare}
+
+After changing an agent, rerunning the same scenarios under a new experiment name and opening the Compare page answers a practical question. Which cases flipped between pass and fail? The Compare page syncs the selected experiments to the URL so a comparison view can be bookmarked or shared within a team. Rows align on scenario keys. Columns show the latest repeat status per experiment. Rows with differing pass/fail are highlighted so regressions stand out without opening every trace. Clicking a cell opens the trace drawer for that experiment's repeat on the scenario, reusing the same FailureCard and TraceTree components as run detail.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figures/compare_page_ui.png}
+  \caption{Compare view across two experiments. Rows with mismatched status are highlighted.}
+  \label{fig:ui-compare}
+\end{figure}
+
+That view closes the loop described in Section~\ref{sec:counterexamples}. Diagnose with a counterexample, edit the agent, rerun, and confirm at a glance whether the fix helped or regressed other scenarios.

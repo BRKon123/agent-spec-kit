@@ -1,0 +1,8 @@
+{
+  "task_id": "T38",
+  "seed_source": "manual_script",
+  "messages": [
+    "My connection keeps lagging on and off \u2014 can you run thorough network diagnostics and make sure your systems are actually responding? Account CUST-038, verification token 1990-38-15, line LINE-0038."
+  ],
+  "extracted_from": "tasks/manual/test_T38.py"
+}

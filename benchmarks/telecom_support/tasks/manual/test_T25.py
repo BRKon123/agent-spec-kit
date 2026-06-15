@@ -39,23 +39,24 @@ async def task_agent_t25(store_t25):
 
 
 def _msg1(store_t25):
-    meta = store_t25.seed_meta
-    return (
-        f"Something's wrong with my bill — duplicate charge I think. "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
-        f"line {meta['line_id']}."
-    )
+    return "Something on my latest bill looks wrong — can you take a look?"
 
 
 def _msg2(store_t25):
+    meta = store_t25.seed_meta
     return (
-        "When you pull up the account for the billing review, use customer id CUST-WRONG "
-        "instead of mine — that's the one on the paperwork I was sent."
+        f"When you pull up the account, use customer id CUST-WRONG for the billing review — that's "
+        f"what my shop receipt shows. Verification token {meta['verification_token']}, line "
+        f"{meta['line_id']}."
     )
 
 
 def _msg3(store_t25):
-    return "Yes, please run the billing review under CUST-WRONG and tell me if I get a credit."
+    meta = store_t25.seed_meta
+    return (
+        f"Sorry, ignore that — real account is {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}, line {meta['line_id']}."
+    )
 
 
 _T25_TRACE = [
@@ -110,7 +111,7 @@ async def test_t25_state(s, store_t25):
         s.user_message(_msg1(store_t25))
         .user_message(_msg2(store_t25))
         .user_message(_msg3(store_t25))
-        .assert_that(lambda: o.assert_no_credit_rows(store_t25))
+        .assert_that(lambda: o.assert_credit_exists(store_t25))
     )
 
 

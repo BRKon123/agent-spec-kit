@@ -41,13 +41,29 @@ async def task_agent_t23(store_t23):
 def _msg(store_t23):
     meta = store_t23.seed_meta
     return (
-        f"I've got the same charge twice on my latest bill. Can you check if I should get a "
-        f"refund and tell me how much — but don't post any credit to my account yet, I just want "
-        f"to know first. "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"I think I was charged twice for the same roaming add-on. Can you check whether I'm owed "
+        f"a refund and tell me how much — but don't actually post anything to my bill yet?"
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
+
+_T23_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "run_billing_policy_specialist",
+        result=m.object({"eligible": True, "amount": m.number(min=0.01)}, extra="forbid"),
+    ),
+]
+
+_T23_OUTPUT = m.llm_criteria(
+    criteria=[
+        "States whether the customer is eligible for a credit or refund (eligible or not eligible)",
+        "Mentions a specific dollar or currency amount for the refund or credit",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -57,29 +73,12 @@ def _msg(store_t23):
     timeout_s=420.0,
 )
 async def test_t23_full(s, store_t23):
-    meta = store_t23.seed_meta
     (
-            s.user_message(_msg(store_t23))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call('run_billing_policy_specialist', result=m.object({'eligible': True, 'amount': m.number(min=0.01)}, extra='forbid')),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_credit_rows(store_t23))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "States whether the customer is eligible for a duplicate-charge refund",
-                        "Includes a specific refund amount when stating eligibility",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+        s.user_message(_msg(store_t23))
+        .assert_tool_calls(_T23_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_credit_rows(store_t23))
+        .assert_output(_T23_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -89,18 +88,7 @@ async def test_t23_full(s, store_t23):
     timeout_s=420.0,
 )
 async def test_t23_trace(s, store_t23):
-    meta = store_t23.seed_meta
-    (
-            s.user_message(_msg(store_t23))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call('run_billing_policy_specialist', result=m.object({'eligible': True, 'amount': m.number(min=0.01)}, extra='forbid')),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+    (s.user_message(_msg(store_t23)).assert_tool_calls(_T23_TRACE, ordered=True, allow_extras=True))
 
 
 @ek.scenario(
@@ -110,11 +98,7 @@ async def test_t23_trace(s, store_t23):
     timeout_s=420.0,
 )
 async def test_t23_state(s, store_t23):
-    meta = store_t23.seed_meta
-    (
-            s.user_message(_msg(store_t23))
-            .assert_that(lambda: o.assert_no_credit_rows(store_t23))
-        )
+    (s.user_message(_msg(store_t23)).assert_that(lambda: o.assert_no_credit_rows(store_t23)))
 
 
 @ek.scenario(
@@ -124,17 +108,4 @@ async def test_t23_state(s, store_t23):
     timeout_s=420.0,
 )
 async def test_t23_output(s, store_t23):
-    meta = store_t23.seed_meta
-    (
-            s.user_message(_msg(store_t23))
-            .assert_output(
-                m.llm_criteria(
-                    criteria=[
-                        "States whether the customer is eligible for a duplicate-charge refund",
-                        "Includes a specific refund amount when stating eligibility",
-                    ],
-                    threshold=2,
-                    model="openai:gpt-5-nano",
-                )
-            )
-        )
+    (s.user_message(_msg(store_t23)).assert_output(_T23_OUTPUT))

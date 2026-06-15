@@ -1,0 +1,7 @@
+AssertionError: LLM criteria threshold failed: passed 1/2 (required 2).
+Failed criteria:
+- [0] criterion: Acknowledges the customer corrected which line needs the
+ticket
+rationale: The reply does not explicitly acknowledge that the customer
+corrected which line needs the ticket; it only asks to confirm the correct
+line_id.

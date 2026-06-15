@@ -107,6 +107,8 @@ class FuzzTrialRecord:
     finished_at: str | None
     duration_ms: int | None
     transcript_blob_path: str | None
+    counterexample_blob_path: str | None = None
+    raw_error_blob_path: str | None = None
     #: Per original step index: user-side turns (empty for non-generative steps).
     per_step_user_turns: tuple[tuple[str, ...], ...] | None = None
 

@@ -4,6 +4,7 @@ import importlib.util
 import sys
 from pathlib import Path
 from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
@@ -56,7 +57,8 @@ def test_extract_regression_appends_scenario(tmp_path: Path) -> None:
     assert target.exists()
     text = target.read_text(encoding="utf-8")
     assert "reg_test_1" in text
-    assert "await s.user_message" in text
+    assert "s.user_message" in text
+    assert "await s.user_message" not in text
 
 
 def test_extract_regression_skip_duplicate(tmp_path: Path) -> None:
@@ -90,7 +92,7 @@ def test_shrink_remove_user_turns(tmp_path: Path) -> None:
 
     calls: list[tuple[str, ...]] = []
 
-    async def verify_batch(cands: list[tuple[str, ...]]) -> list[bool]:
+    async def verify_batch(cands: Sequence[tuple[str, ...]]) -> list[bool]:
         out: list[bool] = []
         for turns in cands:
             calls.append(turns)
@@ -218,7 +220,13 @@ async def sim_case(s, agent):
         fixture_param_names=("agent",),
     )
     body_steps = (
-        _SimulateStep(max_turns=2, stop_condition=None, seed_actor="agent", seed_input="hi"),
+        _SimulateStep(
+            max_turns=2,
+            stop_condition=None,
+            stop_on_actor="any",
+            seed_actor="agent",
+            seed_input="hi",
+        ),
         _EnvAssertStep(fn=mod.ok),
     )
     out = extract_regression(
@@ -353,7 +361,13 @@ async def mm_case(s, agent):
     )
     body_steps = (
         _UserMessageStep("seed"),
-        _SimulateStep(max_turns=2, stop_condition=None, seed_actor="agent", seed_input="hello"),
+        _SimulateStep(
+            max_turns=2,
+            stop_condition=None,
+            stop_on_actor="any",
+            seed_actor="agent",
+            seed_input="hello",
+        ),
         _EnvAssertStep(fn=mod.ok),
     )
     out = extract_regression(

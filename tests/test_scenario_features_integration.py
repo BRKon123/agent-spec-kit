@@ -138,6 +138,22 @@ def test_action_mutates_state_between_simulation_segments() -> None:
     assert len(s.turn_results) == 2
 
 
+def test_forbid_tool_calls_blocks_listed_tool() -> None:
+    a = _Scripted([_tr("ok", "heartbeat_ping")])
+    s = create_scenario(a)
+    s.user_message("hi").forbid_tool_calls([m.tool_call("apply_bill_credit")], allow_extras=True)
+    _run(s.materialise())
+
+
+def test_forbid_tool_calls_raises_when_forbidden_present() -> None:
+    a = _Scripted([_tr("bad", "apply_bill_credit")])
+    s = create_scenario(a)
+    s.user_message("hi").forbid_tool_calls([m.tool_call("apply_bill_credit")], allow_extras=True)
+    with pytest.raises(ScenarioAssertionFailed) as exc:
+        _run(s.materialise())
+    assert exc.value.counterexample.check_kind == "forbid_tool_calls"
+
+
 def test_assert_tool_calls_targets_agent_explicitly_in_simulation() -> None:
     a = _Scripted(
         [
@@ -259,6 +275,27 @@ def test_check_output_and_tool_calls_post_simulation() -> None:
     _run(s.materialise())
     assert s.check_output(m.contains("with tool")).ok
     assert s.check_tool_calls([m.tool_call("t1")], ordered=True, allow_extras=True).ok
+
+
+def test_check_output_and_tool_calls_up_to_now_post_simulation() -> None:
+    a = _Scripted(
+        [
+            _tr("first with tool", "t1"),
+            _tr("second with tool", "t2"),
+        ]
+    )
+    u = _Scripted([_tr("u1"), _tr("u2")])
+    s = create_scenario(a, user=u)
+    s.simulate_conversation(seed_actor="user", seed_input="seed", max_turns=4)
+    _run(s.materialise())
+    assert s.check_output(m.contains("first with tool\nsecond with tool"), turn="up_to_now", actor="agent").ok
+    assert s.check_tool_calls(
+        [m.tool_call("t1"), m.tool_call("t2")],
+        ordered=True,
+        allow_extras=True,
+        turn="up_to_now",
+        actor="agent",
+    ).ok
 
 
 def test_cartesian_injects_both_axes_and_case_objects() -> None:

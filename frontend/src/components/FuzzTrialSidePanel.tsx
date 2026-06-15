@@ -2,9 +2,7 @@ import { useFuzzTrial } from "@/api/queries";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InlineError, InlineLoading } from "@/components/Inline";
-import { TraceTree } from "@/components/TraceTree";
-import { FailureCard } from "@/components/FailureCard";
-import { JsonView } from "@/components/JsonView";
+import { FuzzTrialTraceContent } from "@/components/FuzzTrialTraceContent";
 import { formatDuration } from "@/lib/utils";
 
 export function FuzzTrialSidePanel({
@@ -38,52 +36,11 @@ export function FuzzTrialSidePanel({
         </CardContent>
       </Card>
 
-      {t.user_turns?.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">User turns</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs">
-            <ol className="list-decimal list-inside space-y-1">
-              {t.user_turns.map((u, i) => (
-                <li key={i} className="whitespace-pre-wrap break-words">
-                  {u}
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
-      )}
-
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Event trace</CardTitle>
-        </CardHeader>
-        <CardContent className="text-xs space-y-2">
-          <TraceTree transcript={t.transcript} />
-          {Object.keys(t.blob_errors ?? {}).length > 0 && (
-            <div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-500 mb-1">
-                Blob errors
-              </div>
-              <JsonView value={t.blob_errors} />
-            </div>
-          )}
+        <CardContent className="pt-4 text-xs space-y-4">
+          <FuzzTrialTraceContent trial={t} />
         </CardContent>
       </Card>
-
-      {(t.status !== "passed" || t.failure_message || t.failure_kind) && (
-        <section>
-          <h3 className="text-sm font-semibold mb-2">Failure</h3>
-          <FailureCard
-            counterexample={null}
-            rawError={null}
-            blobErrors={t.blob_errors ?? {}}
-            failureMessage={t.failure_message ?? null}
-            assertionType={t.failure_kind ?? null}
-          />
-        </section>
-      )}
     </div>
   );
 }

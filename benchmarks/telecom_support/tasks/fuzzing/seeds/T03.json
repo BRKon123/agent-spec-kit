@@ -1,0 +1,8 @@
+{
+  "task_id": "T03",
+  "seed_source": "manual_script",
+  "messages": [
+    "My mobile data died near E1 6AN and I don't think it's a network outage \u2014 I haven't restarted yet and don't want a ticket, just what to try first. Account CUST-003, verification token 1990-03-15, line LINE-0003."
+  ],
+  "extracted_from": "tasks/manual/test_T03.py"
+}

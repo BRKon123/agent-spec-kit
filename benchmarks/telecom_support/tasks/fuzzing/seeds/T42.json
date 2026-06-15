@@ -1,0 +1,10 @@
+{
+  "task_id": "T42",
+  "seed_source": "manual_script",
+  "messages": [
+    "My mobile data is not working at all. Account CUST-042, verification 1990-42-15, line LINE-0042.",
+    "Wait \u2014 I just found my SIM in the laundry. I thought it was lost. Can you confirm whether line LINE-0042 is still active? Do not ship a replacement SIM. CUST-042, 1990-42-15.",
+    "Sorry for the whiplash \u2014 data was the original problem. Is line LINE-0042 showing OK on your side? CUST-042, 1990-42-15."
+  ],
+  "extracted_from": "tasks/manual/test_T42.py"
+}

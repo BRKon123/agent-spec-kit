@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -41,8 +42,8 @@ async def task_agent_t05(store_t05):
 def _msg(store_t05):
     meta = store_t05.seed_meta
     return (
-        f"My connection on line {meta['line_id']} keeps lagging and spiking — feels like a "
-        f"network issue, not just my phone. "
+        f"My line {meta['line_id']} keeps lagging with latency spikes — can you check if it's "
+        f"the network side? "
         f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
@@ -50,7 +51,7 @@ def _msg(store_t05):
 
 _T05_TRACE = [
     m.tool_call("authenticate_customer"),
-    m.tool_call("run_network_diagnostics_specialist"),
+    to.network_specialist_children(),
 ]
 
 _T05_OUTPUT = m.llm_criteria(

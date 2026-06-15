@@ -41,9 +41,9 @@ async def task_agent_t09(store_t09):
 def _msg(store_t09):
     meta = store_t09.seed_meta
     return (
-        f"Something's wrong with my network on line {meta['line_id']} around {meta['postcode']} — "
-        f"keeps cutting out. Can you run a proper check? "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        f"Something's off with my connection — keeps dropping and I'm not sure why. "
+        f"Can you dig into it? Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}, line {meta['line_id']}."
     )
 
 

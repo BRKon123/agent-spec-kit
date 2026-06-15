@@ -1,0 +1,22 @@
+\section{Evaluation Synthesis}
+\label{sec:evaluation-summary}
+
+Across the 200 task-and-lane oracle slots, the reference agent passed 146. Failures were disproportionately exposed by the trace, state, and full lanes. In several cases the final reply sounded correct even though a tool was called in the wrong order, an argument was incorrect, or the expected store update did not occur. Final-answer evaluation alone was therefore insufficient for this benchmark.
+
+The expressiveness study found that \emph{agent-spec-kit} represented the twelve check patterns in 165 lines of check logic, compared with 496 for DeepEval and 532 for Pydantic Evals. It also received the highest clarity grade on every specimen. On failing cases, its built-in assertions generally identified the failed check, turn, and nested value path, whereas several alternatives returned a scalar, broad prose judgment, or bare assertion error.
+
+On task-and-lane pairs that passed before injection, full-oracle scenarios caught most ordering and argument-binding faults and detected unwanted side effects that narrower lanes missed. The combined oracle was stronger than any single surface alone.
+
+Simulated users and mutation fuzzing reached tool paths and failure signatures absent from the manual conversations. Manual scripts remained the stable baseline against which these additional findings could be measured. Regression extraction converted discovered failures into permanent scenario files under the same oracles.
+
+\subsection{Threats to Validity}
+\label{sec:evaluation-limitations}
+
+\paragraph{Construct validity.}
+Authoring-clarity and failure-message grades in the expressiveness study relied on LLM judges at full scale rather than human evaluators. Those rankings and specificity scores may not match what human review would find, and no independent developer study assessed everyday authoring clarity or usability. Although the twelve specimens were chosen to reflect common oracle patterns from Chapter~\ref{chap:background}, evaluating this set may still introduce specimen-selection bias, for example by favouring check patterns the library expresses especially well.
+
+\paragraph{External validity.}
+Only one reference agent and one telecom domain were studied. Benchmark-design choices in TelcoSupportBench and its oracle lanes may favour \emph{agent-spec-kit}, for example by aligning tasks and oracles with patterns the framework expresses especially well. Fault-detection eligibility and several pass-rate denominators also rested on a single baseline execution per task-and-lane slot rather than repeated runs. The reported pass rates, line counts, and discovery counts therefore describe this setup rather than customer-support agents or evaluation libraries in general. Despite the promising results, more work is needed before generalising to other agents, domains, or frameworks.
+
+\paragraph{Extraction reliability.}
+Regression extraction generated a valid file for every eligible failure, but fewer than half of extracted scenarios reproduced the exact same assertion on immediate rerun. With user lines fixed, stochastic tool ordering or reply wording could still vary, so a different check broke first or the run passed outright.

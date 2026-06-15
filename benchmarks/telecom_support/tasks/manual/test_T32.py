@@ -39,25 +39,46 @@ async def task_agent_t32(store_t32):
 
 
 def _msg1(store_t32):
-    return "Hi — my SIM stopped working on line LINE-WRONG. I need a replacement sent out."
+    return (
+        "Hi — I need a replacement SIM. Pretty sure it's for my usual line on the account, "
+        "the one I've had forever (LINE-0032)."
+    )
 
 
 def _msg2(store_t32):
-    meta = store_t32.seed_meta
-    lid2 = meta.get("line_id_2", meta["line_id"])
     return (
-        f"Sorry, wrong line — it's actually {lid2}, not LINE-WRONG. "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        "Sorry, I got that wrong — I meant my other line on the account, the family one, "
+        "not the main one."
     )
 
 
 def _msg3(store_t32):
     meta = store_t32.seed_meta
     lid2 = meta.get("line_id_2", meta["line_id"])
-    return f"Yes please — ship the replacement SIM to my default address for {lid2}."
+    return (
+        f"Yes, please use {lid2} for the replacement SIM order."
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}."
+    )
 
 
-def _trace_after_correction(store_t32):
+def _msg4(store_t32):
+    meta = store_t32.seed_meta
+    lid2 = meta.get("line_id_2", meta["line_id"])
+    return f"Confirmed — ship it to {lid2}, that's the right line."
+
+
+def _t32_dialogue(s, store_t32, *, include_confirm: bool = True):
+    chain = (
+        s.user_message(_msg1(store_t32))
+        .user_message(_msg2(store_t32))
+        .user_message(_msg3(store_t32))
+    )
+    if include_confirm:
+        chain = chain.user_message(_msg4(store_t32))
+    return chain
+
+
+def _t32_trace(store_t32):
     meta = store_t32.seed_meta
     lid2 = meta.get("line_id_2", meta["line_id"])
     return [
@@ -69,6 +90,9 @@ def _trace_after_correction(store_t32):
     ]
 
 
+_T32_OUTPUT = m.string(min_len=5)
+
+
 @ek.scenario(
     agent_fixture="task_agent_t32",
     repeats=1,
@@ -76,16 +100,13 @@ def _trace_after_correction(store_t32):
     timeout_s=420.0,
 )
 async def test_t32_full(s, store_t32):
+    meta = store_t32.seed_meta
+    lid2 = meta.get("line_id_2", meta["line_id"])
     (
-        s.user_message(_msg1(store_t32))
-        .user_message(_msg2(store_t32))
-        .user_message(_msg3(store_t32))
-        .assert_tool_calls(_trace_after_correction(store_t32), ordered=True, allow_extras=True)
-        .assert_that(
-            lambda: o.assert_sim_order_for_line(
-                store_t32, store_t32.seed_meta.get("line_id_2", store_t32.seed_meta["line_id"])
-            )
-        )
+        _t32_dialogue(s, store_t32, include_confirm=False)
+        .assert_tool_calls(_t32_trace(store_t32), ordered=True, allow_extras=True)
+        .user_message(_msg4(store_t32))
+        .assert_that(lambda: o.assert_sim_order_for_line(store_t32, lid2))
     )
 
 
@@ -97,10 +118,9 @@ async def test_t32_full(s, store_t32):
 )
 async def test_t32_trace(s, store_t32):
     (
-        s.user_message(_msg1(store_t32))
-        .user_message(_msg2(store_t32))
-        .user_message(_msg3(store_t32))
-        .assert_tool_calls(_trace_after_correction(store_t32), ordered=True, allow_extras=True)
+        _t32_dialogue(s, store_t32, include_confirm=False)
+        .assert_tool_calls(_t32_trace(store_t32), ordered=True, allow_extras=True)
+        .user_message(_msg4(store_t32))
     )
 
 
@@ -111,15 +131,11 @@ async def test_t32_trace(s, store_t32):
     timeout_s=420.0,
 )
 async def test_t32_state(s, store_t32):
+    meta = store_t32.seed_meta
+    lid2 = meta.get("line_id_2", meta["line_id"])
     (
-        s.user_message(_msg1(store_t32))
-        .user_message(_msg2(store_t32))
-        .user_message(_msg3(store_t32))
-        .assert_that(
-            lambda: o.assert_sim_order_for_line(
-                store_t32, store_t32.seed_meta.get("line_id_2", store_t32.seed_meta["line_id"])
-            )
-        )
+        _t32_dialogue(s, store_t32)
+        .assert_that(lambda: o.assert_sim_order_for_line(store_t32, lid2))
     )
 
 
@@ -131,8 +147,6 @@ async def test_t32_state(s, store_t32):
 )
 async def test_t32_output(s, store_t32):
     (
-        s.user_message(_msg1(store_t32))
-        .user_message(_msg2(store_t32))
-        .user_message(_msg3(store_t32))
-        .assert_output(m.string(min_len=5))
+        _t32_dialogue(s, store_t32)
+        .assert_output(_T32_OUTPUT)
     )

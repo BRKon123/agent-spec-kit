@@ -41,11 +41,34 @@ async def task_agent_t40(store_t40):
 def _msg(store_t40):
     meta = store_t40.seed_meta
     return (
-        f"My signal keeps dropping in and out — can you look at recent network events and tell me "
-        f"if anything looks off? Account {meta['customer_id']}, verification token "
-        f"{meta['verification_token']}, line {meta['line_id']}."
+        f"My signal keeps dropping out — please pull recent network events for my line "
+        f"before you score how unusual the signal looks."
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
+
+_T40_SPECIALIST = m.tool_call(
+    "run_network_diagnostics_specialist",
+    children=[
+        m.tool_call("pull_network_events"),
+        m.tool_call("score_signal_anomaly"),
+    ],
+)
+
+_T40_TRACE = [
+    m.tool_call("authenticate_customer"),
+    _T40_SPECIALIST,
+]
+
+_T40_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Acknowledges intermittent signal drops or connectivity issues",
+        "References network diagnostics or investigation (not a definite root cause unless evidence supports it)",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
 
 
 @ek.scenario(
@@ -55,26 +78,12 @@ def _msg(store_t40):
     timeout_s=420.0,
 )
 async def test_t40_full(s, store_t40):
-    meta = store_t40.seed_meta
     (
-            s.user_message(_msg(store_t40))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_network_diagnostics_specialist",
-                        children=[
-                            m.tool_call("pull_network_events"),
-                            m.tool_call("score_signal_anomaly"),
-                        ],
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_mutations(store_t40))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t40))
+        .assert_tool_calls(_T40_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_mutations(store_t40))
+        .assert_output(_T40_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -84,24 +93,10 @@ async def test_t40_full(s, store_t40):
     timeout_s=420.0,
 )
 async def test_t40_trace(s, store_t40):
-    meta = store_t40.seed_meta
     (
-            s.user_message(_msg(store_t40))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call(
-                        "run_network_diagnostics_specialist",
-                        children=[
-                            m.tool_call("pull_network_events"),
-                            m.tool_call("score_signal_anomaly"),
-                        ],
-                    ),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg(store_t40))
+        .assert_tool_calls(_T40_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -111,11 +106,10 @@ async def test_t40_trace(s, store_t40):
     timeout_s=420.0,
 )
 async def test_t40_state(s, store_t40):
-    meta = store_t40.seed_meta
     (
-            s.user_message(_msg(store_t40))
-            .assert_that(lambda: o.assert_no_mutations(store_t40))
-        )
+        s.user_message(_msg(store_t40))
+        .assert_that(lambda: o.assert_no_mutations(store_t40))
+    )
 
 
 @ek.scenario(
@@ -125,8 +119,7 @@ async def test_t40_state(s, store_t40):
     timeout_s=420.0,
 )
 async def test_t40_output(s, store_t40):
-    meta = store_t40.seed_meta
     (
-            s.user_message(_msg(store_t40))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t40))
+        .assert_output(_T40_OUTPUT)
+    )

@@ -1,0 +1,1 @@
+{'pass': False, 'score': 0, 'reason': 'missing run_network_diagnostics_specialist tool call'}

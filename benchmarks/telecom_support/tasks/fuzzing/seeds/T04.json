@@ -1,0 +1,9 @@
+{
+  "task_id": "T04",
+  "seed_source": "manual_script",
+  "messages": [
+    "My mobile data isn't working \u2014 worried it'll still fail even after a restart. Account CUST-004, verification token 1990-04-15, line LINE-0004.",
+    "I restarted the phone on line LINE-0004 and still have no data \u2014 can you open a support ticket? Account CUST-004, verification token 1990-04-15."
+  ],
+  "extracted_from": "tasks/manual/test_T04.py"
+}

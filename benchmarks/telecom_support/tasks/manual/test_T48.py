@@ -41,42 +41,28 @@ async def task_agent_t48(store_t48):
 def _msg1(store_t48):
     meta = store_t48.seed_meta
     return (
-        f"My mobile data is completely broken — I need this escalated now, not a lecture about "
-        f"restarting my phone. Do not open a ticket yet."
-        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
-        f"line {meta['line_id']}."
+        f"My data is broken — I need a supervisor now. Account {meta['customer_id']}, "
+        f"verification {meta['verification_token']}, line {meta['line_id']}."
     )
 
 
-def _msg2(_store_t48):
-    return "I am not restarting my phone. I do not have time for that today."
+def _msg2(store_t48):
+    return "I am not restarting my phone. I do not have time for that."
 
 
-def _msg3(_store_t48):
+def _msg3(store_t48):
     return (
-        "Fine — just acknowledge how urgent this is in your reply. Do not open a ticket or "
-        "escalate in your system yet."
+        "If you will not escalate, just tell me plainly what your policy is — "
+        "I still will not restart my phone."
     )
 
-
-_T48_TRACE = [m.tool_call("authenticate_customer")]
 
 _T48_OUTPUT = m.one_of(
     m.contains("troubleshoot"),
     m.contains("restart"),
     m.contains("escalat"),
     m.contains("policy"),
-    m.contains("complaint"),
-    m.contains("ticket"),
 )
-
-
-def _dialogue(s, store_t48):
-    return (
-        s.user_message(_msg1(store_t48))
-        .user_message(_msg2(store_t48))
-        .user_message(_msg3(store_t48))
-    )
 
 
 @ek.scenario(
@@ -88,9 +74,9 @@ def _dialogue(s, store_t48):
 async def test_t48_full(s, store_t48):
     (
         s.user_message(_msg1(store_t48))
-        .assert_tool_calls(_T48_TRACE, ordered=True, allow_extras=True)
         .user_message(_msg2(store_t48))
         .user_message(_msg3(store_t48))
+        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
         .assert_that(lambda: o.assert_no_tickets(store_t48))
         .assert_output(_T48_OUTPUT)
     )
@@ -105,9 +91,9 @@ async def test_t48_full(s, store_t48):
 async def test_t48_trace(s, store_t48):
     (
         s.user_message(_msg1(store_t48))
-        .assert_tool_calls(_T48_TRACE, ordered=True, allow_extras=True)
         .user_message(_msg2(store_t48))
         .user_message(_msg3(store_t48))
+        .assert_tool_calls([m.tool_call("authenticate_customer")], ordered=True, allow_extras=True)
     )
 
 
@@ -118,7 +104,12 @@ async def test_t48_trace(s, store_t48):
     timeout_s=420.0,
 )
 async def test_t48_state(s, store_t48):
-    (_dialogue(s, store_t48).assert_that(lambda: o.assert_no_tickets(store_t48)))
+    (
+        s.user_message(_msg1(store_t48))
+        .user_message(_msg2(store_t48))
+        .user_message(_msg3(store_t48))
+        .assert_that(lambda: o.assert_no_tickets(store_t48))
+    )
 
 
 @ek.scenario(
@@ -128,4 +119,9 @@ async def test_t48_state(s, store_t48):
     timeout_s=420.0,
 )
 async def test_t48_output(s, store_t48):
-    (_dialogue(s, store_t48).assert_output(_T48_OUTPUT))
+    (
+        s.user_message(_msg1(store_t48))
+        .user_message(_msg2(store_t48))
+        .user_message(_msg3(store_t48))
+        .assert_output(_T48_OUTPUT)
+    )

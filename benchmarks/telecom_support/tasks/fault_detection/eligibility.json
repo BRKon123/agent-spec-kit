@@ -1,0 +1,302 @@
+{
+  "T01": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T02": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T03": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T04": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T05": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T06": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T07": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T08": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T09": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T10": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T11": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T12": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T13": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T14": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T15": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T16": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T17": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T18": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": true
+  },
+  "T19": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T20": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T21": {
+    "F": true,
+    "O": true,
+    "S": false,
+    "T": true
+  },
+  "T22": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": false
+  },
+  "T23": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T24": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T25": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": false
+  },
+  "T26": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": true
+  },
+  "T27": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T28": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T29": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T30": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T31": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": false
+  },
+  "T32": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T33": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T34": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T35": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T36": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T37": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": false
+  },
+  "T38": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T39": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": false
+  },
+  "T40": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T41": {
+    "F": false,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T42": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T43": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T44": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": false
+  },
+  "T45": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T46": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T47": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": false
+  },
+  "T48": {
+    "F": false,
+    "O": true,
+    "S": false,
+    "T": false
+  },
+  "T49": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  },
+  "T50": {
+    "F": true,
+    "O": true,
+    "S": true,
+    "T": true
+  }
+}

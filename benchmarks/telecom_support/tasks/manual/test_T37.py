@@ -41,8 +41,8 @@ async def task_agent_t37(store_t37):
 def _msg1(store_t37):
     meta = store_t37.seed_meta
     return (
-        f"My line keeps failing diagnostics — can you walk me through a phone restart? "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"My line diagnostic failed earlier — can you walk me through a device restart?"
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
@@ -50,13 +50,18 @@ def _msg1(store_t37):
 def _msg2(store_t37):
     meta = store_t37.seed_meta
     return (
-        f"Done — I restarted the phone on {meta['line_id']} and it's still not working. "
-        f"Please record that restart and open a support ticket with the diagnostic details. "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        f"Done — I restarted the phone on line {meta['line_id']}. "
+        f"Please carry on and open a support ticket with whatever the diagnostic showed."
     )
 
 
-_T37_TRACE = [m.tool_call("create_support_ticket")]
+_T37_TRACE = [
+    m.tool_call("record_user_action"),
+    m.tool_call("run_line_diagnostic"),
+    m.tool_call("create_support_ticket"),
+]
+
+_T37_OUTPUT = m.contains("ticket")
 
 
 @ek.scenario(
@@ -66,14 +71,13 @@ _T37_TRACE = [m.tool_call("create_support_ticket")]
     timeout_s=420.0,
 )
 async def test_t37_full(s, store_t37):
-    meta = store_t37.seed_meta
     (
-            s.user_message(_msg1(store_t37))
+        s.user_message(_msg1(store_t37))
         .user_message(_msg2(store_t37))
-            .assert_tool_calls(_T37_TRACE, ordered=True, allow_extras=True)
-            .assert_that(lambda: o.assert_ticket_exists(store_t37))
-            .assert_output(m.contains("ticket"))
-        )
+        .assert_tool_calls(_T37_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_ticket_exists(store_t37))
+        .assert_output(_T37_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -83,12 +87,11 @@ async def test_t37_full(s, store_t37):
     timeout_s=420.0,
 )
 async def test_t37_trace(s, store_t37):
-    meta = store_t37.seed_meta
     (
-            s.user_message(_msg1(store_t37))
+        s.user_message(_msg1(store_t37))
         .user_message(_msg2(store_t37))
-            .assert_tool_calls(_T37_TRACE, ordered=True, allow_extras=True)
-        )
+        .assert_tool_calls(_T37_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -98,12 +101,11 @@ async def test_t37_trace(s, store_t37):
     timeout_s=420.0,
 )
 async def test_t37_state(s, store_t37):
-    meta = store_t37.seed_meta
     (
-            s.user_message(_msg1(store_t37))
+        s.user_message(_msg1(store_t37))
         .user_message(_msg2(store_t37))
-            .assert_that(lambda: o.assert_ticket_exists(store_t37))
-        )
+        .assert_that(lambda: o.assert_ticket_exists(store_t37))
+    )
 
 
 @ek.scenario(
@@ -113,9 +115,8 @@ async def test_t37_state(s, store_t37):
     timeout_s=420.0,
 )
 async def test_t37_output(s, store_t37):
-    meta = store_t37.seed_meta
     (
-            s.user_message(_msg1(store_t37))
+        s.user_message(_msg1(store_t37))
         .user_message(_msg2(store_t37))
-            .assert_output(m.contains("ticket"))
-        )
+        .assert_output(_T37_OUTPUT)
+    )

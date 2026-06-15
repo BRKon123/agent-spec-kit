@@ -1,0 +1,118 @@
+\section{Generative Conversation Testing}
+\label{sec:generative}
+
+Scripted \texttt{user\_message} lines work well when the conversation path is known in advance, such as a support flow with fixed steps or a tutor drill with explicit questions. They are less helpful when the goal is to see how an agent behaves across many plausible or adversarial ways of speaking. Writing out every phrasing, escalation, and multi-turn tangent by hand does not scale, and some user styles are awkward to script at all. A frustrated customer who repeats themselves, mixes threats with requests, or refuses to follow the agent's process is not a single line of dialogue. It is a persona that unfolds over several turns. Generative features exist so the developer can supply \emph{who} is speaking (a user simulator or a fuzz strategy) and still judge the agent with the same \texttt{assert\_tool\_calls}, \texttt{assert\_output}, and \texttt{assert\_that} steps as in a fully scripted scenario. Generation explores conversation, but the scenario script still states what must hold when the exchange ends.
+
+The same fluent chaining from Section~\ref{sec:scenario-language} applies here. A scripted opening line can seed context (\texttt{user\_message("Let's practice multiplication briefly.")}) before a \texttt{simulate\_conversation} or \texttt{fuzz\_conversation} block whose user lines are produced by a simulator or fuzz strategy. Assertions after the block remain ordinary \texttt{assert\_output} or \texttt{assert\_tool\_calls} steps. Assertions can interleave with scripted and generative user lines because the whole scenario lives in one queue executed by a single runner.
+
+\subsection{User Simulation}
+
+\texttt{simulate\_conversation} alternates turns between the agent fixture and an optional \texttt{user\_fixture} until a stop condition passes, a turn budget is exhausted, or a designated actor stops the loop. The user fixture can embody a role or tone (impatient student, angry subscriber, confused caller) through its system prompt and tools, rather than the test author writing each user turn with \texttt{user\_message}. The stop condition is itself a matcher, often \texttt{m.llm\_criteria} when the simulation should end once a rubric is satisfied. After the simulated segment, the scenario chains the same \texttt{assert\_tool\_calls} and \texttt{assert\_output} steps used in fully scripted tests.
+
+Listing~\ref{lst:simulate-student} registers a \texttt{user\_fixture} whose system prompt encodes a mischievous student persona, then runs a short \texttt{simulate\_conversation} segment before a tool check.
+
+\begin{lstlisting}[language=Python,caption={Mischievous-student \texttt{user\_fixture}, \texttt{simulate\_conversation}, and post-hoc tool check.},label=lst:simulate-student]
+_USER_SYSTEM = (
+    "You are a mischievous student in a multiplication tutoring session. "
+    "Ask for products in playful or indirect ways, not like a textbook drill..."
+)
+
+@ek.fixture
+async def user_simulator(llm_model: str):
+    graph = create_react_agent(llm, [], prompt=_USER_SYSTEM)  # persona in prompt
+    return wrap_langchain_agent(graph, ...)
+
+@ek.scenario(agent_fixture="adapted_agent", user_fixture="user_simulator")
+async def test_multiply_dialog_simulated_student(s):
+    (
+        s.simulate_conversation(
+            # user turns from user_simulator, not user_message
+            seed_actor="user",
+            seed_input="Session start. Produce only your first question.",
+            max_turns=2,
+        )
+        .assert_tool_calls(
+            [
+                m.tool_call(
+                    "multiply_integers",
+                    args={"a": m.number(int_only=True), "b": m.number(int_only=True)},
+                )
+            ],
+            ordered=True, allow_extras=True, actor="agent",
+        )
+    )
+\end{lstlisting}
+
+The point is exploratory coverage. Discover whether the agent still calls the right tools and respects policy when the user side is not perfectly cooperative, then tighten any failure with the counterexample and regression tools in the subsections below.
+
+\subsection{Fuzzing}
+
+\texttt{fuzz\_conversation} samples many user-side scripts in one run when even a persona-backed simulator is too narrow. Each \emph{trial} is one independently generated user dialogue, replayed through the agent with the same assertions as a normal scenario. The \texttt{trials} argument sets how many such dialogues to sample per run. Each trial draws its user lines from a \texttt{FuzzConfig} strategy, for example \texttt{behaviour\_grammar} with weighted templates (off-topic chatter, repeated demands, abrupt topic changes), \texttt{hybrid} mixtures, or \texttt{llm\_mutations} that rewrite seed lines.
+
+Listing~\ref{lst:fuzz-demo} shows a fuzz block followed by a strict tool assertion. Many generated dialogues are off-topic or phrase operands in ways that confuse the tutor, for example by passing non-integer arguments to \texttt{multiply\_integers}, and the matcher fails.
+
+\begin{lstlisting}[language=Python,caption={Behaviour-grammar fuzz followed by a strict tool assertion.},label=lst:fuzz-demo]
+(
+    s.fuzz_conversation(
+        fuzz_config=_FUZZ,
+        trials=3,
+        max_user_turns=5,
+    )
+    .assert_tool_calls(
+        [
+            m.tool_call(
+                "multiply_integers",
+                args={"a": m.number(int_only=True), "b": m.number(int_only=True)},
+            )
+        ],
+        ordered=True, allow_extras=False, actor="agent",
+    )
+)
+\end{lstlisting}
+
+Per-trial results are stored like ordinary repeats. Each fuzz trial can carry its own counterexample blob and transcript in SQLite, and the run-detail UI exposes a trials table so a developer can open the trace for one generated dialogue without re-running the suite.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \input{methodology/tikz_styles}%
+    \input{methodology/fig_generative_flow}%
+  }
+  \caption{Generative orchestration: probe queued steps, generate user lines per trial, execute assertions.}
+  \label{fig:generative-flow}
+\end{figure}
+
+\subsection{Extraction and Shrinking}
+
+When a generative run surfaces a surprising failure, the next step is often to make it reproducible. With \texttt{--extract}, an AST-based pass can append a new \texttt{@scenario} with concrete \texttt{user\_message} lines to a regression file, turning an exploratory failure into a permanent script in the sense of Section~\ref{sec:scenario-language}. Listing~\ref{lst:extracted-regression} continues the multiplication-tutor example from Listing~\ref{lst:simulate-student}. Extraction materialises the single user line from a failing fuzz trial that used a mutation strategy to rewrite the seed.
+
+\begin{lstlisting}[language=Python,caption={Extracted regression from a failing multiplication-tutor fuzz trial. The parent scenario applied a mutation strategy to the seed line ``What is 4 x 5?''; the mutation rewrote both operands as words (``four'' and ``five''; other trials may use alternate numeric spellings such as \texttt{4.0} and \texttt{5.0}). Extraction replaced \texttt{fuzz\_conversation} with this one \texttt{user\_message} and kept the original tool and output checks.},label=lst:extracted-regression]
+@ek.scenario(regression_id="reg_fuzz_multiply_001", tags=("regression", "fuzz-demo"), ...)
+async def regression_extracted_multiply(s):
+    (
+        s.user_message("What is four times five?")
+        .assert_tool_calls(
+            [m.tool_call("multiply_integers", args={"a": 4, "b": 5})],
+            ordered=True,
+            allow_extras=True,
+            actor="agent",
+        )
+        .assert_output(m.one_of(m.contains("20"), m.contains("twenty")), actor="agent")
+    )
+\end{lstlisting}
+
+Listing~\ref{lst:extracted-regression} is the kind of scenario a developer might extract after fuzzing. During the generative run, a mutation strategy may have sent ``What is four times five?'' to the tutor. The agent then attempted to call \texttt{multiply\_integers} with string arguments \texttt{"four"} and \texttt{"five"} instead of the integers \texttt{4} and \texttt{5}. \texttt{multiply\_integers} accepts only integer arguments, so this is invalid and is caught by the \texttt{assert\_tool\_calls} check. Extraction materialises that exact user line as a permanent regression so the team can tighten the tutor system prompt to ensure \texttt{multiply\_integers} is called only with integer arguments, then rerun the suite to confirm the failure no longer recurs.
+
+With \texttt{--shrink}, failing fuzz or simulate episodes can be reduced to fewer or simpler user messages while preserving the same failure signature. Passes include removing user turns and simplifying text. LLM-assisted simplification proposes shorter phrasing that still triggers the same assertion. Listing~\ref{lst:shrink-config} shows a typical shrink configuration.
+
+\begin{lstlisting}[language=Python,caption={Shrink configuration on a scenario.},label=lst:shrink-config]
+SHRINK_CFG = ek.ShrinkConfig(
+    passes=(
+        ek.shrink.remove_user_turns(),
+        ek.shrink.simplify_user_messages(),
+    ),
+    confirm_runs=2,
+)
+\end{lstlisting}
+
+Generative steps are optional extensions to the scripting model in Section~\ref{sec:scenario-language}. They change how user lines are produced, not how expectations are expressed. When something goes wrong, the same counterexample and extraction path turns an exploratory dialogue into a small scripted regression the team can keep.

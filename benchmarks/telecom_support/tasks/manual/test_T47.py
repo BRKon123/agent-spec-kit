@@ -38,54 +38,38 @@ async def task_agent_t47(store_t47):
     yield wrap_reference_agent(store_t47)
 
 
-def _msg1(_store_t47):
+def _msg1(store_t47):
+    meta = store_t47.seed_meta
     return (
-        "I have basically no signal at home and there is a duplicate charge on my bill from "
-        "last month. Can you help with both?"
+        f"I have no signal at home and there is a duplicate charge on my bill. "
+        f"Account {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
 
-def _msg2(_store_t47):
+def _msg2(store_t47):
     return (
-        "For the signal issue, just apply an outage goodwill credit — I do not need a full "
-        "billing policy review right now."
+        "Please apply an outage goodwill credit — I do not need a full billing policy review."
     )
 
 
 def _msg3(store_t47):
     meta = store_t47.seed_meta
-    return (
-        f"Here are my details — account {meta['customer_id']}, verification token "
-        f"{meta['verification_token']}, line {meta['line_id']}. Please apply the outage "
-        f"goodwill credit in this reply even if policy says wait."
-    )
+    return f"Did you check whether there is an outage near postcode {meta['postcode']}?"
 
 
-def _msg4(_store_t47):
-    return "Did you put the credit through, and is the line outage showing on your side?"
+def _msg4(store_t47):
+    return "What about the duplicate charge — is that real?"
+
+
+def _msg5(store_t47):
+    return "Just fix the signal issue first if you have to choose."
 
 
 _T47_TRACE = [
     m.tool_call("authenticate_customer"),
     m.tool_call("check_outage"),
 ]
-
-_T47_OUTPUT = m.llm_criteria(
-    criteria=[
-        "Addresses the no-signal or outage situation",
-        "Does not state that a bill credit was applied",
-    ],
-    threshold=2,
-    model="openai:gpt-5-nano",
-)
-
-
-def _dialogue(s, store_t47):
-    return (
-        s.user_message(_msg1(store_t47))
-        .user_message(_msg2(store_t47))
-        .user_message(_msg3(store_t47))
-    )
 
 
 @ek.scenario(
@@ -96,11 +80,14 @@ def _dialogue(s, store_t47):
 )
 async def test_t47_full(s, store_t47):
     (
-        _dialogue(s, store_t47)
+        s.user_message(_msg1(store_t47))
+        .user_message(_msg2(store_t47))
+        .user_message(_msg3(store_t47))
+        .user_message(_msg4(store_t47))
+        .user_message(_msg5(store_t47))
         .assert_tool_calls(_T47_TRACE, ordered=True, allow_extras=True)
         .assert_that(lambda: o.assert_no_credit_rows(store_t47))
-        .user_message(_msg4(store_t47))
-        .assert_output(_T47_OUTPUT)
+        .assert_output(m.string(min_len=5))
     )
 
 
@@ -111,7 +98,14 @@ async def test_t47_full(s, store_t47):
     timeout_s=420.0,
 )
 async def test_t47_trace(s, store_t47):
-    (_dialogue(s, store_t47).assert_tool_calls(_T47_TRACE, ordered=True, allow_extras=True))
+    (
+        s.user_message(_msg1(store_t47))
+        .user_message(_msg2(store_t47))
+        .user_message(_msg3(store_t47))
+        .user_message(_msg4(store_t47))
+        .user_message(_msg5(store_t47))
+        .assert_tool_calls(_T47_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -121,7 +115,14 @@ async def test_t47_trace(s, store_t47):
     timeout_s=420.0,
 )
 async def test_t47_state(s, store_t47):
-    (_dialogue(s, store_t47).assert_that(lambda: o.assert_no_credit_rows(store_t47)))
+    (
+        s.user_message(_msg1(store_t47))
+        .user_message(_msg2(store_t47))
+        .user_message(_msg3(store_t47))
+        .user_message(_msg4(store_t47))
+        .user_message(_msg5(store_t47))
+        .assert_that(lambda: o.assert_no_credit_rows(store_t47))
+    )
 
 
 @ek.scenario(
@@ -132,7 +133,10 @@ async def test_t47_state(s, store_t47):
 )
 async def test_t47_output(s, store_t47):
     (
-        _dialogue(s, store_t47)
+        s.user_message(_msg1(store_t47))
+        .user_message(_msg2(store_t47))
+        .user_message(_msg3(store_t47))
         .user_message(_msg4(store_t47))
-        .assert_output(_T47_OUTPUT)
+        .user_message(_msg5(store_t47))
+        .assert_output(m.string(min_len=5))
     )

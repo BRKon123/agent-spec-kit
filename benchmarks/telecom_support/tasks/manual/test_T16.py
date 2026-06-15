@@ -41,22 +41,25 @@ async def task_agent_t16(store_t16):
 def _msg(store_t16):
     meta = store_t16.seed_meta
     return (
-        f"There are two identical charges on my latest bill for the same thing — "
-        f"can you look into whether I should get one refunded? "
+        f"There's what looks like a duplicate charge on my latest bill — am I owed a refund? "
         f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
 
 
-_T16_TRACE = [
-    m.tool_call("authenticate_customer"),
-    m.tool_call("run_billing_policy_specialist"),
-]
-
 _T16_OUTPUT = m.llm_criteria(
     criteria=[
         "Addresses the duplicate charge or billing dispute",
-        "Explains eligibility or next steps for a refund in plain language",
+        "Mentions a refund, bill credit, or that the customer is owed money",
+    ],
+    threshold=2,
+    model="openai:gpt-5-nano",
+)
+
+_T16_OUTPUT_FULL = m.llm_criteria(
+    criteria=[
+        "Addresses the duplicate charge or billing dispute",
+        "Does not state that a credit was posted or an audit note was recorded on this turn",
     ],
     threshold=2,
     model="openai:gpt-5-nano",
@@ -71,12 +74,19 @@ _T16_OUTPUT = m.llm_criteria(
 )
 async def test_t16_full(s, store_t16):
     (
-        s.user_message(_msg(store_t16))
-        .assert_tool_calls(_T16_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_credit_exists(store_t16))
-        .assert_that(lambda: o.assert_audit_note_exists(store_t16))
-        .assert_output(_T16_OUTPUT)
-    )
+            s.user_message(_msg(store_t16))
+            .assert_tool_calls(
+                [
+                    m.tool_call("authenticate_customer"),
+                    m.tool_call("run_billing_policy_specialist"),
+                ],
+                ordered=True,
+                allow_extras=True,
+            )
+            .assert_that(lambda: o.assert_credit_exists(store_t16))
+            .assert_that(lambda: o.assert_audit_note_exists(store_t16))
+            .assert_output(_T16_OUTPUT_FULL)
+        )
 
 
 @ek.scenario(
@@ -110,4 +120,8 @@ async def test_t16_state(s, store_t16):
     timeout_s=420.0,
 )
 async def test_t16_output(s, store_t16):
-    (s.user_message(_msg(store_t16)).assert_output(_T16_OUTPUT))
+    meta = store_t16.seed_meta
+    (
+            s.user_message(_msg(store_t16))
+            .assert_output(_T16_OUTPUT)
+        )

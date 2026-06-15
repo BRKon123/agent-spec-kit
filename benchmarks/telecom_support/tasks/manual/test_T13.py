@@ -40,8 +40,10 @@ async def task_agent_t13(store_t13):
 
 def _msg1(_store_t13):
     return (
-        "Roaming's been awful since I landed — calls drop and data barely works. "
-        "Feels like the local partner network rather than my phone. Can you dig into what's wrong?"
+        f"Roaming's been awful since I landed — pretty sure it's the local partner network, not my phone. "
+        f"Can you dig into what's going on? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
 

@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
 
-from agent_spec_kit.fuzz_types import GeneratedTurn, Strategy
+from agent_spec_kit.fuzz_types import FuzzSegmentContext, GeneratedTurn, Strategy
 from agent_spec_kit.judges.structured import call_structured
 
 
@@ -17,6 +17,7 @@ class _MutationsResponse(BaseModel):
 
 class _LLMMutationsStrategy:
     __slots__ = ("_model", "_temperature", "_timeout_s")
+    eager_generation = True
 
     def __init__(
         self,
@@ -35,7 +36,9 @@ class _LLMMutationsStrategy:
         rng: random.Random,
         max_user_turns: int,
         seed_inputs: tuple[str, ...],
+        context: FuzzSegmentContext | None = None,
     ) -> Sequence[GeneratedTurn]:
+        _ = context
         if max_user_turns < 1:
             return ()
         if not seed_inputs:

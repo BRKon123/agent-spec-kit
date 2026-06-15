@@ -1,0 +1,205 @@
+{
+  "fuzz_new_failures": [
+    {
+      "task_id": "T30",
+      "mutation_operator": "drop_required_fact",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t30_fuzz_fuzz_study: could not match expected element at index 0 while preserving order\nno actual items were left to search",
+      "tool_path_signature": "(no_tools)",
+      "case_id": "fuzz_trial=op2_drop_required_fact"
+    },
+    {
+      "task_id": "T29",
+      "mutation_operator": "contradict_entity_later",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t29_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 1\nclosest underlying mismatch was (at $[1].args.sim_type): unexpected key 'sim_type'; mismatch at $[1].args.sim_type: unexpected key 'sim_type'",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "case_id": "fuzz_trial=op1_contradict_entity_later"
+    },
+    {
+      "task_id": "T45",
+      "mutation_operator": "drop_required_fact",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t45_fuzz_fuzz_study: could not match expected element at index 0 while preserving order\nno actual items were left to search",
+      "tool_path_signature": "(no_tools)",
+      "case_id": "fuzz_trial=op1_drop_required_fact"
+    },
+    {
+      "task_id": "T04",
+      "mutation_operator": "delay_required_fact",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_that:test_t04_fuzz_fuzz_study: expected at least one ticket",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> run_line_diagnostic -> get_plan_details -> authenticate_customer -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "case_id": "fuzz_trial=op2_delay_required_fact"
+    },
+    {
+      "task_id": "T38",
+      "mutation_operator": "minimise_user_replies",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_fuzz_fuzz_study: could not match expected element at index 0 while preserving order\nno actual items were left to search",
+      "tool_path_signature": "(no_tools)",
+      "case_id": "fuzz_trial=op0_minimise_user_replies"
+    },
+    {
+      "task_id": "T29",
+      "mutation_operator": "delay_required_fact",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t29_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 1\nclosest underlying mismatch was (at $[1].args.sim_type): unexpected key 'sim_type'; mismatch at $[1].args.sim_type: unexpected key 'sim_type'",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "case_id": "fuzz_trial=op2_delay_required_fact"
+    },
+    {
+      "task_id": "T04",
+      "mutation_operator": "ambiguous_acknowledgement",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t04_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 3 through 7\nclosest underlying mismatch was (at $[3].name): value does not equal expected; mismatch at $[3].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> record_user_action -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> check_outage -> run_line_diagnostic -> send_troubleshooting_step -> schedule_store_appointment",
+      "case_id": "fuzz_trial=op1_ambiguous_acknowledgement"
+    },
+    {
+      "task_id": "T38",
+      "mutation_operator": "repeat_or_reorder_turn",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].children): wrong list length: expected exactly 2 value(s) in this order, found 5; mismatch at $[1].children: wrong list length: expected exactly 2 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> heartbeat_ping",
+      "case_id": "fuzz_trial=op1_repeat_or_reorder_turn"
+    },
+    {
+      "task_id": "T04",
+      "mutation_operator": "negate_completed_step",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t04_fuzz_fuzz_study: could not match expected element at index 0 while preserving order\nsearched actual positions 0 through 6\nclosest underlying mismatch was (at $[0].name): value does not equal expected; mismatch at $[0].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping -> authenticate_customer -> get_line_status -> heartbeat_ping -> send_troubleshooting_step",
+      "case_id": "fuzz_trial=op0_negate_completed_step"
+    },
+    {
+      "task_id": "T29",
+      "mutation_operator": "minimise_user_replies",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_output:assert_output: test_t29_fuzz_fuzz_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [1] criterion: Asks which line is correct or acknowledges line uncertainty\n  rationale: The output does not acknowledge uncertainty about which line is correct nor asks which line is correct; it instead requests a line_id for the SIM replacement without confirming ambiguity.",
+      "tool_path_signature": "(no_tools)",
+      "case_id": "fuzz_trial=op3_minimise_user_replies"
+    },
+    {
+      "task_id": "T42",
+      "mutation_operator": "minimise_user_replies",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_output:assert_output: test_t42_fuzz_fuzz_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer does not want a replacement SIM shipped\n  rationale: The text states that no replacement SIM is needed, but it does not explicitly acknowledge the customer's preference not to have a replacement SIM shipped.",
+      "tool_path_signature": "authenticate_customer -> get_line_status -> heartbeat_ping",
+      "case_id": "fuzz_trial=op4_minimise_user_replies"
+    },
+    {
+      "task_id": "T35",
+      "mutation_operator": "drop_required_fact",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t35_fuzz_fuzz_study: could not match expected element at index 0 while preserving order\nno actual items were left to search",
+      "tool_path_signature": "(no_tools)",
+      "case_id": "fuzz_trial=op0_drop_required_fact"
+    },
+    {
+      "task_id": "T29",
+      "mutation_operator": "repeat_or_reorder_turn",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t29_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 1\nclosest underlying mismatch was (at $[1].args.sim_type): unexpected key 'sim_type'; mismatch at $[1].args.sim_type: unexpected key 'sim_type'",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "case_id": "fuzz_trial=op4_repeat_or_reorder_turn"
+    },
+    {
+      "task_id": "T38",
+      "mutation_operator": "increase_pressure",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 4\nclosest underlying mismatch was (at $[4].children[0].name): value does not equal expected; mismatch at $[4].children[0].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> heartbeat_ping -> create_support_ticket -> run_billing_policy_specialist[pull_billing_events -> classify_credit_eligibility]",
+      "case_id": "fuzz_trial=op2_increase_pressure"
+    },
+    {
+      "task_id": "T17",
+      "mutation_operator": "increase_pressure",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t17_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 6\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain] -> check_outage -> create_support_ticket -> escalate_ticket",
+      "case_id": "fuzz_trial=op0_increase_pressure"
+    },
+    {
+      "task_id": "T45",
+      "mutation_operator": "minimise_user_replies",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t45_fuzz_fuzz_study: could not match expected element at index 0 while preserving order\nno actual items were left to search",
+      "tool_path_signature": "(no_tools)",
+      "case_id": "fuzz_trial=op4_minimise_user_replies"
+    },
+    {
+      "task_id": "T03",
+      "mutation_operator": "ambiguous_acknowledgement",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_output:assert_output: test_t03_fuzz_fuzz_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [1] criterion: Does not confirm that a support ticket was opened or created\n  rationale: The output explicitly states that a support ticket was opened (TCK-00001), which confirms ticket creation.",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_line_diagnostic -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "case_id": "fuzz_trial=op3_ambiguous_acknowledgement"
+    },
+    {
+      "task_id": "T38",
+      "mutation_operator": "delay_required_fact",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].children): wrong list length: expected exactly 2 value(s) in this order, found 5; mismatch at $[1].children: wrong list length: expected exactly 2 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping",
+      "case_id": "fuzz_trial=op3_delay_required_fact"
+    },
+    {
+      "task_id": "T04",
+      "mutation_operator": "remove_confirmation",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_that:test_t04_fuzz_fuzz_study: expected at least one ticket",
+      "tool_path_signature": "authenticate_customer -> authenticate_customer -> send_troubleshooting_step -> record_user_action -> create_support_ticket",
+      "case_id": "fuzz_trial=op4_remove_confirmation"
+    },
+    {
+      "task_id": "T38",
+      "mutation_operator": "ambiguous_acknowledgement",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t38_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 2\nclosest underlying mismatch was (at $[1].children): wrong list length: expected exactly 2 value(s) in this order, found 5; mismatch at $[1].children: wrong list length: expected exactly 2 value(s) in this order, found 5",
+      "tool_path_signature": "authenticate_customer -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> heartbeat_ping",
+      "case_id": "fuzz_trial=op4_ambiguous_acknowledgement"
+    },
+    {
+      "task_id": "T43",
+      "mutation_operator": "contradict_entity_later",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_output:assert_output: test_t43_fuzz_fuzz_study: LLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Confirms a support ticket on the customer's main line for SIM or connectivity\n  rationale: The candidate confirms a ticket on the customer\u2019s main line (LINE-0043), but there is no explicit reference to SIM or connectivity issues in the ticket context.",
+      "tool_path_signature": "authenticate_customer -> send_troubleshooting_step -> create_support_ticket",
+      "case_id": "fuzz_trial=op1_contradict_entity_later"
+    },
+    {
+      "task_id": "T29",
+      "mutation_operator": "swap_entity",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t29_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 1\nclosest underlying mismatch was (at $[1].args.line_id): value does not equal expected; mismatch at $[1].args.line_id: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> order_replacement_sim",
+      "case_id": "fuzz_trial=op0_swap_entity"
+    },
+    {
+      "task_id": "T17",
+      "mutation_operator": "ambiguous_acknowledgement",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t17_fuzz_fuzz_study: could not match expected element at index 1 while preserving order\nsearched actual positions 1 through 3\nclosest underlying mismatch was (at $[1].name): value does not equal expected; mismatch at $[1].name: value does not equal expected",
+      "tool_path_signature": "authenticate_customer -> check_outage -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> check_outage -> classify_fault_domain -> score_signal_anomaly -> check_outage] -> run_line_diagnostic",
+      "case_id": "fuzz_trial=op3_ambiguous_acknowledgement"
+    },
+    {
+      "task_id": "T43",
+      "mutation_operator": "repeat_or_reorder_turn",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_tool_calls:assert_tool_calls: test_t43_fuzz_fuzz_study: could not match expected element at index 0 while preserving order\nno actual items were left to search",
+      "tool_path_signature": "(no_tools)",
+      "case_id": "fuzz_trial=op3_repeat_or_reorder_turn"
+    },
+    {
+      "task_id": "T04",
+      "mutation_operator": "increase_pressure",
+      "framework_trial_index": 0,
+      "failure_signature": "assert_that:test_t04_fuzz_fuzz_study: expected at least one ticket",
+      "tool_path_signature": "authenticate_customer -> send_troubleshooting_step -> run_network_diagnostics_specialist[pull_network_events -> check_outage -> run_line_diagnostic -> classify_fault_domain -> score_signal_anomaly] -> create_support_ticket -> authenticate_customer -> record_user_action -> run_network_diagnostics_specialist[pull_network_events -> run_line_diagnostic -> score_signal_anomaly -> classify_fault_domain -> check_outage] -> escalate_ticket -> create_support_ticket",
+      "case_id": "fuzz_trial=op3_increase_pressure"
+    }
+  ],
+  "count": 25
+}

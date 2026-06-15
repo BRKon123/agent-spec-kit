@@ -1,0 +1,17 @@
+\begin{tikzpicture}[
+  node distance=8mm and 6mm,
+  arr/.style={-{Stealth[length=2.2mm]}, thick, draw=black!65},
+]
+  \node[flowwide] (probe) {Probe scenario\\(queued steps)};
+  \node[flowwide, right=of probe] (gen) {Generate user\\lines per trial};
+  \node[flowwide, right=of gen] (replay) {Replay with\\assertions};
+  \node[flowwide, right=of replay] (out) {Pass /\\counterexample};
+
+  \draw[arr] (probe) -- (gen);
+  \draw[arr] (gen) -- (replay);
+  \draw[arr] (replay) -- (out);
+
+  \node[font=\footnotesize, align=center, below=6mm of out, text width=2.8cm]
+    (shrink) {Optional:\\\texttt{--shrink} / \texttt{--extract}};
+  \draw[arr, dashed, draw=black!45] (replay.south) |- (shrink.west);
+\end{tikzpicture}

@@ -1,0 +1,7 @@
+# Generated run outputs from run_user_simulation_study.py
+transcripts/**
+!transcripts/.gitkeep
+
+# Generated summary artifacts
+user_simulation_study.json
+user_simulation_study.md

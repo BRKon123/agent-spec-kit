@@ -1,0 +1,193 @@
+╭─────────────────────── FAIL test_f07_t42_trace [1/1] ────────────────────────╮
+│ Check: forbid_tool_calls                                                     │
+│ Where: 1st forbid_tool_calls after turn #2 (agentturn) (forbidden tool call  │
+│ patterns)                                                                    │
+│ Path: $[3]                                                                   │
+│ Agent errors:                                                                │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-042',        │
+│ 'verification_token': '1990-42-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-042"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_ihtjjtmGnnu0s3SDI0a4E2hd'}}                                            │
+│ {'name': 'get_line_status', 'args': {'line_id': 'LINE-0042'}, 'result':      │
+│ '{"line_id": "LINE-0042", "customer_id": "CUST-042", "phone_number":         │
+│ "+447700900042", "plan_id": "PLAN-STD", "sim_status": "active",              │
+│ "roaming_enabled": true, "data_enabled": true}', 'error': None, 'children':  │
+│ [], 'metadata': {'tool_call_id': 'call_yte79AJald5SkmVLeW2xl4bZ'}}           │
+│ {'name': 'heartbeat_ping', 'args': {}, 'result': '{"status": "ok",           │
+│ "heartbeat": "ping"}', 'error': None, 'children': [], 'metadata':            │
+│ {'tool_call_id': 'call_0TfnAEcwMRpEh7NYsH1zM012'}}                           │
+│ {'name': 'order_replacement_sim', 'args': {'line_id': 'LINE-0042',           │
+│ 'sim_type': 'physical', 'address_id': 'ADDR-DEFAULT'}, 'result': '{"ok":     │
+│ true, "order_id": "SIM-00001", "line_id": "LINE-0042", "sim_type":           │
+│ "physical", "address_id": "ADDR-DEFAULT"}', 'error': None, 'children': [],   │
+│ 'metadata': {}}                                                              │
+│ Expected: forbidden_tool_call: expected no 'order_replacement_sim'           │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-042",                                             │
+│       "verification_token": "1990-42-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-042"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_ihtjjtmGnnu0s3SDI0a4E2hd"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "get_line_status",                                               │
+│     "args": {                                                                │
+│       "line_id": "LINE-0042"                                                 │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "line_id": "LINE-0042",                                                │
+│       "customer_id": "CUST-042",                                             │
+│       "phone_number": "+447700900042",                                       │
+│       "plan_id": "PLAN-STD",                                                 │
+│       "sim_status": "active",                                                │
+│       "roaming_enabled": true,                                               │
+│       "data_enabled": true                                                   │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_yte79AJald5SkmVLeW2xl4bZ"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "heartbeat_ping",                                                │
+│     "args": {},                                                              │
+│     "result": {                                                              │
+│       "status": "ok",                                                        │
+│       "heartbeat": "ping"                                                    │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_0TfnAEcwMRpEh7NYsH1zM012"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "order_replacement_sim",                                         │
+│     "args": {                                                                │
+│       "line_id": "LINE-0042",                                                │
+│       "sim_type": "physical",                                                │
+│       "address_id": "ADDR-DEFAULT"                                           │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "order_id": "SIM-00001",                                               │
+│       "line_id": "LINE-0042",                                                │
+│       "sim_type": "physical",                                                │
+│       "address_id": "ADDR-DEFAULT"                                           │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {}                                                           │
+│   }                                                                          │
+│ ]                                                                            │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-042",                                             │
+│       "verification_token": "1990-42-15"                                     │
+│     },                                                                       │
+│     "result": "{\"ok\": true, \"customer_id\": \"CUST-042\"}",               │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_ihtjjtmGnnu0s3SDI0a4E2hd"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "get_line_status",                                               │
+│     "args": {                                                                │
+│       "line_id": "LINE-0042"                                                 │
+│     },                                                                       │
+│     "result": "{\"line_id\": \"LINE-0042\", \"customer_id\": \"CUST-042\",   │
+│ \"phone_number\": \"+447700900042\", \"plan_id\": \"PLAN-STD\",              │
+│ \"sim_status\": \"active\", \"roaming_enabled\": true, \"data_enabled\":     │
+│ true}",                                                                      │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_yte79AJald5SkmVLeW2xl4bZ"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "heartbeat_ping",                                                │
+│     "args": {},                                                              │
+│     "result": "{\"status\": \"ok\", \"heartbeat\": \"ping\"}",               │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_0TfnAEcwMRpEh7NYsH1zM012"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "order_replacement_sim",                                         │
+│     "args": {                                                                │
+│       "line_id": "LINE-0042",                                                │
+│       "sim_type": "physical",                                                │
+│       "address_id": "ADDR-DEFAULT"                                           │
+│     },                                                                       │
+│     "result": "{\"ok\": true, \"order_id\": \"SIM-00001\", \"line_id\":      │
+│ \"LINE-0042\", \"sim_type\": \"physical\", \"address_id\":                   │
+│ \"ADDR-DEFAULT\"}",                                                          │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {}                                                           │
+│   }                                                                          │
+│ ]                                                                            │
+│ forbidden tool call 'order_replacement_sim' found at index 3 (actual tool    │
+│ 'order_replacement_sim')                                                     │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: My mobile data is not working at all. Account CUST-042,        │
+│ │   verification ...                                                         │
+│ └── AgentTurn: Thanks for the details. Authentication succeeded for          │
+│     CUST-042.                                                                │
+│                                                                              │
+│     What ...                                                                 │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-042"                                      │
+│     │       }                                                                │
+│     ├── get_line_status                                                      │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "line_id": "LINE-0042",                                        │
+│     │         "customer_id": "CUST-042",                                     │
+│     │         "phone_number": "+447700900042",                               │
+│     │         "plan_id": "PLAN-STD",                                         │
+│     │         "sim_status": "active",                                        │
+│     │         "roaming_enabled": true,                                       │
+│     │         "data_enabled": true                                           │
+│     │       }                                                                │
+│     ├── heartbeat_ping                                                       │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "status": "ok",                                                │
+│     │         "heartbeat": "ping"                                            │
+│     │       }                                                                │
+│     └── order_replacement_sim                                                │
+│           result:                                                            │
+│             {                                                                │
+│               "ok": true,                                                    │
+│               "order_id": "SIM-00001",                                       │
+│               "line_id": "LINE-0042",                                        │
+│               "sim_type": "physical",                                        │
+│               "address_id": "ADDR-DEFAULT"                                   │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

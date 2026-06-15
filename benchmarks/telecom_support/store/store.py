@@ -19,6 +19,9 @@ class TelcoStore:
         "seed_meta",
         "_ticket_seq",
         "_sim_order_seq",
+        "fault_first_line_id",
+        "profile_read_before_auth",
+        "fault_network_events_pulled",
     )
 
     def __init__(self, db_path: Path) -> None:
@@ -27,6 +30,9 @@ class TelcoStore:
         self.seed_meta: dict[str, Any] = {}
         self._ticket_seq = 0
         self._sim_order_seq = 0
+        self.fault_first_line_id: str | None = None
+        self.profile_read_before_auth: bool = False
+        self.fault_network_events_pulled: bool = False
         conn = self.connect()
         try:
             conn.executescript(_SCHEMA_PATH.read_text(encoding="utf-8"))

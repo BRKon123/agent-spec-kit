@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from agent_spec_kit.match.types import MatchError, MatchResult, _short_repr, path_to_str
+from agent_spec_kit.match.spec_repr import format_forbidden_spec, format_spec_at_path
 from agent_spec_kit.run import ConversationTurn
 
 _MISSING = object()
@@ -134,9 +135,47 @@ def collect_agent_errors(
         if text and text not in found:
             found.append(text)
 
+    def _from_toolish(value: Any) -> None:
+        """Extract explicit error fields from tool-call-like payloads."""
+        if isinstance(value, dict):
+            err = value.get("error")
+            if isinstance(err, str):
+                add(err)
+            elif err not in (None, "", False, {}):
+                add(str(err))
+            children = value.get("children")
+            if isinstance(children, list):
+                for child in children:
+                    _from_toolish(child)
+        elif isinstance(value, list):
+            for item in value:
+                _from_toolish(item)
+
+    def _looks_like_error_text(text: str) -> bool:
+        s = text.lower()
+        return any(
+            token in s
+            for token in (
+                "traceback",
+                "exception",
+                "error:",
+                "failed",
+                "timeout",
+                "rate limit",
+            )
+        )
+
+    def _looks_like_tool_payload_text(text: str) -> bool:
+        s = text.strip()
+        return (
+            ("'name':" in s or '"name":' in s)
+            and ("'args':" in s or '"args":' in s)
+            and ("'result':" in s or '"result":' in s)
+        )
+
     if isinstance(actual, (list, tuple)):
-        for item in actual:
-            add(str(item))
+        # Tool-call actuals are not agent errors; only explicit "error" fields count.
+        _from_toolish(list(actual))
     elif isinstance(actual, str):
         stripped = actual.strip()
         if stripped.startswith("["):
@@ -145,13 +184,25 @@ def collect_agent_errors(
             except json.JSONDecodeError:
                 parsed = None
             if isinstance(parsed, list):
-                for item in parsed:
-                    add(str(item))
+                _from_toolish(parsed)
             else:
+                if _looks_like_error_text(actual) and not _looks_like_tool_payload_text(actual):
+                    add(actual)
+        elif stripped.startswith("{"):
+            try:
+                parsed_obj = json.loads(stripped)
+            except json.JSONDecodeError:
+                parsed_obj = None
+            if isinstance(parsed_obj, dict):
+                _from_toolish(parsed_obj)
+            elif _looks_like_error_text(actual) and not _looks_like_tool_payload_text(actual):
                 add(actual)
         else:
-            add(actual)
-    elif actual not in ((), None):
+            if _looks_like_error_text(actual):
+                add(actual)
+    elif isinstance(actual, dict):
+        _from_toolish(actual)
+    elif actual not in ((), None, False):
         add(str(actual))
 
     trace_events = events
@@ -235,6 +286,10 @@ def _format_scenario_location(
             "assert_tool_calls",
             "(tool call list for that turn)",
         ),
+        "forbid_tool_calls": (
+            "forbid_tool_calls",
+            "(forbidden tool call patterns)",
+        ),
         "assert_that": ("assert_that", "(environment / fixture check)"),
         "scenario_body": ("scenario body", "(Python assert in test function)"),
         "agent_error": ("agent error", "(runtime error during agent execution)"),
@@ -293,20 +348,48 @@ def _summarize_list_length_mismatch(
     return _short(f"{err.code}: expected {err.expected}", 200), str(wit.get("actual_witness", record.actual)), [err.message]
 
 
+def _matcher_expected_hint(err: MatchError) -> str:
+    """One-line expected contrast from the deepest :class:`MatchError`."""
+    return f"{err.code}: expected {err.expected}"
+
+
 def _summarize_matcher_counterexample(record: FailureRecord, err: MatchError, wit: dict[str, Any]) -> tuple[str, str, list[str]]:
     notes: list[str] = []
     if err.code == "list_length_mismatch":
-        return _summarize_list_length_mismatch(err, wit, record)
+        exp_line, act_line, list_notes = _summarize_list_length_mismatch(err, wit, record)
+        if record.matcher_spec is not None and record.step_kind == "assert_tool_calls":
+            preview = format_spec_at_path(record.matcher_spec, (), max_len=200)
+            if preview:
+                exp_line = f"{exp_line}\n{preview}"
+        elif record.matcher_spec is not None and record.step_kind == "forbid_tool_calls":
+            preview = format_forbidden_spec(record.matcher_spec, max_len=200)
+            if preview:
+                exp_line = f"{exp_line}\n{preview}"
+        return exp_line, act_line, list_notes
 
-    path_s = path_to_str(err.path)
-    if path_s not in ("$", "()") and record.step_kind == "assert_tool_calls" and isinstance(record.actual, list):
-        focused = _deref_match_path(record.actual, err.path)
-        if focused is not _MISSING:
-            exp_line = _short(f"{err.code}: expected {err.expected}", 200)
-            notes.append(err.message)
-            return exp_line, "", notes
+    if (
+        record.matcher_spec is not None
+        and record.step_kind == "forbid_tool_calls"
+    ):
+        hint = _matcher_expected_hint(err)
+        spec_line = format_forbidden_spec(record.matcher_spec, max_len=600)
+        exp_line = f"{hint}\n{spec_line}" if spec_line else hint
+        actual_min: Any = wit.get("actual_witness", record.actual)
+        notes.append(err.message)
+        return exp_line, _format_actual_value(actual_min), notes
 
-    actual_min: Any = wit.get("actual_witness", record.actual)
+    if (
+        record.matcher_spec is not None
+        and record.step_kind == "assert_tool_calls"
+    ):
+        hint = _matcher_expected_hint(err)
+        spec_line = format_spec_at_path(record.matcher_spec, err.path, max_len=600)
+        exp_line = f"{hint}\n{spec_line}" if spec_line else hint
+        actual_min = wit.get("actual_witness", record.actual)
+        notes.append(err.message)
+        return exp_line, _format_actual_value(actual_min), notes
+
+    actual_min = wit.get("actual_witness", record.actual)
     notes.append(err.message)
     return _short(f"{err.code}: expected {err.expected}", 200), _format_actual_value(actual_min), notes
 

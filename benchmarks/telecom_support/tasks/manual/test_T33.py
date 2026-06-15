@@ -41,11 +41,28 @@ async def task_agent_t33(store_t33):
 def _msg(store_t33):
     meta = store_t33.seed_meta
     return (
-        f"My mobile data keeps cutting out — can you run a proper network check on line {meta['line_id']} "
-        f"and tell me what you find? Account {meta['customer_id']}, verification token "
-        f"{meta['verification_token']}."
+        f"I think my SIM card is dodgy — can you run proper network diagnostics and tell me "
+        f"what evidence you actually found?"
+        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
+
+_T33_TRACE = [
+    m.tool_call("authenticate_customer"),
+    m.tool_call(
+        "run_network_diagnostics_specialist",
+        result=m.object(
+            {
+                "fault_domain": m.one_of("sim"),
+                "evidence": m.list_of(m.string(min_len=1)),
+            },
+            extra="forbid",
+        ),
+    ),
+]
+
+_T33_OUTPUT = m.string(min_len=5)
 
 
 @ek.scenario(
@@ -55,20 +72,12 @@ def _msg(store_t33):
     timeout_s=420.0,
 )
 async def test_t33_full(s, store_t33):
-    meta = store_t33.seed_meta
     (
-            s.user_message(_msg(store_t33))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call('run_network_diagnostics_specialist', result=m.object({'fault_domain': m.one_of('sim'), 'evidence': m.list_of(m.string(min_len=1))}, extra='forbid')),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-            .assert_that(lambda: o.assert_no_mutations(store_t33))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t33))
+        .assert_tool_calls(_T33_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_mutations(store_t33))
+        .assert_output(_T33_OUTPUT)
+    )
 
 
 @ek.scenario(
@@ -78,18 +87,10 @@ async def test_t33_full(s, store_t33):
     timeout_s=420.0,
 )
 async def test_t33_trace(s, store_t33):
-    meta = store_t33.seed_meta
     (
-            s.user_message(_msg(store_t33))
-            .assert_tool_calls(
-                [
-                    m.tool_call("authenticate_customer"),
-                    m.tool_call('run_network_diagnostics_specialist', result=m.object({'fault_domain': m.one_of('sim'), 'evidence': m.list_of(m.string(min_len=1))}, extra='forbid')),
-                ],
-                ordered=True,
-                allow_extras=True,
-            )
-        )
+        s.user_message(_msg(store_t33))
+        .assert_tool_calls(_T33_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -99,11 +100,10 @@ async def test_t33_trace(s, store_t33):
     timeout_s=420.0,
 )
 async def test_t33_state(s, store_t33):
-    meta = store_t33.seed_meta
     (
-            s.user_message(_msg(store_t33))
-            .assert_that(lambda: o.assert_no_mutations(store_t33))
-        )
+        s.user_message(_msg(store_t33))
+        .assert_that(lambda: o.assert_no_mutations(store_t33))
+    )
 
 
 @ek.scenario(
@@ -113,8 +113,7 @@ async def test_t33_state(s, store_t33):
     timeout_s=420.0,
 )
 async def test_t33_output(s, store_t33):
-    meta = store_t33.seed_meta
     (
-            s.user_message(_msg(store_t33))
-            .assert_output(m.string(min_len=5))
-        )
+        s.user_message(_msg(store_t33))
+        .assert_output(_T33_OUTPUT)
+    )

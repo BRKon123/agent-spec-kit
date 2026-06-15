@@ -1,0 +1,164 @@
+\appendix
+\chapter{Evaluation supplementary tables}
+\label{app:evaluation}
+
+\section{Full task catalogue (T01--T50)}
+\label{app:full-task-catalog}
+
+\begin{longtable}{@{}llp{4.8cm}ccc@{}}
+\caption{Full TelcoSupportBench task catalogue. Sim and Fuzz mark the same fourteen tasks in the generative studies (Section~\ref{sec:generative-studies}). Extract marks the twelve tasks in the regression-extraction arm (simulation primaries).} \\
+\toprule
+Task & Category & Description (abridged) & Sim & Fuzz & Extract \\
+\midrule
+\endfirsthead
+\multicolumn{6}{l}{\textit{Continued from previous page}} \\
+\toprule
+Task & Category & Description (abridged) & Sim & Fuzz & Extract \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+T01 & Data & Mobile data disabled on line &  &  &  \\
+T02 & Data & Local outage causes data failure &  &  &  \\
+T03 & Data & Troubleshoot before escalation & Y & Y &  \\
+T04 & Data & Diagnostic fail after restart & Y & Y & Y \\
+T05 & Data & Network specialist for latency &  &  &  \\
+T06 & Data & Parallel status and heartbeat &  &  &  \\
+T07 & Data & Reference forgets outage-first &  &  &  \\
+T08 & Data & Ticket with generic reason &  &  &  \\
+T09 & Data & High severity without escalation reason &  &  &  \\
+T10 & Data & Certain root cause, weak evidence &  &  &  \\
+T11 & Roaming & Roaming disabled abroad &  &  &  \\
+T12 & Roaming & Plan excludes destination &  &  &  \\
+T13 & Roaming & Possible partner fault &  &  &  \\
+T14 & Roaming & Compensation for unsupported dest. &  &  &  \\
+T15 & Roaming & Domestic outage logic on roaming &  &  &  \\
+T16 & Billing & Duplicate charge credit &  &  &  \\
+T17 & Billing & Short outage not eligible & Y & Y & Y \\
+T18 & Billing & Long outage goodwill credit &  &  &  \\
+T19 & Billing & Billing ticket not immediate credit &  &  &  \\
+T20 & Billing & Billing details before auth & Y & Y & Y \\
+T21 & Billing & Correct answer, missing audit &  &  &  \\
+T22 & Billing & Credit when ineligible &  &  &  \\
+T23 & Billing & Missing amount when eligible &  &  &  \\
+T24 & Billing & Overpromised compensation &  &  &  \\
+T25 & Billing & Wrong customer id in specialist &  &  &  \\
+T26 & SIM & Lost SIM replacement &  &  &  \\
+T27 & SIM & eSIM setup failure & Y & Y & Y \\
+T28 & SIM & Incompatible with eSIM &  &  &  \\
+T29 & SIM & Late line identification & Y & Y & Y \\
+T30 & SIM & Address change plus SIM & Y & Y & Y \\
+T31 & SIM & eSIM on incompatible device &  &  &  \\
+T32 & SIM & Wrong line on multi-line account &  &  &  \\
+T33 & SIM & fault\_domain=sim, empty evidence &  &  &  \\
+T34 & SIM & Appointment without diagnostic &  &  &  \\
+T35 & Escalation & Escalate, do not duplicate ticket & Y & Y & Y \\
+T36 & Escalation & Severe widespread outage &  &  &  \\
+T37 & Escalation & Diagnostic fail after user action &  &  &  \\
+T38 & Escalation & Parallel specialist and heartbeat & Y & Y & Y \\
+T39 & Escalation & Duplicate ticket &  &  &  \\
+T40 & Escalation & Reversed nested specialist order &  &  &  \\
+T41 & Mixed & Data plus billing complaint &  &  &  \\
+T42 & Mixed & Issue shift data to SIM & Y & Y & Y \\
+T43 & Mixed & Wrong line then correction & Y & Y & Y \\
+T44 & Mixed & False restart claim & Y & Y &  \\
+T45 & Mixed & Delayed authentication & Y & Y & Y \\
+T46 & Mixed & Stale line after correction &  &  &  \\
+T47 & Mixed & Mixed billing and connectivity state &  &  &  \\
+T48 & Adversarial & Refuses troubleshoot, wants escalate &  &  &  \\
+T49 & Adversarial & Another customer's details & Y & Y & Y \\
+T50 & Adversarial & Leak before authentication &  &  &  \\
+\end{longtable}
+
+\section{Failure taxonomy per task}
+\label{app:taxonomy-per-task}
+
+Y = new failures on that arm relative to manual (and fuzz, for fuzz-new). Manual-known tasks fail on the canonical script.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Task & Manual & Sim new & Fuzz new \\
+\midrule
+T03 & Pass & Y & Y \\
+T04 & Pass & Y & Y \\
+T17 & Pass & -- & Y \\
+T20 & Pass & Y & -- \\
+T27 & Pass & -- & -- \\
+T29 & Fail & Y & Y \\
+T30 & Pass & -- & Y \\
+T35 & Pass & -- & Y \\
+T38 & Fail & Y & Y \\
+T42 & Pass & Y & Y \\
+T43 & Fail & Y & Y \\
+T44 & Fail & -- & -- \\
+T45 & Pass & Y & Y \\
+T49 & Pass & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Fault-detection detail grid}
+\label{app:fault-detection-grid}
+
+Legend. \textbf{det} = detected. \textbf{miss} = eligible but passed. \textbf{N/A} = initial baseline run did not pass on that slot. Primary matrix: 152 task-and-lane cells (38 fault--task rows $\times$ 4 oracle lanes), 121 baseline-eligible.
+
+\small
+\begin{longtable}{@{}llcccc@{}}
+\caption{Fault detection by task and oracle lane (primary matrix).} \\
+\toprule
+Fault & Task & O & S & T & F \\
+\midrule
+\endfirsthead
+\toprule
+Fault & Task & O & S & T & F \\
+\midrule
+\endhead
+F01 & T03 & miss & miss & N/A & N/A \\
+F01 & T37 & miss & N/A & N/A & N/A \\
+F01 & T44 & miss & miss & N/A & N/A \\
+F01 & T48 & miss & N/A & N/A & N/A \\
+F02 & T29 & miss & det & det & det \\
+F02 & T43 & miss & det & miss & det \\
+F02 & T46 & miss & det & det & det \\
+F03 & T14 & miss & det & miss & N/A \\
+F03 & T17 & miss & det & miss & det \\
+F03 & T22 & miss & N/A & N/A & N/A \\
+F03 & T27 & miss & det & miss & det \\
+F04 & T20 & miss & miss & miss & miss \\
+F04 & T45 & miss & det & miss & det \\
+F04 & T49 & miss & det & miss & det \\
+F04 & T50 & det & det & miss & det \\
+F05 & T05 & miss & miss & det & N/A \\
+F05 & T38 & miss & miss & det & det \\
+F05 & T40 & miss & miss & N/A & N/A \\
+F06 & T09 & miss & miss & N/A & N/A \\
+F06 & T10 & det & miss & N/A & N/A \\
+F06 & T23 & det & det & N/A & N/A \\
+F06 & T33 & det & det & N/A & N/A \\
+F07 & T29 & miss & miss & det & det \\
+F07 & T30 & det & miss & det & det \\
+F07 & T42 & det & det & det & det \\
+F07 & T43 & miss & det & det & det \\
+F08 & T18 & miss & N/A & det & N/A \\
+F08 & T21 & miss & N/A & det & det \\
+F08 & T26 & miss & N/A & det & N/A \\
+F08 & T35 & miss & miss & miss & miss \\
+F09 & T04 & det & det & det & det \\
+F09 & T19 & det & det & det & det \\
+F09 & T35 & miss & miss & miss & miss \\
+F09 & T34 & miss & miss & miss & miss \\
+F10 & T29 & miss & miss & det & det \\
+F10 & T42 & miss & miss & miss & det \\
+F10 & T43 & det & miss & miss & det \\
+F10 & T44 & miss & miss & N/A & det \\
+\bottomrule
+\end{longtable}
+
+\section{Diagnostic specificity on injected faults}
+\label{app:diagnostic-grid}
+
+Full-cell grid for detected injections on the full oracle (F lane). Summary in Table~\ref{tab:diagnostic-comparison} (Section~\ref{sec:diagnostic-quality-faults}).
+
+\input{appendix/diagnostic_grid}

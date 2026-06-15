@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -41,17 +42,18 @@ async def task_agent_t04(store_t04):
 def _msg1(store_t04):
     meta = store_t04.seed_meta
     return (
-        f"My mobile data's been dead all day on line {meta['line_id']}. "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        f"My mobile data isn't working — worried it'll still fail even after a restart. "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
 
 def _msg2(store_t04):
     meta = store_t04.seed_meta
     return (
-        f"I restarted my phone like you asked — still no data on {meta['line_id']}. "
-        f"Can you log that and open a support ticket? "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        f"I restarted the phone on line {meta['line_id']} and still have no data — can you "
+        f"open a support ticket? Account {meta['customer_id']}, verification token "
+        f"{meta['verification_token']}."
     )
 
 
@@ -77,12 +79,19 @@ _T04_OUTPUT = m.llm_criteria(
 )
 async def test_t04_full(s, store_t04):
     (
-        s.user_message(_msg1(store_t04))
-        .user_message(_msg2(store_t04))
-        .assert_tool_calls(_T04_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_ticket_exists(store_t04))
-        .assert_output(_T04_OUTPUT)
-    )
+            s.user_message(_msg1(store_t04))
+            .user_message(_msg2(store_t04))
+            .assert_tool_calls(
+                [
+                    m.tool_call("record_user_action"),
+                    m.tool_call("create_support_ticket"),
+                ],
+                ordered=True,
+                allow_extras=True,
+            )
+            .assert_that(lambda: o.assert_ticket_exists(store_t04))
+            .assert_output(to.mutation_claim_output("Confirms a support ticket was opened"))
+        )
 
 
 @ek.scenario(
@@ -93,10 +102,18 @@ async def test_t04_full(s, store_t04):
 )
 async def test_t04_trace(s, store_t04):
     (
-        s.user_message(_msg1(store_t04))
-        .user_message(_msg2(store_t04))
-        .assert_tool_calls(_T04_TRACE, ordered=True, allow_extras=True)
-    )
+            s.user_message(_msg1(store_t04))
+            .user_message(_msg2(store_t04))
+            .assert_tool_calls(
+                [
+                    m.tool_call("record_user_action"),
+                    m.tool_call("create_support_ticket"),
+                ],
+                ordered=True,
+                allow_extras=True,
+            )
+            .assert_that(lambda: o.assert_ticket_exists(store_t04))
+        )
 
 
 @ek.scenario(
@@ -107,10 +124,10 @@ async def test_t04_trace(s, store_t04):
 )
 async def test_t04_state(s, store_t04):
     (
-        s.user_message(_msg1(store_t04))
-        .user_message(_msg2(store_t04))
-        .assert_that(lambda: o.assert_ticket_exists(store_t04))
-    )
+            s.user_message(_msg1(store_t04))
+            .user_message(_msg2(store_t04))
+            .assert_that(lambda: o.assert_ticket_exists(store_t04))
+        )
 
 
 @ek.scenario(
@@ -121,7 +138,8 @@ async def test_t04_state(s, store_t04):
 )
 async def test_t04_output(s, store_t04):
     (
-        s.user_message(_msg1(store_t04))
-        .user_message(_msg2(store_t04))
-        .assert_output(_T04_OUTPUT)
-    )
+            s.user_message(_msg1(store_t04))
+            .user_message(_msg2(store_t04))
+            .assert_output(to.mutation_claim_output("Confirms a support ticket was opened"))
+            .assert_that(lambda: o.assert_ticket_exists(store_t04))
+        )

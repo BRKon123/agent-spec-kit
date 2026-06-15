@@ -34,6 +34,13 @@ export interface RunListItem {
   metadata: Record<string, unknown>;
 }
 
+export interface RunListPage {
+  items: RunListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface RunDetail {
   run_id: string;
   experiment_id?: string | null;
@@ -172,6 +179,8 @@ export interface FuzzTrialRunRow extends FuzzTrialSummary {
 
 export interface FuzzTrialDetail extends FuzzTrialRunRow {
   transcript: ConversationTurn[] | null;
+  counterexample: Counterexample | null;
+  raw_error: { error: string } | null;
   blob_errors: Record<string, string>;
 }
 

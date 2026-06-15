@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -38,36 +39,43 @@ async def task_agent_t43(store_t43):
     yield wrap_reference_agent(store_t43)
 
 
-def _msg1(_store_t43):
-    return "I need a replacement SIM — the problem is on my main number ending 4421."
+def _stale_line(store_t43):
+    return o.stale_line_id(store_t43)
+
+
+def _seed_line(store_t43):
+    return str(store_t43.seed_meta["line_id"])
+
+
+def _msg1(store_t43):
+    stale = _stale_line(store_t43)
+    return f"Please open a support ticket on {stale} — my SIM will not connect on that line."
 
 
 def _msg2(store_t43):
-    meta = store_t43.seed_meta
-    return (
-        f"Wait, sorry — I meant our family line ending 7788, not 4421. "
-        f"The correct line id is {meta['line_id']}."
-    )
+    return "Sorry, that is the wrong line — I meant our main phone instead."
 
 
 def _msg3(store_t43):
     meta = store_t43.seed_meta
+    seed = _seed_line(store_t43)
     return (
-        f"Yes — {meta['line_id']} is the right line. Please just confirm status for now; "
-        f"do not ship a replacement SIM yet."
-        f" Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        f"Yes use {seed} for the ticket. Account {meta['customer_id']}, verification "
+        f"{meta['verification_token']}."
     )
 
 
-_T43_TRACE = [m.tool_call("authenticate_customer")]
+_T43_AUTH_TRACE = [m.tool_call("authenticate_customer")]
 
+_T43_AFTER_MSG2_OUTPUT = to.clarification_output(
+    "Acknowledges the customer corrected which line needs the ticket",
+    "Does not confirm a ticket was opened on the wrong line before correction",
+)
 
-def _dialogue(s, store_t43):
-    return (
-        s.user_message(_msg1(store_t43))
-        .user_message(_msg2(store_t43))
-        .user_message(_msg3(store_t43))
-    )
+_T43_OUTPUT = to.issue_binding_output(
+    "Confirms a support ticket on the customer's main line for SIM or connectivity",
+    "Does not describe the issue only as a billing or plan dispute",
+)
 
 
 @ek.scenario(
@@ -77,11 +85,23 @@ def _dialogue(s, store_t43):
     timeout_s=420.0,
 )
 async def test_t43_full(s, store_t43):
+    stale = _stale_line(store_t43)
     (
-        _dialogue(s, store_t43)
-        .assert_tool_calls(_T43_TRACE, ordered=True, allow_extras=True)
-        .assert_that(lambda: o.assert_no_mutations(store_t43))
-        .assert_output(m.string(min_len=5))
+        s.user_message(_msg1(store_t43))
+        .forbid_tool_calls(to.PREMATURE_TICKET)
+        .user_message(_msg2(store_t43))
+        .forbid_tool_calls(to.PREMATURE_TICKET)
+        .assert_output(_T43_AFTER_MSG2_OUTPUT)
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
+        .user_message(_msg3(store_t43))
+        .assert_tool_calls(_T43_AUTH_TRACE, ordered=True, allow_extras=True)
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
+        .assert_that(
+            lambda: o.assert_latest_ticket_reason_excludes(
+                store_t43, "billing", "invoice", "plan dispute"
+            )
+        )
+        .assert_output(_T43_OUTPUT)
     )
 
 
@@ -92,7 +112,14 @@ async def test_t43_full(s, store_t43):
     timeout_s=420.0,
 )
 async def test_t43_trace(s, store_t43):
-    (_dialogue(s, store_t43).assert_tool_calls(_T43_TRACE, ordered=True, allow_extras=True))
+    (
+        s.user_message(_msg1(store_t43))
+        .forbid_tool_calls(to.PREMATURE_TICKET)
+        .user_message(_msg2(store_t43))
+        .forbid_tool_calls(to.PREMATURE_TICKET)
+        .user_message(_msg3(store_t43))
+        .assert_tool_calls(_T43_AUTH_TRACE, ordered=True, allow_extras=True)
+    )
 
 
 @ek.scenario(
@@ -102,7 +129,19 @@ async def test_t43_trace(s, store_t43):
     timeout_s=420.0,
 )
 async def test_t43_state(s, store_t43):
-    (_dialogue(s, store_t43).assert_that(lambda: o.assert_no_mutations(store_t43)))
+    stale = _stale_line(store_t43)
+    (
+        s.user_message(_msg1(store_t43))
+        .user_message(_msg2(store_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
+        .user_message(_msg3(store_t43))
+        .assert_that(lambda: o.assert_no_ticket_on_line(store_t43, stale))
+        .assert_that(
+            lambda: o.assert_latest_ticket_reason_excludes(
+                store_t43, "billing", "invoice", "plan dispute"
+            )
+        )
+    )
 
 
 @ek.scenario(
@@ -112,4 +151,10 @@ async def test_t43_state(s, store_t43):
     timeout_s=420.0,
 )
 async def test_t43_output(s, store_t43):
-    (_dialogue(s, store_t43).assert_output(m.string(min_len=5)))
+    (
+        s.user_message(_msg1(store_t43))
+        .user_message(_msg2(store_t43))
+        .assert_output(_T43_AFTER_MSG2_OUTPUT)
+        .user_message(_msg3(store_t43))
+        .assert_output(_T43_OUTPUT)
+    )

@@ -22,6 +22,8 @@ from agent_spec_kit.failures import (
 )
 from agent_spec_kit.fixture_graph import TeardownFn, resolve_fixtures, scenario_case_runs
 from agent_spec_kit.fuzz.summary import render_trial_summary
+from agent_spec_kit.fuzz_context import build_fuzz_segment_context, strategy_eager_generation
+from agent_spec_kit.fuzz_types import GeneratedTurn
 from agent_spec_kit.generative import CapturedEpisode, FailureSignature
 from agent_spec_kit.param_cases import Case
 from agent_spec_kit.registries import ScenarioDef
@@ -67,6 +69,44 @@ def _user_turns_slice(turns: list[ConversationTurn], start: int) -> tuple[str, .
             o = t.output
             out.append(o if isinstance(o, str) else str(o) if o is not None else "")
     return tuple(out)
+
+
+def _fuzz_segment_index(original_steps: list[_Step], step_index: int) -> int:
+    return sum(
+        1 for j in range(step_index) if isinstance(original_steps[j], _FuzzConversationStep)
+    )
+
+
+def _rng_for_fuzz_step(
+    fst: _FuzzConversationStep,
+    *,
+    trial: int,
+    segment_k: int,
+) -> random.Random:
+    return random.Random((fst.fuzz_config.seed or 0) + trial * 100_003 + segment_k * 7919)
+
+
+async def _generate_fuzz_turns(
+    fst: _FuzzConversationStep,
+    *,
+    rng: random.Random,
+    segment_index: int,
+    turn_results: tuple[ConversationTurn, ...],
+) -> tuple[GeneratedTurn, ...]:
+    strategy = fst.fuzz_config.strategy
+    context = None
+    if segment_index > 0 or not strategy_eager_generation(strategy):
+        context = build_fuzz_segment_context(
+            turn_results,
+            segment_index=segment_index,
+        )
+    generated = await strategy.generate(
+        rng=rng,
+        max_user_turns=fst.max_user_turns,
+        seed_inputs=fst.fuzz_config.seed_inputs,
+        context=context,
+    )
+    return tuple(generated)
 
 
 def _flat_user_turns_from_breakdown(breakdown: tuple[tuple[str, ...], ...]) -> tuple[str, ...]:
@@ -207,6 +247,7 @@ async def _run_trial_with_breakdown(
     param_case: dict[str, Case[Any]],
     original_steps: list[_Step],
     fuzz_messages_by_index: dict[int, tuple[str, ...]],
+    trial_index: int = 0,
 ) -> tuple[
     bool,
     Counterexample | None,
@@ -252,7 +293,18 @@ async def _run_trial_with_breakdown(
         for i, st in enumerate(original_steps):
             s._executed_until = i
             if isinstance(st, _FuzzConversationStep):
-                msgs = fuzz_messages_by_index[i]
+                seg_k = _fuzz_segment_index(original_steps, i)
+                if i in fuzz_messages_by_index and strategy_eager_generation(st.fuzz_config.strategy):
+                    msgs = fuzz_messages_by_index[i]
+                else:
+                    rng = _rng_for_fuzz_step(st, trial=trial_index, segment_k=seg_k)
+                    generated = await _generate_fuzz_turns(
+                        st,
+                        rng=rng,
+                        segment_index=seg_k,
+                        turn_results=tuple(s._turn_results),
+                    )
+                    msgs = tuple(g.message for g in generated)
                 for m in msgs:
                     await s._dispatch_user_message_text(m)
                 breakdown_list[i] = tuple(msgs)
@@ -529,13 +581,16 @@ async def probe_generative_scenario(
         fuzz_messages: dict[int, tuple[str, ...]] = {}
         seed_for_trial: int | None = None
         for k, (ix, fst) in enumerate(fuzz_steps):
-            rng = random.Random((fst.fuzz_config.seed or 0) + trial * 100_003 + k * 7919)
             if seed_for_trial is None:
                 seed_for_trial = (fst.fuzz_config.seed or 0) + trial * 100_003
-            generated = await fst.fuzz_config.strategy.generate(
+            if not strategy_eager_generation(fst.fuzz_config.strategy):
+                continue
+            rng = _rng_for_fuzz_step(fst, trial=trial, segment_k=k)
+            generated = await _generate_fuzz_turns(
+                fst,
                 rng=rng,
-                max_user_turns=fst.max_user_turns,
-                seed_inputs=fst.fuzz_config.seed_inputs,
+                segment_index=k,
+                turn_results=(),
             )
             fuzz_messages[ix] = tuple(g.message for g in generated)
         fuzz_messages_by_trial.append(fuzz_messages)
@@ -634,18 +689,16 @@ async def run_single_fuzz_trial_async(
     for k, (ix, fst) in enumerate(fuzz_steps):
         if seed_for_trial is None:
             seed_for_trial = (fst.fuzz_config.seed or 0) + trial_index * 100_003
-        # Re-derive labels from the same generation as main process would — use stored messages only for execution;
-        # for summary we re-generate with same RNG as probe for this trial.
-        rng = random.Random((fst.fuzz_config.seed or 0) + trial_index * 100_003 + k * 7919)
-        generated = await fst.fuzz_config.strategy.generate(
+        seg_k = _fuzz_segment_index(steps, ix)
+        rng = _rng_for_fuzz_step(fst, trial=trial_index, segment_k=seg_k)
+        generated = await _generate_fuzz_turns(
+            fst,
             rng=rng,
-            max_user_turns=fst.max_user_turns,
-            seed_inputs=fst.fuzz_config.seed_inputs,
+            segment_index=seg_k,
+            turn_results=(),
         )
         labels_all.extend(g.label for g in generated)
         details_all.extend(dict(g.detail) for g in generated)
-        # Ensure execution uses probe-provided messages (worker may have divergent RNG if strategy is non-deterministic)
-        _ = fuzz_messages_by_index.get(ix, ())
 
     if fuzz_steps:
         summary_label = render_trial_summary(
@@ -662,6 +715,7 @@ async def run_single_fuzz_trial_async(
         param_case=param_case,
         original_steps=steps,
         fuzz_messages_by_index=fuzz_messages_by_index,
+        trial_index=trial_index,
     )
     duration_s = time.perf_counter() - t0
     flat_turns = _flat_user_turns_from_breakdown(breakdown)
@@ -674,9 +728,10 @@ async def run_single_fuzz_trial_async(
             "path": cx.path,
             "expected_summary": cx.expected_summary,
             "actual_min": cx.actual_min,
-            "notes": tuple(cx.notes),
+            "notes": list(cx.notes),
             "check_kind": cx.check_kind,
             "location_detail": cx.location_detail,
+            "events": list(cx.events) if cx.events else None,
         }
     return {
         "trial_index": trial_index,
@@ -693,6 +748,7 @@ async def run_single_fuzz_trial_async(
         "turn_results": turns,
         "failure_signature": sig.as_dict() if sig else None,
         "counterexample": cx_payload,
+        "raw_error": raw_err,
         "ok": ok_t,
     }
 

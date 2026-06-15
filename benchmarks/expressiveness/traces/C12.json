@@ -1,0 +1,20 @@
+{
+  "turns": [
+    {
+      "output": "I need the correct line before opening a ticket.",
+      "tools": []
+    },
+    {
+      "output": "Thanks for clarifying — please confirm your current line.",
+      "tools": []
+    },
+    {
+      "output": "Ticket opened on LINE-001.",
+      "tools": [
+        {"name": "authenticate_customer", "args": {}, "result": "ok"},
+        {"name": "create_support_ticket", "args": {"line_id": "LINE-001"}, "result": {"ticket_id": "INC-9046"}}
+      ]
+    }
+  ],
+  "corrected_line_id": "LINE-001"
+}

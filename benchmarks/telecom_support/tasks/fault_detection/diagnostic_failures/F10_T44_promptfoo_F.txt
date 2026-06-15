@@ -1,0 +1,1 @@
+{'pass': False, 'score': 0, 'reason': "expected first tool send_troubleshooting_step, got 'authenticate_customer'"}

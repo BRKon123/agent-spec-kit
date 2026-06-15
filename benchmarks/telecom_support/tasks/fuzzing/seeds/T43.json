@@ -1,0 +1,10 @@
+{
+  "task_id": "T43",
+  "seed_source": "manual_script",
+  "messages": [
+    "Please open a support ticket on LINE-0043B \u2014 my SIM will not connect on that line.",
+    "Sorry, that is the wrong line \u2014 I meant our main phone instead.",
+    "Yes use LINE-0043 for the ticket. Account CUST-043, verification 1990-43-15."
+  ],
+  "extracted_from": "tasks/manual/test_T43.py"
+}

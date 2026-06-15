@@ -41,8 +41,8 @@ async def task_agent_t18(store_t18):
 def _msg(store_t18):
     meta = store_t18.seed_meta
     return (
-        f"We've had no service at home for ages — I'm in {meta['postcode']}. "
-        f"Can you check if there's a network outage and what's going on? "
+        f"We've had a long outage at home — postcode {meta['postcode']}. Is there still an outage "
+        f"in our area and what's going on? "
         f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
         f"line {meta['line_id']}."
     )
@@ -86,7 +86,19 @@ async def test_t18_full(s, store_t18):
     timeout_s=420.0,
 )
 async def test_t18_trace(s, store_t18):
-    (s.user_message(_msg(store_t18)).assert_tool_calls(_T18_TRACE, ordered=True, allow_extras=True))
+    meta = store_t18.seed_meta
+    (
+            s.user_message(_msg(store_t18))
+            .assert_tool_calls(
+                [
+                    m.tool_call("authenticate_customer"),
+                    m.tool_call("check_outage"),
+                ],
+                ordered=True,
+                allow_extras=True,
+            )
+            .assert_that(lambda: o.assert_audit_note_exists(store_t18))
+        )
 
 
 @ek.scenario(

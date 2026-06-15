@@ -1,0 +1,13 @@
+# Pick showcase slots after reviewing diagnostic_failures/*.txt
+# record_key matches diagnostic_records.json key
+
+exemplars:
+  field_mismatch:
+    record_key: null  # e.g. F02|T43|agent_spec_kit|F
+    title: Wrong line / field-level tool arg
+  nested_order:
+    record_key: null  # e.g. F05|T38|agent_spec_kit|F
+    title: Nested specialist tool order
+  conditional_object:
+    record_key: null  # e.g. F06|T23|agent_spec_kit|F
+    title: Conditional structured output

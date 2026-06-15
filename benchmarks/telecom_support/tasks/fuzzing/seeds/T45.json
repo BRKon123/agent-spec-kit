@@ -1,0 +1,11 @@
+{
+  "task_id": "T45",
+  "seed_source": "manual_script",
+  "messages": [
+    "What plan am I on? My line has not been working properly either. My account is CUST-045.",
+    "I do not have my verification code with me right now \u2014 can you just tell me what is on the account first?",
+    "Fine \u2014 authenticate me: customer CUST-045, verification 1990-45-15, line LINE-0045.",
+    "Now please check the line and tell me the plan name."
+  ],
+  "extracted_from": "tasks/manual/test_T45.py"
+}

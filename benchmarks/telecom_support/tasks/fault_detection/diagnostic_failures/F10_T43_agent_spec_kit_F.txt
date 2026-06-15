@@ -1,0 +1,50 @@
+╭──────────────────────── FAIL test_f10_t43_full [1/1] ────────────────────────╮
+│ Check: assert_output                                                         │
+│ Where: 1st assert_output after turn #4 (agentturn) (final assistant text for │
+│ that turn)                                                                   │
+│ Agent errors:                                                                │
+│ No problem. Please confirm the correct line_id for your main phone (e.g.,    │
+│ LINE-XXXX).                                                                  │
+│                                                                              │
+│ If you want me to check the status of that line, I’ll need to authenticate   │
+│ first. Please provide:                                                       │
+│ - customer_id                                                                │
+│ - verification_token                                                         │
+│                                                                              │
+│ Once authenticated, I’ll pull the line status for the corrected line.        │
+│ Summary: awaiting corrected main line_id and your credentials to proceed.    │
+│ Expected: llm_criteria_threshold: expected passed_count >= 2                 │
+│ Actual:                                                                      │
+│                                                                              │
+│ No problem. Please confirm the correct line_id for your main phone (e.g.,    │
+│ LINE-XXXX).                                                                  │
+│                                                                              │
+│ If you want me to check the status of that line, I’ll need to authenticate   │
+│ first. Please provide:                                                       │
+│ - customer_id                                                                │
+│ - verification_token                                                         │
+│                                                                              │
+│ Once authenticated, I’ll pull the line status for the corrected line.        │
+│ Summary: awaiting corrected main line_id and your credentials to proceed.    │
+│ No problem. Please confirm the correct line_id for your main phone (e.g.,    │
+│ LINE-XXXX).                                                                  │
+│                                                                              │
+│ If you want me to check the status of that line, I’ll need to authenticate   │
+│ first. Please provide:                                                       │
+│ - customer_id                                                                │
+│ - verification_token                                                         │
+│                                                                              │
+│ Once authenticated, I’ll pull the line status for the corrected line.        │
+│ Summary: awaiting corrected main line_id and your credentials to proceed.    │
+│ LLM criteria threshold failed: passed 1/2 (required 2).                      │
+│ Failed criteria:                                                             │
+│ - [0] criterion: Acknowledges the customer corrected which line needs the    │
+│ ticket                                                                       │
+│   rationale: The reply does not explicitly acknowledge that the customer     │
+│ corrected which line needs the ticket; it only asks to confirm the correct   │
+│ line_id.                                                                     │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: Please open a support ticket on LINE-0043B — my SIM will not   │
+│ │   connect ...           ...

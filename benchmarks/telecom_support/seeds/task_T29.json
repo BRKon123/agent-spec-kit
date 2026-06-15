@@ -13,7 +13,8 @@
     "roaming_issue": false,
     "fault_domain": "unknown",
     "plan_change_billing_error": false,
-    "line_id_2": "LINE-0029B"
+    "line_id_2": "LINE-0029B",
+    "decoy_line_id": "LINE-WRONG"
   },
   "customers": [
     {
@@ -46,6 +47,15 @@
       "line_id": "LINE-0029B",
       "customer_id": "CUST-029",
       "phone_number": "+4477009000292",
+      "plan_id": "PLAN-STD",
+      "sim_status": "active",
+      "roaming_enabled": 1,
+      "data_enabled": 1
+    },
+    {
+      "line_id": "LINE-WRONG",
+      "customer_id": "CUST-029",
+      "phone_number": "+4477009000299",
       "plan_id": "PLAN-STD",
       "sim_status": "active",
       "roaming_enabled": 1,

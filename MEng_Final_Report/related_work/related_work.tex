@@ -1,0 +1,109 @@
+\chapter{Related Work}
+\label{chap:related-work}
+
+\section{Existing Evaluation Libraries and Observability Tooling}
+\label{sec:existing_eval_libraries}
+
+Alongside academic benchmarks, several practical libraries have emerged for evaluating LLM applications during development. These tools are useful because they move evaluation closer to the developer workflow. Test cases can be rerun, prompts and models can be compared, and failures can be inspected more systematically than with ad hoc scripts. However, they also show that current tooling is still only partially suited to evaluating stateful, tool-using agents.
+
+\subsection{OpenAI Evals}
+
+OpenAI Evals is an open-source framework for evaluating LLMs and LLM systems \citep{openaiEvals}. It provides a general structure for defining datasets, running models on examples, and grading the resulting outputs. This is useful when developers want repeatable evaluation suites for comparing model versions or prompt changes. Evals can also use model-graded checks, where another LLM judges whether the output satisfies some rubric.
+
+The limitation is that OpenAI Evals is still mainly organised around examples and graders. This works well for many single-turn tasks, but is less natural for agent evaluations where the important behaviour may be distributed across several turns, tool calls, and state changes. It can be extended with custom logic, but the framework does not provide a particularly direct scenario-level language for asserting, for example, that a user-facing output, a sequence of tool calls, and the resulting application state are all correct together.
+
+\subsection{DeepEval and Ragas}
+
+DeepEval and Ragas provide more application-oriented evaluation abstractions. DeepEval presents LLM evaluation in a unit-testing style and ships ready-made metrics, including G-Eval \citep{liu2023geval}, alongside measures for RAG, conversations, safety, and agentic behaviour \citep{deepevalDocs}. Its tool correctness metric evaluates whether expected tools were called, with options to consider input parameters and tool outputs \citep{deepevalDocs}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figures/geval_instantiation_code_snippet.png}
+  \caption{G-Eval prompt instantiation using the DeepEval library: evaluation criteria and chain-of-thought instructions are composed into a judge prompt for scoring model outputs \citep{liu2023geval,deepevalDocs}.}
+  \label{fig:geval-prompt}
+\end{figure}
+
+Ragas was originally designed for RAG evaluation, decomposing quality into dimensions such as faithfulness, answer relevance, context precision, and context recall \citep{es2023ragas,ragasDocs}. More recent versions also include agent metrics such as tool call accuracy, tool call F1, and agent goal accuracy \citep{ragasDocs}. Agent goal accuracy is a binary multi-turn metric. An evaluator LLM reads the full interaction trace, infers the outcome the agent reached, and judges whether it matches the user's goal, either against a provided reference outcome or by inferring the goal from the conversation \citep{ragasDocs}.
+
+These libraries are valuable because they recognise that LLM systems should not only be judged by final-answer quality. However, their tool checks are still relatively metric-oriented. They are useful for comparing expected and actual tool calls, but they are less ergonomic when a developer wants to specify precise properties of a tool argument or a structured output. For example, checking that a particular tool argument contains the substring \texttt{urgent}, or that a nested structured output field satisfies a domain-specific predicate, is not usually a first-class assertion. It generally requires custom code, a custom metric, or reshaping the output into the format expected by the evaluator. This makes simple behavioural expectations feel heavier than ordinary software tests.
+
+\subsection{Promptfoo}
+
+Promptfoo is an open-source tool for evaluating and red-teaming LLM applications using declarative test cases \citep{promptfooDocs}. It supports prompt and model comparison, assertions, CI/CD workflows, caching, and multiple providers. It also includes deterministic assertions such as equality, substring containment, regex matching, JSON validation, and custom JavaScript or Python assertions \citep{promptfooDocs}. This makes it closer to traditional test-driven development than many purely metric-based evaluation frameworks.
+
+Promptfoo is therefore one of the more practical tools for developer-led LLM testing. However, its main abstraction is still the prompt/application test case and its assertions. More complex agent checks, especially those involving multi-turn traces, tool-call arguments, structured outputs, and stateful side effects, can become awkward unless the developer writes custom assertion logic. It provides a useful assertion vocabulary, but it is less focused on representing a full agent scenario as a single object with output checks, tool checks, and state checks expressed together.
+
+\subsection{Observability-Focused Tools}
+
+A related group of tools focuses on observability rather than evaluation alone. LangSmith provides tracing, evaluation, prompt testing, feedback collection, and production monitoring for LLM applications \citep{langsmithDocs}. Langfuse similarly provides open-source application tracing, prompt management, evaluation, user feedback, and monitoring for LLM systems \citep{langfuseDocs}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.68\textwidth]{figures/langfuse_example_trace.png}
+  \caption{Example Langfuse trace for a RAG-style QA request: nested observations record retrieval (embedding and vector-store lookup), prompt retrieval, and final generation, with per-step latency, token usage, inputs, outputs, and cost \citep{langfuseDocs}.}
+  \label{fig:langfuse-trace}
+\end{figure}
+
+These tools are important because agent failures are often hard to understand without seeing the full execution trace, including the prompts, model responses, tool calls, tool outputs, intermediate steps, latency, and cost.
+
+Observability tools are therefore highly complementary to evaluation libraries. They help developers inspect what happened during a run. However, observability does not by itself define what should have happened. A trace viewer can show that a tool was called, but the developer still needs a concise way to state what should have happened, such as argument constraints on a tool call or a required postcondition on external state.
+
+\subsection{Gaps in Existing Libraries}
+
+Existing libraries cover scoring, metrics, traces, and monitoring, but they leave important gaps for teams building domain-specific agents.
+
+\begin{itemize}
+    \item \textbf{Final-output evaluation hides agent failures.}
+    Benchmarks and LLM judges compare isolated inputs and replies \citep{liang2022helm,liu2023geval}, but that is not enough for tool-using agents.
+    \begin{itemize}
+        \item A plausible final answer can hide wrong tools, skipped steps, or invalid state, while a terse reply may still reflect a correct trajectory.
+        \item Failures often collapse to a single score, leaving the developer to reconstruct \emph{where} the trace went wrong.
+    \end{itemize}
+
+    \item \textbf{Benchmarks show the problem but do not supply reusable test infrastructure.}
+    Agent benchmarks have made trace- and state-aware evaluation visible \citep{yao2024taubench,trivedi2024appworld}.
+    \begin{itemize}
+        \item They are fixed leaderboards, not behavioural contracts a domain team can rerun on every change.
+        \item Developers need executable scenarios with explicit oracles, not only scores on benchmark-chosen tasks.
+    \end{itemize}
+
+    \item \textbf{Expectations are fragmented across files and hard for a team to read.}
+    Eval setup often spans datasets, graders, trace assertions, and runner config in separate places.
+    \begin{itemize}
+        \item Teammates must jump between files to see what is actually being tested.
+        \item For multi-turn agents, the natural unit is the conversation (message, agent turn, checks, then the next turn), but what is missing is one declarative script with dialogue and oracles after each turn, repeats included.
+    \end{itemize}
+
+    \item \textbf{Multi-surface checks are awkward to express as one coherent scenario.}
+    A single test may need output, tool, and state assertions together.
+    \begin{itemize}
+        \item A reply phrase, a tool argument, a forbidden call, and a final state check may all matter at once.
+        \item Most tooling supports each check in isolation, not the full episode as one readable test object.
+    \end{itemize}
+
+    \item \textbf{Failure reports lack the precision needed for fast iteration.}
+    Trace viewers show what happened, and metrics show pass or fail. Neither alone answers which expectation broke, on which turn, at which field. \emph{agent-spec-kit} keeps both the failing assertion and the episode trace in one view (Section~\ref{sec:execution-workflow}).
+    \begin{itemize}
+        \item The bug may sit in tool args, a missing tool, or state while the reply still sounds fine.
+        \item Without assertion-local reports (path, expected vs.\ actual, transcript context), the developer must reconstruct what failed by reading through long raw traces by hand.
+    \end{itemize}
+
+    \item \textbf{Exploratory coverage and regression preservation are not first-class.}
+    Scripted scenarios only cover paths the author anticipated, but dependable agents must survive dialogue they did not write by hand.
+    \begin{itemize}
+        \item Users vary in tone, disclosure, and pressure, so scripting every phrasing and persona does not scale.
+        \item Fuzzing and user simulation can surface failures on altered scripts or new customer styles, but most libraries treat those runs separately or leave them as hard-to-rerun traces.
+        \item When exploration finds a failure, teams still need to turn it into a version-controlled regression the suite runs on every change.
+    \end{itemize}
+\end{itemize}
+
+Taken together, what is missing is concise, scenario-style tooling that lets teams declare behaviour in one place, explore beyond fixed scripts, debug precisely when it fails, and preserve new failures as regressions.
+
+\section{Motivation for Agent-Spec-Kit}
+\label{sec:agent-spec-kit-motivation}
+
+Chapter~\ref{chap:background} argues that agent evaluation must go beyond final answers. Traces, tool use, environment state, and repeated runs all matter. Interactive benchmarks such as AppWorld, $\tau$-bench, and ToolSandbox show why in realistic settings \citep{trivedi2024appworld,yao2024taubench,lu2024toolsandbox}. Software-testing work complements them by showing how to find failures, simplify them, and preserve the result as a regression test \citep{claessen2000quickcheck,zeller2002simplifying}.
+
+As Section~\ref{sec:existing_eval_libraries} argued, existing tools still scatter dialogue, graders, and trace checks across separate files rather than one readable scenario script. They make it awkward to assert on replies, tool calls, and environment state in a single episode, expose pass or fail (or raw traces) rather than a mismatch report tied to the specific assertion that broke, and seldom offer user simulation or mutation fuzzing as first-class features, let alone a path from an exploratory failure to a saved regression scenario.
+
+\emph{agent-spec-kit} targets that combined gap. Each agent episode is a testable scenario with explicit checks on the final reply, tool calls, and environment state. When an assertion fails, the framework reports which expectation broke, where in the episode, and structured expected-versus-actual detail at that check (Section~\ref{sec:counterexamples} defines this as a \emph{Counterexample}). User simulation, mutation fuzzing, failure shrinking, and regression extraction extend the same model so discoveries from exploration can stay in the suite. The methodology chapter develops those workflows in full.

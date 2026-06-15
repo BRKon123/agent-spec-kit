@@ -1,0 +1,75 @@
+{
+  "family": "F10",
+  "task": "T43",
+  "scenario": "test_f10_t43_full",
+  "seed": "task_T43",
+  "witness_check": "assert_output",
+  "witness_where": "1st assert_output after turn #4 (agentturn) (final assistant text for\nthat turn)",
+  "witness_path": "",
+  "witness_expected": "llm_criteria_threshold: expected passed_count >= 2",
+  "witness_actual": "No problem. Please confirm the correct line_id for your main phone (e.g.,\nLINE-XXXX).\nIf you want me to check the status of that line, I\u2019ll need to authenticate\nfirst. Please provide:\n- customer_id\n- verification_token\nOnce authenticated, I\u2019ll pull the line status for the corrected line.\nSummary: awaiting corrected main line_id and your credentials to proceed.\nNo problem. Please confirm the correct line_id for your main phone (e.g.,\nLINE-XXXX).\nIf you want me to check the status of that line, I\u2019ll need to authenticate\nfirst. Please provide:\n- customer_id\n- verification_token\nOnce authenticated, I\u2019ll pull the line status for the corrected line.\nSummary: awaiting corrected main line_id and your credentials to proceed.\nLLM criteria threshold failed: passed 1/2 (required 2).\nFailed criteria:\n- [0] criterion: Acknowledges the customer corrected which line needs the\nticket\nrationale: The reply does not explicitly acknowledge that the customer\ncorrected which line needs the ticket; it only asks to confirm the correct\nline_id.",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [],
+  "final_output": "No problem. Please confirm the correct line_id for your main phone (e.g.,\nLINE-XXXX).\nIf you want me to check the status of that line, I\u2019ll need to authenticate\nfirst. Please provide:\n- customer_id\n- verification_token\nOnce authenticated, I\u2019ll pull the line status for the corrected line.\nSummary: awaiting corrected main line_id and your credentials to proceed.",
+  "store_snapshot": {
+    "seed": "task_T43",
+    "seed_meta": {
+      "task_id": "T43",
+      "customer_id": "CUST-043",
+      "line_id": "LINE-0043",
+      "verification_token": "1990-43-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "line_id_2": "LINE-0043B",
+      "seed_task": "task_T43"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-043",
+          "name": "Customer 43",
+          "dob_check_token": "1990-43-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0043",
+          "customer_id": "CUST-043",
+          "phone_number": "+447700900043",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        },
+        {
+          "line_id": "LINE-0043B",
+          "customer_id": "CUST-043",
+          "phone_number": "+4477009000432",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

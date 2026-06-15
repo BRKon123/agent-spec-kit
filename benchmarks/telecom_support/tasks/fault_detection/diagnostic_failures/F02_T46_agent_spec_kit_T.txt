@@ -1,0 +1,128 @@
+╭─────────────────────── FAIL test_f02_t46_trace [1/1] ────────────────────────╮
+│ Check: assert_tool_calls                                                     │
+│ Where: 1st assert_tool_calls after turn #6 (agentturn) (tool call list for   │
+│ that turn)                                                                   │
+│ Path: $[1].args.step                                                         │
+│ Agent errors:                                                                │
+│ {'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-046',        │
+│ 'verification_token': '1990-46-15'}, 'result': '{"ok": true, "customer_id":  │
+│ "CUST-046"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':    │
+│ 'call_GqZzlUkP1yQDiAchgo9CFLJv'}}                                            │
+│ {'name': 'send_troubleshooting_step', 'args': {'line_id': 'LINE-0046',       │
+│ 'step': 'Restart your device, then toggle airplane mode off and back on, and │
+│ test mobile data on LINE-0046.'}, 'result': '{"ok": true, "line_id":         │
+│ "LINE-0046", "step": "Restart your device, then toggle airplane mode off and │
+│ back on, and test mobile data on LINE-0046."}', 'error': None, 'children':   │
+│ [], 'metadata': {'tool_call_id': 'call_8cu2ZX3gjqRlK7eVS4s6cPyr'}}           │
+│ {'name': 'create_support_ticket', 'args': {'customer_id': 'CUST-046',        │
+│ 'line_id': 'LINE-0046', 'reason': 'Diagnostic ticket for LINE-0046: mobile   │
+│ data connectivity issue; initial troubleshooting performed per user request  │
+│ (device restart and airplane mode toggle) to document findings.',            │
+│ 'priority': 'normal'}, 'result': '{"ok": true, "ticket_id": "TCK-00001",     │
+│ "status": "open"}', 'error': None, 'children': [], 'metadata':               │
+│ {'tool_call_id': 'call_XmzxjyAUe1dJZM9zpyAux2sR'}}                           │
+│ Expected: extra_key: expected no extra keys                                  │
+│ Actual:                                                                      │
+│                                                                              │
+│ [                                                                            │
+│   {                                                                          │
+│     "name": "authenticate_customer",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-046",                                             │
+│       "verification_token": "1990-46-15"                                     │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "customer_id": "CUST-046"                                              │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_GqZzlUkP1yQDiAchgo9CFLJv"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "send_troubleshooting_step",                                     │
+│     "args": {                                                                │
+│       "line_id": "LINE-0046",                                                │
+│       "step": "Restart your device, then toggle airplane mode off and back   │
+│ on, and test mobile data on LINE-0046."                                      │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "line_id": "LINE-0046",                                                │
+│       "step": "Restart your device, then toggle airplane mode off and back   │
+│ on, and test mobile data on LINE-0046."                                      │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_8cu2ZX3gjqRlK7eVS4s6cPyr"                        │
+│     }                                                                        │
+│   },                                                                         │
+│   {                                                                          │
+│     "name": "create_support_ticket",                                         │
+│     "args": {                                                                │
+│       "customer_id": "CUST-046",                                             │
+│       "line_id": "LINE-0046",                                                │
+│       "reason": "Diagnostic ticket for LINE-0046: mobile data connectivity   │
+│ issue; initial troubleshooting performed per user request (device restart    │
+│ and airplane mode toggle) to document findings.",                            │
+│       "priority": "normal"                                                   │
+│     },                                                                       │
+│     "result": {                                                              │
+│       "ok": true,                                                            │
+│       "ticket_id": "TCK-00001",                                              │
+│       "status": "open"                                                       │
+│     },                                                                       │
+│     "error": null,                                                           │
+│     "children": [],                                                          │
+│     "metadata": {                                                            │
+│       "tool_call_id": "call_XmzxjyAUe1dJZM9zpyAux2sR"                        │
+│     }                                                                        │
+│   }                                                                          │
+│ ]                                                                            │
+│ could not match expected element at index 1 while preserving order           │
+│ searched actual positions 1 through 2                                        │
+│ closest underlying mismatch was (at $[1].args.step): unexpected key 'step'   │
+│ unexpected key 'step'                                                        │
+│ (+1 more matcher error(s))                                                   │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: Please open a support ticket on LINE-WRONG — my work phone     │
+│ │   keeps drop...                                                            │
+│ ├── AgentTurn: I can help open that ticket for LINE-WRONG. I just need to    │
+│ │   verify you...                                                            │
+│ ├── UserTurn: Sorry, that is my old line — I meant my current work phone     │
+│ │   instead.                                                                 │
+│ ├── AgentTurn: Thanks for the update. To help with your current work line,   │
+│ │   I need to...                                                             │
+│ ├── UserTurn: Yes use LINE-0046. Account CUST-046, verification 1990-46-15   │
+│ │   — go ahe...                                                              │
+│ └── AgentTurn: Ticket created successfully.                                  │
+│                                                                              │
+│     - Ticket ID: TCK-00001                                                   │
+│     - Customer: CUST...                                                      │
+│     ├── authenticate_customer                                                │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "customer_id": "CUST-046"                                      │
+│     │       }                                                                │
+│     ├── send_troubleshooting_step                                            │
+│     │     result:                                                            │
+│     │       {                                                                │
+│     │         "ok": true,                                                    │
+│     │         "line_id": "LINE-0046",                                        │
+│     │         "step": "Restart your device, then toggle airplane mode off    │
+│     │   and back on, and test mobile data on LINE-0046."                     │
+│     │       }                                                                │
+│     └── create_support_ticket                                                │
+│           result:                                                            │
+│             {                                                                │
+│               "ok": true,                                                    │
+│               "ticket_id": "TCK-00001",                                      │
+│               "status": "open"                                               │
+│             }                                                                │
+╰──────────────────────────────────────────────────────────────────────────────╯

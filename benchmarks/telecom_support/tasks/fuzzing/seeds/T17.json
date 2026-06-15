@@ -1,0 +1,8 @@
+{
+  "task_id": "T17",
+  "seed_source": "manual_script",
+  "messages": [
+    "My service dropped out for just a few minutes yesterday at postcode E1 6AN \u2014 am I owed any compensation? Account CUST-017, verification token 1990-17-15, line LINE-0017."
+  ],
+  "extracted_from": "tasks/manual/test_T17.py"
+}

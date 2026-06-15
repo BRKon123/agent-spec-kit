@@ -1,0 +1,97 @@
+{
+  "family": "F07",
+  "task": "T30",
+  "scenario": "test_f07_t30_full",
+  "seed": "task_T30",
+  "witness_check": "forbid_tool_calls",
+  "witness_where": "1st forbid_tool_calls after turn #2 (agentturn) (forbidden tool call\npatterns)",
+  "witness_path": "$[1]",
+  "witness_expected": "forbidden_tool_call: expected no 'order_replacement_sim'",
+  "witness_actual": "[\n{\n\"name\": \"authenticate_customer\",\n\"args\": {\n\"customer_id\": \"CUST-030\",\n\"verification_token\": \"1990-30-15\"\n},\n\"result\": {\n\"ok\": true,\n\"customer_id\": \"CUST-030\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_7hAmxoo4gdYGGiEI1ktmwQlE\"\n}\n},\n{\n\"name\": \"order_replacement_sim\",\n\"args\": {\n\"line_id\": \"LINE-WRONG\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"result\": {\n\"error\": \"unknown_line_id\"\n},\n\"error\": null,\n\"children\": [],\n\"metadata\": {}\n}\n]\n[\n{\n\"name\": \"authenticate_customer\",\n\"args\": {\n\"customer_id\": \"CUST-030\",\n\"verification_token\": \"1990-30-15\"\n},\n\"result\": \"{\\\"ok\\\": true, \\\"customer_id\\\": \\\"CUST-030\\\"}\",\n\"error\": null,\n\"children\": [],\n\"metadata\": {\n\"tool_call_id\": \"call_7hAmxoo4gdYGGiEI1ktmwQlE\"\n}\n},\n{\n\"name\": \"order_replacement_sim\",\n\"args\": {\n\"line_id\": \"LINE-WRONG\",\n\"sim_type\": \"physical\",\n\"address_id\": \"ADDR-DEFAULT\"\n},\n\"result\": \"{\\\"error\\\": \\\"unknown_line_id\\\"}\",\n\"error\": null,\n\"children\": [],\n\"metadata\": {}\n}\n]\nforbidden tool call 'order_replacement_sim' found at index 1 (actual tool\n'order_replacement_sim')",
+  "witness_state_message": "",
+  "turns": [],
+  "final_tools": [
+    {
+      "name": "authenticate_customer",
+      "args": {
+        "customer_id": "CUST-030",
+        "verification_token": "1990-30-15"
+      },
+      "result": {
+        "ok": true,
+        "customer_id": "CUST-030"
+      },
+      "error": null,
+      "children": [],
+      "metadata": {
+        "tool_call_id": "call_7hAmxoo4gdYGGiEI1ktmwQlE"
+      }
+    },
+    {
+      "name": "order_replacement_sim",
+      "args": {
+        "line_id": "LINE-WRONG",
+        "sim_type": "physical",
+        "address_id": "ADDR-DEFAULT"
+      },
+      "result": {
+        "error": "unknown_line_id"
+      },
+      "error": null,
+      "children": [],
+      "metadata": {}
+    }
+  ],
+  "final_output": "{'name': 'authenticate_customer', 'args': {'customer_id': 'CUST-030',\n'verification_token': '1990-30-15'}, 'result': '{\"ok\": true, \"customer_id\":\n\"CUST-030\"}', 'error': None, 'children': [], 'metadata': {'tool_call_id':\n'call_7hAmxoo4gdYGGiEI1ktmwQlE'}}\n{'name': 'order_replacement_sim', 'args': {'line_id': 'LINE-WRONG',\n'sim_type': 'physical', 'address_id': 'ADDR-DEFAULT'}, 'result': '{\"error\":\n\"unknown_line_id\"}', 'error': None, 'children': [], 'metadata': {}}",
+  "store_snapshot": {
+    "seed": "task_T30",
+    "seed_meta": {
+      "task_id": "T30",
+      "customer_id": "CUST-030",
+      "line_id": "LINE-0030",
+      "verification_token": "1990-30-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "address_unverified": true,
+      "seed_task": "task_T30"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-030",
+          "name": "Customer 30",
+          "dob_check_token": "1990-30-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0030",
+          "customer_id": "CUST-030",
+          "phone_number": "+447700900030",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

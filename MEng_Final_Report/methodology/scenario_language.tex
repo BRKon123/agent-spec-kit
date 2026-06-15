@@ -1,0 +1,106 @@
+\section{The Scenario Language for Scripting Conversations}
+\label{sec:scenario-language}
+
+The central interface of \emph{agent-spec-kit} is a scenario language implemented in Python on a \texttt{Scenario} object, with steps chained in call order. A scenario file should read top to bottom like a transcript with expectations woven in. Seed the environment state, send a user line, check tools and reply, optionally change the environment, send another line, and check again. That ordering matches how engineers describe multi-turn bugs in practice and avoids splitting conversation logic in YAML while assertions live elsewhere, which Chapter~\ref{chap:related-work} identifies as a common friction point in some libraries.
+
+\subsection{Scripting Metaphor and Developer Ergonomics}
+
+Scenarios are plain \texttt{async def test\_*} functions decorated with \texttt{@scenario}, with dependencies injected through \texttt{@fixture} in the same style as pytest. Steps such as \texttt{user\_message} and \texttt{assert\_tool\_calls} are chained on \texttt{s} and executed when \texttt{materialise()} runs (the runner usually does this implicitly after the scenario body returns). Queuing before execution lets the generative layer record a scenario once and replay it with different generated user lines without rewriting the assertion block.
+
+Because the language is Python, conversation and oracles stay in one module that refactors with the rest of the test suite. The agent under test does not need to import the framework. Only the test file declares the behavioural contract. That lowers adoption cost compared with frameworks that require wrapping production agents in heavyweight abstractions.
+
+\subsection{Multi-Turn Scripted Conversations}
+
+Listing~\ref{lst:multiply-dialog-scripted} shows a minimal two-turn script. After each user message the scenario requires a specific tool call and a reply that contains the expected product.
+
+\begin{lstlisting}[language=Python,caption={Two-turn scripted scenario with per-turn tool and output checks.},label=lst:multiply-dialog-scripted]
+(
+    s.user_message("What is 5 x 6?")
+    .assert_tool_calls(
+        [m.tool_call("multiply_integers", args={"a": 5, "b": 6})],
+        ordered=True,
+        allow_extras=True,
+    )
+    .assert_output(m.contains("30"))
+    .user_message("What is 9 x 8?")
+    .assert_tool_calls(
+        [m.tool_call("multiply_integers", args={"a": 9, "b": 8})],
+        ordered=True,
+        allow_extras=True,
+    )
+    .assert_output(m.contains("72"))
+)
+\end{lstlisting}
+
+Each \texttt{user\_message} triggers one agent turn and appends to the transcript. By default, \texttt{assert\_output} and \texttt{assert\_tool\_calls} apply to the most recent agent turn (\texttt{turn="last"}). For dialogue-wide checks, set \texttt{turn="up\_to\_now"}. \texttt{actor=} selects whether to apply checks to agent or user turns. Mixing tool and output assertions after the same user line is deliberate because many agent failures are visible only in the trace even when the final sentence sounds acceptable (Chapter~\ref{chap:background}).
+
+\subsection{Environment Setup and Mid-Scenario Actions}
+
+Scenarios also describe world state, not only dialogue. Table~\ref{tab:env-step-types} contrasts three mechanisms.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{p{0.18\textwidth}p{0.22\textwidth}p{0.14\textwidth}X}
+\toprule
+\textbf{Mechanism} & \textbf{When} & \textbf{Pass/fail?} & \textbf{Role} \\
+\midrule
+\texttt{@fixture} & Before scenario body & -- &
+Inject isolated stores, agents, flags, then \texttt{yield} teardown. \\
+\texttt{s.action(fn)} & Any queued step & No &
+Side effect on environment. Receives fixture kwargs. \\
+\texttt{s.assert\_that(fn)} & Any queued step & Yes &
+Same call pattern as \texttt{action}. Failure yields a counterexample. \\
+\bottomrule
+\end{tabularx}
+\caption{Fixtures, actions, and environment assertions in the scenario script.}
+\label{tab:env-step-types}
+\end{table}
+
+Listing~\ref{lst:action-assert} illustrates \texttt{action} followed by \texttt{assert\_that}. The test simulates an external change (a ticket inserted into a store) and then checks that the store satisfies a postcondition.
+
+\begin{lstlisting}[language=Python,caption={Mid-scenario environment mutation and state check.},label=lst:action-assert]
+def _apply_state() -> None:
+    insert_ticket(ticket_store, line_id=meta()["line_id"])
+
+(
+    s.user_message("check")
+    .action(_apply_state)
+    .assert_that(lambda: assert_ticket_exists(ticket_store))
+)
+\end{lstlisting}
+
+That pattern supports offline user effects (a device reboot, a payment posted outside the chat) without building a full user simulator, and it supports ordering constraints such as verifying that the agent did not mutate state before authentication.
+
+Dual-control evaluation, where both agent and user can change shared state through tools, appears in $\tau^2$-bench~\citep{barres2025tau2}. The scenario language can express the same pattern with a \texttt{user\_fixture} with its own tools and \texttt{simulate\_conversation}, scripted \texttt{action} steps for deterministic user-side effects, and \texttt{assert\_that} on a shared store after both parties have acted. In $\tau$-bench the simulated user cannot mutate shared state through tools, so interaction stays single-control~\citep{yao2024taubench}. Chapter~\ref{chap:evaluation} uses a single-control telecom setup, but dual-control scenarios can be written with these fixtures and steps today.
+
+\subsection{Registration, Discovery, and Repeats}
+
+\texttt{@scenario} binds \texttt{agent\_fixture} and optionally \texttt{user\_fixture}, and sets \texttt{repeats}, \texttt{tags}, and timeouts. Discovery imports \texttt{test\_*.py} and \texttt{fixtures.py} recursively, registering definitions in global registries before execution.
+
+\texttt{repeats=N} schedules \texttt{N} independent jobs for the same case, useful when the same scenario may pass or fail on different runs because the model is not deterministic. Run summaries report how many of those jobs passed.
+
+\subsection{Parametrised Fixtures}
+
+When the same conversation script should run against several LLM backends, seeds, or configuration tuples, duplicating the scenario body is wasteful and hard to maintain. \texttt{@parametrize} on a fixture (or on \texttt{@scenario}) lists the varying values once, and the framework then runs one job per value, each with its own row in run summaries and the Compare UI.
+
+Listing~\ref{lst:parametrize-fixture} shows the idea. The scenario body is written once, and only the fixture varies the model passed into the wrapped graph. The framework runs that scenario once per listed value.
+
+\begin{lstlisting}[language=Python,caption={Parametrised agent fixture: one scenario, multiple model cases.},label=lst:parametrize-fixture]
+_LLM_MODEL_CASES = (
+    ek.case("gpt-4.1-nano-2025-04-14", id="gpt41nano"),
+    ek.case("gpt-5-nano", id="gpt5nano"),
+)
+
+@ek.fixture
+@ek.parametrize("llm_model", _LLM_MODEL_CASES)
+async def adapted_agent(llm_model: str):
+    return wrap_langchain_agent(build_tutor_graph(llm_model), ...)
+
+@ek.scenario(agent_fixture="adapted_agent")
+async def test_multiply_dialog(s):
+    # @parametrize on the fixture runs this scenario once per llm_model case.
+    ...
+\end{lstlisting}
+
+Parametrisation is orthogonal to \texttt{repeats}. A parametrised case can still set \texttt{repeats=3} to estimate pass rate for that model, whereas repeats without parametrisation re-runs the identical configuration. Section~\ref{sec:execution-workflow} describes how runs and experiments surface those rows when comparing agent updates across models or prompts.

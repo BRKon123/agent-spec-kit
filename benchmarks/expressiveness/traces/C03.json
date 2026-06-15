@@ -1,0 +1,11 @@
+{
+  "output": "You appear eligible for a preview refund of $12.50; nothing was posted.",
+  "tools": [
+    {"name": "authenticate_customer", "args": {}, "result": "ok"},
+    {
+      "name": "run_billing_policy_specialist",
+      "args": {},
+      "result": {"eligible": true, "amount": 12.5, "currency": "USD"}
+    }
+  ]
+}

@@ -41,9 +41,9 @@ async def task_agent_t07(store_t07):
 def _msg(store_t07):
     meta = store_t07.seed_meta
     return (
-        f"I've got zero signal — can't call or use mobile data. Can you run a line diagnostic on "
-        f"{meta['line_id']} straight away? "
-        f"Account {meta['customer_id']}, verification token {meta['verification_token']}."
+        f"I've got zero signal on my phone — what's going on with my line? "
+        f"Account {meta['customer_id']}, verification token {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
 

@@ -1,0 +1,19 @@
+{
+  "output": "Diagnostics show high severity; I recommend opening a ticket.",
+  "tools": [
+    {"name": "authenticate_customer", "args": {"customer_id": "CUST-001"}, "result": "ok"},
+    {
+      "name": "run_network_diagnostics_specialist",
+      "args": {"query": "connectivity"},
+      "result": {
+        "severity": "high",
+        "recommended_action": "create_ticket",
+        "escalation_reason": "signal anomaly"
+      },
+      "children": [
+        {"name": "pull_network_events", "args": {}, "result": []},
+        {"name": "score_signal_anomaly", "args": {}, "result": {"score": 0.9}}
+      ]
+    }
+  ]
+}

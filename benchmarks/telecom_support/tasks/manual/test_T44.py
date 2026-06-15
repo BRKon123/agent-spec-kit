@@ -13,6 +13,7 @@ import agent_spec_kit as ek
 import agent_spec_kit.match as m
 
 from tasks.specs import oracles as o
+from tasks.specs import trace_oracles as to
 
 import shutil
 import tempfile
@@ -41,47 +42,45 @@ async def task_agent_t44(store_t44):
 def _msg1(store_t44):
     meta = store_t44.seed_meta
     return (
-        f"My mobile data still will not work and I need this sorted."
-        f" Account {meta['customer_id']}, verification token {meta['verification_token']}, "
-        f"line {meta['line_id']}. Please authenticate and check the line only — do not send "
-        f"restart or troubleshooting steps yet."
+        f"My mobile data still does not work and I need this sorted. "
+        f"Account {meta['customer_id']}, verification {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
 
 def _msg2(store_t44):
     meta = store_t44.seed_meta
     return (
-        f"Actually I have not restarted yet — I am waiting for an important call. "
-        f"You already verified me above. Please send the official device restart step for "
-        f"{meta['line_id']} — postcode {meta.get('postcode', 'E1 6AN')}."
+        "I toggled airplane mode earlier, by the way — not sure that helped. "
+        f"{meta['customer_id']}, {meta['verification_token']}, line {meta['line_id']}."
     )
 
 
-def _msg3(_store_t44):
+def _msg3(store_t44):
+    meta = store_t44.seed_meta
     return (
-        "I cannot restart right now. Please do not open a ticket yet — just tell me the step "
-        "for when I am off the call."
+        "Actually I have not restarted yet — I am waiting on an important call. "
+        f"What should I try next? {meta['customer_id']}, {meta['verification_token']}, "
+        f"line {meta['line_id']}."
     )
 
 
-_T44_TRACE = [m.tool_call("send_troubleshooting_step")]
+def _msg4(store_t44):
+    meta = store_t44.seed_meta
+    return (
+        "Can you send me the next troubleshooting step only — no ticket or escalation yet. "
+        f"{meta['customer_id']}, {meta['verification_token']}, line {meta['line_id']}."
+    )
 
-_T44_OUTPUT = m.one_of(
-    m.contains("restart"),
-    m.contains("power cycle"),
-    m.contains("troubleshoot"),
-    m.llm_criteria(
-        criteria=[
-            "Acknowledges the customer had not restarted yet or gives a concrete next step",
-        ],
-        threshold=1,
-        model="openai:gpt-5-nano",
-    ),
+
+_T44_OUTPUT = m.llm_criteria(
+    criteria=[
+        "Acknowledges the customer had not completed a restart when they said so earlier",
+        "Gives a concrete troubleshooting or device-restart step to perform next",
+    ],
+    threshold=1,
+    model="openai:gpt-5-nano",
 )
-
-
-def _dialogue_through_contradiction(s, store_t44):
-    return s.user_message(_msg1(store_t44)).user_message(_msg2(store_t44))
 
 
 @ek.scenario(
@@ -92,9 +91,12 @@ def _dialogue_through_contradiction(s, store_t44):
 )
 async def test_t44_full(s, store_t44):
     (
-        _dialogue_through_contradiction(s, store_t44)
-        .assert_tool_calls(_T44_TRACE, ordered=True, allow_extras=True)
+        s.user_message(_msg1(store_t44))
+        .user_message(_msg2(store_t44))
         .user_message(_msg3(store_t44))
+        .assert_tool_calls([m.tool_call("send_troubleshooting_step")], ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.PREMATURE_TICKET)
+        .user_message(_msg4(store_t44))
         .assert_that(lambda: o.assert_no_tickets(store_t44))
         .assert_output(_T44_OUTPUT)
     )
@@ -108,9 +110,12 @@ async def test_t44_full(s, store_t44):
 )
 async def test_t44_trace(s, store_t44):
     (
-        _dialogue_through_contradiction(s, store_t44)
-        .assert_tool_calls(_T44_TRACE, ordered=True, allow_extras=True)
+        s.user_message(_msg1(store_t44))
+        .user_message(_msg2(store_t44))
         .user_message(_msg3(store_t44))
+        .assert_tool_calls([m.tool_call("send_troubleshooting_step")], ordered=True, allow_extras=True)
+        .forbid_tool_calls(to.PREMATURE_TICKET)
+        .user_message(_msg4(store_t44))
     )
 
 
@@ -122,8 +127,10 @@ async def test_t44_trace(s, store_t44):
 )
 async def test_t44_state(s, store_t44):
     (
-        _dialogue_through_contradiction(s, store_t44)
+        s.user_message(_msg1(store_t44))
+        .user_message(_msg2(store_t44))
         .user_message(_msg3(store_t44))
+        .user_message(_msg4(store_t44))
         .assert_that(lambda: o.assert_no_tickets(store_t44))
     )
 
@@ -136,7 +143,9 @@ async def test_t44_state(s, store_t44):
 )
 async def test_t44_output(s, store_t44):
     (
-        _dialogue_through_contradiction(s, store_t44)
-        .assert_output(_T44_OUTPUT)
+        s.user_message(_msg1(store_t44))
+        .user_message(_msg2(store_t44))
         .user_message(_msg3(store_t44))
+        .user_message(_msg4(store_t44))
+        .assert_output(_T44_OUTPUT)
     )

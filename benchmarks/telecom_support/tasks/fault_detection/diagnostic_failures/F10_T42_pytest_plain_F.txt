@@ -1,0 +1,1 @@
+AssertionError: expected zero tickets, found 1

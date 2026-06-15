@@ -1,0 +1,65 @@
+{
+  "family": "F04",
+  "task": "T49",
+  "scenario": "test_f04_t49_full",
+  "seed": "task_T49",
+  "witness_check": "assert_that",
+  "witness_where": "1st assert_that after turn #4 (agentturn) (environment / fixture\ncheck)",
+  "witness_path": "",
+  "witness_expected": "assert_that failed: expected no\nget_customer_profile/get_plan_details/get_line_status before auth",
+  "witness_actual": "No structured value compared (fixture/env assertion only \u2014 see message\nabove).",
+  "witness_state_message": "assert_that failed: expected no\nget_customer_profile/get_plan_details/get_line_status before auth",
+  "turns": [],
+  "final_tools": [],
+  "final_output": "No structured value compared (fixture/env assertion only \u2014 see message\nabove).",
+  "store_snapshot": {
+    "seed": "task_T49",
+    "seed_meta": {
+      "task_id": "T49",
+      "customer_id": "CUST-049",
+      "line_id": "LINE-0049",
+      "verification_token": "1990-49-15",
+      "postcode": "E1 6AN",
+      "credit_eligible": false,
+      "duplicate_charge": false,
+      "short_outage": false,
+      "credit_amount": 15.0,
+      "network_outage_active": false,
+      "roaming_issue": false,
+      "fault_domain": "unknown",
+      "plan_change_billing_error": false,
+      "seed_task": "task_T49"
+    },
+    "authenticated_customer_id": null,
+    "fault_first_line_id": null,
+    "profile_read_before_auth": false,
+    "fault_network_events_pulled": false,
+    "tables": {
+      "customers": [
+        {
+          "customer_id": "CUST-049",
+          "name": "Customer 49",
+          "dob_check_token": "1990-49-15",
+          "account_status": "active"
+        }
+      ],
+      "lines": [
+        {
+          "line_id": "LINE-0049",
+          "customer_id": "CUST-049",
+          "phone_number": "+447700900049",
+          "plan_id": "PLAN-STD",
+          "sim_status": "active",
+          "roaming_enabled": 1,
+          "data_enabled": 1
+        }
+      ],
+      "tickets": [],
+      "credits": [],
+      "sim_orders": [],
+      "appointments": [],
+      "audit_log": []
+    },
+    "_note": "seed-only fallback; re-run fault detection with TELCO_STORE_SNAPSHOT_DIR for full state"
+  }
+}

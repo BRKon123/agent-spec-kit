@@ -1,0 +1,15 @@
+{
+  "output": "Pulled network events and scored anomaly before summarizing.",
+  "tools": [
+    {"name": "authenticate_customer", "args": {}, "result": "ok"},
+    {
+      "name": "run_network_diagnostics_specialist",
+      "args": {"query": "latency"},
+      "result": {"severity": "medium", "recommended_action": "monitor"},
+      "children": [
+        {"name": "pull_network_events", "args": {}, "result": []},
+        {"name": "score_signal_anomaly", "args": {}, "result": {"score": 0.55}}
+      ]
+    }
+  ]
+}

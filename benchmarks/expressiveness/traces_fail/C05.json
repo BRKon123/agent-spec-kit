@@ -1,0 +1,19 @@
+{
+  "output": "There is a local outage affecting your area; engineers are working on it.",
+  "tools": [
+    {
+      "name": "get_outage_status",
+      "args": {
+        "line_id": "LINE-001"
+      },
+      "result": {
+        "active": true
+      }
+    },
+    {
+      "name": "authenticate_customer",
+      "args": {},
+      "result": "ok"
+    }
+  ]
+}

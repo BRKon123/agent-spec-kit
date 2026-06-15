@@ -1,0 +1,46 @@
+╭─────────────────────── FAIL test_f02_t29_state [1/1] ────────────────────────╮
+│ Check: assert_that                                                           │
+│ Where: 1st assert_that after turn #6 (agentturn) (environment / fixture      │
+│ check)                                                                       │
+│ Agent errors:                                                                │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│ Expected: assert_that failed: expected no sim order on line 'LINE-WRONG',    │
+│ found 1                                                                      │
+│ Actual:                                                                      │
+│                                                                              │
+│ No structured value compared (fixture/env assertion only — see message       │
+│ above).                                                                      │
+│                                                                              │
+│ ────────────────────────────────────────                                     │
+│ Event trace                                                                  │
+│ ├── UserTurn: Hi — I need a replacement SIM. Pretty sure it's for line       │
+│ │   LINE-WRONG o...                                                          │
+│ ├── AgentTurn: Thanks. I can help with a replacement SIM for your line.      │
+│ │                                                                            │
+│ │   To proceed,...                                                           │
+│ ├── UserTurn: Sorry, wrong line — it's LINE-0029. Account CUST-029,          │
+│ │   verification to...                                                       │
+│ ├── AgentTurn: Authentication successful for CUST-029.                       │
+│ │                                                                            │
+│ │   What I did:                                                              │
+│ │   - Placed a repla...                                                      │
+│ │   ├── authenticate_customer                                                │
+│ │   │     result:                                                            │
+│ │   │       {                                                                │
+│ │   │         "ok": true,                                                    │
+│ │   │         "customer_id": "CUST-029"                                      │
+│ │   │       }                                                                │
+│ │   └── order_replacement_sim                                                │
+│ │         result:                                                            │
+│ │           {                                                                │
+│ │             "ok": true,                                                    │
+│ │             "order_id": "SIM-00001",                                       │
+│ │             "line_id": "LINE-WRONG",                                       │
+│ │             "sim_type": "physical",                                        │
+│ │             "address_id": "ADDR-DEFAULT"                                   │
+│ │           }                                                                │
+│ ├── UserTurn: Thanks — go ahead with that order.                             │
+│ └── AgentTurn: I can place the SIM replacement order. To proceed, I need     │
+│     to authenti...                                                           │
+╰──────────────────────────────────────────────────────────────────────────────╯

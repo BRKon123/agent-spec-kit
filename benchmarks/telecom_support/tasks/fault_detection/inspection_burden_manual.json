@@ -1,0 +1,737 @@
+{
+  "F01|T44|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F01|T44|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F01|T44|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F01|T44|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F01|T44|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F01|T44|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T29|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F02|T29|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T29|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T29|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T29|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T29|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T43|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F02|T43|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T43|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T43|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T43|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T43|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T46|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F02|T46|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T46|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T46|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T46|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F02|T46|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T17|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F03|T17|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T17|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T17|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T17|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T17|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T27|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F03|T27|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T27|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T27|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T27|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F03|T27|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T45|agent_spec_kit|F": {
+    "units": 3,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F04|T45|pytest_plain|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T45|langsmith|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T45|pydantic_evals|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T45|promptfoo|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T45|braintrust|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T49|agent_spec_kit|F": {
+    "units": 3,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F04|T49|pytest_plain|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T49|langsmith|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T49|pydantic_evals|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T49|promptfoo|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T49|braintrust|F": {
+    "units": 3,
+    "baseline_units": 3,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T50|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F04|T50|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T50|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T50|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T50|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F04|T50|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F05|T38|agent_spec_kit|F": {
+    "units": 2,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F05|T38|pytest_plain|F": {
+    "units": 38,
+    "baseline_units": 2,
+    "ratio": "19\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F05|T38|langsmith|F": {
+    "units": 38,
+    "baseline_units": 2,
+    "ratio": "19\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F05|T38|pydantic_evals|F": {
+    "units": 38,
+    "baseline_units": 2,
+    "ratio": "19\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F05|T38|promptfoo|F": {
+    "units": 38,
+    "baseline_units": 2,
+    "ratio": "19\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F05|T38|braintrust|F": {
+    "units": 38,
+    "baseline_units": 2,
+    "ratio": "19\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T29|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F07|T29|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T29|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T29|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T29|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T29|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T30|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F07|T30|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T30|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T30|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T30|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T30|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T42|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F07|T42|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T42|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T42|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T42|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T42|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T43|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F07|T43|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T43|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T43|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T43|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F07|T43|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F08|T21|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F08|T21|pytest_plain|F": {
+    "units": 10,
+    "baseline_units": 1,
+    "ratio": "10\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F08|T21|langsmith|F": {
+    "units": 10,
+    "baseline_units": 1,
+    "ratio": "10\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F08|T21|pydantic_evals|F": {
+    "units": 10,
+    "baseline_units": 1,
+    "ratio": "10\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F08|T21|promptfoo|F": {
+    "units": 10,
+    "baseline_units": 1,
+    "ratio": "10\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F08|T21|braintrust|F": {
+    "units": 10,
+    "baseline_units": 1,
+    "ratio": "10\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T04|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F09|T04|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T04|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T04|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T04|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T04|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T19|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F09|T19|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T19|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T19|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T19|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F09|T19|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T29|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F10|T29|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T29|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T29|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T29|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T29|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T42|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F10|T42|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T42|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T42|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T42|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T42|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T43|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F10|T43|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T43|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T43|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T43|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T43|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T44|agent_spec_kit|F": {
+    "units": 1,
+    "role": "baseline",
+    "note": "agent_spec_kit panel witness"
+  },
+  "F10|T44|pytest_plain|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T44|langsmith|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T44|pydantic_evals|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T44|promptfoo|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  },
+  "F10|T44|braintrust|F": {
+    "units": 1,
+    "baseline_units": 1,
+    "ratio": "1\u00d7",
+    "note": "hand-counted from failure box"
+  }
+}

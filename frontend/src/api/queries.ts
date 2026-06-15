@@ -6,7 +6,7 @@ import type {
   FuzzTrialRunRow,
   RepeatTrace,
   RunDetail,
-  RunListItem,
+  RunListPage,
   ScenarioRow,
 } from "@/lib/types";
 import { fetchJson } from "./http";
@@ -43,10 +43,10 @@ export function useRuns(params: {
   const qs = new URLSearchParams();
   if (params.experiment_id) qs.set("experiment_id", params.experiment_id);
   if (params.status) qs.set("status", params.status);
-  if (params.limit) qs.set("limit", String(params.limit));
-  if (params.offset) qs.set("offset", String(params.offset));
+  if (params.limit != null) qs.set("limit", String(params.limit));
+  if (params.offset != null) qs.set("offset", String(params.offset));
   const url = `/api/runs${qs.size ? `?${qs.toString()}` : ""}`;
-  return useQuery<RunListItem[]>({
+  return useQuery<RunListPage>({
     queryKey: queryKeys.runs(params),
     queryFn: () => fetchJson(url),
   });
