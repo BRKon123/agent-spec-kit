@@ -1,266 +1,269 @@
 # agent-spec-kit — Presentation speaker plan & transcript
 
-**Total budget: 18 minutes, INCLUDING the demo.** Plan: **~8 min slides +
-~8–9 min demo + buffer**. The demo sits between Part I (the library) and Part II
+**Total budget: 18 minutes, INCLUDING the demo.** Plan: **~9 min slides +
+~8 min demo + buffer**. The demo sits between Part I (the library) and Part II
 (the evaluation), so the audience sees the tool work before hearing the numbers.
 
-> This is a fast deck. Aim ~25–35 s per content slide. Land *one* idea per slide
-> and move on — the detail is in the report, not the talk. The four section
-> dividers are spoken in a single sentence each.
+> This is a fast deck (25 slides). Aim ~25–35 s per content slide. Land *one* idea
+> per slide and move on — the detail is in the report, not the talk. The four
+> section dividers are each one spoken sentence.
 
 Slides compiled from `presentation.tex` (XeLaTeX, Imperial beamer theme).
+Slide numbers below are **physical PDF pages**.
 
 | # | Slide | Target | Running |
 |---|-------|-------:|--------:|
-| 1 | Title | 0:20 | 0:20 |
-| 2 | Tool-using agents act on the world | 0:35 | 0:55 |
-| 3 | Correctness lives on three surfaces (O/T/S) | 0:30 | 1:25 |
-| 4 | Existing tools cover part of the loop | 0:35 | 2:00 |
-| 5 | Research question | 0:25 | 2:25 |
-| — | **Part I divider** | 0:05 | 2:30 |
-| 6 | Core idea: scenario = conversation script | 0:50 | 3:20 |
-| 7 | Precise diagnostics: counterexamples | 0:40 | 4:00 |
-| 8 | Framework-neutral execution model | 0:30 | 4:30 |
-| 9 | Discovery → regression workflow | 0:35 | 5:05 |
-| — | **DEMO** | ~8–9 min | ~14:00 |
-| — | **Part II divider** | 0:05 | 14:05 |
-| 10 | TelcoSupportBench testbed | 0:35 | 14:40 |
-| 11 | Finding 1 — output-only insufficient | 0:40 | 15:20 |
-| 12 | Finding 2 — more expressive, less code | 0:35 | 15:55 |
-| 13 | Finding 3 — full oracles catch faults | 0:30 | 16:25 |
-| 14 | Finding 4 — generative discovery | 0:35 | 17:00 |
-| 15 | Conclusion | 0:40 | 17:40 |
-| 16 | Thank you / questions | — | — |
+| 1 | Title | 0:15 | 0:15 |
+| 2 | Tool-using agents act on the world | 0:35 | 0:50 |
+| 3 | Correctness lives on three surfaces (O/T/S) | 0:30 | 1:20 |
+| 4 | Existing tools cover part of the loop | 0:35 | 1:55 |
+| 5 | Research question | 0:25 | 2:20 |
+| 6 | — *Part I divider* | 0:05 | 2:25 |
+| 7 | Core idea: scenario = conversation script | 0:50 | 3:15 |
+| 8 | Matcher language — matching the reply | 0:35 | 3:50 |
+| 9 | Matching the tool trace *(optional)* | 0:25 | 4:15 |
+| 10 | …and the matchers compose *(optional)* | 0:25 | 4:40 |
+| 11 | Precise diagnostics: counterexamples | 0:40 | 5:20 |
+| 12 | Framework-neutral execution model | 0:25 | 5:45 |
+| 13 | Authored tests → automatic discovery | 0:30 | 6:15 |
+| 14 | Persistent runs, CLI, web UI | 0:25 | 6:40 |
+| 15 | — *Live Demo divider* → **DEMO** | ~8 min | ~14:40 |
+| 16 | — *Part II divider* | 0:05 | 14:45 |
+| 17 | TelcoSupportBench testbed | 0:35 | 15:20 |
+| 18 | Finding 1 — output-only insufficient | 0:40 | 16:00 |
+| 19 | Finding 2 — more expressive, less code | 0:30 | 16:30 |
+| 20 | Finding 3 — full oracles catch faults | 0:25 | 16:55 |
+| 21 | Finding 4 — generative discovery | 0:35 | 17:30 |
+| 22 | Honest about the limits *(optional)* | 0:20 | 17:50 |
+| 23 | Conclusion | 0:30 | 18:20 |
+| 24 | Future work *(optional)* | 0:15 | 18:35 |
+| 25 | Thank you / questions | — | — |
 
-**To hit ~8 min of slides I trimmed the spoken deck. Two slides are now optional
-"skip unless asked":**
-- **Matcher language** (slide 7 in the `.tex`) — skip in the talk; mention only if
-  someone asks how assertions are written. *(Currently still in the deck after
-  Core idea — advance past it quickly or delete the frame.)*
-- **Threats to validity** + **Future work** — fold both into Q&A / the closing
-  sentence; the frames remain in the `.tex` as backup.
-
-> Priority if you overrun: protect the demo and Findings 1 & 4 (the
-> "well-motivated + promising" core). Everything else can compress.
-> The T45 privacy bug is **shown live in the demo**, not on a slide.
+> Running ~0:30 over with everything in. **Claw-back levers (marked *optional*):**
+> - **Slides 9 & 10** (tool-trace + compose): the reply matcher on slide 8 already
+>   makes the point. Show 8, then *flick* through 9–10 in ~15 s total, or skip.
+> - **Slide 22 (threats)** and **slide 24 (future work)**: fold into the closing
+>   sentence / Q&A.
+>
+> Priority if you overrun: protect the **demo** and **Findings 1 & 4** (the
+> "well-motivated + promising" core). The T45 privacy bug is **shown live in the
+> demo**, not on a slide.
 
 ---
 
 ## Transcript (talking points per slide)
 
-### 1 — Title (0:30)
-"Good morning. I'm Ruthvik, and my project is *agent-spec-kit*: a framework for
-**scenario-driven evaluation and testing of tool-using LLM agents**. Over the next
-~20 minutes I'll motivate the problem, show you the library — including a live
-demo — and then the evaluation evidence that it works."
+### 1 — Title (0:15)
+"Good morning. I'm Ruthvik — my project is *agent-spec-kit*: a framework for
+**scenario-driven evaluation and testing of tool-using LLM agents**. I'll motivate
+the problem, show you the library with a live demo, then the evaluation evidence."
 
-### 2 — Tool-using agents act on the world (1:15)
-"LLMs have moved from text generators to **agents**: they plan, call tools, and
-**change external state**. The moment an agent can act, its correctness can no
-longer be judged from the final reply alone. A customer-support agent can sound
-perfectly polite while it skips authentication and leaks account data, calls the
-wrong tool, or leaves the database in an invalid state. The plausible answer is
-only *one* part of being correct."
+### 2 — Tool-using agents act on the world (0:35)
+"LLMs have moved from text generators to **agents** that plan, call tools, and
+**change external state**. Once an agent can act, correctness can't be judged from
+the final reply alone. A support agent can sound perfectly polite while it skips
+authentication, calls the wrong tool, or leaves the database invalid — the reply
+passes, the actions and state silently don't."
 
-### 3 — Correctness lives on three surfaces (1:00)
-"Concretely, correctness spans three surfaces: **Output** — what it says;
-**Trace** — which tools it called and in what order; and **State** — what it left
-behind in the world. The key problem: a failure on *any* of these can be hidden
-by a fluent reply, and even masked by recovery on a later turn. So we need to
-assert over all three, across a whole conversation."
+### 3 — Correctness lives on three surfaces (0:30)
+"Correctness spans three surfaces: **Output** — what it says; **Trace** — which
+tools it called and in what order; **State** — what it left behind. A failure on
+any one can be hidden by a fluent reply, even masked by recovery on a later turn.
+So we must assert over all three, across a whole conversation."
 
-### 4 — Existing tools cover part of the loop (1:15)
-"Existing tooling each covers part of this. Output graders and LLM-as-judge —
-HELM, G-Eval — are great for comparing models on final answers, but blind to tool
-and state failures. Agent benchmarks like τ-bench and AppWorld are trace- and
-state-aware, but they're fixed leaderboards, not reusable infrastructure for
-*your* agent. And trace viewers like Langfuse show you *what* happened — you still
-have to infer what *should* have happened. **The gap:** no single reusable way to
-assert over output, trace, and state in one multi-turn scenario, with precise
-diagnostics when a check fails."
+### 4 — Existing tools cover part of the loop (0:35)
+"Existing tools each cover part of this. Output graders / LLM-judges — HELM,
+G-Eval — compare final answers but are blind to tool and state failures. Agent
+benchmarks like τ-bench and AppWorld are trace/state aware but fixed leaderboards,
+not infrastructure for *your* agent. Trace viewers like Langfuse show *what*
+happened — you still infer what *should* have. **The gap:** no reusable way to
+assert over output + trace + state in one scenario with precise diagnostics."
 
-### 5 — Research question (0:45)
-"So the question: can we evaluate stateful, tool-using agents in a
-**software-testing style** — readable scenarios combining assertions over replies,
-tool trajectories, and state, while keeping enough evidence to diagnose failures
-precisely? My answer is agent-spec-kit, which I'll now show you."
+### 5 — Research question (0:25)
+"So: can we evaluate stateful, tool-using agents in a **software-testing style** —
+readable scenarios combining assertions over replies, tool trajectories, and
+state, while keeping enough evidence to diagnose failures precisely? The answer is
+agent-spec-kit."
 
-### 6 — Core idea (1:30)  *(key slide)*
-"The central idea: a scenario **is** a conversation script, with the contract
-woven in after each turn. Here's a real one. The user sends a message; then
-`assert_output` checks the reply — that's **O**. `assert_tool_calls` checks the
-agent authenticated *before* touching account tools — that's **T**, the trace.
-And `assert_that` runs a postcondition on the database — that's **S**, state. All
-three surfaces, in one file that reads like the dialogue itself — instead of being
-scattered across datasets, graders, and runner config."
+### 6 — Part I divider (0:05)
+"First, the library."
 
-### 7 — Matcher language (0:50)
-"Assertions are built from one composable matcher language. Literals, dicts and
-lists are auto-coerced into matchers; there are rich combinators for objects,
-lists, nested tool calls, and conditional rules. And where you genuinely need
-nuance, you can drop in an LLM rubric — but as pass/fail criteria, not an opaque
-score."
+### 7 — Core idea (0:50)  *(key slide)*
+"The central idea: a scenario **is** a conversation script with the contract woven
+in. The user sends a message; `assert_output` checks the reply — that's **O**;
+`assert_tool_calls` checks the agent authenticated *before* touching account tools
+— that's **T**, the trace; and `assert_that` runs a database postcondition — **S**,
+state. All three surfaces in one file that reads like the dialogue, instead of
+being scattered across datasets, graders, and runner config. Note `assert_that`
+just takes the function — the `store` fixture is injected by name."
 
-### 8 — Precise diagnostics (1:10)  *(key slide)*
-"Diagnostics are the other half of the value. Every failed assertion produces a
-**structured counterexample**: the check that broke, a human-readable location
-like 'assert_tool_calls after turn 2', a **JSON-pointer path** to the exact
-mismatch — for example `$[1].args.line_id` — and expected-versus-actual. You get
-the identical view in the terminal, the stored database, and the web UI. It turns
-'it failed somehow' into 'this check broke, here'."
+### 8 — Matcher language: the reply (0:35)
+"Checks are one composable matcher language. Literals, dicts, lists are
+auto-coerced. Combine them — here `one_of` of two `contains` for alternate
+phrasings. And where text genuinely needs judgement, drop in an **LLM rubric** —
+but as pass/fail criteria, not an opaque score."
 
-### 9 — Framework-neutral execution (0:55)
-"Architecturally: you register fixtures and scenarios; the CLI runs them;
-`materialise` drives the agent turn by turn; matchers check each turn. On success
-it's persisted; on failure a counterexample is emitted. Crucially, adapters for
-LangChain and Pydantic AI **normalise traces** into one event model, so your
+### 9 — Matching the tool trace (0:25)  *(optional)*
+"The same language matches the normalised **tool trace**. Order and extras are
+explicit: `ordered=True` pins the sequence, `allow_extras=True` lets other calls
+interleave, and `forbid_tool_calls` asserts a tool is *never* used."
+
+### 10 — …and the matchers compose (0:25)  *(optional)*
+"And it composes into structure: `m.object` constrains only the fields you name,
+`m.list` does ordered or unordered, and **conditional rules** require or forbid a
+field only *when* another holds — e.g. a pager group is required only for
+high-severity incidents."
+
+### 11 — Precise diagnostics (0:40)  *(key slide)*
+"Diagnostics are the other half of the value. A scalar tells you *that* it failed;
+a **counterexample** tells you *where*. Every failed assertion names the check, a
+human location like 'after turn 2', and a **JSON-pointer path** to the exact
+mismatch — `$[1].args.line_id`, expected vs. actual. Same view in the terminal,
+the store, and the web UI."
+
+### 12 — Framework-neutral execution (0:25)
+"Architecturally: fixtures and scenarios → CLI runs them → `materialise` drives
+the agent turn by turn → matchers check each turn; pass persists, fail emits a
+counterexample. Adapters for LangChain and Pydantic AI **normalise traces**, so
 oracles never depend on a framework's message format."
 
-### 10 — Discovery → regression (1:05)
-"Authored scenarios encode what you already know. To find what you *don't*, the
-same oracles power **user simulation** and **mutation fuzzing**, which generate new
-dialogues; **shrinking** reduces a failure to a minimal reproducer; and
-**extraction** pins it back into the suite as a permanent regression scenario —
-one continuous loop from discovery to regression."
+### 13 — Authored tests → discovery (0:30)
+"Authored scenarios encode what you know. To find what you *don't*, the same
+oracles power **user simulation** and **mutation fuzzing** to generate new
+dialogues, **shrinking** reduces a failure to a minimal reproducer, and
+**extraction** pins it back as a permanent regression — one loop, discovery to
+regression."
 
-### 11 — Persistence, CLI, web UI (0:45)
-"Everything is stored locally with git metadata. There's a CLI — `run`, `runs`,
-`show`, `ui` — and a read-only web browser with a runs list, a trace drawer, fuzz
-trials, and a compare view to track regressions across experiments. Let me show
-you all of this live."
+### 14 — Persistence, CLI, web UI (0:25)
+"Every run is stored locally with git metadata. A CLI — `run`, `runs`, `show`,
+`ui` — and a read-only web browser: runs list, trace drawer, fuzz trials, and a
+compare view across experiments. Let me show you all of this live."
 
 ---
 
-## 🔴 LIVE DEMO (8–10 minutes) — outline
+## 🔴 SLIDE 15 — LIVE DEMO (~8 min) — outline
 
-> Goal: let the audience *see* the four pillars from Part I working end-to-end on
-> the real benchmark — authoring, precise failure, generative discovery, and the
-> UI. Keep a terminal (large font) and a browser tab on the web UI pre-warmed.
+> Goal: let the audience *see* the Part I pillars working end-to-end on the real
+> benchmark — authoring, precise failure, generative discovery, the UI. Terminal
+> (large font) + a browser tab on the web UI, both pre-warmed.
 >
 > **Pre-flight (before the talk):**
 > - `cd agent_spec_kit`, virtualenv active, `OPENAI_API_KEY` set.
 > - Pre-run a clean baseline so results exist instantly:
 >   `agent-spec-kit run benchmarks/telecom_support/ --tags pilot,reference`
-> - Have the web UI already running in a tab: `agent-spec-kit ui --open`.
-> - Have the T45 fuzz example handy as a fallback (it's slow/stochastic live).
+> - Web UI already running: `agent-spec-kit ui --open`.
+> - Saved T45 fuzz transcript open as a fallback (live fuzzing is slow/stochastic).
 > - Increase terminal font; clear scrollback; `clear` between segments.
 
 **[GAP — fill in exact commands once rehearsed; rough script below.]**
 
-1. **Author a scenario (≈2 min).**
-   Open a scenario file (e.g. a telecom task or `examples/langchain_scenario_tests/`).
-   Walk through `user_message` → `assert_output` / `assert_tool_calls` /
-   `assert_that`. Emphasise it reads like the dialogue. Run it:
-   `agent-spec-kit run <path>` → green pass.
+1. **Author a scenario (≈2 min).** Open a scenario (a telecom task or
+   `examples/langchain_scenario_tests/`). Walk `user_message` → `assert_output` /
+   `assert_tool_calls` / `assert_that`; emphasise it reads like the dialogue.
+   Run `agent-spec-kit run <path>` → green pass.
 
-2. **Make it fail precisely (≈2 min).**
-   Tighten one assertion (e.g. expect a specific `line_id`, or `forbid_tool_calls`
-   a pre-auth tool). Re-run → show the **Rich counterexample** in the terminal:
-   the failed check, the turn, and the JSON-pointer path. This is the slide-8
-   promise, live.
+2. **Make it fail precisely (≈2 min).** Tighten one assertion (a specific `line_id`,
+   or `forbid_tool_calls` a pre-auth tool). Re-run → the **Rich counterexample**:
+   failed check, turn, JSON-pointer path. The slide-11 promise, live.
 
-3. **Browse results in the web UI (≈2 min).**
-   Switch to the browser. Runs list → open the run → scenario/repeat table →
-   open the **trace drawer** on the failing repeat. Show the same failure card and
-   the nested event tree (agent turn → tool calls). Mention experiment **compare**.
+3. **Browse results in the web UI (≈2 min).** Switch to the browser. Runs list →
+   open the run → scenario/repeat table → **trace drawer** on the failing repeat:
+   same failure card + nested event tree (agent turn → tool calls). Mention
+   experiment **compare**.
 
-4. **Generative discovery (≈2–3 min).**
-   Run a fuzz/simulation scenario:
-   `agent-spec-kit run <fuzz path> --shrink --extract`.
-   Show the fuzz-trials panel, a discovered failure signature absent from the
-   manual script, then the **extracted regression `.py`** that was written.
-   *(If live fuzzing is too slow/flaky, narrate the pre-run T45 `CUST-045`
-   pre-auth privacy bug from the saved transcript instead.)*
+4. **Generative discovery (≈2 min).** Run a fuzz/sim scenario:
+   `agent-spec-kit run <fuzz path> --shrink --extract`. Show the fuzz-trials panel,
+   a discovered failure signature absent from the manual script, then the
+   **extracted regression `.py`**. *This is where you show the real T45 `CUST-045`
+   pre-auth privacy bug* (from the live run, or narrate the saved transcript).
 
-5. **One-line wrap (≈30 s).**
-   "So: author, fail precisely, discover, and pin as a regression — all in one
-   model. Now, does it actually pay off?" → advance to Part II.
+5. **One-line wrap (≈30 s).** "So: author, fail precisely, discover, pin as a
+   regression — one model. Now, does it pay off?" → advance to Part II.
 
-> **Demo risk management:** LLM calls are stochastic and networked. The baseline
-> and fuzz runs are pre-executed; if anything stalls live, fall back to the
-> already-populated UI and the saved transcripts. Never debug live for more than
-> ~20s — narrate the pre-run artefacts instead.
+> **Demo risk management:** LLM calls are stochastic/networked. Baseline and fuzz
+> runs are pre-executed; if anything stalls, fall back to the populated UI and the
+> saved transcripts. Never debug live > ~20 s — narrate the pre-run artefacts.
 
 ---
 
-### 12 — TelcoSupportBench (1:10)
-"To evaluate it I built TelcoSupportBench — a synthetic mobile-support domain: 50
-tasks against a reference LangGraph agent with a coordinator and two specialists.
-Each task has four oracle lanes — output, trace, state, and full. The design
-principle is that tools stay *permissive*; **policy is asserted in the oracles**,
-not hidden in the simulator. I compared against seven other approaches."
+### 16 — Part II divider (0:05)
+"Does multi-surface, scenario-driven testing actually pay off?"
 
-### 13 — Finding 1 (1:05)  *(key slide)*
+### 17 — TelcoSupportBench (0:35)
+"To evaluate it I built TelcoSupportBench — a synthetic mobile-support domain: 50
+tasks against a reference LangGraph agent (coordinator + two specialists). Each
+task has four oracle lanes — output, trace, state, and full. Tools stay
+*permissive*; **policy is asserted in the oracles**, not hidden in the simulator.
+Compared against seven other approaches."
+
+### 18 — Finding 1 (0:40)  *(key slide)*
 "First finding: output-only grading is not enough. Across 200 oracle slots, **all
 50 output lanes passed** — yet **54 slots failed**, every one in the trace, state,
 or full lanes. The reply sounded right while a tool ran out of order or a store
-update never happened. Final-answer evaluation alone would have reported a clean
-100% pass."
+update never happened. Output-only would have reported a clean 100%."
 
-### 14 — Finding 2 (1:00)
-"Second: it's more expressive with less code. Across twelve canonical check
-patterns, agent-spec-kit needed **165 lines** versus 496 for DeepEval and 532 for
-Pydantic Evals — and got the **highest clarity grade on every specimen**. On
-failure it gives an exact path witness where the others return a scalar, broad
-prose, or a bare AssertionError."
+### 19 — Finding 2 (0:30)
+"Second: more expressive, less code. Across twelve canonical check patterns,
+agent-spec-kit needed **165 lines** vs 496 (DeepEval) and 532 (Pydantic Evals) —
+and the **highest clarity grade on every specimen**, giving an exact path witness
+where others return a scalar or bare AssertionError."
 
-### 15 — Finding 3 (1:00)
-"Third: full oracles catch faults the narrow lanes miss. I injected ten fault
-families and measured which lane detects each. Output detection is often **zero**
-for tool-ordering and state-mutation faults, while state and full lanes hit
-**75–100%**. The combined oracle beats any single surface."
+### 20 — Finding 3 (0:25)
+"Third: full oracles catch faults narrow lanes miss. Ten injected fault families —
+output detection is often **zero** for tool-ordering and state faults, while state
+and full lanes hit **75–100%**. The combined oracle beats any single surface."
 
-### 14 — Finding 4 (0:35)  *(key slide)*
+### 21 — Finding 4 (0:35)  *(key slide)*
 "Fourth: generative testing finds bugs nobody scripted. From 14 manual scripts,
-user simulation and fuzzing reached far more tool paths and **many more distinct
-failure signatures** — 24 and 18 versus 3 — reusing the same oracle. Discovered
-failures are shrunk and extracted into permanent regressions. You saw exactly this
-in the demo — that real pre-auth privacy bug was found this way."
+simulation and fuzzing reached far more tool paths and **many more distinct
+failure signatures** — 24 and 18 vs 3 — same oracle, then shrunk and extracted to
+regressions. You saw exactly this in the demo: the pre-auth privacy bug."
 
-### 17 — Threats to validity (0:45)
-"I'll be honest about limits: clarity grades used LLM judges, not a human study;
-it's one agent and one domain, whose design may favour the framework; and fewer
-than half of extracted scenarios reproduced the *exact* signature on immediate
-rerun, due to stochastic ordering. The results are promising but describe this
-setup, not agents in general."
+### 22 — Threats to validity (0:20)  *(optional)*
+"Honest limits: clarity grades used LLM judges, not a human study; one agent, one
+domain whose design may favour the framework; and fewer than half of extracted
+scenarios reproduced the *exact* signature on immediate rerun. Promising, but this
+setup — not agents in general."
 
-### 18 — Conclusion (1:00)
-"To conclude: the right unit of evaluation is the **behavioural episode**, not the
-final reply. agent-spec-kit unifies output, trace, and state oracles in one
-readable, framework-neutral scenario, with assertion-local diagnostics, and a
-single discovery-to-regression workflow. The evidence: hidden trace/state
-failures exposed, three-times-less check code with the best clarity, and
-generative testing surfacing real bugs."
+### 23 — Conclusion (0:30)
+"The right unit of evaluation is the **behavioural episode**, not the final reply.
+agent-spec-kit unifies output, trace, and state in one readable, framework-neutral
+scenario, with assertion-local diagnostics and a discovery-to-regression workflow
+— evidenced by hidden failures exposed, 3× less check code, and real bugs found."
 
-### 19 — Future work (0:30)
-"Future work: more domains and frameworks, human studies of clarity,
-signature-stable replay after extraction, and larger team-based suites."
+### 24 — Future work (0:15)  *(optional)*
+"Future: more domains and frameworks, human studies of clarity, signature-stable
+replay after extraction, larger team-based suites."
 
-### 20 — Thank you (Q&A)
+### 25 — Thank you (Q&A)
 "Thank you — happy to take questions."
 
 ---
 
 ## Figures: status
 
-**Included from the report / theme (real):**
-- `react_prompting.png`, `langfuse_example_trace.png` (motivation)
-- `rich_console_failure_output.png` (counterexample, slide 8)
-- `specific_run_page_ui.png` (web UI, slide 11)
-- `tao_bench_setup.png` (benchmark inspiration, slide 12)
-- `fuzz_llm_pipeline.png` (fuzzing, slide 16)
-- All bar charts (Findings 1 & 2) are native `pgfplots` — edit numbers in `.tex`.
-- Detection table (Finding 3) is native LaTeX.
+**Self-built TikZ / native visuals (no external image):**
+- Slide 2 — agent → fluent reply (✓) while trace & state silently fail (✗).
+- Slide 3 — three O/T/S surface cards.
+- Slides 7–10 — code listings (scenario + the three matcher slides).
+- Slide 11 — abstract "scalar / AssertionError vs. pinpointed counterexample"
+  contrast (the *concept*; real errors are shown in the demo).
+- Slide 12 — framework-neutral execution diagram.
+- Slide 13 — discovery→regression flow.
+- Findings 1 & 2 — native `pgfplots` bar charts; Finding 3 — native LaTeX table.
+  Edit the numbers directly in the `.tex`.
 
-**Placeholders to fill if you have/ want better assets:**
-- **Slide 7 (matcher language):** `[FIGURE PLACEHOLDER]` — a clean matcher
-  cheat-sheet or nested `m.tool_call` code card. Swap the `\fbox{...}` for an
-  `\includegraphics`.
-- **Slide 12 (TelcoSupportBench):** currently uses the τ-bench setup image as a
-  stand-in — replace with a real TelcoSupportBench architecture diagram
-  (coordinator + specialists + tools/DB) if you draw one.
-- Other UI screenshots are available in `images/` if you want extra demo-backup
-  slides: `runs_page_ui.png`, `compare_page_ui.png`.
+**Real figures from the report / theme:**
+- `langfuse_example_trace.png` (slide 4, existing tools)
+- `specific_run_page_ui.png` (slide 14, web UI)
+- `tao_bench_setup.png` (slide 17, benchmark inspiration — stand-in)
+
+**Optional improvement:**
+- **Slide 17 (TelcoSupportBench)** uses the τ-bench setup image as a stand-in —
+  replace with a real TelcoSupportBench architecture diagram (coordinator +
+  specialists + tools/DB) if you draw one.
+- Extra UI screenshots in `images/` for demo-backup slides if wanted:
+  `runs_page_ui.png`, `compare_page_ui.png`, `rich_console_failure_output.png`.
 
 ## Build
 ```bash

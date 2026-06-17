@@ -97,7 +97,7 @@
 \begin{frame}
 	\frametitle{Tool-using agents act on the world}
 	\begin{columns}[T]
-		\begin{column}{0.56\linewidth}
+		\begin{column}{0.5\linewidth}
 			\begin{itemize}
 				\setlength\itemsep{0.8em}
 				\item LLMs are no longer just text generators --- as \textbf{agents} they
@@ -114,11 +114,36 @@
 			\vspace{0.4em}
 			{\footnotesize\textcolor{ICLBlue}{The plausible answer is only \emph{one} part of being correct.}}
 		\end{column}
-		\begin{column}{0.42\linewidth}
+		\begin{column}{0.48\linewidth}
 			\centering
-			\vspace{0.5em}
-			\includegraphics[width=\linewidth]{react_prompting.png}\\[4pt]
-			{\tiny\textcolor{ICLBlue}{Reasoning + acting (ReAct): the agent interleaves thoughts, tool calls, and replies.}}
+			\vspace{0.2em}
+			\scalebox{1.18}{%
+			\begin{tikzpicture}[font=\scriptsize,
+				good/.style={draw=green!55!black, fill=green!8, rounded corners=3pt, inner sep=4pt},
+				bad/.style={draw=red!65!black, fill=red!6, rounded corners=3pt, inner sep=4pt},
+				lbl/.style={font=\tiny, text=ICLBlue}]
+				% agent
+				\node[flow, minimum width=20mm] (ag) {Support agent};
+				% the visible reply -- looks great
+				\node[good, right=10mm of ag, text width=24mm, align=left] (reply)
+					{``Done --- your refund is\\sorted, have a great day!''\ \textcolor{green!55!black}{\ding{52}}};
+				\node[lbl, above=1pt of reply] {\Ochip\ \textbf{reply} (looks fine)};
+				% hidden trace -- wrong
+				\node[bad, below=8mm of reply, text width=24mm, align=left] (trace)
+					{\texttt{get\_account()} \textcolor{red!65!black}{\ding{56}}\\\scriptsize\emph{before} \texttt{authenticate()}};
+				% hidden state -- wrong
+				\node[bad, below=6mm of trace, text width=24mm, align=left] (state)
+					{ticket left \texttt{OPEN} \textcolor{red!65!black}{\ding{56}}\\\scriptsize refund never written};
+				% arrows first, then labels sit cleanly on top
+				\draw[arr] (ag) -- (reply);
+				\draw[arr, draw=red!55!black] (ag.south) |- (trace.west);
+				\draw[arr, draw=red!55!black] (ag.south) |- (state.west);
+				\node[lbl, fill=white, inner sep=1.5pt, align=center, left=6mm of trace]
+					{\Tchip\\[2pt]wrong order};
+				\node[lbl, fill=white, inner sep=1.5pt, align=center, left=6mm of state]
+					{\Schip\\[2pt]bad state};
+			\end{tikzpicture}}\\[6pt]
+			{\footnotesize\textcolor{ICLBlue}{The reply passes; the actions and state silently do not.}}
 		\end{column}
 	\end{columns}
 \end{frame}
@@ -186,9 +211,9 @@
 		\end{column}
 		\begin{column}{0.44\linewidth}
 			\centering
-			\vspace{0.3em}
-			\includegraphics[width=\linewidth]{langfuse_example_trace.png}\\[3pt]
-			{\tiny\textcolor{ICLBlue}{Trace viewers show the episode; they do not encode the expected behaviour.}}
+			\vspace{0.1em}
+			\includegraphics[width=\linewidth, height=0.66\textheight, keepaspectratio]{langfuse_example_trace.png}\\[5pt]
+			{\footnotesize\textcolor{ICLBlue}{Trace viewers show the episode; they do not encode the expected behaviour.}}
 		\end{column}
 	\end{columns}
 \end{frame}
@@ -196,26 +221,29 @@
 %------------------------------------------------
 \begin{frame}
 	\frametitle{Research question}
-	\vspace{1.2em}
-	\begin{columns}[c]
-		\begin{column}{0.16\linewidth}
-			\centering
-			\includegraphics[width=\linewidth]{imperial_logo.png}
-		\end{column}
-		\begin{column}{0.8\linewidth}
-			{\large Can the evaluation of \textbf{stateful, tool-using LLM agents} be expressed
-			in a \textbf{software-testing style} ---}
-			\vspace{0.6em}
+	\vspace{1.0em}
+	\begin{center}
+	\begin{minipage}{0.86\linewidth}
+		% blue accent bar + question
+		\hspace{-4mm}\begin{tikzpicture}[baseline=(txt.north)]
+			\node[anchor=north west, text width=0.95\linewidth, inner sep=0pt] (txt) {%
+				{\Large Can the evaluation of \textbf{stateful, tool-using LLM agents} be
+				expressed in a \textbf{software-testing style}:}\\[0.7em]
+				{\Large readable scenarios that combine assertions over \textbf{replies},
+				\textbf{tool trajectories}, and \textbf{application state}, while keeping enough
+				structured evidence to \textbf{diagnose} failures precisely?}%
+			};
+			\draw[line width=2.2pt, ICLBlue] ([xshift=-5mm]txt.north west) -- ([xshift=-5mm]txt.south west);
+		\end{tikzpicture}
 
-			{\large readable scenarios that combine assertions over \textbf{replies},
-			\textbf{tool trajectories}, and \textbf{application state}, while preserving enough
-			structured evidence to \textbf{diagnose} failures precisely?}
-			\vspace{1.0em}
-
-			{\footnotesize\textcolor{ICLBlue}{\textbf{Answer:} \emph{agent-spec-kit} --- a scenario-driven testing
-			framework for LLM agents, evaluated on a 50-task benchmark.}}
-		\end{column}
-	\end{columns}
+		\vspace{1.6em}
+		\begin{beamercolorbox}[wd=\linewidth, sep=10pt, rounded=true]{}%
+			\colorbox{ICLBlue!10}{\parbox{\dimexpr\linewidth-20pt}{%
+				\color{ICLBlue}\textbf{Answer:}\ \emph{agent-spec-kit} --- a scenario-driven
+				testing framework for LLM agents, evaluated on a 50-task benchmark.}}
+		\end{beamercolorbox}
+	\end{minipage}
+	\end{center}
 \end{frame}
 
 %----------------------------------------------------------------------------------------
@@ -244,16 +272,16 @@
 \begin{lstlisting}
 @scenario(agent_fixture="agent", user_fixture="user")
 async def test_billing_credit(s, store):
-    (s.user_message("I was double charged in October")
-      # O: the reply must insist on verifying first
-      .assert_output(m.contains("verify"))
-      # T: the agent must authenticate before account tools
-      .assert_tool_calls([
-          m.tool_call("authenticate_customer"),
-          m.tool_call("get_billing", args={"id": "CUST-045"}),
-      ])
-      # S: a postcondition on the database / environment
-      .assert_that(lambda: assert_credit_policy(store)))
+    s.user_message("I was double charged in October")
+    # O: the reply must insist on verifying first
+    s.assert_output(m.contains("verify"))
+    # T: the agent must authenticate before account tools
+    s.assert_tool_calls([
+        m.tool_call("authenticate_customer"),
+        m.tool_call("get_billing", args={"id": "CUST-045"}),
+    ])
+    # S: a postcondition on the database state
+    s.assert_that(assert_credit_policy)
 \end{lstlisting}
 		\end{column}
 		\begin{column}{0.36\linewidth}
@@ -271,27 +299,109 @@ async def test_billing_credit(s, store):
 \end{frame}
 
 %------------------------------------------------
-\begin{frame}
+\begin{frame}[fragile]
 	\frametitle{One composable matcher language}
-	\begin{columns}[T]
-		\begin{column}{0.5\linewidth}
+	\framesubtitle{Start simple: matching the reply}
+	\begin{columns}[T,onlytextwidth]
+		\begin{column}{0.37\linewidth}
 			\begin{itemize}
-				\setlength\itemsep{0.55em}
-				\item Literals, \texttt{dict}s and \texttt{list}s are \emph{coerced} into matchers automatically.
-				\item Rich combinators: \texttt{m.object}, \texttt{m.list}, \texttt{m.one\_of},
-				\texttt{m.optional}, \texttt{m.tool\_call(..., children=[...])}.
-				\item Conditional rules: \texttt{m.require("pager").when(m.field("severity") == "high")}.
-				\item Selective \textbf{LLM rubrics} (\texttt{m.llm\_criteria}) only where nuance is needed ---
-				pass/fail criteria, not opaque scores.
+				\setlength\itemsep{0.9em}
+				\item Literals, \texttt{dict}s and \texttt{list}s are \emph{coerced} into matchers
+				automatically.
+				\item Combine them: \texttt{m.one\_of} (any), \texttt{m.all\_of} (all),
+				\texttt{m.not\_}, \texttt{m.contains}, \texttt{m.regex}.
+				\item Selective \textbf{LLM rubric} only where text needs judgement --- pass/fail
+				criteria, not opaque scores.
 			\end{itemize}
 		\end{column}
-		\begin{column}{0.5\linewidth}
-			\centering
-			% Placeholder: a clean matcher snippet image could go here
-			\fbox{\parbox[c][0.62\textheight][c]{0.92\linewidth}{\centering
-				\textcolor{ICLBlue}{\textbf{[FIGURE PLACEHOLDER]}}\\[6pt]
-				\footnotesize Matcher cheat-sheet / nested \texttt{m.tool\_call} example.\\
-				(Render a clean code card or reuse a report listing.)}}
+		\hfill
+		\begin{column}{0.55\linewidth}
+\begin{lstlisting}
+# deterministic: offer a refund OR a credit
+s.assert_output(
+  m.one_of(
+    m.contains("refund"),
+    m.contains("account credit"),
+  )
+)
+\end{lstlisting}
+			\vspace{0.6em}
+\begin{lstlisting}
+# nuance? hand that one check to an LLM judge
+s.assert_output(m.llm_criteria(
+  criteria=["acknowledges the double charge",
+            "does not promise a refund yet"],
+  threshold=2,
+))
+\end{lstlisting}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}[fragile]
+	\frametitle{Matching the tool trace}
+	\framesubtitle{Order and extras are explicit, not implied}
+	\begin{columns}[T,onlytextwidth]
+		\begin{column}{0.37\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.9em}
+				\item \texttt{assert\_tool\_calls} matches the \emph{normalised} tool trace.
+				\item \texttt{ordered=True} pins the sequence; \texttt{ordered=False} for parallel siblings.
+				\item \texttt{allow\_extras=True} lets other calls interleave; \texttt{forbid\_tool\_calls}
+				asserts a tool is \emph{never} used.
+			\end{itemize}
+		\end{column}
+		\hfill
+		\begin{column}{0.55\linewidth}
+\begin{lstlisting}
+s.assert_tool_calls(
+  [
+    m.tool_call("authenticate_customer"),
+    m.tool_call("get_billing",
+                args={"id": "CUST-045"}),
+  ],
+  ordered=True,       # must appear in order
+  allow_extras=True,  # others may interleave
+)
+\end{lstlisting}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}[fragile]
+	\frametitle{\ldots and the matchers compose}
+	\framesubtitle{Structured objects and conditional rules}
+	\begin{columns}[T,onlytextwidth]
+		\begin{column}{0.36\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.8em}
+				\item \texttt{m.object} constrains structured args or results --- only the fields
+				you name.
+				\item \texttt{m.list} matches sequences \texttt{ordered} or \texttt{unordered}.
+				\item \textbf{Conditional rules}: \texttt{require}/\texttt{forbid} a field only
+				\emph{when} another field holds.
+			\end{itemize}
+		\end{column}
+		\hfill
+		\begin{column}{0.55\linewidth}
+\begin{lstlisting}
+m.tool_call("open_incident", args=m.object(
+  {
+    "id": m.regex(r"INC-\d{4}-\d+"),
+    "severity": m.one_of("high", "medium"),
+    "components": m.list(["edge", "core"],
+                         mode="unordered"),
+  },
+  rules=[                        # conditional
+    m.require("pager_group")
+     .when(m.field("severity") == "high"),
+    m.forbid("pager_group")
+     .when(m.field("severity") == "medium"),
+  ],
+))
+\end{lstlisting}
 		\end{column}
 	\end{columns}
 \end{frame}
@@ -316,8 +426,28 @@ async def test_billing_credit(s, store):
 		\end{column}
 		\begin{column}{0.52\linewidth}
 			\centering
-			\includegraphics[width=\linewidth]{rich_console_failure_output.png}\\[3pt]
-			{\tiny\textcolor{ICLBlue}{Rich terminal counterexample: failed check, turn, path, expected vs.\ actual.}}
+			\vspace{0.2em}
+			\begin{tikzpicture}[font=\scriptsize, node distance=2mm,
+				row/.style={rounded corners=2pt, minimum width=52mm, text width=48mm,
+					align=left, inner sep=3pt}]
+				% --- vague: what other graders give you ---
+				\node[font=\tiny, text=black!55] (cap1) {Typical grader output};
+				\node[row, draw=black!35, fill=black!4, align=center, below=1.5mm of cap1] (v)
+					{\textcolor{red!70!black}{\ding{56}}\ \ \texttt{AssertionError} \,/\, \texttt{score 0.0}};
+				\node[font=\tiny\itshape, text=red!60!black, below=1pt of v]
+					(vq) {which check? which turn? which field?};
+
+				% --- precise: the counterexample ---
+				\node[font=\scriptsize\bfseries, text=ICLBlue, below=4mm of vq] (cap2)
+					{agent-spec-kit counterexample};
+				\node[row, draw=green!55!black, fill=green!8, below=1.8mm of cap2] (r0)
+					{\texttt{[0] authenticate}\hfill\textcolor{green!55!black}{\ding{52}}};
+				\node[row, draw=red!70!black, line width=1pt, fill=red!8, below=1.4mm of r0] (r1)
+					{\texttt{[1] get\_line\_status}\hfill\textcolor{red!70!black}{\ding{56}}};
+				\node[row, draw=red!70!black, dashed, below=1.4mm of r1, font=\tiny] (p)
+					{path \texttt{\$[1].args.line\_id}\\ expected \texttt{LINE-001}\hfill actual \texttt{LINE-002}};
+			\end{tikzpicture}\\[6pt]
+			{\footnotesize\textcolor{ICLBlue}{A scalar tells you \emph{that} it failed; a counterexample tells you \emph{where}.}}
 		\end{column}
 	\end{columns}
 \end{frame}
@@ -326,27 +456,34 @@ async def test_billing_credit(s, store):
 \begin{frame}
 	\frametitle{Framework-neutral execution model}
 	\centering
-	\vspace{0.3em}
-	\begin{tikzpicture}[node distance=7mm and 9mm]
+	\vspace{1.4em}
+	\resizebox{\textwidth}{!}{%
+	\begin{tikzpicture}[node distance=11mm and 13mm,
+		flow/.append style={minimum height=11mm, minimum width=24mm, font=\small\bfseries},
+		store/.append style={minimum height=11mm, minimum width=24mm, font=\small\bfseries},
+		fail/.append style={minimum height=11mm, minimum width=24mm, font=\small\bfseries}]
 		\node[flow] (dec) {\texttt{@fixture} /\\\texttt{@scenario}};
 		\node[flow, right=of dec] (cli) {CLI \texttt{run}};
 		\node[flow, right=of cli] (mat) {\texttt{Scenario}\\\texttt{.materialise}};
 		\node[flow, right=of mat] (agent) {\texttt{AdaptedAgent}\\\texttt{.run\_turn}};
 		\node[flow, right=of agent] (match) {\texttt{match}\\\texttt{.async\_check}};
 
-		\node[store, below=14mm of agent, xshift=10mm] (store) {\texttt{LocalResultStore}\\\scriptsize SQLite + blobs};
-		\node[fail, below=14mm of cli] (cx) {\texttt{Counterexample}\\\scriptsize CLI / UI};
+		\node[store, below=26mm of match] (store) {\texttt{LocalResultStore}\\\scriptsize SQLite + blobs};
+		\node[fail, below=26mm of cli] (cx) {\texttt{Counterexample}\\\scriptsize CLI / UI};
 
 		\draw[arr] (dec) -- (cli);
 		\draw[arr] (cli) -- (mat);
 		\draw[arr] (mat) -- (agent);
 		\draw[arr] (agent) -- (match);
-		\draw[arr] (match) -- node[font=\scriptsize, text=ICLBlue, sloped, above] {ok} (store);
-		\draw[arr] (match.south) |- node[font=\scriptsize, text=red!60!black, near end, above] {fail} (cx.east);
+		% ok: straight down into the store
+		\draw[arr] (match.south) -- node[font=\small, text=ICLBlue, right=2pt] {ok} (store.north);
+		% fail: drop, run left ABOVE the store node, then into the counterexample
+		\draw[arr, draw=red!60!black] (match.south west) -- ++(0,-13mm)
+			-| node[font=\small, text=red!60!black, pos=0.25, above] {fail} (cx.north);
 
-		\node[draw=ICLBlue!40, dashed, rounded corners, fit=(agent), inner sep=5pt, label={[font=\tiny,text=ICLBlue]below:LangChain / Pydantic AI / custom adapters}] {};
-	\end{tikzpicture}
-	\vspace{0.4em}
+		\node[draw=ICLBlue!40, dashed, rounded corners, fit=(agent), inner sep=5pt, label={[font=\scriptsize,text=ICLBlue]below:LangChain / Pydantic AI / custom adapters}] {};
+	\end{tikzpicture}}
+	\vspace{1.6em}
 	\begin{itemize}
 		\setlength\itemsep{0.2em}
 		\item Adapters \textbf{normalise traces} (LangGraph, Pydantic AI) into one event model ---
@@ -513,8 +650,8 @@ async def test_billing_credit(s, store):
 \begin{frame}
 	\frametitle{Finding 2 --- more expressive, less code}
 	\framesubtitle{Twelve canonical check patterns, ported across frameworks}
-	\begin{columns}[T]
-		\begin{column}{0.54\linewidth}
+	\begin{columns}[T,onlytextwidth]
+		\begin{column}{0.5\linewidth}
 			\centering
 			\vspace{0.3em}
 			\begin{tikzpicture}
@@ -532,7 +669,8 @@ async def test_billing_credit(s, store):
 			\end{axis}
 			\end{tikzpicture}
 		\end{column}
-		\begin{column}{0.44\linewidth}
+		\hfill
+		\begin{column}{0.42\linewidth}
 			\begin{itemize}
 				\setlength\itemsep{0.6em}
 				\item \textbf{165 lines} vs.\ 496 (DeepEval) and 532 (Pydantic Evals).
@@ -616,8 +754,7 @@ async def test_billing_credit(s, store):
 
 %------------------------------------------------
 \begin{frame}
-	\frametitle{Honest about the limits}
-	\framesubtitle{Threats to validity}
+	\frametitle{Threats to validity}
 	\begin{columns}[T]
 		\begin{column}{0.5\linewidth}
 			\begin{itemize}
