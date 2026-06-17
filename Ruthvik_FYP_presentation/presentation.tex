@@ -110,8 +110,9 @@
 					\item calls the \textbf{wrong tool} or in the wrong order,
 					\item leaves the \textbf{database} in an invalid state.
 				\end{itemize}
-				\item The plausible answer is only \emph{one} part of being correct.
 			\end{itemize}
+			\vspace{0.4em}
+			{\footnotesize\textcolor{ICLBlue}{The plausible answer is only \emph{one} part of being correct.}}
 		\end{column}
 		\begin{column}{0.42\linewidth}
 			\centering
@@ -127,19 +128,40 @@
 	\frametitle{Correctness lives on three surfaces}
 	\framesubtitle{Output is necessary but far from sufficient}
 
-	\centering
-	\vspace{0.6em}
-	\begin{tikzpicture}[node distance=6mm]
-		\node[flow, minimum width=34mm, minimum height=14mm] (o)
-			{\normalsize\Ochip\ \ Output\\[2pt]\scriptsize what the agent \emph{says}};
-		\node[flow, minimum width=34mm, minimum height=14mm, right=12mm of o] (t)
-			{\normalsize\Tchip\ \ Trace\\[2pt]\scriptsize which \emph{tools} it called};
-		\node[store, minimum width=34mm, minimum height=14mm, right=12mm of t] (s)
-			{\normalsize\Schip\ \ State\\[2pt]\scriptsize the \emph{state} it left behind};
-		\node[below=10mm of t, text=ICLBlue, font=\footnotesize, align=center, text width=0.8\linewidth]
-			{A failure on \emph{any} surface can be hidden by a fluent reply ---
-			and may even be masked by recovery on a later turn.};
-	\end{tikzpicture}
+	\vspace{1.2em}
+	\begin{columns}[T,onlytextwidth]
+		\begin{column}{0.3\linewidth}
+			\centering
+			\tikz\node[rounded corners=4pt, fill=ICLBlue, text=white, minimum width=3cm,
+				minimum height=1.7cm, font=\fontsize{34}{34}\selectfont\bfseries]{O};\\[8pt]
+			{\large\color{ICLBlue}\textbf{Output}}\\[2pt]
+			{\footnotesize\color{ICLBlue}what the agent \emph{says}}
+		\end{column}
+		\hfill
+		\begin{column}{0.3\linewidth}
+			\centering
+			\tikz\node[rounded corners=4pt, fill=ICLBlue!65, text=white, minimum width=3cm,
+				minimum height=1.7cm, font=\fontsize{34}{34}\selectfont\bfseries]{T};\\[8pt]
+			{\large\color{ICLBlue}\textbf{Trace}}\\[2pt]
+			{\footnotesize\color{ICLBlue}which \emph{tools} it called}
+		\end{column}
+		\hfill
+		\begin{column}{0.3\linewidth}
+			\centering
+			\tikz\node[rounded corners=4pt, fill=ICLDarkBlue, text=white, minimum width=3cm,
+				minimum height=1.7cm, font=\fontsize{34}{34}\selectfont\bfseries]{S};\\[8pt]
+			{\large\color{ICLBlue}\textbf{State}}\\[2pt]
+			{\footnotesize\color{ICLBlue}the \emph{state} it left behind}
+		\end{column}
+	\end{columns}
+	\vspace{2.2em}
+	\begin{center}
+		\begin{minipage}{0.78\linewidth}
+			\centering\color{ICLBlue}
+			A failure on \emph{any} surface can be hidden by a fluent reply ---
+			and may even be masked by recovery on a later turn.
+		\end{minipage}
+	\end{center}
 \end{frame}
 
 %------------------------------------------------
@@ -564,11 +586,12 @@ async def test_billing_credit(s, store):
 %------------------------------------------------
 \begin{frame}
 	\frametitle{Finding 4 --- generative testing finds bugs nobody scripted}
-	\begin{columns}[T]
-		\begin{column}{0.5\linewidth}
+	\framesubtitle{14 tasks, the same F-oracle throughout}
+	\begin{columns}[c]
+		\begin{column}{0.54\linewidth}
 			\centering
-			\scriptsize
-			\renewcommand{\arraystretch}{1.2}
+			\small
+			\renewcommand{\arraystretch}{1.3}
 			\begin{tabular}{lccc}
 			\toprule
 			\textbf{Method} & \textbf{Convs} & \textbf{Tool paths} & \textbf{Failure sigs} \\
@@ -577,29 +600,16 @@ async def test_billing_credit(s, store):
 			User simulation  & 70 & \textbf{58} & \textbf{24} \\
 			Mutation fuzz    & 70 & 36 & 18 \\
 			\bottomrule
-			\end{tabular}\\[4pt]
-			{\tiny\textcolor{ICLBlue}{14 tasks. Simulation \& fuzzing reuse the \emph{same} F-oracle as the manual scripts.}}
-			\vspace{0.6em}
-
-			\includegraphics[width=0.92\linewidth]{fuzz_llm_pipeline.png}\\[2pt]
-			{\tiny\textcolor{ICLBlue}{Mutation-fuzz pipeline over valid transcripts.}}
+			\end{tabular}
 		\end{column}
-		\begin{column}{0.5\linewidth}
+		\begin{column}{0.44\linewidth}
 			\begin{itemize}
-				\setlength\itemsep{0.5em}
-				\item Simulation \& fuzzing reached \textbf{many failure signatures absent} from the
+				\setlength\itemsep{0.8em}
+				\item Simulation \& fuzzing reach \textbf{far more failure signatures} than the
 				hand-written scripts --- at little extra authoring cost.
+				\item Discovered failures are \textbf{shrunk} and \textbf{extracted} into permanent
+				regressions.
 			\end{itemize}
-			\begin{block}{\small Real bug found by fuzzing --- T45}
-				\scriptsize
-				The \texttt{drop\_required\_fact} mutation garbles the opening turn (still mentions
-				\texttt{CUST-045}). The agent then \textbf{names and anchors the account in prose
-				\emph{before} authentication} --- a pre-auth \textbf{privacy} violation the manual
-				script never triggered. Caught by the output rubric (2/4 criteria, needed 3).
-			\end{block}
-			\vspace{0.3em}
-
-			{\footnotesize Extraction then pins it as a permanent regression scenario.}
 		\end{column}
 	\end{columns}
 \end{frame}

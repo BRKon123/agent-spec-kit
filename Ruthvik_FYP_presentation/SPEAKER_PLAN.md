@@ -1,40 +1,48 @@
 # agent-spec-kit — Presentation speaker plan & transcript
 
-**Total budget:** ~28 min = **18 min slides** + **8–10 min live demo**.
-Demo sits between Part I (the library) and Part II (the evaluation), so the
-audience sees the tool work before hearing the numbers.
+**Total budget: 18 minutes, INCLUDING the demo.** Plan: **~8 min slides +
+~8–9 min demo + buffer**. The demo sits between Part I (the library) and Part II
+(the evaluation), so the audience sees the tool work before hearing the numbers.
+
+> This is a fast deck. Aim ~25–35 s per content slide. Land *one* idea per slide
+> and move on — the detail is in the report, not the talk. The four section
+> dividers are spoken in a single sentence each.
 
 Slides compiled from `presentation.tex` (XeLaTeX, Imperial beamer theme).
 
-| # | Slide | Target time | Running |
-|---|-------|------------:|--------:|
-| 1 | Title | 0:30 | 0:30 |
-| 2 | Tool-using agents act on the world | 1:15 | 1:45 |
-| 3 | Correctness lives on three surfaces (O/T/S) | 1:00 | 2:45 |
-| 4 | Existing tools cover part of the loop | 1:15 | 4:00 |
-| 5 | Research question | 0:45 | 4:45 |
-| — | **Part I divider** | 0:10 | 4:55 |
-| 6 | Core idea: scenario = conversation script | 1:30 | 6:25 |
-| 7 | One composable matcher language | 0:50 | 7:15 |
-| 8 | Precise diagnostics: counterexamples | 1:10 | 8:25 |
-| 9 | Framework-neutral execution model | 0:55 | 9:20 |
-| 10 | Discovery → regression workflow | 1:05 | 10:25 |
-| 11 | Persistent runs, CLI, web UI | 0:45 | 11:10 |
-| — | **DEMO** | 8–10 min | ~20:00 |
-| — | **Part II divider** | 0:10 | 20:10 |
-| 12 | TelcoSupportBench testbed | 1:10 | 21:20 |
-| 13 | Finding 1 — output-only insufficient | 1:05 | 22:25 |
-| 14 | Finding 2 — more expressive, less code | 1:00 | 23:25 |
-| 15 | Finding 3 — full oracles catch faults | 1:00 | 24:25 |
-| 16 | Finding 4 — generative discovery | 1:20 | 25:45 |
-| 17 | Threats to validity | 0:45 | 26:30 |
-| 18 | Conclusion | 1:00 | 27:30 |
-| 19 | Future work | 0:30 | 28:00 |
-| 20 | Thank you / questions | — | — |
+| # | Slide | Target | Running |
+|---|-------|-------:|--------:|
+| 1 | Title | 0:20 | 0:20 |
+| 2 | Tool-using agents act on the world | 0:35 | 0:55 |
+| 3 | Correctness lives on three surfaces (O/T/S) | 0:30 | 1:25 |
+| 4 | Existing tools cover part of the loop | 0:35 | 2:00 |
+| 5 | Research question | 0:25 | 2:25 |
+| — | **Part I divider** | 0:05 | 2:30 |
+| 6 | Core idea: scenario = conversation script | 0:50 | 3:20 |
+| 7 | Precise diagnostics: counterexamples | 0:40 | 4:00 |
+| 8 | Framework-neutral execution model | 0:30 | 4:30 |
+| 9 | Discovery → regression workflow | 0:35 | 5:05 |
+| — | **DEMO** | ~8–9 min | ~14:00 |
+| — | **Part II divider** | 0:05 | 14:05 |
+| 10 | TelcoSupportBench testbed | 0:35 | 14:40 |
+| 11 | Finding 1 — output-only insufficient | 0:40 | 15:20 |
+| 12 | Finding 2 — more expressive, less code | 0:35 | 15:55 |
+| 13 | Finding 3 — full oracles catch faults | 0:30 | 16:25 |
+| 14 | Finding 4 — generative discovery | 0:35 | 17:00 |
+| 15 | Conclusion | 0:40 | 17:40 |
+| 16 | Thank you / questions | — | — |
 
-> If running long, the easiest cuts are slide 7 (matcher language) and slide 17
-> (threats can be folded into Q&A). Never cut Findings 1 and 4 — they are the
-> "well-motivated + promising" core.
+**To hit ~8 min of slides I trimmed the spoken deck. Two slides are now optional
+"skip unless asked":**
+- **Matcher language** (slide 7 in the `.tex`) — skip in the talk; mention only if
+  someone asks how assertions are written. *(Currently still in the deck after
+  Core idea — advance past it quickly or delete the frame.)*
+- **Threats to validity** + **Future work** — fold both into Q&A / the closing
+  sentence; the frames remain in the `.tex` as backup.
+
+> Priority if you overrun: protect the demo and Findings 1 & 4 (the
+> "well-motivated + promising" core). Everything else can compress.
+> The T45 privacy bug is **shown live in the demo**, not on a slide.
 
 ---
 
@@ -202,14 +210,12 @@ families and measured which lane detects each. Output detection is often **zero*
 for tool-ordering and state-mutation faults, while state and full lanes hit
 **75–100%**. The combined oracle beats any single surface."
 
-### 16 — Finding 4 (1:20)  *(key slide)*
+### 14 — Finding 4 (0:35)  *(key slide)*
 "Fourth: generative testing finds bugs nobody scripted. From 14 manual scripts,
 user simulation and fuzzing reached far more tool paths and **many more distinct
-failure signatures** — 24 and 18 versus 3 — reusing the same oracle. A concrete
-example: a fuzz mutation garbled an opening message but kept the customer id;
-the agent then **named and anchored that account in prose before authentication**
-— a real pre-auth **privacy** violation the manual script never triggered. And
-extraction turns it into a permanent regression test."
+failure signatures** — 24 and 18 versus 3 — reusing the same oracle. Discovered
+failures are shrunk and extracted into permanent regressions. You saw exactly this
+in the demo — that real pre-auth privacy bug was found this way."
 
 ### 17 — Threats to validity (0:45)
 "I'll be honest about limits: clarity grades used LLM judges, not a human study;
