@@ -1,0 +1,674 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% agent-spec-kit — MEng Final Presentation
+% Imperial College London beamer theme
+%
+%!TEX program = xelatex
+% Must be compiled with XeLaTeX (custom Imperial Sans fonts).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[
+	aspectratio=169, % 16:9
+	t,               % top-align content
+	onlytextwidth,
+	10pt,
+]{beamer}
+
+\usetheme{Imperial}
+
+% Look for images in images/ (theme default is Images/)
+\graphicspath{{images/}{./}}
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES
+%----------------------------------------------------------------------------------------
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, backgrounds}
+\usepackage{listings}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+
+% Code listing style (kept short; uses the document sans/mono fonts)
+\definecolor{codebg}{RGB}{245,245,250}
+\definecolor{codekw}{RGB}{0,0,160}
+\definecolor{codecm}{RGB}{120,120,130}
+\definecolor{codestr}{RGB}{0,120,90}
+\lstset{
+	language=Python,
+	basicstyle=\ttfamily\scriptsize,
+	backgroundcolor=\color{codebg},
+	keywordstyle=\color{codekw}\bfseries,
+	commentstyle=\color{codecm}\itshape,
+	stringstyle=\color{codestr},
+	morekeywords={async,await,scenario,fixture},
+	showstringspaces=false,
+	breaklines=true,
+	columns=fullflexible,
+	frame=single,
+	rulecolor=\color{ICLBlue!30},
+	framesep=6pt,
+	xleftmargin=4pt,
+	xrightmargin=4pt,
+	aboveskip=4pt,
+	belowskip=2pt,
+}
+
+% Re-usable TikZ node styles for the architecture diagram
+\tikzset{
+	flow/.style={rectangle, rounded corners=2pt, draw=ICLBlue, line width=0.6pt,
+		fill=ICLBlue!8, text=ICLBlue, font=\scriptsize\bfseries,
+		minimum height=8mm, minimum width=20mm, align=center, inner sep=3pt},
+	store/.style={flow, draw=ICLDarkBlue, fill=ICLLightGrey, text=ICLDarkBlue},
+	fail/.style={flow, draw=red!60!black, fill=red!6, text=red!60!black},
+	arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, draw=ICLBlue!70},
+}
+
+% Small helpers for oracle "chips"
+\newcommand{\chip}[2]{\tikz[baseline=(c.base)]{\node[fill=#1,text=white,rounded corners=2pt,
+	font=\scriptsize\bfseries,inner sep=2.2pt] (c) {#2};}}
+\newcommand{\Ochip}{\chip{ICLBlue}{\,O\,}}
+\newcommand{\Tchip}{\chip{ICLBlue!70}{\,T\,}}
+\newcommand{\Schip}{\chip{ICLDarkBlue}{\,S\,}}
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION INFORMATION
+%----------------------------------------------------------------------------------------
+\title{agent-spec-kit}
+\subtitle{Scenario-Driven Evaluation and Testing of Tool-Using LLM Agents}
+\author{Ruthvik Konduru}
+\date{June 2026}
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	TITLE SLIDE  (logo-led, white background)
+%----------------------------------------------------------------------------------------
+\begingroup
+	\setbeamercolor{title page title}{fg=ICLBlue}
+	\setbeamercolor{title page subtitle}{fg=ICLBlue}
+	\setbeamercolor{author}{fg=ICLBlue}
+	\setbeamercolor{date}{fg=ICLBlue}
+	\setbeamertemplate{title page}[logo]{imperial_logo.png}
+	\frame[plain, s]{\titlepage}
+\endgroup
+
+%----------------------------------------------------------------------------------------
+%	1. MOTIVATION
+%----------------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Tool-using agents act on the world}
+	\begin{columns}[T]
+		\begin{column}{0.56\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.8em}
+				\item LLMs are no longer just text generators --- as \textbf{agents} they
+				plan, call tools, and \textbf{change external state}.
+				\item Correctness can therefore \textbf{not} be judged from the final reply alone.
+				\item A support agent can sound perfectly polite while it:
+				\begin{itemize}
+					\setlength\itemsep{0.3em}
+					\item skips \textbf{authentication} and leaks account data,
+					\item calls the \textbf{wrong tool} or in the wrong order,
+					\item leaves the \textbf{database} in an invalid state.
+				\end{itemize}
+				\item The plausible answer is only \emph{one} part of being correct.
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.42\linewidth}
+			\centering
+			\vspace{0.5em}
+			\includegraphics[width=\linewidth]{react_prompting.png}\\[4pt]
+			{\tiny\textcolor{ICLBlue}{Reasoning + acting (ReAct): the agent interleaves thoughts, tool calls, and replies.}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Correctness lives on three surfaces}
+	\framesubtitle{Output is necessary but far from sufficient}
+
+	\centering
+	\vspace{0.6em}
+	\begin{tikzpicture}[node distance=6mm]
+		\node[flow, minimum width=34mm, minimum height=14mm] (o)
+			{\normalsize\Ochip\ \ Output\\[2pt]\scriptsize what the agent \emph{says}};
+		\node[flow, minimum width=34mm, minimum height=14mm, right=12mm of o] (t)
+			{\normalsize\Tchip\ \ Trace\\[2pt]\scriptsize which \emph{tools} it called};
+		\node[store, minimum width=34mm, minimum height=14mm, right=12mm of t] (s)
+			{\normalsize\Schip\ \ State\\[2pt]\scriptsize the \emph{state} it left behind};
+		\node[below=10mm of t, text=ICLBlue, font=\footnotesize, align=center, text width=0.8\linewidth]
+			{A failure on \emph{any} surface can be hidden by a fluent reply ---
+			and may even be masked by recovery on a later turn.};
+	\end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Existing tools only cover part of the loop}
+	\begin{columns}[T]
+		\begin{column}{0.54\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.6em}
+				\item \textbf{Output graders / LLM-as-judge} (HELM, G-Eval, MT-Bench): great for
+				comparing models on isolated final answers --- but \emph{blind} to tool and state failures.
+				\item \textbf{Agent benchmarks} ($\tau$-bench, AppWorld, WebArena): trace/state aware,
+				but \emph{fixed leaderboards}, not reusable infrastructure for your own agent.
+				\item \textbf{Trace viewers} (LangSmith, Langfuse): show \emph{what} happened ---
+				the developer still has to infer what \emph{should} have happened.
+			\end{itemize}
+			\vspace{0.4em}
+			\begin{block}{\small The gap}
+				\small No single, reusable way to assert over \textbf{output + trace + state}
+				in one multi-turn scenario --- with \textbf{precise diagnostics} when a check fails.
+			\end{block}
+		\end{column}
+		\begin{column}{0.44\linewidth}
+			\centering
+			\vspace{0.3em}
+			\includegraphics[width=\linewidth]{langfuse_example_trace.png}\\[3pt]
+			{\tiny\textcolor{ICLBlue}{Trace viewers show the episode; they do not encode the expected behaviour.}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Research question}
+	\vspace{1.2em}
+	\begin{columns}[c]
+		\begin{column}{0.16\linewidth}
+			\centering
+			\includegraphics[width=\linewidth]{imperial_logo.png}
+		\end{column}
+		\begin{column}{0.8\linewidth}
+			{\large Can the evaluation of \textbf{stateful, tool-using LLM agents} be expressed
+			in a \textbf{software-testing style} ---}
+			\vspace{0.6em}
+
+			{\large readable scenarios that combine assertions over \textbf{replies},
+			\textbf{tool trajectories}, and \textbf{application state}, while preserving enough
+			structured evidence to \textbf{diagnose} failures precisely?}
+			\vspace{1.0em}
+
+			{\footnotesize\textcolor{ICLBlue}{\textbf{Answer:} \emph{agent-spec-kit} --- a scenario-driven testing
+			framework for LLM agents, evaluated on a 50-task benchmark.}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+%	SECTION DIVIDER: THE LIBRARY
+%----------------------------------------------------------------------------------------
+\begingroup
+	\setbeamercolor{normal text}{fg=ICLBlue}\usebeamercolor[fg]{normal text}
+	\setbeamercolor{page number in head/foot}{fg=white}
+	\begin{frame}[plain]
+		\vspace{6mm}
+		\hfill\includegraphics[width=3.2cm]{imperial_logo.png}\\[1.2cm]
+		\begin{adjustwidth}{0cm}{0.15\textwidth}
+			{\Huge{\ImperialSansSemiBold Part I --- The Library}}\\[0.5cm]
+			{\large\ImperialSansMedium \emph{agent-spec-kit}: behaviour as executable scenarios}
+		\end{adjustwidth}
+	\end{frame}
+\endgroup
+
+%------------------------------------------------
+\begin{frame}[fragile]
+	\frametitle{The core idea: a scenario \emph{is} a conversation script}
+	\framesubtitle{Output, tool, and state checks live together, woven in after each turn}
+
+	\begin{columns}[T]
+		\begin{column}{0.62\linewidth}
+\begin{lstlisting}
+@scenario(agent_fixture="agent", user_fixture="user")
+async def test_billing_credit(s, store):
+    (s.user_message("I was double charged in October")
+      # O: the reply must insist on verifying first
+      .assert_output(m.contains("verify"))
+      # T: the agent must authenticate before account tools
+      .assert_tool_calls([
+          m.tool_call("authenticate_customer"),
+          m.tool_call("get_billing", args={"id": "CUST-045"}),
+      ])
+      # S: a postcondition on the database / environment
+      .assert_that(lambda: assert_credit_policy(store)))
+\end{lstlisting}
+		\end{column}
+		\begin{column}{0.36\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.5em}
+				\item \Ochip\ \texttt{assert\_output} --- the reply
+				\item \Tchip\ \texttt{assert\_tool\_calls} / \texttt{forbid\_tool\_calls} --- the trace
+				\item \Schip\ \texttt{assert\_that} --- environment / DB state
+			\end{itemize}
+			\vspace{0.4em}
+			{\footnotesize One file reads like a dialogue with the contract inlined ---
+			no separate datasets, graders, and runner config.}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{One composable matcher language}
+	\begin{columns}[T]
+		\begin{column}{0.5\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.55em}
+				\item Literals, \texttt{dict}s and \texttt{list}s are \emph{coerced} into matchers automatically.
+				\item Rich combinators: \texttt{m.object}, \texttt{m.list}, \texttt{m.one\_of},
+				\texttt{m.optional}, \texttt{m.tool\_call(..., children=[...])}.
+				\item Conditional rules: \texttt{m.require("pager").when(m.field("severity") == "high")}.
+				\item Selective \textbf{LLM rubrics} (\texttt{m.llm\_criteria}) only where nuance is needed ---
+				pass/fail criteria, not opaque scores.
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.5\linewidth}
+			\centering
+			% Placeholder: a clean matcher snippet image could go here
+			\fbox{\parbox[c][0.62\textheight][c]{0.92\linewidth}{\centering
+				\textcolor{ICLBlue}{\textbf{[FIGURE PLACEHOLDER]}}\\[6pt]
+				\footnotesize Matcher cheat-sheet / nested \texttt{m.tool\_call} example.\\
+				(Render a clean code card or reuse a report listing.)}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Precise diagnostics: structured counterexamples}
+	\framesubtitle{When a check fails, you learn \emph{which} expectation broke, \emph{where}}
+	\begin{columns}[T]
+		\begin{column}{0.46\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.5em}
+				\item Every failed assertion produces a \textbf{Counterexample}:
+				\begin{itemize}\setlength\itemsep{0.2em}
+					\item headline + human location (``assert\_tool\_calls after turn \#2'')
+					\item a \textbf{JSON-pointer path} to the mismatch, e.g. \texttt{\$[1].args.line\_id}
+					\item expected vs.\ actual, plus a bounded event trace
+				\end{itemize}
+				\item Identical view in the \textbf{terminal}, the \textbf{SQLite} store, and the \textbf{web UI}.
+				\item Turns ``it failed somehow'' into ``\emph{this} check broke \emph{here}''.
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.52\linewidth}
+			\centering
+			\includegraphics[width=\linewidth]{rich_console_failure_output.png}\\[3pt]
+			{\tiny\textcolor{ICLBlue}{Rich terminal counterexample: failed check, turn, path, expected vs.\ actual.}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Framework-neutral execution model}
+	\centering
+	\vspace{0.3em}
+	\begin{tikzpicture}[node distance=7mm and 9mm]
+		\node[flow] (dec) {\texttt{@fixture} /\\\texttt{@scenario}};
+		\node[flow, right=of dec] (cli) {CLI \texttt{run}};
+		\node[flow, right=of cli] (mat) {\texttt{Scenario}\\\texttt{.materialise}};
+		\node[flow, right=of mat] (agent) {\texttt{AdaptedAgent}\\\texttt{.run\_turn}};
+		\node[flow, right=of agent] (match) {\texttt{match}\\\texttt{.async\_check}};
+
+		\node[store, below=14mm of agent, xshift=10mm] (store) {\texttt{LocalResultStore}\\\scriptsize SQLite + blobs};
+		\node[fail, below=14mm of cli] (cx) {\texttt{Counterexample}\\\scriptsize CLI / UI};
+
+		\draw[arr] (dec) -- (cli);
+		\draw[arr] (cli) -- (mat);
+		\draw[arr] (mat) -- (agent);
+		\draw[arr] (agent) -- (match);
+		\draw[arr] (match) -- node[font=\scriptsize, text=ICLBlue, sloped, above] {ok} (store);
+		\draw[arr] (match.south) |- node[font=\scriptsize, text=red!60!black, near end, above] {fail} (cx.east);
+
+		\node[draw=ICLBlue!40, dashed, rounded corners, fit=(agent), inner sep=5pt, label={[font=\tiny,text=ICLBlue]below:LangChain / Pydantic AI / custom adapters}] {};
+	\end{tikzpicture}
+	\vspace{0.4em}
+	\begin{itemize}
+		\setlength\itemsep{0.2em}
+		\item Adapters \textbf{normalise traces} (LangGraph, Pydantic AI) into one event model ---
+		oracles never depend on a framework's message format.
+	\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{From authored tests to automatic discovery}
+	\centering
+	\vspace{0.2em}
+	\begin{tikzpicture}[node distance=8mm]
+		\node[flow, minimum width=26mm] (man) {Manual scenario\\\scriptsize stable baseline};
+		\node[flow, minimum width=26mm, right=of man] (sim) {Simulate / Fuzz\\\scriptsize new dialogues};
+		\node[flow, minimum width=26mm, right=of sim] (shrink) {Shrink\\\scriptsize minimal reproducer};
+		\node[fail, minimum width=26mm, right=of shrink] (ext) {Extract\\\scriptsize regression \texttt{.py}};
+		\draw[arr] (man) -- (sim);
+		\draw[arr] (sim) -- (shrink);
+		\draw[arr] (shrink) -- (ext);
+		\draw[arr] (ext.south) .. controls +(0,-1) and +(0,-1) .. node[font=\scriptsize,text=ICLBlue,below]{added back to the suite} (man.south);
+	\end{tikzpicture}
+	\vspace{0.4em}
+	\begin{columns}[T]
+		\begin{column}{0.5\linewidth}
+			\begin{itemize}\setlength\itemsep{0.3em}
+				\item \textbf{Repeats} for stochastic agents.
+				\item \textbf{User simulation}: persona-driven multi-turn dialogues.
+				\item \textbf{Mutation fuzzing}: perturb valid transcripts.
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.5\linewidth}
+			\begin{itemize}\setlength\itemsep{0.3em}
+				\item \textbf{Shrinking}: delta-debug to a minimal failing dialogue.
+				\item \textbf{Extraction}: pin a discovered failure as a permanent scenario.
+				\item All under the \emph{same} oracle vocabulary.
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Persistent runs, CLI, and a web results browser}
+	\begin{columns}[T]
+		\begin{column}{0.4\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.55em}
+				\item Every run stored locally (SQLite + gzip blobs) with git metadata.
+				\item CLI: \texttt{run}, \texttt{runs}, \texttt{show}, \texttt{regressions}, \texttt{ui}.
+				\item Read-only \textbf{web UI}: runs list, run detail, trace drawer, fuzz trials.
+				\item \textbf{Compare} named experiments side-by-side to track regressions.
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.6\linewidth}
+			\centering
+			\includegraphics[width=\linewidth]{specific_run_page_ui.png}\\[2pt]
+			{\tiny\textcolor{ICLBlue}{Run detail page: per-scenario, per-repeat results with a trace drawer.}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+%	DEMO DIVIDER
+%----------------------------------------------------------------------------------------
+\begingroup
+	\setbeamercolor{normal text}{fg=ICLBlue}\usebeamercolor[fg]{normal text}
+	\setbeamercolor{page number in head/foot}{fg=white}
+	\begin{frame}[plain]
+		\vspace{6mm}
+		\hfill\includegraphics[width=3.2cm]{imperial_logo.png}\\[1.0cm]
+		\begin{adjustwidth}{0cm}{0.12\textwidth}
+			{\Huge{\ImperialSansSemiBold Live Demo}}\\[0.5cm]
+			{\large\ImperialSansMedium Writing a scenario, watching it fail precisely,\\
+			discovering a bug, and pinning it as a regression.}\\[0.8cm]
+			{\footnotesize\ImperialSansMedium ($\approx$ 8--10 minutes --- see speaker plan for the script)}
+		\end{adjustwidth}
+	\end{frame}
+\endgroup
+
+%----------------------------------------------------------------------------------------
+%	SECTION DIVIDER: EVALUATION
+%----------------------------------------------------------------------------------------
+\begingroup
+	\setbeamercolor{normal text}{fg=ICLBlue}\usebeamercolor[fg]{normal text}
+	\setbeamercolor{page number in head/foot}{fg=white}
+	\begin{frame}[plain]
+		\vspace{6mm}
+		\hfill\includegraphics[width=3.2cm]{imperial_logo.png}\\[1.2cm]
+		\begin{adjustwidth}{0cm}{0.15\textwidth}
+			{\Huge{\ImperialSansSemiBold Part II --- Evaluation}}\\[0.5cm]
+			{\large\ImperialSansMedium Does multi-surface, scenario-driven testing actually pay off?}
+		\end{adjustwidth}
+	\end{frame}
+\endgroup
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{TelcoSupportBench: the evaluation testbed}
+	\begin{columns}[T]
+		\begin{column}{0.56\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.55em}
+				\item A synthetic \textbf{mobile-support} domain built for this project.
+				\item \textbf{50 tasks} (T01--T50) against a reference \textbf{LangGraph} agent:
+				a coordinator + diagnostics + billing specialists.
+				\item Each task has \textbf{four oracle lanes}:
+				\Ochip\ output, \Tchip\ trace, \Schip\ state, and \textbf{F} = full (all three).
+				\item \textbf{Design principle:} tools stay \emph{permissive}; \textbf{policy is asserted in
+				the oracles}, not hidden in the simulator.
+				\item Compared against \textbf{7} other evaluation approaches.
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.44\linewidth}
+			\centering
+			\vspace{0.2em}
+			\includegraphics[width=\linewidth]{tao_bench_setup.png}\\[3pt]
+			{\tiny\textcolor{ICLBlue}{Inspiration: $\tau$-bench-style dual-control support setting.
+			\textbf{[Replace with TelcoSupportBench architecture figure if available]}}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Finding 1 --- output-only grading is not enough}
+	\framesubtitle{Reference agent across 200 oracle slots (50 tasks $\times$ 4 lanes)}
+	\begin{columns}[T]
+		\begin{column}{0.52\linewidth}
+			\centering
+			\vspace{0.4em}
+			\begin{tikzpicture}
+			\begin{axis}[
+				ybar, bar width=16pt, width=\linewidth, height=0.62\textheight,
+				ymin=0, ymax=55,
+				ylabel={\scriptsize failing slots}, ylabel near ticks,
+				symbolic x coords={Output, State, Trace, Full},
+				xtick=data, x tick label style={font=\scriptsize},
+				ytick={0,10,20,30,40,50}, y tick label style={font=\scriptsize},
+				nodes near coords, nodes near coords style={font=\scriptsize, text=ICLBlue},
+				every axis plot/.append style={fill=ICLBlue!70, draw=ICLBlue},
+			]
+			\addplot coordinates {(Output,0) (State,10) (Trace,20) (Full,24)};
+			\end{axis}
+			\end{tikzpicture}
+		\end{column}
+		\begin{column}{0.46\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.6em}
+				\item \textbf{All 50 output lanes passed} --- yet \textbf{54 of 200} slots failed.
+				\item Every one of those failures lived in the \textbf{trace}, \textbf{state}, or \textbf{full} lanes.
+				\item The reply ``sounded correct'' while a tool ran in the wrong order, an argument
+				was wrong, or a store update never happened.
+			\end{itemize}
+			\vspace{0.3em}
+			\begin{block}{\small Takeaway}
+				\small Final-answer evaluation alone would have reported \textbf{100\%} pass.
+			\end{block}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Finding 2 --- more expressive, less code}
+	\framesubtitle{Twelve canonical check patterns, ported across frameworks}
+	\begin{columns}[T]
+		\begin{column}{0.54\linewidth}
+			\centering
+			\vspace{0.3em}
+			\begin{tikzpicture}
+			\begin{axis}[
+				xbar, bar width=14pt, width=\linewidth, height=0.5\textheight,
+				xmin=0, xmax=600,
+				symbolic y coords={Pydantic Evals, DeepEval, {agent-spec-kit}},
+				ytick=data, y tick label style={font=\scriptsize},
+				xtick={0,200,400,600}, x tick label style={font=\scriptsize},
+				xlabel={\scriptsize lines of check logic}, xlabel near ticks,
+				nodes near coords, nodes near coords style={font=\scriptsize, text=ICLBlue},
+				every axis plot/.append style={fill=ICLBlue!70, draw=ICLBlue},
+			]
+			\addplot coordinates {(165,{agent-spec-kit}) (496,DeepEval) (532,{Pydantic Evals})};
+			\end{axis}
+			\end{tikzpicture}
+		\end{column}
+		\begin{column}{0.44\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.6em}
+				\item \textbf{165 lines} vs.\ 496 (DeepEval) and 532 (Pydantic Evals).
+				\item \textbf{Highest clarity grade on every one} of the twelve specimens.
+				\item On failures, it gives an exact \textbf{path witness} where alternatives return a
+				scalar, broad prose, or a bare \texttt{AssertionError}.
+			\end{itemize}
+			\vspace{0.3em}
+			{\footnotesize\textcolor{ICLBlue}{Declarative DSL --- equivalent in policy to the hand-written ports,
+			but far easier to read and debug.}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Finding 3 --- full oracles catch faults narrow lanes miss}
+	\framesubtitle{Injected-fault detection (F01--F10) on previously-passing slots}
+	\begin{columns}[T]
+		\begin{column}{0.5\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.6em}
+				\item Ten fault families injected into the agent; measure which lane \emph{detects} each.
+				\item \textbf{Output} detection is frequently \textbf{0\%} for tool-ordering and
+				state-mutation faults.
+				\item \textbf{State} and \textbf{Full} lanes reach \textbf{75--100\%} on those same faults.
+				\item The \textbf{combined oracle} is stronger than any single surface alone.
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.5\linewidth}
+			\centering
+			\scriptsize
+			\renewcommand{\arraystretch}{1.15}
+			\begin{tabular}{lcccc}
+			\toprule
+			\textbf{Fault} & \textbf{O} & \textbf{S} & \textbf{T} & \textbf{F} \\
+			\midrule
+			F02 (state)  & 0\%  & \textbf{100\%} & 67\%  & \textbf{100\%} \\
+			F03 (state)  & 0\%  & \textbf{100\%} & 0\%   & \textbf{100\%} \\
+			F05 (order)  & 0\%  & 0\%   & \textbf{100\%} & \textbf{100\%} \\
+			F07 (trace)  & 50\% & 50\%  & \textbf{100\%} & \textbf{100\%} \\
+			F08 (trace)  & 0\%  & 0\%   & \textbf{75\%}  & 50\%  \\
+			F10 (full)   & 25\% & 0\%   & 33\%  & \textbf{100\%} \\
+			\bottomrule
+			\end{tabular}\\[4pt]
+			{\tiny\textcolor{ICLBlue}{Detection rate = detected / eligible. Selected rows; full matrix F01--F10 in the report.}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Finding 4 --- generative testing finds bugs nobody scripted}
+	\begin{columns}[T]
+		\begin{column}{0.5\linewidth}
+			\centering
+			\scriptsize
+			\renewcommand{\arraystretch}{1.2}
+			\begin{tabular}{lccc}
+			\toprule
+			\textbf{Method} & \textbf{Convs} & \textbf{Tool paths} & \textbf{Failure sigs} \\
+			\midrule
+			Manual scripts   & 14 & 10 & 3 \\
+			User simulation  & 70 & \textbf{58} & \textbf{24} \\
+			Mutation fuzz    & 70 & 36 & 18 \\
+			\bottomrule
+			\end{tabular}\\[4pt]
+			{\tiny\textcolor{ICLBlue}{14 tasks. Simulation \& fuzzing reuse the \emph{same} F-oracle as the manual scripts.}}
+			\vspace{0.6em}
+
+			\includegraphics[width=0.92\linewidth]{fuzz_llm_pipeline.png}\\[2pt]
+			{\tiny\textcolor{ICLBlue}{Mutation-fuzz pipeline over valid transcripts.}}
+		\end{column}
+		\begin{column}{0.5\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.5em}
+				\item Simulation \& fuzzing reached \textbf{many failure signatures absent} from the
+				hand-written scripts --- at little extra authoring cost.
+			\end{itemize}
+			\begin{block}{\small Real bug found by fuzzing --- T45}
+				\scriptsize
+				The \texttt{drop\_required\_fact} mutation garbles the opening turn (still mentions
+				\texttt{CUST-045}). The agent then \textbf{names and anchors the account in prose
+				\emph{before} authentication} --- a pre-auth \textbf{privacy} violation the manual
+				script never triggered. Caught by the output rubric (2/4 criteria, needed 3).
+			\end{block}
+			\vspace{0.3em}
+
+			{\footnotesize Extraction then pins it as a permanent regression scenario.}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Honest about the limits}
+	\framesubtitle{Threats to validity}
+	\begin{columns}[T]
+		\begin{column}{0.5\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.6em}
+				\item \textbf{Construct:} clarity \& diagnostic grades used \textbf{LLM judges}, not a
+				human developer study.
+				\item \textbf{External:} a \textbf{single} reference agent and \textbf{one} telecom domain ---
+				design choices may favour the framework.
+			\end{itemize}
+		\end{column}
+		\begin{column}{0.5\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.6em}
+				\item \textbf{Rerun:} extraction produced a valid file for every eligible failure, but
+				\textbf{fewer than half} reproduced the \emph{exact} signature on immediate rerun ---
+				stochastic ordering/wording drifts.
+				\item Results are \textbf{promising} but describe \emph{this} setup, not agents in general.
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Conclusion}
+	\begin{itemize}
+		\setlength\itemsep{0.7em}
+		\item The right unit of evaluation is the \textbf{behavioural episode}, not the final reply ---
+		a polite answer can hide a skipped auth step, a mis-ordered tool, or a corrupted store.
+		\item \emph{agent-spec-kit} unifies \textbf{output + trace + state} oracles in one readable,
+		executable, framework-neutral scenario.
+		\item \textbf{Diagnostics are part of evaluation quality}: assertion-local counterexamples make
+		failures fixable, not just countable.
+		\item A single workflow spans \textbf{discovery $\rightarrow$ regression}: simulate, fuzz, shrink, extract.
+		\item Evidence: hidden trace/state failures exposed, \textbf{3$\times$ less} check code with the
+		highest clarity, and generative testing surfacing real bugs --- e.g. a pre-auth privacy leak.
+	\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+	\frametitle{Future work}
+	\begin{itemize}
+		\setlength\itemsep{0.8em}
+		\item More \textbf{domains and agent frameworks} --- test whether the scenario model transfers
+		beyond TelcoSupportBench.
+		\item \textbf{Human studies} of authoring clarity and diagnostic usefulness, to replace LLM-judge grading.
+		\item \textbf{Signature-stable replay} after extraction, and more robust matching of stochastic
+		trajectories.
+		\item \textbf{Larger, team-based suites} to see how the workflow scales in everyday development.
+	\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+%	CLOSING SLIDE
+%----------------------------------------------------------------------------------------
+\begingroup
+	\setbeamercolor{normal text}{fg=ICLBlue}\usebeamercolor[fg]{normal text}
+	\setbeamertemplate{closing slide logo}[logo]{imperial_logo.png}
+	\setbeamertemplate{closing slide text}[text]{Thank you.\\ Questions?}
+	\usebeamertemplate{closing slide}
+\endgroup
+
+\end{document}

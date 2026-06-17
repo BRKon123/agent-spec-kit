@@ -14,6 +14,8 @@ frontend/node_modules/
 src/agent_spec_kit/web/dist/*
 !src/agent_spec_kit/web/dist/.gitkeep
 
+Bart_FYP_Presentation/
+
 # Virtual environments
 .venv
 
