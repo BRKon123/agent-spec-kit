@@ -220,6 +220,53 @@
 
 %------------------------------------------------
 \begin{frame}
+	\frametitle{\ldots and you can't script every conversation}
+	\framesubtitle{Authored tests only cover what you thought to write}
+	\begin{columns}[T,onlytextwidth]
+		\begin{column}{0.54\linewidth}
+			\begin{itemize}
+				\setlength\itemsep{0.7em}
+				\item Hand-written scenarios capture the policies you \emph{already} know ---
+				the cases you thought of.
+				\item But agents are \textbf{stochastic} and real users are \textbf{messy}: they
+				rephrase, omit details, push back, change intent mid-conversation.
+				\item The failures that bite are the dialogue paths \textbf{nobody scripted}.
+			\end{itemize}
+			\vspace{0.3em}
+			\begin{block}{\small Beyond the cases you authored}
+				\small
+				The framework should \textbf{explore} conversations automatically --- simulated
+				users and transcript fuzzing --- and \textbf{keep} the real failures it finds as
+				permanent regression tests.
+			\end{block}
+		\end{column}
+		\hfill
+		\begin{column}{0.42\linewidth}
+			\centering
+			\vspace{0.4em}
+			{\footnotesize\textcolor{ICLBlue}{space of \emph{all} real conversations}}\\[2pt]
+			\begin{tikzpicture}[font=\scriptsize]
+				\node[draw=ICLBlue!55, fill=ICLBlue!4, ellipse, minimum width=6.4cm,
+					minimum height=4.2cm] (c) {};
+				% authored region: a small sub-area scripts actually cover
+				\node[draw=ICLBlue!55, dashed, circle, minimum size=2cm, fill=ICLBlue!14]
+					(k) at (-1.5,0.15) {};
+				\foreach \p in {(-1.95,0.2),(-1.5,0.55),(-1.15,-0.05),(-1.7,-0.45)}{
+					\fill[ICLBlue] \p circle (2.6pt);}
+				\node[font=\tiny, text=ICLBlue, align=center] at (-1.5,-1.35) {authored\\scripts};
+				% failures scattered across the unscripted remainder
+				\foreach \p in {(0.5,1.0),(1.6,0.55),(1.0,-0.15),(2.0,-0.5),(0.6,-1.05),(1.55,-1.2)}{
+					\node[text=red!70!black, font=\footnotesize\bfseries] at \p {\ding{56}};}
+				\node[font=\tiny, text=red!70!black, align=center] at (1.55,1.35)
+					{failures nobody\\scripted};
+			\end{tikzpicture}\\[4pt]
+			{\footnotesize\textcolor{ICLBlue}{Scripts cover a small known region --- bugs hide in the rest.}}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
 	\frametitle{Research question}
 	\vspace{1.0em}
 	\begin{center}
@@ -445,7 +492,7 @@ m.tool_call("open_incident", args=m.object(
 				\node[row, draw=red!70!black, line width=1pt, fill=red!8, below=1.4mm of r0] (r1)
 					{\texttt{[1] get\_line\_status}\hfill\textcolor{red!70!black}{\ding{56}}};
 				\node[row, draw=red!70!black, dashed, below=1.4mm of r1, font=\tiny] (p)
-					{path \texttt{\$[1].args.line\_id}\\ expected \texttt{LINE-001}\hfill actual \texttt{LINE-002}};
+					{path \texttt{\$[1].args.line\_id}\\ expected \texttt{LINE-001}\\ actual\ \ \ \texttt{LINE-002}};
 			\end{tikzpicture}\\[6pt]
 			{\footnotesize\textcolor{ICLBlue}{A scalar tells you \emph{that} it failed; a counterexample tells you \emph{where}.}}
 		\end{column}
