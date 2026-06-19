@@ -49,3 +49,5 @@ MEng_Final_Report/build/
 
 # Generated PDFs
 MEng_Final_Report/main.pdf
+# Demo: generated regression extraction (regenerated live during the demo)
+demo/regressions/test_extracted.py

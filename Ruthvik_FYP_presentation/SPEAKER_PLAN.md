@@ -48,8 +48,9 @@ Slide numbers below are **physical PDF pages**.
 >
 > Priority if you overrun: protect the **demo** and **Findings 1 & 4** (the
 > "well-motivated + promising" core). Slide 5 sets up the generative half, so the
-> demo's discovery step and Finding 4 land — keep it. The T45 privacy bug is
-> **shown live in the demo**, not on a slide.
+> demo's discovery step and Finding 4 land — keep it. A live pre-auth bug
+> (analogous to the report's T45 finding) is **shown live in the demo**, not on a
+> slide.
 
 ---
 
@@ -154,46 +155,64 @@ compare view across experiments. Let me show you all of this live."
 
 ## 🔴 SLIDE 16 — LIVE DEMO (~8 min) — outline
 
-> Goal: let the audience *see* the Part I pillars working end-to-end on the real
-> benchmark — authoring, precise failure, generative discovery, the UI. Terminal
-> (large font) + a browser tab on the web UI, both pre-warmed.
+> Goal: let the audience *see* the Part I pillars working end-to-end —
+> authoring, precise failure, generative discovery, the UI. All code is in
+> **`demo/`** (see `demo/README.md`); a mini mobile-support agent driving the
+> exact same story as the slides.
 >
 > **Pre-flight (before the talk):**
-> - `cd agent_spec_kit`, virtualenv active, `OPENAI_API_KEY` set.
-> - Pre-run a clean baseline so results exist instantly:
->   `agent-spec-kit run benchmarks/telecom_support/ --tags pilot,reference`
-> - Web UI already running: `agent-spec-kit ui --open`.
-> - Saved T45 fuzz transcript open as a fallback (live fuzzing is slow/stochastic).
-> - Increase terminal font; clear scrollback; `clear` between segments.
+> - `cd agent_spec_kit`; `set -a; . ./.env; set +a` (loads `OPENAI_API_KEY`).
+>   Web UI already running in a browser tab: `uv run agent-spec-kit ui --open`.
+> - Editor open on `demo/test_demo.py` + `demo/test_discovery.py`; big terminal
+>   font; scrollback cleared; `rm -f demo/regressions/test_extracted.py`.
+> - **Pre-run all three commands once** under `--experiment demo` so the UI has
+>   rows for step 3 and imports are warm (the first run builds the package).
+> - Each run is **~4–7 s live** (`gpt-5-nano`, `reasoning_effort=low`; the 5 fuzz
+>   trials run concurrently). Offline (`unset OPENAI_API_KEY`) is instant and
+>   deterministic — the identical pass/fail story, your safety net if the network
+>   misbehaves.
 
-**[GAP — fill in exact commands once rehearsed; rough script below.]**
+**Flow principle — run first, talk over it; never type-then-stare.** Because a
+live run is a few seconds, **kick the command off, then immediately turn to the
+code and narrate** — the result lands while you're talking, and you read it out.
+The command is punctuation, not a pause.
 
-1. **Author a scenario (≈2 min).** Open a scenario (a telecom task or
-   `examples/langchain_scenario_tests/`). Walk `user_message` → `assert_output` /
-   `assert_tool_calls` / `assert_that`; emphasise it reads like the dialogue.
-   Run `agent-spec-kit run <path>` → green pass.
+1. **Author + run, then walk the code (≈1.5 min).** Type & launch:
+   `uv run agent-spec-kit run demo/ --tags demo-pass --experiment demo`.
+   *While it runs*, scroll `test_billing_credit`: "user message… the reply check —
+   O… authenticate-before-billing — T… a state postcondition — S." By now it's
+   back → "green: all three surfaces held."
 
-2. **Make it fail precisely (≈2 min).** Tighten one assertion (a specific `line_id`,
-   or `forbid_tool_calls` a pre-auth tool). Re-run → the **Rich counterexample**:
-   failed check, turn, JSON-pointer path. The slide-12 promise, live.
+2. **Make it fail precisely (≈2 min).** Launch:
+   `uv run agent-spec-kit run demo/ --tags demo-fail --experiment demo`. *While it
+   runs*, point at the `LINE-001` line: "the customer actually asked about
+   LINE-002 — watch what the failure tells us." Read the box: "not just *failed* —
+   the trace check, after turn 2, at path `$[1].args.line_id`, expected
+   `LINE-001`, got `LINE-002`." (Tie to the *Precise diagnostics* slide.)
 
-3. **Browse results in the web UI (≈2 min).** Switch to the browser. Runs list →
-   open the run → scenario/repeat table → **trace drawer** on the failing repeat:
-   same failure card + nested event tree (agent turn → tool calls). Mention
-   experiment **compare**.
+3. **Browse results in the web UI (≈2 min).** *All clicking + talking — no command
+   waiting.* Browser tab → runs list → open the failing run → scenario table →
+   **trace drawer** on the failing repeat: same failure card + the nested event
+   tree (agent turn → authenticate → get_line_status). One sentence on **compare**.
 
-4. **Generative discovery (≈2 min).** Run a fuzz/sim scenario:
-   `agent-spec-kit run <fuzz path> --shrink --extract`. Show the fuzz-trials panel,
-   a discovered failure signature absent from the manual script, then the
-   **extracted regression `.py`**. *This is where you show the real T45 `CUST-045`
-   pre-auth privacy bug* (from the live run, or narrate the saved transcript).
+4. **Generative discovery (≈2 min).** Launch:
+   `uv run agent-spec-kit run demo/ --tags demo-discovery --extract --experiment demo`.
+   *While it runs*, set it up: "the script only tests what I thought of — let the
+   fuzzer vary the opening: customers who *claim* they're already verified." Read
+   the result: "every trial withheld a real token, but the agent trusted them,
+   fabricated a token, and read the account — calling billing/line tools with no
+   verification. A bug I never scripted." Then
+   `cat demo/regressions/test_extracted.py`: "`--extract` pinned it as a permanent
+   regression." (No `--shrink` — skipped for speed.)
 
-5. **One-line wrap (≈30 s).** "So: author, fail precisely, discover, pin as a
+5. **One-line wrap (≈30 s).** "Author, fail precisely, discover, pin as a
    regression — one model. Now, does it pay off?" → advance to Part II.
 
-> **Demo risk management:** LLM calls are stochastic/networked. Baseline and fuzz
-> runs are pre-executed; if anything stalls, fall back to the populated UI and the
-> saved transcripts. Never debug live > ~20 s — narrate the pre-run artefacts.
+> **Risk management:** verified live on `gpt-5-nano` — step 1 passes (6/6), step 2
+> fails at `$[1].args.line_id`, step 4 finds the access-without-verification bug
+> (4/4) and extracts a regression that reproduces it. If a live run stalls > ~15 s
+> (occasional API spike), keep talking through the code; or `unset
+> OPENAI_API_KEY` and re-run — offline is instant and identical.
 
 ---
 
@@ -228,7 +247,8 @@ and full lanes hit **75–100%**. The combined oracle beats any single surface."
 "Fourth: generative testing finds bugs nobody scripted. From 14 manual scripts,
 simulation and fuzzing reached far more tool paths and **many more distinct
 failure signatures** — 24 and 18 vs 3 — same oracle, then shrunk and extracted to
-regressions. You saw exactly this in the demo: the pre-auth privacy bug."
+regressions. You saw exactly this in the demo: the agent reading account data
+without proper verification."
 
 ### 23 — Threats to validity (0:20)  *(optional)*
 "Honest limits: clarity grades used LLM judges, not a human study; one agent, one
