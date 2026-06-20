@@ -87,7 +87,7 @@ async def test_t14_full(s, store_t14):
                     m.tool_call("authenticate_customer"),
                     m.tool_call(
                         "run_billing_policy_specialist",
-                        # calibration: child tool order varies; assert BillingDecision fields only
+                        # note: child tool order varies; assert BillingDecision fields only
                         result=m.object(
                             {
                                 "eligible": False,
@@ -133,7 +133,7 @@ async def test_t14_trace(s, store_t14):
                     m.tool_call("authenticate_customer"),
                     m.tool_call(
                         "run_billing_policy_specialist",
-                        # calibration: child tool order varies; assert BillingDecision fields only
+                        # note: child tool order varies; assert BillingDecision fields only
                         result=m.object(
                             {
                                 "eligible": False,

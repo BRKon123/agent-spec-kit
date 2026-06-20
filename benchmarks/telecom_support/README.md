@@ -20,7 +20,7 @@ uv run python benchmarks/telecom_support/scripts/build_fault_eligibility.py
 uv run python benchmarks/telecom_support/scripts/bootstrap_fault_detection.py
 
 # Run primary matrix (live LLM) and parse log
-TELCO_DISABLE_CALIBRATION_STEERING=1 OPENAI_API_KEY=... \
+OPENAI_API_KEY=... \
   uv run python benchmarks/telecom_support/scripts/run_fault_detection.py --run --workers 4
 
 # Tables from real run JSON only
@@ -106,5 +106,5 @@ Per-check-type authoring effort (agent_spec_kit vs pytest vs LangSmith / Pydanti
 ## Deferred
 
 - Full T01–T50 scenario implementations, user simulation (~20 tasks), fuzz (~15 tasks), shrink/extract
-- Reference calibration failures per task table
+- Reference failures per task table
 - `uv run agent-spec-kit run benchmarks/telecom_support/ --shrink --extract`

@@ -13,7 +13,7 @@ Six frameworks report the same underlying full-scenario failure with different e
 cd benchmarks/telecom_support
 
 # 1) Live fault run (writes log + trace JSONL + store snapshots)
-TELCO_DISABLE_CALIBRATION_STEERING=1 uv run python scripts/run_fault_detection.py --run
+uv run python scripts/run_fault_detection.py --run
 
 # 2) Bundle per-slot artifacts
 uv run python scripts/export_diagnostic_artifacts.py

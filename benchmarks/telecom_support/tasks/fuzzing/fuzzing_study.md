@@ -4,7 +4,6 @@
 - Run id: 20260605T111127Z
 - Tasks: T03, T04, T17, T20, T27, T29, T30, T35, T38, T42, T43, T44, T45, T49
 - Mutation backend: llm
-- Calibration steering: False
 
 ## Primary comparison
 

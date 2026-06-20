@@ -1,6 +1,6 @@
 # Fault-detection eligibility (from frozen baseline)
 
-Source log: `tasks/calibration_logs/baseline_T01_T50.log`
+Source log: `tasks/baseline_logs/baseline_T01_T50.log`
 
 ## Primary matrix slots
 

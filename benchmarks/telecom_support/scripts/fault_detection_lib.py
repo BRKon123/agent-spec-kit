@@ -16,11 +16,11 @@ MATRIX_PATH = BENCH / "tasks" / "fault_matrix.yaml"
 ELIGIBILITY_PATH = FAULT_DIR / "eligibility.json"
 RESULTS_PATH = FAULT_DIR / "fault_detection_results.json"
 META_PATH = FAULT_DIR / "fault_detection_run_meta.json"
-DEFAULT_BASELINE_LOG = BENCH / "tasks" / "calibration_logs" / "baseline_T01_T50.log"
+DEFAULT_BASELINE_LOG = BENCH / "tasks" / "baseline_logs" / "baseline_T01_T50.log"
 DEFAULT_FAULT_LOG = FAULT_DIR / "fault_detection_primary.log"
-DEFAULT_PAIRED_LOG = FAULT_DIR / "calibration_paired.log"
-DEFAULT_PAIRED_JSON = FAULT_DIR / "calibration_paired.json"
-DEFAULT_TRACE_DIR = FAULT_DIR / "calibration_trace"
+DEFAULT_PAIRED_LOG = FAULT_DIR / "paired.log"
+DEFAULT_PAIRED_JSON = FAULT_DIR / "paired.json"
+DEFAULT_TRACE_DIR = FAULT_DIR / "paired_trace"
 
 ORACLE_FROM_KIND = {"full": "F", "trace": "T", "state": "S", "output": "O"}
 ORACLE_TO_KIND = {v: k for k, v in ORACLE_FROM_KIND.items()}
@@ -86,19 +86,9 @@ def expected_scenario_names(
 
 def parse_baseline_eligibility(log_text: str) -> dict[str, dict[str, bool]]:
     """Parse reference baseline log into per-task oracle pass flags."""
-    sys_path_insert = str(BENCH)
-    import sys
-
-    if sys_path_insert not in sys.path:
-        sys.path.insert(0, sys_path_insert)
-    from scripts.run_calibration import parse_results
-
-    parsed = parse_results(log_text)
     eligibility: dict[str, dict[str, bool]] = {}
-    for (tid, oracle), runs in parsed.items():
-        if not runs:
-            continue
-        eligibility.setdefault(tid, {})[oracle] = bool(runs[0])
+    for rec in parse_reference_log(log_text).values():
+        eligibility.setdefault(rec["task"], {})[rec["oracle"]] = bool(rec["passed"])
     return eligibility
 
 
@@ -243,7 +233,7 @@ def patch_eligibility_for_tasks(
 
 
 def paired_slots_to_fault_results(paired: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """Convert calibration_paired slots to fault_detection_results shape."""
+    """Convert paired slots to fault_detection_results shape."""
     out: dict[str, dict[str, Any]] = {}
     for key, rec in paired.items():
         out[key] = {

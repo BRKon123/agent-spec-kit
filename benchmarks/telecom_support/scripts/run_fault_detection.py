@@ -35,9 +35,8 @@ from scripts.fault_detection_lib import (  # noqa: E402
 DIAG_TRACE_DIR = BENCH / "tasks" / "fault_detection" / "diagnostic_artifacts" / "traces"
 DIAG_SNAPSHOT_DIR = BENCH / "tasks" / "fault_detection" / "diagnostic_artifacts" / "snapshots"
 
-ENV_DISABLE_STEERING = {
+ENV_RUN = {
     **os.environ,
-    "TELCO_DISABLE_CALIBRATION_STEERING": "1",
     "TELCO_AGENT_TRACE_DIR": str(DIAG_TRACE_DIR),
     "TELCO_STORE_SNAPSHOT_DIR": str(DIAG_SNAPSHOT_DIR),
 }
@@ -86,7 +85,7 @@ def _run_agent_spec_kit(
         proc = subprocess.run(
             cmd,
             cwd=REPO,
-            env=ENV_DISABLE_STEERING,
+            env=ENV_RUN,
             stdout=logf,
             stderr=subprocess.STDOUT,
             text=True,

@@ -14,7 +14,6 @@ primary_tasks:
   - T45
   - T49
 framework_trials: 1
-calibration_steering: false
 fuzz_mutation:
   backend: llm
   model: openai:gpt-5-nano

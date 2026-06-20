@@ -3,7 +3,6 @@
 - Generated: 2026-05-31T15:18:29.146883+00:00
 - Run id: 20260531T145454Z
 - Tasks: T03, T04, T17, T20, T27, T29, T30, T35, T38, T42, T43, T44, T45, T49
-- Calibration steering: False
 
 ## Primary comparison
 

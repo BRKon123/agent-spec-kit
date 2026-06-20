@@ -197,7 +197,6 @@ def record_from_fuzz_job(
         "max_user_turns_by_segment": max_user_turns_by_segment(task_id, cfg),
         "invalid_run_reason": invalid_run_reason,
         "per_step_user_turns": per_step,
-        "calibration_steering": False,
     }
 
 

@@ -11,7 +11,7 @@ uv run python benchmarks/telecom_support/scripts/generate_fault_detection_table.
 - Matrix hash: `b6c509c52ff5ad54`
 - Run exit code: `1`
 - Parsed scenarios: `152` / `152`
-- Baseline (frozen): `tasks/calibration_logs/baseline_report.md`
+- Baseline (frozen): `tasks/baseline_logs/baseline_report.md`
 
 ## Summary (detection rate = detected / eligible)
 
@@ -75,6 +75,6 @@ Legend: **detected** = eligible and fault scenario failed; **missed** = eligible
 
 ## Notes
 
-- Denominator uses only task×oracle slots where the **frozen unsteered reference** passed (`eligibility.json` from `baseline_T01_T50.log`).
+- Denominator uses only task×oracle slots where the **frozen reference** passed (`eligibility.json` from `baseline_T01_T50.log`).
 - Reference agent and baseline artifacts are not re-run or modified by this pipeline.
 - Sparse columns (e.g. F01/T on T03, T44) reflect baseline gaps, not missing fault injection.

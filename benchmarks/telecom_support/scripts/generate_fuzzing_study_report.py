@@ -42,7 +42,6 @@ def generate_markdown(study: dict[str, Any]) -> str:
         f"- Run id: {study.get('run_id', 'n/a')}",
         f"- Tasks: {', '.join(study['selected_tasks'])}",
         f"- Mutation backend: {mutation_backend or 'deterministic'}",
-        f"- Calibration steering: {study.get('calibration_steering', False)}",
         "",
         "## Primary comparison",
         "",

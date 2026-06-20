@@ -26,7 +26,7 @@ Bart_FYP_Presentation/
 # local run storage
 .agent_spec_kit/
 
-benchmarks/telecom_support/tasks/calibration_logs/
+benchmarks/telecom_support/tasks/baseline_logs/
 
 # LaTeX build directory
 MEng_Final_Report/build/

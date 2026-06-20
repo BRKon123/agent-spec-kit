@@ -146,8 +146,6 @@ async def _run(args: argparse.Namespace) -> int:
     logs_dir.mkdir(parents=True, exist_ok=True)
     transcripts_dir.mkdir(parents=True, exist_ok=True)
     traces_dir.mkdir(parents=True, exist_ok=True)
-    os.environ.pop("TELCO_ENABLE_CALIBRATION_STEERING", None)
-    os.environ["TELCO_DISABLE_CALIBRATION_STEERING"] = "1"
     os.environ["TELCO_AGENT_TRACE_DIR"] = str(traces_dir)
     run_log_path = logs_dir / "run.log"
     run_events_path = logs_dir / "run_events.jsonl"
@@ -168,7 +166,6 @@ async def _run(args: argparse.Namespace) -> int:
             "selected_tasks": selected_tasks,
             "methods": sorted(methods),
             "mutation_backend": "llm" if "fuzz" in methods else None,
-            "calibration_steering": False,
         },
     )
     if baseline_methods and records:
@@ -276,7 +273,6 @@ async def _run(args: argparse.Namespace) -> int:
         "ui_run_id": ui_run_id,
         "ui_experiment": args.experiment if not args.no_ui else None,
         "run_dir": str(run_dir.relative_to(BENCH)),
-        "calibration_steering": False,
         "selected_tasks": selected_tasks,
         "methods": sorted(methods),
         "mutation_backend": "llm" if "fuzz" in methods else "deterministic",

@@ -10,11 +10,6 @@ from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_core.tools import BaseTool
 
-from agents.calibration_steering import (
-    billing_specialist_extra,
-    calibration_steering_suffix,
-    network_specialist_extra,
-)
 from agents.prompts import (
     billing_specialist_prompt,
     fault_system_prompt,
@@ -37,21 +32,6 @@ def require_api_key() -> None:
             "TelcoSupportBench requires OPENAI_API_KEY "
             "(install dependency-groups dev and export the key)."
         )
-
-
-def calibration_steering_enabled() -> bool:
-    """True only when TELCO_ENABLE_CALIBRATION_STEERING=1 (opt-in calibration hints)."""
-    if os.environ.get("TELCO_DISABLE_CALIBRATION_STEERING", "").strip().lower() in (
-        "1",
-        "true",
-        "yes",
-    ):
-        return False
-    return os.environ.get("TELCO_ENABLE_CALIBRATION_STEERING", "").strip().lower() in (
-        "1",
-        "true",
-        "yes",
-    )
 
 
 def _structured_response_json(out: dict[str, Any], *, variant: str = "reference") -> str:
@@ -135,7 +115,6 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
                             f"line_id={line_id.strip()}\n"
                             f"postcode={store.seed_meta.get('postcode', 'SW1A1AA')}\n"
                             f"complaint: {complaint.strip()}"
-                            f"{network_specialist_extra(store) if calibration_steering_enabled() else ''}"
                         ),
                     }
                 ]
@@ -157,7 +136,6 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
                         "content": (
                             f"customer_id={customer_id.strip()}\n"
                             f"issue: {issue.strip()}"
-                            f"{billing_specialist_extra(store) if calibration_steering_enabled() else ''}"
                         ),
                     }
                 ]
@@ -177,6 +155,4 @@ def build_graph(store: TelcoStore, *, variant: str = "reference") -> object:
         if variant == "reference"
         else fault_system_prompt(variant)
     )
-    if variant == "reference" and calibration_steering_enabled():
-        prompt = prompt + calibration_steering_suffix(store)
     return create_agent(llm, tools=coordinator_tools, system_prompt=prompt)

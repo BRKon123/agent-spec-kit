@@ -1,4 +1,4 @@
-"""Scenario run context helpers (trace logging, no task-specific agent steering)."""
+"""Scenario run context helpers (trace logging, no task-specific agent hints)."""
 
 from __future__ import annotations
 

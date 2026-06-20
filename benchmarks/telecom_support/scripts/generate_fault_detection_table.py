@@ -13,7 +13,7 @@ BENCH = Path(__file__).resolve().parents[1]
 FAULT_DIR = BENCH / "tasks" / "fault_detection"
 TABLE_PATH = FAULT_DIR / "FAULT_DETECTION_TABLE.md"
 DIAG_PATH = FAULT_DIR / "FAULT_DIAGNOSTICS.md"
-BASELINE_REPORT = BENCH / "tasks" / "calibration_logs" / "baseline_report.md"
+BASELINE_REPORT = BENCH / "tasks" / "baseline_logs" / "baseline_report.md"
 
 if str(BENCH) not in sys.path:
     sys.path.insert(0, str(BENCH))
@@ -126,7 +126,7 @@ def generate_table(
             "",
             "## Notes",
             "",
-            "- Denominator uses only task×oracle slots where the **frozen unsteered reference** passed (`eligibility.json` from `baseline_T01_T50.log`).",
+            "- Denominator uses only task×oracle slots where the **frozen reference** passed (`eligibility.json` from `baseline_T01_T50.log`).",
             "- Reference agent and baseline artifacts are not re-run or modified by this pipeline.",
             "- Sparse columns (e.g. F01/T on T03, T44) reflect baseline gaps, not missing fault injection.",
             "",
